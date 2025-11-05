@@ -403,6 +403,7 @@ model CompanySettings {
   email       String @default("")
   address     String @default("")
   website     String @default("")
+  supportTelegram String @default("") @map("support_telegram")
 
   // Юридическая информация
   inn       String @default("")

@@ -31,6 +31,7 @@ export const CompanySettingsPage = () => {
     email: '',
     address: '',
     website: '',
+    supportTelegram: '',
     inn: '',
     director: '',
     bank: '',
@@ -48,6 +49,7 @@ export const CompanySettingsPage = () => {
         email: settings.email,
         address: settings.address,
         website: settings.website,
+        supportTelegram: settings.supportTelegram || '',
         inn: settings.inn,
         director: settings.director,
         bank: settings.bank,
@@ -274,6 +276,18 @@ export const CompanySettingsPage = () => {
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 placeholder="https://company.ru"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Telegram поддержка</label>
+              <Input
+                value={formData.supportTelegram}
+                onChange={(e) => setFormData({ ...formData, supportTelegram: e.target.value })}
+                placeholder="@username или t.me/username"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Укажите ссылку на Telegram или username для связи с поддержкой
+              </p>
             </div>
           </CardContent>
         </Card>

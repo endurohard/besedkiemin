@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CatalogHeader } from '../components/CatalogHeader';
-import { MapPin, Phone, Mail, Clock, Check } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Check, MessageCircle } from 'lucide-react';
 import api from '../lib/api';
-import { CatalogCategory, CatalogProduct } from '../types';
+import { CatalogCategory, CatalogProduct, CompanySettings } from '../types';
 
 // Образцы товаров с изображениями
 const sampleProducts = [
@@ -125,6 +125,7 @@ const CatalogPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -135,6 +136,7 @@ const CatalogPage: React.FC = () => {
   useEffect(() => {
     fetchCategories();
     fetchProducts();
+    fetchCompanySettings();
   }, []);
 
   const fetchCategories = async () => {
@@ -168,6 +170,16 @@ const CatalogPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Ошибка загрузки товаров:', err);
+    }
+  };
+
+  const fetchCompanySettings = async () => {
+    try {
+      const response = await fetch(`${api.defaults.baseURL}/company-settings/public`);
+      const data = await response.json();
+      setCompanySettings(data);
+    } catch (err) {
+      console.error('Ошибка загрузки настроек компании:', err);
     }
   };
 
@@ -393,23 +405,57 @@ const CatalogPage: React.FC = () => {
                 <Phone size={20} style={styles.contactIcon} />
                 <div>
                   <div style={styles.contactLabel}>Телефон</div>
-                  <a href="tel:+79643777776" style={styles.contactValue}>+7 (964) 377-77-76</a>
+                  <a
+                    href={`tel:${companySettings?.phone ? companySettings.phone.replace(/\D/g, '') : '+79643777776'}`}
+                    style={styles.contactValue}
+                  >
+                    {companySettings?.phone || '+7 (964) 377-77-76'}
+                  </a>
                 </div>
               </div>
               <div style={styles.contactItem}>
                 <Mail size={20} style={styles.contactIcon} />
                 <div>
                   <div style={styles.contactLabel}>Email</div>
-                  <a href="mailto:besedkiemin.ru@yandex.ru" style={styles.contactValue}>besedkiemin.ru@yandex.ru</a>
+                  <a
+                    href={`mailto:${companySettings?.email || 'besedkiemin.ru@yandex.ru'}`}
+                    style={styles.contactValue}
+                  >
+                    {companySettings?.email || 'besedkiemin.ru@yandex.ru'}
+                  </a>
                 </div>
               </div>
               <div style={styles.contactItem}>
                 <MapPin size={20} style={styles.contactIcon} />
                 <div>
                   <div style={styles.contactLabel}>Адрес</div>
-                  <div style={styles.contactValue}>Республика Дагестан, г. Избербаш</div>
+                  <div style={styles.contactValue}>
+                    {companySettings?.address || 'Республика Дагестан, г. Избербаш'}
+                  </div>
                 </div>
               </div>
+              {companySettings?.supportTelegram && (
+                <div style={styles.contactItem}>
+                  <MessageCircle size={20} style={styles.contactIcon} />
+                  <div>
+                    <div style={styles.contactLabel}>Telegram поддержка</div>
+                    <a
+                      href={
+                        companySettings.supportTelegram.startsWith('http')
+                          ? companySettings.supportTelegram
+                          : companySettings.supportTelegram.startsWith('@')
+                          ? `https://t.me/${companySettings.supportTelegram.slice(1)}`
+                          : `https://t.me/${companySettings.supportTelegram}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={styles.contactValue}
+                    >
+                      {companySettings.supportTelegram}
+                    </a>
+                  </div>
+                </div>
+              )}
               <div style={styles.contactItem}>
                 <Clock size={20} style={styles.contactIcon} />
                 <div>
@@ -494,9 +540,45 @@ const CatalogPage: React.FC = () => {
             </div>
             <div style={styles.footerCol}>
               <h4 style={styles.footerTitle}>Контакты</h4>
-              <a href="tel:+79643777776" style={styles.footerLink}>+7 (964) 377-77-76</a>
-              <a href="mailto:besedkiemin.ru@yandex.ru" style={styles.footerLink}>besedkiemin.ru@yandex.ru</a>
-              <div style={styles.footerLink}>Республика Дагестан, г. Избербаш</div>
+              {companySettings?.phone && (
+                <a href={`tel:${companySettings.phone.replace(/\D/g, '')}`} style={styles.footerLink}>
+                  {companySettings.phone}
+                </a>
+              )}
+              {!companySettings?.phone && (
+                <a href="tel:+79643777776" style={styles.footerLink}>+7 (964) 377-77-76</a>
+              )}
+              {companySettings?.email && (
+                <a href={`mailto:${companySettings.email}`} style={styles.footerLink}>
+                  {companySettings.email}
+                </a>
+              )}
+              {!companySettings?.email && (
+                <a href="mailto:besedkiemin.ru@yandex.ru" style={styles.footerLink}>besedkiemin.ru@yandex.ru</a>
+              )}
+              {companySettings?.address && (
+                <div style={styles.footerLink}>{companySettings.address}</div>
+              )}
+              {!companySettings?.address && (
+                <div style={styles.footerLink}>Республика Дагестан, г. Избербаш</div>
+              )}
+              {companySettings?.supportTelegram && (
+                <a
+                  href={
+                    companySettings.supportTelegram.startsWith('http')
+                      ? companySettings.supportTelegram
+                      : companySettings.supportTelegram.startsWith('@')
+                      ? `https://t.me/${companySettings.supportTelegram.slice(1)}`
+                      : `https://t.me/${companySettings.supportTelegram}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{...styles.footerLink, display: 'flex', alignItems: 'center', gap: '8px'}}
+                >
+                  <MessageCircle size={16} />
+                  Telegram поддержка
+                </a>
+              )}
             </div>
             <div style={styles.footerCol}>
               <h4 style={styles.footerTitle}>Режим работы</h4>

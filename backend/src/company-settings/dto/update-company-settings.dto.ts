@@ -44,4 +44,8 @@ export class UpdateCompanySettingsDto {
   @IsOptional()
   @IsString()
   accountNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  supportTelegram?: string;
 }

@@ -638,6 +638,7 @@ export interface CompanySettings {
   email: string;
   address: string;
   website: string;
+  supportTelegram: string;
   inn: string;
   director: string;
   bank: string;
@@ -654,6 +655,7 @@ export interface UpdateCompanySettingsDto {
   email?: string;
   address?: string;
   website?: string;
+  supportTelegram?: string;
   inn?: string;
   director?: string;
   bank?: string;

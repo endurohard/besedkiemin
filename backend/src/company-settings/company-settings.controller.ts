@@ -7,16 +7,24 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 
 @Controller('company-settings')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class CompanySettingsController {
   constructor(private readonly companySettingsService: CompanySettingsService) {}
 
+  // Публичный эндпоинт для получения настроек (для публичной страницы каталога)
+  @Get('public')
+  async getPublicSettings() {
+    return this.companySettingsService.getSettings();
+  }
+
+  // Защищенный эндпоинт для авторизованных пользователей
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async getSettings() {
     return this.companySettingsService.getSettings();
   }
 
   @Patch()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER)
   async update(@Body() updateDto: UpdateCompanySettingsDto) {
     return this.companySettingsService.update(updateDto);
