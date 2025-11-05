@@ -76,9 +76,8 @@ export const CatalogHeader = () => {
             {/* Logo */}
             <div style={styles.logoWrapper}>
               <a href="/" style={styles.logo}>
-                <img src="/logo-besedkiemin.png" alt="Besedki EMIN" style={styles.logoIcon} />
-                <div style={styles.logoText}>
-                  <div style={styles.logoTitle}>Besedki EMIN</div>
+                <div style={styles.logoContainer}>
+                  <img src="/logo-besedkiemin.png" alt="Besedki EMIN" style={styles.logoIcon} />
                   <div style={styles.logoSubtitle}>производство с 2020 года</div>
                 </div>
               </a>
@@ -260,29 +259,26 @@ const styles: Record<string, React.CSSProperties> = {
   logo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
     textDecoration: 'none',
     color: '#111827',
+  },
+  logoContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '4px',
   },
   logoIcon: {
     height: '60px',
     width: 'auto',
     objectFit: 'contain',
   },
-  logoText: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  logoTitle: {
-    fontSize: '20px',
-    fontWeight: 'bold',
-    color: '#111827',
-    lineHeight: 1.2,
-  },
   logoSubtitle: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: '#2d5016',
     lineHeight: 1.2,
+    fontWeight: 500,
+    textAlign: 'center',
   },
 
   // Main Navigation
