@@ -11,12 +11,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
+    strictPort: false,
+    host: true,
+    cors: true,
+    watch: {
+      usePolling: true, // Используем polling вместо file system events в Docker
     },
+    hmr: false, // Отключаем HMR для работы через Kong
+    // Прокси не нужен, т.к. API идет через Kong
   },
 })

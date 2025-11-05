@@ -1,6 +1,5 @@
-version: '3.8'
-
 services:
+  # Application Database
   postgres:
     image: postgres:16-alpine
     container_name: besedki_postgres
@@ -18,44 +17,80 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - besedki-network
 
+  # Kong API Gateway (DB-less mode with declarative config)
+  kong:
+    image: kong:3.4
+    container_name: kong_gateway
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: '0.0.0.0:8001'
+      KONG_PROXY_LISTEN: '0.0.0.0:80, 0.0.0.0:443 ssl'
+    ports:
+      - '80:80'     # HTTP на стандартном порту (без :8000 в URL)
+      - '443:443'   # HTTPS на стандартном порту
+      - '8001:8001' # Kong Admin API (read-only in DB-less mode)
+    volumes:
+      - ./kong.yml:/usr/local/kong/declarative/kong.yml:ro
+    healthcheck:
+      test: ['CMD', 'kong', 'health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - besedki-network
+
+  # Backend API
   backend:
-    image: node:18-alpine
+    image: node:18
     container_name: besedki_backend
     restart: unless-stopped
     working_dir: /app
     command: sh -c "npm install && npx prisma generate && npm run start:dev"
-    ports:
-      - '3000:3000'
+    expose:
+      - '3000'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/besedki_emin?schema=public
       JWT_SECRET: super-secret-jwt-key-change-in-production
       JWT_EXPIRATION: 7d
       PORT: 3000
       NODE_ENV: development
-      CORS_ORIGIN: http://localhost:5173
+      CORS_ORIGIN: http://localhost
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules
+    networks:
+      - besedki-network
 
+  # Frontend
   frontend:
-    image: node:18-alpine
+    image: node:18
     container_name: besedki_frontend
     restart: unless-stopped
     working_dir: /app
     command: sh -c "npm install && npm run dev -- --host"
-    ports:
-      - '5173:5173'
+    expose:
+      - '5173'
     environment:
-      VITE_API_URL: http://localhost:3000
+      VITE_API_URL: http://localhost/api
     depends_on:
       - backend
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    networks:
+      - besedki-network
 
   # asterisk:
   #   build:
@@ -75,3 +110,7 @@ volumes:
   postgres_data:
   asterisk_logs:
   asterisk_spool:
+
+networks:
+  besedki-network:
+    driver: bridge

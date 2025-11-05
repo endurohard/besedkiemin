@@ -31,14 +31,14 @@ const queryClient = new QueryClient({
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuthStore();
-  return user ? <Layout>{children}</Layout> : <Navigate to="/login" />;
+  return user ? <Layout>{children}</Layout> : <Navigate to="/app/login" />;
 };
 
 const NonOwnerRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuthStore();
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/app/login" />;
   // OWNER и MANAGER не имеют производственных задач, перенаправляем на Канбан
-  if (user.role === UserRole.OWNER || user.role === UserRole.MANAGER) return <Navigate to="/kanban" />;
+  if (user.role === UserRole.OWNER || user.role === UserRole.MANAGER) return <Navigate to="/app/kanban" />;
   return <Layout>{children}</Layout>;
 };
 
@@ -47,15 +47,15 @@ const OwnerRoute = ({ children }: { children: React.ReactNode }) => {
   return user?.role === UserRole.OWNER ? (
     <Layout>{children}</Layout>
   ) : (
-    <Navigate to="/" />
+    <Navigate to="/app" />
   );
 };
 
 const ManagerOwnerRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuthStore();
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/app/login" />;
   if (user.role !== UserRole.OWNER && user.role !== UserRole.MANAGER) {
-    return <Navigate to="/" />;
+    return <Navigate to="/app" />;
   }
   return <Layout>{children}</Layout>;
 };
@@ -71,9 +71,17 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          {/* Публичные маршруты */}
+          <Route path="/" element={<CatalogPage />} />
+          <Route path="/catalog" element={<CatalogPage />} />
+          <Route path="/catalog/:slug" element={<ProductDetailPage />} />
+
+          {/* Вход в систему управления */}
+          <Route path="/app/login" element={<LoginPage />} />
+
+          {/* Система управления производством */}
           <Route
-            path="/"
+            path="/app"
             element={
               <NonOwnerRoute>
                 <TasksPage />
@@ -81,7 +89,7 @@ function App() {
             }
           />
           <Route
-            path="/kanban"
+            path="/app/kanban"
             element={
               <PrivateRoute>
                 <KanbanPage />
@@ -89,7 +97,7 @@ function App() {
             }
           />
           <Route
-            path="/analytics"
+            path="/app/analytics"
             element={
               <OwnerRoute>
                 <AnalyticsPage />
@@ -97,7 +105,7 @@ function App() {
             }
           />
           <Route
-            path="/users"
+            path="/app/users"
             element={
               <OwnerRoute>
                 <UserManagementPage />
@@ -105,7 +113,7 @@ function App() {
             }
           />
           <Route
-            path="/inventory"
+            path="/app/inventory"
             element={
               <PrivateRoute>
                 <InventoryPage />
@@ -113,7 +121,7 @@ function App() {
             }
           />
           <Route
-            path="/shipments"
+            path="/app/shipments"
             element={
               <PrivateRoute>
                 <ShipmentsPage />
@@ -121,7 +129,7 @@ function App() {
             }
           />
           <Route
-            path="/defects"
+            path="/app/defects"
             element={
               <PrivateRoute>
                 <DefectsPage />
@@ -129,7 +137,7 @@ function App() {
             }
           />
           <Route
-            path="/workflow"
+            path="/app/workflow"
             element={
               <OwnerRoute>
                 <WorkflowSettingsPage />
@@ -137,7 +145,7 @@ function App() {
             }
           />
           <Route
-            path="/company-settings"
+            path="/app/company-settings"
             element={
               <OwnerRoute>
                 <CompanySettingsPage />
@@ -145,7 +153,7 @@ function App() {
             }
           />
           <Route
-            path="/product-types"
+            path="/app/product-types"
             element={
               <ManagerOwnerRoute>
                 <ProductTypesPage />
@@ -153,7 +161,7 @@ function App() {
             }
           />
           <Route
-            path="/catalog-management"
+            path="/app/catalog-management"
             element={
               <ManagerOwnerRoute>
                 <CatalogManagementPage />
@@ -161,15 +169,13 @@ function App() {
             }
           />
           <Route
-            path="/catalog-orders"
+            path="/app/catalog-orders"
             element={
               <ManagerOwnerRoute>
                 <CatalogOrdersPage />
               </ManagerOwnerRoute>
             }
           />
-          <Route path="/catalog" element={<CatalogPage />} />
-          <Route path="/catalog/:slug" element={<ProductDetailPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

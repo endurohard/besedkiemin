@@ -19,6 +19,9 @@ export class TelegramService implements OnModuleInit {
     photosCollected?: string[];
   }>();
 
+  // Хранилище кодов авторизации: код -> { userId, expiresAt }
+  private loginCodes = new Map<string, { userId: string; expiresAt: Date }>();
+
   constructor(private prisma: PrismaService) {}
 
   async onModuleInit() {
@@ -115,6 +118,53 @@ export class TelegramService implements OnModuleInit {
       });
 
       await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+    });
+
+    // /login - авторизация через код
+    this.bot.onText(/\/login (.+)/, async (msg, match) => {
+      const chatId = msg.chat.id;
+      const telegramId = msg.from?.id.toString();
+      const code = match?.[1]?.trim();
+
+      if (!telegramId || !code) {
+        await this.bot.sendMessage(chatId, '❌ Неверная команда. Используйте: /login КОД');
+        return;
+      }
+
+      // Проверяем код
+      const loginData = this.loginCodes.get(code);
+      if (!loginData) {
+        await this.bot.sendMessage(chatId, '❌ Неверный или устаревший код авторизации');
+        return;
+      }
+
+      // Проверяем срок действия
+      if (new Date() > loginData.expiresAt) {
+        this.loginCodes.delete(code);
+        await this.bot.sendMessage(chatId, '❌ Срок действия кода истёк. Получите новый код на сайте.');
+        return;
+      }
+
+      // Привязываем Telegram к пользователю
+      const user = await this.prisma.user.findUnique({ where: { id: loginData.userId } });
+      if (!user) {
+        await this.bot.sendMessage(chatId, '❌ Пользователь не найден');
+        this.loginCodes.delete(code);
+        return;
+      }
+
+      await this.prisma.user.update({
+        where: { id: loginData.userId },
+        data: { telegramId },
+      });
+
+      // Удаляем использованный код
+      this.loginCodes.delete(code);
+
+      await this.bot.sendMessage(
+        chatId,
+        `✅ Авторизация успешна!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role}\n\n🔔 Вы будете получать уведомления о задачах`
+      );
     });
 
     // Обработка фото для браковки
@@ -373,5 +423,48 @@ export class TelegramService implements OnModuleInit {
     } catch (error) {
       this.logger.error(`Failed to send Telegram photo to ${chatId}`, error);
     }
+  }
+
+  /**
+   * Генерирует код для авторизации через Telegram
+   */
+  generateLoginCode(userId: string): string {
+    // Генерируем 6-значный код
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Код действителен 5 минут
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+
+    this.loginCodes.set(code, { userId, expiresAt });
+
+    this.logger.log(`Generated login code for user ${userId}: ${code}`);
+
+    return code;
+  }
+
+  /**
+   * Проверяет, существует ли код и не истёк ли он
+   */
+  validateLoginCode(code: string): { valid: boolean; userId?: string } {
+    const loginData = this.loginCodes.get(code);
+
+    if (!loginData) {
+      return { valid: false };
+    }
+
+    if (new Date() > loginData.expiresAt) {
+      this.loginCodes.delete(code);
+      return { valid: false };
+    }
+
+    return { valid: true, userId: loginData.userId };
+  }
+
+  /**
+   * Удаляет использованный код
+   */
+  removeLoginCode(code: string): void {
+    this.loginCodes.delete(code);
   }
 }

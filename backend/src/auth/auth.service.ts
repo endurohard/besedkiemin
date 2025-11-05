@@ -45,4 +45,8 @@ export class AuthService {
       },
     };
   }
+
+  async findUserById(userId: string): Promise<any> {
+    return await this.usersService.findOne(userId);
+  }
 }

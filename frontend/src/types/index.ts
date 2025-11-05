@@ -661,3 +661,26 @@ export interface UpdateCompanySettingsDto {
   accountNumber?: string;
   logoUrl?: string;
 }
+
+// Telegram Authorization
+export interface TelegramLoginCodeRequest {
+  email: string;
+  password: string;
+}
+
+export interface TelegramLoginCodeResponse {
+  code: string;
+  expiresIn: number;
+  message: string;
+}
+
+export interface TelegramCheckAuthRequest {
+  code: string;
+}
+
+export interface TelegramCheckAuthResponse {
+  status?: 'pending';
+  message?: string;
+  access_token?: string;
+  user?: User;
+}

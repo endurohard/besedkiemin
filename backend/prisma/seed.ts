@@ -40,10 +40,10 @@ async function main() {
   const hashedPassword = await bcrypt.hash('password123', 10);
 
   const owner = await prisma.user.upsert({
-    where: { email: 'owner@factory.com' },
+    where: { email: 'owner@example.com' },
     update: {},
     create: {
-      email: 'owner@factory.com',
+      email: 'owner@example.com',
       password: hashedPassword,
       firstName: 'Владелец',
       lastName: 'Главный',
@@ -52,10 +52,10 @@ async function main() {
   });
 
   const manager = await prisma.user.upsert({
-    where: { email: 'manager@factory.com' },
+    where: { email: 'manager@example.com' },
     update: {},
     create: {
-      email: 'manager@factory.com',
+      email: 'manager@example.com',
       password: hashedPassword,
       firstName: 'Иван',
       lastName: 'Менеджер',
@@ -64,10 +64,10 @@ async function main() {
   });
 
   const designer = await prisma.user.upsert({
-    where: { email: 'designer@factory.com' },
+    where: { email: 'designer@example.com' },
     update: {},
     create: {
-      email: 'designer@factory.com',
+      email: 'designer@example.com',
       password: hashedPassword,
       firstName: 'Анна',
       lastName: 'Проектировщик',
@@ -76,10 +76,10 @@ async function main() {
   });
 
   const preparer = await prisma.user.upsert({
-    where: { email: 'preparer@factory.com' },
+    where: { email: 'preparer@example.com' },
     update: {},
     create: {
-      email: 'preparer@factory.com',
+      email: 'preparer@example.com',
       password: hashedPassword,
       firstName: 'Сергей',
       lastName: 'Заготовщик',
@@ -88,10 +88,10 @@ async function main() {
   });
 
   const painter = await prisma.user.upsert({
-    where: { email: 'painter@factory.com' },
+    where: { email: 'painter@example.com' },
     update: {},
     create: {
-      email: 'painter@factory.com',
+      email: 'painter@example.com',
       password: hashedPassword,
       firstName: 'Мария',
       lastName: 'Маляр',
@@ -100,10 +100,10 @@ async function main() {
   });
 
   const warehouse = await prisma.user.upsert({
-    where: { email: 'warehouse@factory.com' },
+    where: { email: 'warehouse@example.com' },
     update: {},
     create: {
-      email: 'warehouse@factory.com',
+      email: 'warehouse@example.com',
       password: hashedPassword,
       firstName: 'Петр',
       lastName: 'Складист',
@@ -275,12 +275,12 @@ async function main() {
 
   console.log('\n🎉 База данных успешно заполнена!');
   console.log('\n📧 Учетные данные для входа:');
-  console.log('   Владелец: owner@factory.com / password123');
-  console.log('   Менеджер: manager@factory.com / password123');
-  console.log('   Проектировщик: designer@factory.com / password123');
-  console.log('   Заготовщик: preparer@factory.com / password123');
-  console.log('   Маляр: painter@factory.com / password123');
-  console.log('   Складист: warehouse@factory.com / password123');
+  console.log('   Владелец: owner@example.com / password123');
+  console.log('   Менеджер: manager@example.com / password123');
+  console.log('   Проектировщик: designer@example.com / password123');
+  console.log('   Заготовщик: preparer@example.com / password123');
+  console.log('   Маляр: painter@example.com / password123');
+  console.log('   Складист: warehouse@example.com / password123');
 }
 
 main()

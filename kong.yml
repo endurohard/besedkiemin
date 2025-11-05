@@ -1,0 +1,95 @@
+_format_version: "3.0"
+
+services:
+  # Backend API Service
+  - name: backend-service
+    url: http://backend:3000
+    protocol: http
+    host: backend
+    port: 3000
+    path: /
+    retries: 5
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    routes:
+      - name: backend-api-route
+        paths:
+          - /api
+        strip_path: true
+        preserve_host: false
+        protocols:
+          - http
+          - https
+      - name: backend-docs-route
+        paths:
+          - /docs
+        strip_path: false
+        preserve_host: false
+        protocols:
+          - http
+          - https
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Accept-Version
+            - Content-Length
+            - Content-MD5
+            - Content-Type
+            - Date
+            - Authorization
+          exposed_headers:
+            - X-Auth-Token
+          credentials: true
+          max_age: 3600
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+          policy: local
+
+  # Frontend Service
+  - name: frontend-service
+    url: http://frontend:5173
+    protocol: http
+    host: frontend
+    port: 5173
+    path: /
+    retries: 5
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    routes:
+      - name: frontend-route
+        paths:
+          - /
+        strip_path: false
+        preserve_host: false
+        protocols:
+          - http
+          - https
+        plugins:
+          - name: request-transformer
+            config:
+              replace:
+                headers:
+                  - Host:localhost:5173
+      - name: frontend-hmr-route
+        paths:
+          - /vite-hmr
+        strip_path: true
+        preserve_host: false
+        protocols:
+          - http
+          - https

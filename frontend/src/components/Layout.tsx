@@ -12,7 +12,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/app/login');
   };
 
   return (

@@ -77,7 +77,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
     <aside className="w-64 border-r bg-card min-h-[calc(100vh-73px)] p-4">
       <nav className="space-y-1">
         {userRole !== UserRole.OWNER && userRole !== UserRole.MANAGER && (
-          <Link to="/" className={`${linkClasses('/')} relative`}>
+          <Link to="/app" className={`${linkClasses('/app')} relative`}>
             <ClipboardList size={20} />
             <span className="flex-1">Мои задачи</span>
             {taskCount > 0 && (
@@ -89,7 +89,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
         )}
 
         {(userRole === UserRole.OWNER || userRole === UserRole.MANAGER) && (
-          <Link to="/kanban" className={linkClasses('/kanban')}>
+          <Link to="/app/kanban" className={linkClasses('/app/kanban')}>
             <LayoutDashboard size={20} />
             <span>Канбан</span>
           </Link>
@@ -97,11 +97,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
 
         {(userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER) && (
           <>
-            <Link to="/inventory" className={linkClasses('/inventory')}>
+            <Link to="/app/inventory" className={linkClasses('/app/inventory')}>
               <Package size={20} />
               <span>Склад</span>
             </Link>
-            <Link to="/shipments" className={`${linkClasses('/shipments')} relative`}>
+            <Link to="/app/shipments" className={`${linkClasses('/app/shipments')} relative`}>
               <TruckIcon size={20} />
               <span className="flex-1">Отгрузки</span>
               {shipmentCount > 0 && (
@@ -115,7 +115,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
 
         {/* Брак - доступен для маляра, складиста, менеджера и владельца */}
         {(userRole === UserRole.PAINTER || userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER) && (
-          <Link to="/defects" className={`${linkClasses('/defects')} relative`}>
+          <Link to="/app/defects" className={`${linkClasses('/app/defects')} relative`}>
             <AlertTriangle size={20} />
             <span className="flex-1">Брак</span>
             {defectCount > 0 && (
@@ -128,15 +128,15 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
 
         {(userRole === UserRole.OWNER || userRole === UserRole.MANAGER) && (
           <>
-            <Link to="/product-types" className={linkClasses('/product-types')}>
+            <Link to="/app/product-types" className={linkClasses('/app/product-types')}>
               <Grid3x3 size={20} />
               <span>Типы товаров</span>
             </Link>
-            <Link to="/catalog-management" className={linkClasses('/catalog-management')}>
+            <Link to="/app/catalog-management" className={linkClasses('/app/catalog-management')}>
               <ShoppingCart size={20} />
               <span>Каталог товаров</span>
             </Link>
-            <Link to="/catalog-orders" className={linkClasses('/catalog-orders')}>
+            <Link to="/app/catalog-orders" className={linkClasses('/app/catalog-orders')}>
               <ShoppingBag size={20} />
               <span>Заказы с сайта</span>
             </Link>
@@ -145,19 +145,19 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
 
         {userRole === UserRole.OWNER && (
           <>
-            <Link to="/analytics" className={linkClasses('/analytics')}>
+            <Link to="/app/analytics" className={linkClasses('/app/analytics')}>
               <BarChart3 size={20} />
               <span>Аналитика</span>
             </Link>
-            <Link to="/users" className={linkClasses('/users')}>
+            <Link to="/app/users" className={linkClasses('/app/users')}>
               <Users size={20} />
               <span>Пользователи</span>
             </Link>
-            <Link to="/workflow" className={linkClasses('/workflow')}>
+            <Link to="/app/workflow" className={linkClasses('/app/workflow')}>
               <Settings size={20} />
               <span>Производственный цикл</span>
             </Link>
-            <Link to="/company-settings" className={linkClasses('/company-settings')}>
+            <Link to="/app/company-settings" className={linkClasses('/app/company-settings')}>
               <Settings size={20} />
               <span>Настройки компании</span>
             </Link>

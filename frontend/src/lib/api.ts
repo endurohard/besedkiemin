@@ -43,6 +43,10 @@ import type {
   ReorderWorkflowStagesDto,
   CompanySettings,
   UpdateCompanySettingsDto,
+  TelegramLoginCodeRequest,
+  TelegramLoginCodeResponse,
+  TelegramCheckAuthRequest,
+  TelegramCheckAuthResponse,
 } from '@/types';
 
 const api = axios.create({
@@ -68,7 +72,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = '/app/login';
     }
     return Promise.reject(error);
   }
@@ -83,6 +87,16 @@ export const authApi = {
 
   getProfile: async (): Promise<User> => {
     const response = await api.get<User>('/auth/profile');
+    return response.data;
+  },
+
+  requestTelegramCode: async (data: TelegramLoginCodeRequest): Promise<TelegramLoginCodeResponse> => {
+    const response = await api.post<TelegramLoginCodeResponse>('/auth/telegram/request-code', data);
+    return response.data;
+  },
+
+  checkTelegramAuth: async (data: TelegramCheckAuthRequest): Promise<TelegramCheckAuthResponse> => {
+    const response = await api.post<TelegramCheckAuthResponse>('/auth/telegram/check-auth', data);
     return response.data;
   },
 };
