@@ -1,0 +1,245 @@
+================================================
+КОМАНДЫ ДЛЯ ВЫПОЛНЕНИЯ НА УДАЛЕННОМ СЕРВЕРЕ
+================================================
+
+Сервер: 77.221.151.105
+Пользователь: root
+Пароль: xn7168vH9vB5
+
+================================================
+ШАГ 1: ПОДКЛЮЧЕНИЕ К СЕРВЕРУ
+================================================
+
+Выполните на вашем компьютере:
+
+ssh root@77.221.151.105
+
+Пароль: xn7168vH9vB5
+
+================================================
+ШАГ 2: АВТОМАТИЧЕСКОЕ РАЗВЕРТЫВАНИЕ
+================================================
+
+После подключения к серверу выполните:
+
+curl -sSL https://raw.githubusercontent.com/endurohard/besedkiemin/docker-deploy/deploy-to-server.sh -o deploy.sh && chmod +x deploy.sh && ./deploy.sh
+
+Этот скрипт автоматически:
+- Установит Docker и Docker Compose
+- Клонирует репозиторий
+- Создаст .env файлы
+- Запустит все контейнеры
+- Применит миграции БД
+- Настроит Kong API Gateway
+
+================================================
+ШАГ 3 (АЛЬТЕРНАТИВА): РУЧНОЕ РАЗВЕРТЫВАНИЕ
+================================================
+
+Если автоматический скрипт не работает, выполните вручную:
+
+# 1. Установка Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+systemctl start docker
+systemctl enable docker
+
+# 2. Установка Docker Compose
+curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+
+# 3. Установка Git (если нужно)
+apt-get update && apt-get install -y git
+
+# 4. Клонирование репозитория
+cd /root
+git clone https://github.com/endurohard/besedkiemin.git
+cd besedkiemin
+git checkout docker-deploy
+
+# 5. Создание backend/.env
+cat > backend/.env << 'EOF'
+DATABASE_URL="postgresql://postgres:postgres@postgres:5432/besedki_emin?schema=public"
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+JWT_EXPIRATION="7d"
+TELEGRAM_BOT_TOKEN="your-telegram-bot-token"
+TELEGRAM_BOT_USERNAME="besedkiemin_bot"
+NODE_ENV="production"
+PORT=3000
+EOF
+
+# 6. Создание frontend/.env
+cat > frontend/.env << 'EOF'
+VITE_API_URL=http://localhost/api
+EOF
+
+# 7. Запуск контейнеров
+docker-compose up -d
+
+# 8. Ожидание запуска БД (15 секунд)
+sleep 15
+
+# 9. Применение миграций
+docker-compose exec backend npx prisma db push
+
+# 10. Инициализация Kong
+bash init-kong.sh
+
+# 11. Проверка статуса
+docker-compose ps
+
+================================================
+ШАГ 4: ПРОВЕРКА РАБОТОСПОСОБНОСТИ
+================================================
+
+# Проверить запущенные контейнеры
+docker-compose ps
+
+# Должны быть запущены:
+# - besedki_backend (Up)
+# - besedki_frontend (Up)
+# - besedki_postgres (Up, healthy)
+# - kong_gateway (Up, healthy)
+
+# Проверить логи
+docker-compose logs backend --tail=50
+docker-compose logs frontend --tail=50
+
+# Проверить доступность API
+curl http://localhost/api/health
+
+# Если все ОК, откройте в браузере:
+# http://77.221.151.105/
+
+================================================
+ШАГ 5: НАСТРОЙКА TELEGRAM БОТА (ОПЦИОНАЛЬНО)
+================================================
+
+Если хотите использовать Telegram:
+
+1. Создайте бота через @BotFather в Telegram
+2. Получите токен бота
+3. Отредактируйте backend/.env:
+   nano backend/.env
+
+4. Замените:
+   TELEGRAM_BOT_TOKEN="your-telegram-bot-token"
+   TELEGRAM_BOT_USERNAME="besedkiemin_bot"
+
+   На реальные значения
+
+5. Перезапустите backend:
+   docker-compose restart backend
+
+================================================
+ПОЛЕЗНЫЕ КОМАНДЫ
+================================================
+
+# Просмотр логов всех сервисов
+docker-compose logs -f
+
+# Просмотр логов конкретного сервиса
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f postgres
+docker-compose logs -f kong
+
+# Перезапуск конкретного сервиса
+docker-compose restart backend
+
+# Перезапуск всех сервисов
+docker-compose restart
+
+# Остановка всех сервисов
+docker-compose down
+
+# Запуск всех сервисов
+docker-compose up -d
+
+# Проверка статуса контейнеров
+docker-compose ps
+docker stats
+
+# Проверка использования диска
+df -h
+docker system df
+
+# Обновление кода с GitHub
+cd /root/besedkiemin
+git pull origin docker-deploy
+docker-compose down
+docker-compose up -d --build
+
+# Backup базы данных
+docker-compose exec postgres pg_dump -U postgres besedki_emin > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Восстановление базы данных
+docker-compose exec -T postgres psql -U postgres besedki_emin < backup_YYYYMMDD_HHMMSS.sql
+
+# Очистка неиспользуемых Docker ресурсов
+docker system prune -a -f
+
+================================================
+ДОСТУПЫ
+================================================
+
+После успешного развертывания:
+
+Публичная страница каталога:
+http://77.221.151.105/
+
+Система управления:
+http://77.221.151.105/app
+
+API:
+http://77.221.151.105/api
+
+Учетные записи:
+- Владелец: owner@example.com / password123
+- Менеджер: manager@example.com / password123
+- Дизайнер: designer@example.com / password123
+- Заготовщик: preparer@example.com / password123
+- Маляр: painter@example.com / password123
+- Складист: warehouse@example.com / password123
+
+⚠️ ВАЖНО: Измените пароли после первого входа!
+
+================================================
+TROUBLESHOOTING
+================================================
+
+Проблема: Контейнер не запускается
+Решение:
+docker-compose logs [service_name]
+docker-compose up -d --force-recreate [service_name]
+
+Проблема: База данных недоступна
+Решение:
+docker-compose restart postgres
+docker-compose logs postgres
+
+Проблема: Kong не отвечает
+Решение:
+docker-compose logs kong
+bash init-kong.sh
+
+Проблема: Frontend показывает ошибки API
+Решение:
+- Проверьте frontend/.env (VITE_API_URL=http://localhost/api)
+- Проверьте Kong: curl http://localhost:8001/
+- Перезапустите frontend: docker-compose restart frontend
+
+================================================
+ПОРТЫ
+================================================
+
+80   - HTTP (Kong API Gateway)
+443  - HTTPS (Kong API Gateway)
+8001 - Kong Admin API
+5432 - PostgreSQL (внутренний)
+3000 - Backend API (внутренний)
+5173 - Frontend (внутренний)
+
+Убедитесь, что порты 80 и 443 открыты в firewall!
+
+================================================
