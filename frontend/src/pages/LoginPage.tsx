@@ -174,17 +174,6 @@ export const LoginPage = () => {
                   </>
                 )}
               </div>
-
-              <div className="text-xs text-muted-foreground mt-4 p-3 bg-muted/50 rounded-md">
-                <p className="font-medium mb-1">Тестовые аккаунты:</p>
-                <p className="text-green-600 font-semibold">Владелец: owner@example.com</p>
-                <p>Менеджер: manager@example.com</p>
-                <p>Дизайнер: designer@example.com</p>
-                <p>Заготовщик: preparer@example.com</p>
-                <p>Маляр: painter@example.com</p>
-                <p>Складист: warehouse@example.com</p>
-                <p className="mt-2 font-medium">Пароль для всех: password123</p>
-              </div>
             </form>
           ) : (
             // Отображение кода Telegram
