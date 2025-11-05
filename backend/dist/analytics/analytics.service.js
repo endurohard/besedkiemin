@@ -1,0 +1,480 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AnalyticsService = void 0;
+const common_1 = require("@nestjs/common");
+const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
+let AnalyticsService = class AnalyticsService {
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async getProductionOverview() {
+        const [totalOrders, activeOrders, completedOrders, totalProducts, productsInProduction, completedProducts, rejectedProducts, pendingQualityChecks,] = await Promise.all([
+            this.prisma.order.count(),
+            this.prisma.order.count({
+                where: {
+                    status: {
+                        in: [client_1.OrderStatus.NEW, client_1.OrderStatus.IN_PRODUCTION],
+                    },
+                },
+            }),
+            this.prisma.order.count({
+                where: { status: client_1.OrderStatus.COMPLETED },
+            }),
+            this.prisma.product.count(),
+            this.prisma.product.count({
+                where: {
+                    stage: {
+                        notIn: [client_1.ProductionStage.PENDING, client_1.ProductionStage.COMPLETED, client_1.ProductionStage.REJECTED],
+                    },
+                },
+            }),
+            this.prisma.product.count({
+                where: { stage: client_1.ProductionStage.COMPLETED },
+            }),
+            this.prisma.qualityCheck.groupBy({
+                by: ['productId'],
+                where: { status: client_1.QualityStatus.REJECTED },
+            }).then(result => result.length),
+            this.prisma.product.count({
+                where: { stage: client_1.ProductionStage.QUALITY_CHECK },
+            }),
+        ]);
+        const productsByStage = await this.prisma.product.groupBy({
+            by: ['stage'],
+            _count: true,
+        });
+        const stageStats = productsByStage.reduce((acc, item) => {
+            acc[item.stage] = item._count;
+            return acc;
+        }, {});
+        return {
+            orders: {
+                total: totalOrders,
+                active: activeOrders,
+                completed: completedOrders,
+                completionRate: totalOrders > 0 ? ((completedOrders / totalOrders) * 100).toFixed(1) : '0',
+            },
+            products: {
+                total: totalProducts,
+                inProduction: productsInProduction,
+                completed: completedProducts,
+                rejected: rejectedProducts,
+                pendingQualityCheck: pendingQualityChecks,
+                completionRate: totalProducts > 0 ? ((completedProducts / totalProducts) * 100).toFixed(1) : '0',
+            },
+            stageDistribution: stageStats,
+        };
+    }
+    async getUserPerformance() {
+        const users = await this.prisma.user.findMany({
+            where: { isActive: true },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+            },
+        });
+        const userStats = await Promise.all(users.map(async (user) => {
+            const [completedTasks, avgTaskDuration, activeTask] = await Promise.all([
+                this.prisma.productHistory.count({
+                    where: {
+                        userId: user.id,
+                        completedAt: { not: null },
+                    },
+                }),
+                this.prisma.productHistory.findMany({
+                    where: {
+                        userId: user.id,
+                        completedAt: { not: null },
+                    },
+                    select: {
+                        startedAt: true,
+                        completedAt: true,
+                    },
+                }).then((tasks) => {
+                    if (tasks.length === 0)
+                        return 0;
+                    const totalDuration = tasks.reduce((sum, task) => {
+                        if (!task.completedAt)
+                            return sum;
+                        return sum + (task.completedAt.getTime() - task.startedAt.getTime());
+                    }, 0);
+                    return Math.round(totalDuration / tasks.length / 1000 / 60 / 60);
+                }),
+                this.prisma.productHistory.findFirst({
+                    where: {
+                        userId: user.id,
+                        completedAt: null,
+                    },
+                    include: {
+                        product: {
+                            select: {
+                                name: true,
+                                order: {
+                                    select: {
+                                        orderNumber: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                }),
+            ]);
+            return {
+                user: {
+                    id: user.id,
+                    name: `${user.firstName} ${user.lastName}`,
+                    role: user.role,
+                },
+                stats: {
+                    completedTasks,
+                    avgTaskDurationHours: avgTaskDuration,
+                    hasActiveTask: !!activeTask,
+                    activeTask: activeTask ? {
+                        productName: activeTask.product.name,
+                        orderNumber: activeTask.product.order.orderNumber,
+                        stage: activeTask.stage,
+                        startedAt: activeTask.startedAt,
+                    } : null,
+                },
+            };
+        }));
+        return userStats;
+    }
+    async getQualityStats() {
+        const [totalChecks, approvedChecks, rejectedChecks, pendingChecks, recentRejections,] = await Promise.all([
+            this.prisma.qualityCheck.count(),
+            this.prisma.qualityCheck.count({
+                where: { status: client_1.QualityStatus.APPROVED },
+            }),
+            this.prisma.qualityCheck.count({
+                where: { status: client_1.QualityStatus.REJECTED },
+            }),
+            this.prisma.qualityCheck.count({
+                where: { status: client_1.QualityStatus.PENDING },
+            }),
+            this.prisma.qualityCheck.findMany({
+                where: { status: client_1.QualityStatus.REJECTED },
+                take: 10,
+                orderBy: { checkedAt: 'desc' },
+                include: {
+                    product: {
+                        select: {
+                            name: true,
+                            order: {
+                                select: {
+                                    orderNumber: true,
+                                    customerName: true,
+                                },
+                            },
+                        },
+                    },
+                    checkedBy: {
+                        select: {
+                            firstName: true,
+                            lastName: true,
+                        },
+                    },
+                },
+            }),
+        ]);
+        const approvalRate = totalChecks > 0
+            ? ((approvedChecks / totalChecks) * 100).toFixed(1)
+            : '0';
+        return {
+            total: totalChecks,
+            approved: approvedChecks,
+            rejected: rejectedChecks,
+            pending: pendingChecks,
+            approvalRate,
+            recentRejections: recentRejections.map(check => ({
+                id: check.id,
+                productName: check.product.name,
+                orderNumber: check.product.order.orderNumber,
+                customerName: check.product.order.customerName,
+                reason: check.notes,
+                checkedBy: check.checkedBy
+                    ? `${check.checkedBy.firstName} ${check.checkedBy.lastName}`
+                    : 'Не указан',
+                checkedAt: check.checkedAt,
+            })),
+        };
+    }
+    async getProductTypeStats() {
+        const productTypes = await this.prisma.productType.findMany({
+            where: { isActive: true },
+            select: {
+                id: true,
+                name: true,
+                _count: {
+                    select: { products: true },
+                },
+            },
+        });
+        const typeStats = await Promise.all(productTypes.map(async (type) => {
+            const [completed, inProduction, rejected] = await Promise.all([
+                this.prisma.product.count({
+                    where: {
+                        productTypeId: type.id,
+                        stage: client_1.ProductionStage.COMPLETED,
+                    },
+                }),
+                this.prisma.product.count({
+                    where: {
+                        productTypeId: type.id,
+                        stage: {
+                            notIn: [client_1.ProductionStage.PENDING, client_1.ProductionStage.COMPLETED, client_1.ProductionStage.REJECTED],
+                        },
+                    },
+                }),
+                this.prisma.product.count({
+                    where: {
+                        productTypeId: type.id,
+                        stage: client_1.ProductionStage.REJECTED,
+                    },
+                }),
+            ]);
+            return {
+                type: type.name,
+                total: type._count.products,
+                completed,
+                inProduction,
+                rejected,
+                completionRate: type._count.products > 0
+                    ? ((completed / type._count.products) * 100).toFixed(1)
+                    : '0',
+            };
+        }));
+        return typeStats;
+    }
+    async getPerformanceSummary(startDate, endDate) {
+        const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const end = endDate || new Date();
+        const [ordersCreated, ordersCompleted, productsCompleted, qualityChecksPerformed,] = await Promise.all([
+            this.prisma.order.count({
+                where: {
+                    createdAt: {
+                        gte: start,
+                        lte: end,
+                    },
+                },
+            }),
+            this.prisma.order.count({
+                where: {
+                    updatedAt: {
+                        gte: start,
+                        lte: end,
+                    },
+                    status: client_1.OrderStatus.COMPLETED,
+                },
+            }),
+            this.prisma.product.count({
+                where: {
+                    updatedAt: {
+                        gte: start,
+                        lte: end,
+                    },
+                    stage: client_1.ProductionStage.COMPLETED,
+                },
+            }),
+            this.prisma.qualityCheck.count({
+                where: {
+                    checkedAt: {
+                        gte: start,
+                        lte: end,
+                        not: null,
+                    },
+                },
+            }),
+        ]);
+        return {
+            period: {
+                start,
+                end,
+                days: Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
+            },
+            ordersCreated,
+            ordersCompleted,
+            productsCompleted,
+            qualityChecksPerformed,
+            avgProductsPerDay: productsCompleted / Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
+        };
+    }
+    async getFullCycleAnalytics(startDate, endDate) {
+        const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const end = endDate || new Date();
+        const deliveredShipments = await this.prisma.shipment.findMany({
+            where: {
+                status: client_1.ShipmentStatus.DELIVERED,
+                updatedAt: {
+                    gte: start,
+                    lte: end,
+                },
+            },
+            include: {
+                items: {
+                    include: {
+                        inventoryItem: {
+                            include: {
+                                product: {
+                                    include: {
+                                        order: true,
+                                        productType: true,
+                                        history: {
+                                            orderBy: {
+                                                startedAt: 'asc',
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        const cycleStats = deliveredShipments.flatMap(shipment => shipment.items.map(item => {
+            const product = item.inventoryItem.product;
+            const order = product.order;
+            const history = product.history;
+            const fullCycleDuration = shipment.updatedAt.getTime() - order.createdAt.getTime();
+            const productionStart = history.length > 0 ? history[0].startedAt : product.createdAt;
+            const productionEnd = history.find(h => h.stage === client_1.ProductionStage.COMPLETED)?.completedAt || product.updatedAt;
+            const productionDuration = productionEnd.getTime() - productionStart.getTime();
+            const warehouseStart = productionEnd;
+            const warehouseEnd = shipment.createdAt;
+            const warehouseDuration = warehouseEnd.getTime() - warehouseStart.getTime();
+            const deliveryDuration = shipment.updatedAt.getTime() - shipment.createdAt.getTime();
+            const stagesDuration = {};
+            history.forEach(h => {
+                if (h.completedAt) {
+                    const duration = h.completedAt.getTime() - h.startedAt.getTime();
+                    stagesDuration[h.stage] = (stagesDuration[h.stage] || 0) + duration;
+                }
+            });
+            return {
+                orderNumber: order.orderNumber,
+                customerName: order.customerName,
+                productName: product.name,
+                productType: product.productType?.name || 'Не указан',
+                quantity: item.quantity,
+                orderCreatedAt: order.createdAt,
+                deliveredAt: shipment.updatedAt,
+                durations: {
+                    fullCycleHours: Math.round(fullCycleDuration / 1000 / 60 / 60 * 10) / 10,
+                    productionHours: Math.round(productionDuration / 1000 / 60 / 60 * 10) / 10,
+                    warehouseHours: Math.round(warehouseDuration / 1000 / 60 / 60 * 10) / 10,
+                    deliveryHours: Math.round(deliveryDuration / 1000 / 60 / 60 * 10) / 10,
+                    stageHours: Object.entries(stagesDuration).reduce((acc, [stage, duration]) => {
+                        acc[stage] = Math.round(duration / 1000 / 60 / 60 * 10) / 10;
+                        return acc;
+                    }, {}),
+                },
+            };
+        }));
+        const avgFullCycle = cycleStats.length > 0
+            ? cycleStats.reduce((sum, stat) => sum + stat.durations.fullCycleHours, 0) / cycleStats.length
+            : 0;
+        const avgProduction = cycleStats.length > 0
+            ? cycleStats.reduce((sum, stat) => sum + stat.durations.productionHours, 0) / cycleStats.length
+            : 0;
+        const avgWarehouse = cycleStats.length > 0
+            ? cycleStats.reduce((sum, stat) => sum + stat.durations.warehouseHours, 0) / cycleStats.length
+            : 0;
+        const avgDelivery = cycleStats.length > 0
+            ? cycleStats.reduce((sum, stat) => sum + stat.durations.deliveryHours, 0) / cycleStats.length
+            : 0;
+        const allStages = [
+            client_1.ProductionStage.DESIGN,
+            client_1.ProductionStage.PREPARATION,
+            client_1.ProductionStage.PAINTING,
+            client_1.ProductionStage.QUALITY_CHECK,
+        ];
+        const avgStages = {};
+        allStages.forEach(stage => {
+            const stageData = cycleStats
+                .map(stat => stat.durations.stageHours[stage] || 0)
+                .filter(val => val > 0);
+            avgStages[stage] = stageData.length > 0
+                ? stageData.reduce((sum, val) => sum + val, 0) / stageData.length
+                : 0;
+        });
+        const ordersInProgress = await this.prisma.order.findMany({
+            where: {
+                status: {
+                    in: [client_1.OrderStatus.NEW, client_1.OrderStatus.IN_PRODUCTION],
+                },
+            },
+            include: {
+                products: {
+                    include: {
+                        productType: true,
+                        history: {
+                            orderBy: {
+                                startedAt: 'asc',
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        const inProgressStats = ordersInProgress.map(order => {
+            const currentDuration = Date.now() - order.createdAt.getTime();
+            const products = order.products;
+            const completedProducts = products.filter(p => p.stage === client_1.ProductionStage.COMPLETED).length;
+            const totalProducts = products.length;
+            return {
+                orderNumber: order.orderNumber,
+                customerName: order.customerName,
+                createdAt: order.createdAt,
+                currentDurationHours: Math.round(currentDuration / 1000 / 60 / 60 * 10) / 10,
+                totalProducts,
+                completedProducts,
+                completionPercent: totalProducts > 0 ? Math.round((completedProducts / totalProducts) * 100) : 0,
+                products: products.map(p => ({
+                    name: p.name,
+                    type: p.productType?.name || 'Не указан',
+                    stage: p.stage,
+                    quantity: p.quantity,
+                })),
+            };
+        });
+        return {
+            period: {
+                start,
+                end,
+                days: Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
+            },
+            summary: {
+                totalDelivered: cycleStats.length,
+                avgFullCycleHours: Math.round(avgFullCycle * 10) / 10,
+                avgProductionHours: Math.round(avgProduction * 10) / 10,
+                avgWarehouseHours: Math.round(avgWarehouse * 10) / 10,
+                avgDeliveryHours: Math.round(avgDelivery * 10) / 10,
+                avgStageHours: Object.entries(avgStages).reduce((acc, [stage, hours]) => {
+                    acc[stage] = Math.round(hours * 10) / 10;
+                    return acc;
+                }, {}),
+            },
+            completedCycles: cycleStats.sort((a, b) => b.deliveredAt.getTime() - a.deliveredAt.getTime()),
+            ordersInProgress: inProgressStats.sort((a, b) => b.currentDurationHours - a.currentDurationHours),
+        };
+    }
+};
+exports.AnalyticsService = AnalyticsService;
+exports.AnalyticsService = AnalyticsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+], AnalyticsService);
+//# sourceMappingURL=analytics.service.js.map

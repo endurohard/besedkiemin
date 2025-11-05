@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Phone Widget</title>
+</head>
+<body>
+    <h1>Test Phone Widget</h1>
+    <p>Open browser console (F12) to see logs</p>
+
+    <script>
+        console.log('=== Testing Phone Widget ===');
+
+        // Check if user data has SIP info
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            console.log('User found:', user);
+            console.log('Has SIP Server:', !!user.sipServer);
+            console.log('Has SIP User:', !!user.sipUser);
+            console.log('Has SIP Password:', !!user.sipPassword);
+
+            if (user.sipServer && user.sipUser && user.sipPassword) {
+                console.log('✅ All SIP data present');
+                console.log('SIP Server:', user.sipServer);
+                console.log('SIP User:', user.sipUser);
+                console.log('SIP Port:', user.sipPort);
+                console.log('SIP WS Port:', user.sipWsPort);
+            } else {
+                console.log('❌ Missing SIP data');
+            }
+        } else {
+            console.log('❌ No user in localStorage');
+        }
+
+        // Check if JsSIP is available
+        console.log('JsSIP available:', typeof window.JsSIP !== 'undefined');
+    </script>
+</body>
+</html>

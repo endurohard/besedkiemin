@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Besedki EMIN Phone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .phone-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 380px;
+      overflow: hidden;
+    }
+
+    .phone-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .phone-header h1 {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+
+    .status {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-top: 10px;
+      padding: 8px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+    }
+
+    .status.error {
+      background: rgba(255,59,48,0.3);
+    }
+
+    .status.success {
+      background: rgba(52,199,89,0.3);
+    }
+
+    .phone-body {
+      padding: 20px;
+    }
+
+    .settings-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+    }
+
+    .form-group input {
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .btn {
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+    }
+
+    .btn-danger {
+      background: #ff3b30;
+      color: white;
+    }
+
+    .btn-success {
+      background: #34c759;
+      color: white;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .dialer {
+      display: none;
+    }
+
+    .dialer.active {
+      display: block;
+    }
+
+    .phone-display {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 20px;
+      min-height: 60px;
+    }
+
+    .phone-number {
+      font-size: 24px;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+      color: #333;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .key {
+      padding: 20px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 10px;
+      font-size: 24px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .key:hover {
+      background: #e0e0e0;
+      transform: scale(1.05);
+    }
+
+    .key:active {
+      transform: scale(0.95);
+    }
+
+    .call-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .incoming-call {
+      display: none;
+      background: linear-gradient(135deg, #34c759 0%, #00a65a 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .incoming-call.active {
+      display: block;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    .incoming-call h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .incoming-call .number {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-container">
+    <div class="phone-header">
+      <h1>📞 Besedki EMIN Phone</h1>
+      <div class="status" id="status">Настройте подключение</div>
+    </div>
+
+    <div class="phone-body">
+      <!-- Форма настроек -->
+      <div id="settings" class="settings-form">
+        <div class="form-group">
+          <label>Адрес сервера</label>
+          <input type="text" id="server" placeholder="192.168.1.100" value="192.168.1.100">
+        </div>
+        <div class="form-group">
+          <label>Extension (номер)</label>
+          <input type="text" id="user" placeholder="1001" value="1001">
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" id="password" placeholder="••••••••" value="password123">
+        </div>
+        <button class="btn btn-primary" onclick="connect()">Подключиться</button>
+      </div>
+
+      <!-- Входящий звонок -->
+      <div id="incoming" class="incoming-call">
+        <h3>📞 Входящий звонок</h3>
+        <div class="number" id="incomingNumber">+7 999 123 45 67</div>
+        <div class="call-actions">
+          <button class="btn btn-success" style="flex: 1" onclick="answerCall()">Ответить</button>
+          <button class="btn btn-danger" style="flex: 1" onclick="rejectCall()">Отклонить</button>
+        </div>
+      </div>
+
+      <!-- Номеронабиратель -->
+      <div id="dialer" class="dialer">
+        <div class="phone-display">
+          <div class="phone-number" id="phoneNumber"></div>
+        </div>
+
+        <div class="keypad">
+          <button class="key" onclick="addDigit('1')">1</button>
+          <button class="key" onclick="addDigit('2')">2</button>
+          <button class="key" onclick="addDigit('3')">3</button>
+          <button class="key" onclick="addDigit('4')">4</button>
+          <button class="key" onclick="addDigit('5')">5</button>
+          <button class="key" onclick="addDigit('6')">6</button>
+          <button class="key" onclick="addDigit('7')">7</button>
+          <button class="key" onclick="addDigit('8')">8</button>
+          <button class="key" onclick="addDigit('9')">9</button>
+          <button class="key" onclick="addDigit('*')">*</button>
+          <button class="key" onclick="addDigit('0')">0</button>
+          <button class="key" onclick="addDigit('#')">#</button>
+        </div>
+
+        <div class="call-actions">
+          <button class="btn btn-danger" style="flex: 1" onclick="backspace()">← Стереть</button>
+          <button class="btn btn-success" style="flex: 2" onclick="makeCall()" id="callBtn">📞 Позвонить</button>
+        </div>
+
+        <button class="btn btn-danger" style="width: 100%; margin-top: 10px" onclick="disconnect()">Отключиться</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    let phoneNumber = '';
+    let isConnected = false;
+    let inCall = false;
+
+    // Подключение к SIP
+    function connect() {
+      const config = {
+        server: document.getElementById('server').value,
+        user: document.getElementById('user').value,
+        password: document.getElementById('password').value,
+        port: 5060, // SIP порт (не используется напрямую, только для информации)
+        wsPort: 8089, // WebSocket порт для Yeastar S100
+        displayName: 'Besedki Phone'
+      };
+
+      if (!config.server || !config.user || !config.password) {
+        updateStatus('Заполните все поля', 'error');
+        return;
+      }
+
+      updateStatus('Подключение...', '');
+      ipcRenderer.send('sip-register', config);
+    }
+
+    // Отключение от SIP
+    function disconnect() {
+      ipcRenderer.send('sip-unregister');
+      isConnected = false;
+      document.getElementById('settings').classList.remove('hidden');
+      document.getElementById('dialer').classList.remove('active');
+      updateStatus('Отключено', '');
+    }
+
+    // Добавить цифру
+    function addDigit(digit) {
+      if (!inCall) {
+        phoneNumber += digit;
+        document.getElementById('phoneNumber').textContent = phoneNumber;
+      }
+    }
+
+    // Удалить последнюю цифру
+    function backspace() {
+      phoneNumber = phoneNumber.slice(0, -1);
+      document.getElementById('phoneNumber').textContent = phoneNumber;
+    }
+
+    // Совершить звонок
+    function makeCall() {
+      if (!phoneNumber) {
+        updateStatus('Введите номер', 'error');
+        return;
+      }
+
+      inCall = true;
+      document.getElementById('callBtn').textContent = '📞 Завершить';
+      document.getElementById('callBtn').classList.remove('btn-success');
+      document.getElementById('callBtn').classList.add('btn-danger');
+      document.getElementById('callBtn').onclick = hangupCall;
+
+      ipcRenderer.send('make-call', phoneNumber);
+    }
+
+    // Завершить звонок
+    function hangupCall() {
+      ipcRenderer.send('hangup-call');
+      inCall = false;
+      phoneNumber = '';
+      document.getElementById('phoneNumber').textContent = '';
+      document.getElementById('callBtn').textContent = '📞 Позвонить';
+      document.getElementById('callBtn').classList.add('btn-success');
+      document.getElementById('callBtn').classList.remove('btn-danger');
+      document.getElementById('callBtn').onclick = makeCall;
+    }
+
+    // Ответить на звонок
+    function answerCall() {
+      ipcRenderer.send('answer-call');
+      document.getElementById('incoming').classList.remove('active');
+      inCall = true;
+    }
+
+    // Отклонить звонок
+    function rejectCall() {
+      ipcRenderer.send('reject-call');
+      document.getElementById('incoming').classList.remove('active');
+    }
+
+    // Обновить статус
+    function updateStatus(message, type) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = 'status';
+      if (type) statusEl.classList.add(type);
+    }
+
+    // События от main процесса
+    ipcRenderer.on('sip-status', (event, data) => {
+      updateStatus(data.message, data.status === 'error' ? 'error' : 'success');
+
+      if (data.status === 'registered') {
+        isConnected = true;
+        document.getElementById('settings').classList.add('hidden');
+        document.getElementById('dialer').classList.add('active');
+      }
+    });
+
+    ipcRenderer.on('call-status', (event, data) => {
+      if (data.status === 'calling') {
+        updateStatus('Звонок...', '');
+      } else if (data.status === 'connected' || data.status === 'accepted') {
+        updateStatus('В разговоре', 'success');
+      } else if (data.status === 'ended') {
+        updateStatus('Звонок завершён', '');
+        hangupCall();
+      } else if (data.status === 'failed') {
+        updateStatus(`Ошибка: ${data.message}`, 'error');
+        hangupCall();
+      }
+    });
+
+    ipcRenderer.on('incoming-call', (event, data) => {
+      document.getElementById('incomingNumber').textContent = data.from;
+      document.getElementById('incoming').classList.add('active');
+      updateStatus(`Входящий от ${data.from}`, 'success');
+    });
+
+    // Автоматическое подключение при получении конфига из URL
+    ipcRenderer.on('auto-connect', (event, config) => {
+      console.log('Auto-connecting with config:', config);
+
+      // Заполняем форму
+      document.getElementById('server').value = config.server;
+      document.getElementById('user').value = config.user;
+      document.getElementById('password').value = config.password;
+
+      // Автоматически подключаемся
+      updateStatus('Автоматическое подключение...', '');
+      setTimeout(() => {
+        connect();
+      }, 500);
+    });
+  </script>
+</body>
+</html>
