@@ -20,11 +20,11 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: node:18-alpine
     container_name: besedki_backend
     restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npx prisma generate && npm run start:dev"
     ports:
       - '3000:3000'
     environment:
@@ -32,7 +32,7 @@ services:
       JWT_SECRET: super-secret-jwt-key-change-in-production
       JWT_EXPIRATION: 7d
       PORT: 3000
-      NODE_ENV: production
+      NODE_ENV: development
       CORS_ORIGIN: http://localhost:5173
     depends_on:
       postgres:
@@ -42,11 +42,11 @@ services:
       - /app/node_modules
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: node:18-alpine
     container_name: besedki_frontend
     restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
     ports:
       - '5173:5173'
     environment:
@@ -57,19 +57,19 @@ services:
       - ./frontend:/app
       - /app/node_modules
 
-  asterisk:
-    build:
-      context: ./asterisk
-      dockerfile: Dockerfile
-    container_name: besedki_asterisk
-    restart: unless-stopped
-    network_mode: host
-    volumes:
-      - ./asterisk/config:/etc/asterisk
-      - asterisk_logs:/var/log/asterisk
-      - asterisk_spool:/var/spool/asterisk
-    environment:
-      - TZ=Europe/Moscow
+  # asterisk:
+  #   build:
+  #     context: ./asterisk
+  #     dockerfile: Dockerfile
+  #   container_name: besedki_asterisk
+  #   restart: unless-stopped
+  #   network_mode: host
+  #   volumes:
+  #     - ./asterisk/config:/etc/asterisk
+  #     - asterisk_logs:/var/log/asterisk
+  #     - asterisk_spool:/var/spool/asterisk
+  #   environment:
+  #     - TZ=Europe/Moscow
 
 volumes:
   postgres_data:
