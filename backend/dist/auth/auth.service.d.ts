@@ -21,4 +21,5 @@ export declare class AuthService {
             sipWsPort: any;
         };
     }>;
+    findUserById(userId: string): Promise<any>;
 }

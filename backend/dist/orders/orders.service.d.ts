@@ -27,14 +27,14 @@ export declare class OrdersService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                notes: string | null;
-                startedAt: Date;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 completedAt: Date | null;
                 passedAt: Date | null;
+                notes: string | null;
                 productId: string;
-                userId: string;
                 workflowStageId: string | null;
+                startedAt: Date;
+                userId: string;
             })[];
         } & {
             description: string | null;
@@ -44,11 +44,11 @@ export declare class OrdersService {
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
+            productTypeId: string;
+            orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
-            productTypeId: string;
-            orderId: string;
         })[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -56,12 +56,12 @@ export declare class OrdersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        priority: import(".prisma/client").$Enums.OrderPriority;
+        notes: string | null;
+        orderNumber: string;
         customerName: string;
         customerPhone: string | null;
         customerAddress: string | null;
-        notes: string | null;
-        priority: import(".prisma/client").$Enums.OrderPriority;
-        orderNumber: string;
         createdById: string;
     }>;
     findAll(filters?: {
@@ -89,14 +89,14 @@ export declare class OrdersService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                notes: string | null;
-                startedAt: Date;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 completedAt: Date | null;
                 passedAt: Date | null;
+                notes: string | null;
                 productId: string;
-                userId: string;
                 workflowStageId: string | null;
+                startedAt: Date;
+                userId: string;
             })[];
         } & {
             description: string | null;
@@ -106,11 +106,11 @@ export declare class OrdersService {
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
+            productTypeId: string;
+            orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
-            productTypeId: string;
-            orderId: string;
         })[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -118,12 +118,12 @@ export declare class OrdersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        priority: import(".prisma/client").$Enums.OrderPriority;
+        notes: string | null;
+        orderNumber: string;
         customerName: string;
         customerPhone: string | null;
         customerAddress: string | null;
-        notes: string | null;
-        priority: import(".prisma/client").$Enums.OrderPriority;
-        orderNumber: string;
         createdById: string;
     })[]>;
     findOne(id: string): Promise<{
@@ -164,14 +164,14 @@ export declare class OrdersService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                notes: string | null;
-                startedAt: Date;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 completedAt: Date | null;
                 passedAt: Date | null;
+                notes: string | null;
                 productId: string;
-                userId: string;
                 workflowStageId: string | null;
+                startedAt: Date;
+                userId: string;
             })[];
         } & {
             description: string | null;
@@ -181,11 +181,11 @@ export declare class OrdersService {
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
+            productTypeId: string;
+            orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
-            productTypeId: string;
-            orderId: string;
         })[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -193,12 +193,12 @@ export declare class OrdersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        priority: import(".prisma/client").$Enums.OrderPriority;
+        notes: string | null;
+        orderNumber: string;
         customerName: string;
         customerPhone: string | null;
         customerAddress: string | null;
-        notes: string | null;
-        priority: import(".prisma/client").$Enums.OrderPriority;
-        orderNumber: string;
         createdById: string;
     }>;
     update(id: string, updateOrderDto: UpdateOrderDto): Promise<{
@@ -217,11 +217,11 @@ export declare class OrdersService {
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
+            productTypeId: string;
+            orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
-            productTypeId: string;
-            orderId: string;
         }[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -229,12 +229,12 @@ export declare class OrdersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        priority: import(".prisma/client").$Enums.OrderPriority;
+        notes: string | null;
+        orderNumber: string;
         customerName: string;
         customerPhone: string | null;
         customerAddress: string | null;
-        notes: string | null;
-        priority: import(".prisma/client").$Enums.OrderPriority;
-        orderNumber: string;
         createdById: string;
     }>;
     remove(id: string): Promise<{
@@ -243,12 +243,12 @@ export declare class OrdersService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        priority: import(".prisma/client").$Enums.OrderPriority;
+        notes: string | null;
+        orderNumber: string;
         customerName: string;
         customerPhone: string | null;
         customerAddress: string | null;
-        notes: string | null;
-        priority: import(".prisma/client").$Enums.OrderPriority;
-        orderNumber: string;
         createdById: string;
     }>;
     getStatistics(filters?: {

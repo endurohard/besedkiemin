@@ -24,6 +24,7 @@ let TelegramService = TelegramService_1 = class TelegramService {
         this.logger = new common_1.Logger(TelegramService_1.name);
         this.botToken = '8406603601:AAEdJDXar7oTYkxyFPW6Gn-m5bXwFZrQX9U';
         this.userStates = new Map();
+        this.loginCodes = new Map();
     }
     async onModuleInit() {
         this.logger.log('Initializing Telegram Bot...');
@@ -96,6 +97,37 @@ let TelegramService = TelegramService_1 = class TelegramService {
                 message += `   📊 ${task.quantity} шт.\n\n`;
             });
             await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+        });
+        this.bot.onText(/\/login (.+)/, async (msg, match) => {
+            const chatId = msg.chat.id;
+            const telegramId = msg.from?.id.toString();
+            const code = match?.[1]?.trim();
+            if (!telegramId || !code) {
+                await this.bot.sendMessage(chatId, '❌ Неверная команда. Используйте: /login КОД');
+                return;
+            }
+            const loginData = this.loginCodes.get(code);
+            if (!loginData) {
+                await this.bot.sendMessage(chatId, '❌ Неверный или устаревший код авторизации');
+                return;
+            }
+            if (new Date() > loginData.expiresAt) {
+                this.loginCodes.delete(code);
+                await this.bot.sendMessage(chatId, '❌ Срок действия кода истёк. Получите новый код на сайте.');
+                return;
+            }
+            const user = await this.prisma.user.findUnique({ where: { id: loginData.userId } });
+            if (!user) {
+                await this.bot.sendMessage(chatId, '❌ Пользователь не найден');
+                this.loginCodes.delete(code);
+                return;
+            }
+            await this.prisma.user.update({
+                where: { id: loginData.userId },
+                data: { telegramId },
+            });
+            this.loginCodes.delete(code);
+            await this.bot.sendMessage(chatId, `✅ Авторизация успешна!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role}\n\n🔔 Вы будете получать уведомления о задачах`);
         });
         this.bot.on('photo', async (msg) => {
             const chatId = msg.chat.id;
@@ -296,6 +328,58 @@ let TelegramService = TelegramService_1 = class TelegramService {
         }
         catch (error) {
             this.logger.error(`Failed to send Telegram photo to ${chatId}`, error);
+        }
+    }
+    generateLoginCode(userId) {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+        this.loginCodes.set(code, { userId, expiresAt });
+        this.logger.log(`Generated login code for user ${userId}: ${code}`);
+        return code;
+    }
+    validateLoginCode(code) {
+        const loginData = this.loginCodes.get(code);
+        if (!loginData) {
+            return { valid: false };
+        }
+        if (new Date() > loginData.expiresAt) {
+            this.loginCodes.delete(code);
+            return { valid: false };
+        }
+        return { valid: true, userId: loginData.userId };
+    }
+    removeLoginCode(code) {
+        this.loginCodes.delete(code);
+    }
+    async notifyAdmins(message) {
+        try {
+            const adminId = process.env.TELEGRAM_ADMIN_ID;
+            if (adminId) {
+                await this.bot.sendMessage(adminId, message, { parse_mode: 'HTML' });
+                this.logger.log(`Уведомление отправлено администратору: ${adminId}`);
+            }
+            const admins = await this.prisma.user.findMany({
+                where: {
+                    role: { in: ['OWNER', 'MANAGER'] },
+                    telegramId: { not: null },
+                },
+            });
+            for (const admin of admins) {
+                if (admin.telegramId && admin.telegramId !== adminId) {
+                    try {
+                        await this.bot.sendMessage(admin.telegramId, message, { parse_mode: 'HTML' });
+                        this.logger.log(`Уведомление отправлено: ${admin.firstName} ${admin.lastName}`);
+                    }
+                    catch (error) {
+                        this.logger.error(`Ошибка отправки уведомления пользователю ${admin.id}:`, error);
+                    }
+                }
+            }
+        }
+        catch (error) {
+            this.logger.error('Ошибка отправки уведомлений администраторам:', error);
+            throw error;
         }
     }
 };

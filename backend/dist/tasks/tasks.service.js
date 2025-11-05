@@ -540,7 +540,11 @@ let TasksService = class TasksService {
             });
         }
     }
-    async getDefectsWithPhotos() {
+    async getDefectsWithPhotos(userId) {
+        let user = null;
+        if (userId) {
+            user = await this.prisma.user.findUnique({ where: { id: userId } });
+        }
         const rejectedTasks = await this.prisma.task.findMany({
             where: {
                 status: client_1.TaskStatus.REJECTED,
@@ -582,7 +586,31 @@ let TasksService = class TasksService {
                 defectPhotos: task.defectPhotos,
             };
         }));
-        return defects.filter((d) => d.id);
+        let filteredDefects = defects.filter((d) => d.id);
+        if (user && (user.role === client_1.UserRole.OWNER || user.role === client_1.UserRole.MANAGER)) {
+            return filteredDefects;
+        }
+        if (user) {
+            let userStage = null;
+            switch (user.role) {
+                case client_1.UserRole.DESIGNER:
+                    userStage = client_1.ProductionStage.DESIGN;
+                    break;
+                case client_1.UserRole.PREPARER:
+                    userStage = client_1.ProductionStage.PREPARATION;
+                    break;
+                case client_1.UserRole.PAINTER:
+                    userStage = client_1.ProductionStage.PAINTING;
+                    break;
+                case client_1.UserRole.WAREHOUSE:
+                    userStage = client_1.ProductionStage.QUALITY_CHECK;
+                    break;
+                default:
+                    userStage = client_1.ProductionStage.PENDING;
+            }
+            filteredDefects = filteredDefects.filter((d) => d.product?.stage === userStage);
+        }
+        return filteredDefects;
     }
     async acceptDefectRework(productId, userId) {
         const user = await this.prisma.user.findUnique({

@@ -7,363 +7,363 @@ export declare class ProductsController {
     constructor(productsService: ProductsService);
     create(createProductDto: CreateProductDto): Promise<{
         order: {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            description: string | null;
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
             orderNumber: string;
             customerName: string;
             customerPhone: string | null;
-            status: import(".prisma/client").$Enums.OrderStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            notes: string | null;
             customerAddress: string | null;
             createdById: string;
         };
         productType: {
+            description: string | null;
+            name: string;
+            isActive: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
-            description: string | null;
-            isActive: boolean;
             productionTimeHours: number | null;
         };
     } & {
+        description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        quantity: number;
-        orderId: string;
-        name: string;
-        description: string | null;
-        dimensions: string | null;
         stage: import(".prisma/client").$Enums.ProductionStage;
+        quantity: number;
+        productTypeId: string;
+        orderId: string;
+        dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
-        productTypeId: string;
     }>;
     findAll(orderId?: string, stage?: ProductionStage): Promise<({
         order: {
+            status: import(".prisma/client").$Enums.OrderStatus;
             id: string;
             orderNumber: string;
             customerName: string;
-            status: import(".prisma/client").$Enums.OrderStatus;
         };
         qualityChecks: ({
             checkedBy: {
-                id: string;
                 firstName: string;
                 lastName: string;
+                id: string;
             };
         } & {
-            id: string;
             status: import(".prisma/client").$Enums.QualityStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: string;
             notes: string | null;
+            productId: string;
             photoUrl: string | null;
             checkedAt: Date | null;
             checkedById: string | null;
         })[];
         history: ({
             user: {
-                id: string;
                 firstName: string;
                 lastName: string;
                 role: import(".prisma/client").$Enums.UserRole;
+                id: string;
             };
         } & {
-            id: string;
             status: import(".prisma/client").$Enums.TaskStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: string;
             stage: import(".prisma/client").$Enums.ProductionStage;
             completedAt: Date | null;
             passedAt: Date | null;
             notes: string | null;
+            productId: string;
             workflowStageId: string | null;
             startedAt: Date;
             userId: string;
         })[];
     } & {
+        description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        quantity: number;
-        orderId: string;
-        name: string;
-        description: string | null;
-        dimensions: string | null;
         stage: import(".prisma/client").$Enums.ProductionStage;
+        quantity: number;
+        productTypeId: string;
+        orderId: string;
+        dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
-        productTypeId: string;
     })[]>;
     getByStage(stage: ProductionStage): Promise<({
         order: {
+            status: import(".prisma/client").$Enums.OrderStatus;
             id: string;
             orderNumber: string;
             customerName: string;
-            status: import(".prisma/client").$Enums.OrderStatus;
         };
         qualityChecks: ({
             checkedBy: {
-                id: string;
                 firstName: string;
                 lastName: string;
+                id: string;
             };
         } & {
-            id: string;
             status: import(".prisma/client").$Enums.QualityStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: string;
             notes: string | null;
+            productId: string;
             photoUrl: string | null;
             checkedAt: Date | null;
             checkedById: string | null;
         })[];
         history: ({
             user: {
-                id: string;
                 firstName: string;
                 lastName: string;
                 role: import(".prisma/client").$Enums.UserRole;
+                id: string;
             };
         } & {
-            id: string;
             status: import(".prisma/client").$Enums.TaskStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: string;
             stage: import(".prisma/client").$Enums.ProductionStage;
             completedAt: Date | null;
             passedAt: Date | null;
             notes: string | null;
+            productId: string;
             workflowStageId: string | null;
             startedAt: Date;
             userId: string;
         })[];
     } & {
+        description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        quantity: number;
-        orderId: string;
-        name: string;
-        description: string | null;
-        dimensions: string | null;
         stage: import(".prisma/client").$Enums.ProductionStage;
+        quantity: number;
+        productTypeId: string;
+        orderId: string;
+        dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
-        productTypeId: string;
     })[]>;
     findOne(id: string): Promise<{
         order: {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            description: string | null;
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
             orderNumber: string;
             customerName: string;
             customerPhone: string | null;
-            status: import(".prisma/client").$Enums.OrderStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            notes: string | null;
             customerAddress: string | null;
             createdById: string;
         };
         qualityChecks: ({
             checkedBy: {
-                id: string;
                 firstName: string;
                 lastName: string;
+                id: string;
             };
         } & {
-            id: string;
             status: import(".prisma/client").$Enums.QualityStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: string;
             notes: string | null;
+            productId: string;
             photoUrl: string | null;
             checkedAt: Date | null;
             checkedById: string | null;
         })[];
         history: ({
             user: {
-                id: string;
                 firstName: string;
                 lastName: string;
                 role: import(".prisma/client").$Enums.UserRole;
+                id: string;
             };
         } & {
-            id: string;
             status: import(".prisma/client").$Enums.TaskStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: string;
             stage: import(".prisma/client").$Enums.ProductionStage;
             completedAt: Date | null;
             passedAt: Date | null;
             notes: string | null;
+            productId: string;
             workflowStageId: string | null;
             startedAt: Date;
             userId: string;
         })[];
     } & {
+        description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        quantity: number;
-        orderId: string;
-        name: string;
-        description: string | null;
-        dimensions: string | null;
         stage: import(".prisma/client").$Enums.ProductionStage;
+        quantity: number;
+        productTypeId: string;
+        orderId: string;
+        dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
-        productTypeId: string;
     }>;
     getHistory(id: string): Promise<({
         user: {
-            id: string;
             firstName: string;
             lastName: string;
             role: import(".prisma/client").$Enums.UserRole;
+            id: string;
         };
     } & {
-        id: string;
         status: import(".prisma/client").$Enums.TaskStatus;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
-        productId: string;
         stage: import(".prisma/client").$Enums.ProductionStage;
         completedAt: Date | null;
         passedAt: Date | null;
         notes: string | null;
+        productId: string;
         workflowStageId: string | null;
         startedAt: Date;
         userId: string;
     })[]>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<{
         order: {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            description: string | null;
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
             orderNumber: string;
             customerName: string;
             customerPhone: string | null;
-            status: import(".prisma/client").$Enums.OrderStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            notes: string | null;
             customerAddress: string | null;
             createdById: string;
         };
         history: ({
             user: {
-                id: string;
                 firstName: string;
                 lastName: string;
                 role: import(".prisma/client").$Enums.UserRole;
+                id: string;
             };
         } & {
-            id: string;
             status: import(".prisma/client").$Enums.TaskStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: string;
             stage: import(".prisma/client").$Enums.ProductionStage;
             completedAt: Date | null;
             passedAt: Date | null;
             notes: string | null;
+            productId: string;
             workflowStageId: string | null;
             startedAt: Date;
             userId: string;
         })[];
     } & {
+        description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        quantity: number;
-        orderId: string;
-        name: string;
-        description: string | null;
-        dimensions: string | null;
         stage: import(".prisma/client").$Enums.ProductionStage;
+        quantity: number;
+        productTypeId: string;
+        orderId: string;
+        dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
-        productTypeId: string;
     }>;
     moveToStage(id: string, body: {
         stage: ProductionStage;
         notes?: string;
     }, req: any): Promise<{
         order: {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            description: string | null;
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
             orderNumber: string;
             customerName: string;
             customerPhone: string | null;
-            status: import(".prisma/client").$Enums.OrderStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            notes: string | null;
             customerAddress: string | null;
             createdById: string;
         };
         history: ({
             user: {
-                id: string;
                 firstName: string;
                 lastName: string;
                 role: import(".prisma/client").$Enums.UserRole;
+                id: string;
             };
         } & {
-            id: string;
             status: import(".prisma/client").$Enums.TaskStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: string;
             stage: import(".prisma/client").$Enums.ProductionStage;
             completedAt: Date | null;
             passedAt: Date | null;
             notes: string | null;
+            productId: string;
             workflowStageId: string | null;
             startedAt: Date;
             userId: string;
         })[];
     } & {
+        description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        quantity: number;
-        orderId: string;
-        name: string;
-        description: string | null;
-        dimensions: string | null;
         stage: import(".prisma/client").$Enums.ProductionStage;
+        quantity: number;
+        productTypeId: string;
+        orderId: string;
+        dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
-        productTypeId: string;
     }>;
     remove(id: string): Promise<{
+        description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        quantity: number;
-        orderId: string;
-        name: string;
-        description: string | null;
-        dimensions: string | null;
         stage: import(".prisma/client").$Enums.ProductionStage;
+        quantity: number;
+        productTypeId: string;
+        orderId: string;
+        dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
-        productTypeId: string;
     }>;
 }

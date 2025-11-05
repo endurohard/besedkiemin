@@ -24,8 +24,8 @@ let TasksController = class TasksController {
     async getMyTasks(req) {
         return this.tasksService.getMyTasks(req.user.userId);
     }
-    async getDefects() {
-        return this.tasksService.getDefectsWithPhotos();
+    async getDefects(req) {
+        return this.tasksService.getDefectsWithPhotos(req.user.userId);
     }
     async getUnacceptedDefectsCount(req) {
         return this.tasksService.getUnacceptedDefectsCount(req.user.userId);
@@ -61,8 +61,9 @@ __decorate([
 __decorate([
     (0, common_1.Get)('defects'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить все браки с фото' }),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], TasksController.prototype, "getDefects", null);
 __decorate([

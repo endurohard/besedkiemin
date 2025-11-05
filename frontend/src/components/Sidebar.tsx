@@ -38,7 +38,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
   const { data: defectsCountData } = useQuery({
     queryKey: ['defects-count'],
     queryFn: async () => {
-      const response = await fetch('http://localhost:3000/tasks/defects/unaccepted/count', {
+      const response = await fetch('/api/tasks/defects/unaccepted/count', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },

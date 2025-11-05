@@ -24,7 +24,7 @@ interface CatalogOrder {
   comment?: string;
   cancellationReason?: string;
   status: 'NEW' | 'CONTACTED' | 'IN_WORK' | 'COMPLETED' | 'CANCELLED';
-  totalAmount: number;
+  totalAmount: number | null;
   createdAt: string;
   contactedAt?: string;
   contactedBy?: string;
@@ -430,7 +430,7 @@ const CatalogOrdersPage: React.FC = () => {
                             Итого:
                           </td>
                           <td className="px-4 py-2 text-right text-lg">
-                            {order.totalAmount.toLocaleString()} ₽
+                            {order.totalAmount ? `${order.totalAmount.toLocaleString()} ₽` : '—'}
                           </td>
                         </tr>
                       </tbody>

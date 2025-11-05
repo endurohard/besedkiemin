@@ -670,7 +670,13 @@ export class TasksService {
   }
 
   // Получить все браки (с фото и без)
-  async getDefectsWithPhotos() {
+  async getDefectsWithPhotos(userId?: string) {
+    // Получаем информацию о пользователе
+    let user = null;
+    if (userId) {
+      user = await this.prisma.user.findUnique({ where: { id: userId } });
+    }
+
     // Получаем все забракованные задачи
     const rejectedTasks = await this.prisma.task.findMany({
       where: {
@@ -719,7 +725,39 @@ export class TasksService {
       })
     );
 
-    return defects.filter((d) => d.id); // Убираем null значения
+    let filteredDefects = defects.filter((d) => d.id); // Убираем null значения
+
+    // Владелец и менеджер видят все браки
+    if (user && (user.role === UserRole.OWNER || user.role === UserRole.MANAGER)) {
+      return filteredDefects;
+    }
+
+    // Производственные рабочие видят только браки на своей стадии
+    if (user) {
+      let userStage: ProductionStage | null = null;
+
+      switch (user.role) {
+        case UserRole.DESIGNER:
+          userStage = ProductionStage.DESIGN;
+          break;
+        case UserRole.PREPARER:
+          userStage = ProductionStage.PREPARATION;
+          break;
+        case UserRole.PAINTER:
+          userStage = ProductionStage.PAINTING;
+          break;
+        case UserRole.WAREHOUSE:
+          userStage = ProductionStage.QUALITY_CHECK;
+          break;
+        default:
+          userStage = ProductionStage.PENDING;
+      }
+
+      // Фильтруем только браки на стадии пользователя
+      filteredDefects = filteredDefects.filter((d) => d.product?.stage === userStage);
+    }
+
+    return filteredDefects;
   }
 
   // Принять брак на доработку (для любого работника)

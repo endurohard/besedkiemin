@@ -83,6 +83,9 @@ let AuthService = class AuthService {
             },
         };
     }
+    async findUserById(userId) {
+        return await this.usersService.findOne(userId);
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

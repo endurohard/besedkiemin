@@ -36,6 +36,61 @@ async function main() {
 
   console.log('✅ Типы продуктов созданы');
 
+  // Создание этапов производственного цикла (workflow stages)
+  const stage1 = await prisma.workflowStage.upsert({
+    where: { order: 1 },
+    update: {},
+    create: {
+      name: 'Проектирование',
+      description: 'Создание чертежей и проектной документации',
+      order: 1,
+      role: UserRole.DESIGNER,
+      legacyStage: ProductionStage.DESIGN,
+      isActive: true,
+    },
+  });
+
+  const stage2 = await prisma.workflowStage.upsert({
+    where: { order: 2 },
+    update: {},
+    create: {
+      name: 'Заготовка',
+      description: 'Подготовка материалов и заготовок',
+      order: 2,
+      role: UserRole.PREPARER,
+      legacyStage: ProductionStage.PREPARATION,
+      isActive: true,
+    },
+  });
+
+  const stage3 = await prisma.workflowStage.upsert({
+    where: { order: 3 },
+    update: {},
+    create: {
+      name: 'Покраска',
+      description: 'Покраска и финишная обработка',
+      order: 3,
+      role: UserRole.PAINTER,
+      legacyStage: ProductionStage.PAINTING,
+      isActive: true,
+    },
+  });
+
+  const stage4 = await prisma.workflowStage.upsert({
+    where: { order: 4 },
+    update: {},
+    create: {
+      name: 'Склад',
+      description: 'Проверка качества, упаковка и отгрузка',
+      order: 4,
+      role: UserRole.WAREHOUSE,
+      legacyStage: ProductionStage.QUALITY_CHECK,
+      isActive: true,
+    },
+  });
+
+  console.log('✅ Этапы производственного цикла созданы');
+
   // Создание пользователей
   const hashedPassword = await bcrypt.hash('password123', 10);
 
@@ -272,6 +327,255 @@ async function main() {
     order2: order2.orderNumber,
     order3: order3.orderNumber,
   });
+
+  // Создание категорий каталога
+  const besedkiCategory = await prisma.catalogCategory.upsert({
+    where: { slug: 'besedki' },
+    update: {},
+    create: {
+      name: 'Беседки',
+      slug: 'besedki',
+      description: 'Красивые и прочные беседки для вашего участка',
+      order: 1,
+      isActive: true,
+    },
+  });
+
+  const arkiCategory = await prisma.catalogCategory.upsert({
+    where: { slug: 'arki-i-navesy' },
+    update: {},
+    create: {
+      name: 'Арки и навесы',
+      slug: 'arki-i-navesy',
+      description: 'Арки, перголы и навесы для сада',
+      order: 2,
+      isActive: true,
+    },
+  });
+
+  const kacheliCategory = await prisma.catalogCategory.upsert({
+    where: { slug: 'kacheli' },
+    update: {},
+    create: {
+      name: 'Качели',
+      slug: 'kacheli',
+      description: 'Парковые качели для отдыха',
+      order: 3,
+      isActive: true,
+    },
+  });
+
+  const mebelCategory = await prisma.catalogCategory.upsert({
+    where: { slug: 'mebel' },
+    update: {},
+    create: {
+      name: 'Мебель',
+      slug: 'mebel',
+      description: 'Садовая мебель для дома и террас',
+      order: 4,
+      isActive: true,
+    },
+  });
+
+  const vazonyCategory = await prisma.catalogCategory.upsert({
+    where: { slug: 'vazony' },
+    update: {},
+    create: {
+      name: 'Вазоны',
+      slug: 'vazony',
+      description: 'Декоративные вазоны и цветочницы',
+      order: 5,
+      isActive: true,
+    },
+  });
+
+  console.log('✅ Категории каталога созданы');
+
+  // Создание товаров каталога
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'besedka-vosmigrannik' },
+    update: {},
+    create: {
+      name: 'Беседка восьмигранник',
+      slug: 'besedka-vosmigrannik',
+      description: 'Классическая восьмигранная беседка из натурального дерева. Размер 3.5x3.5 м.',
+      price: 285000,
+      categoryId: besedkiCategory.id,
+      images: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800'],
+      isActive: true,
+      isFeatured: true,
+      order: 1,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'besedka-standartnaya' },
+    update: {},
+    create: {
+      name: 'Беседка стандартная',
+      slug: 'besedka-standartnaya',
+      description: 'Просторная беседка для семейного отдыха. Размер 3x4 м.',
+      price: 195000,
+      categoryId: besedkiCategory.id,
+      images: ['https://images.unsplash.com/photo-1600607686527-6fb886090705?w=800'],
+      isActive: true,
+      order: 2,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'besedka-s-mangalnoy-zonoy' },
+    update: {},
+    create: {
+      name: 'Беседка с мангальной зоной',
+      slug: 'besedka-s-mangalnoy-zonoy',
+      description: 'Беседка с встроенной зоной для приготовления шашлыка. Размер 4x5 м.',
+      price: 345000,
+      categoryId: besedkiCategory.id,
+      images: ['https://images.unsplash.com/photo-1600585154084-4e5fe7c39198?w=800'],
+      isActive: true,
+      isFeatured: true,
+      order: 3,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'arka-sadovaya' },
+    update: {},
+    create: {
+      name: 'Арка садовая',
+      slug: 'arka-sadovaya',
+      description: 'Декоративная арка для сада из массива дерева. Размер 2.5x1.2 м.',
+      price: 35000,
+      categoryId: arkiCategory.id,
+      images: ['https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?w=800'],
+      isActive: true,
+      order: 1,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'pergola' },
+    update: {},
+    create: {
+      name: 'Пергола',
+      slug: 'pergola',
+      description: 'Элегантная пергола для создания тени. Размер 3x3 м.',
+      price: 125000,
+      categoryId: arkiCategory.id,
+      images: ['https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800'],
+      isActive: true,
+      order: 2,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'naves-dlya-avtomobilya' },
+    update: {},
+    create: {
+      name: 'Навес для автомобиля',
+      slug: 'naves-dlya-avtomobilya',
+      description: 'Прочный деревянный навес для машины. Размер 6x3 м.',
+      price: 185000,
+      categoryId: arkiCategory.id,
+      images: ['https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800'],
+      isActive: true,
+      order: 3,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'kachelya-lavochka' },
+    update: {},
+    create: {
+      name: 'Качеля-лавочка',
+      slug: 'kachelya-lavochka',
+      description: 'Удобные парковые качели на 3 человека. Размер 2x1.5 м.',
+      price: 45000,
+      categoryId: kacheliCategory.id,
+      images: ['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800'],
+      isActive: true,
+      isFeatured: true,
+      order: 1,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'tahta-sadovaya' },
+    update: {},
+    create: {
+      name: 'Тахта садовая',
+      slug: 'tahta-sadovaya',
+      description: 'Удобная тахта для отдыха на свежем воздухе. Размер 180x80 см.',
+      price: 28500,
+      categoryId: mebelCategory.id,
+      images: ['https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800'],
+      isActive: true,
+      order: 1,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'kreslo-kachalka-lord' },
+    update: {},
+    create: {
+      name: 'Кресло-качалка Лорд',
+      slug: 'kreslo-kachalka-lord',
+      description: 'Классическое кресло-качалка из массива. Размер 70x90 см.',
+      price: 18500,
+      categoryId: mebelCategory.id,
+      images: ['https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=800'],
+      isActive: true,
+      order: 2,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'stol-kafelnyy' },
+    update: {},
+    create: {
+      name: 'Стол кафельный',
+      slug: 'stol-kafelnyy',
+      description: 'Прочный стол с керамической плиткой. Размер 120x80 см.',
+      price: 22000,
+      categoryId: mebelCategory.id,
+      images: ['https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=800'],
+      isActive: true,
+      order: 3,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'lezhak-parkovyy' },
+    update: {},
+    create: {
+      name: 'Лежак парковый',
+      slug: 'lezhak-parkovyy',
+      description: 'Комфортный лежак для отдыха у бассейна. Размер 180x60 см.',
+      price: 15900,
+      categoryId: mebelCategory.id,
+      images: ['https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=800'],
+      isActive: true,
+      order: 4,
+    },
+  });
+
+  await prisma.catalogProduct.upsert({
+    where: { slug: 'vazon-sadovyy' },
+    update: {},
+    create: {
+      name: 'Вазон садовый',
+      slug: 'vazon-sadovyy',
+      description: 'Декоративный вазон для цветов из дерева. Размер 50x50 см.',
+      price: 8500,
+      categoryId: vazonyCategory.id,
+      images: ['https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800'],
+      isActive: true,
+      order: 1,
+    },
+  });
+
+  console.log('✅ Товары каталога созданы');
 
   console.log('\n🎉 База данных успешно заполнена!');
   console.log('\n📧 Учетные данные для входа:');

@@ -21,6 +21,8 @@ async function bootstrap() {
             'http://localhost:5174',
             'http://localhost:5175',
             'http://localhost:3001',
+            'http://localhost:8000',
+            'http://localhost',
             process.env.CORS_ORIGIN
         ].filter(Boolean),
         credentials: true,
@@ -32,11 +34,16 @@ async function bootstrap() {
         .addBearerAuth()
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, config);
-    swagger_1.SwaggerModule.setup('api', app, document);
+    swagger_1.SwaggerModule.setup('docs', app, document, {
+        customSiteTitle: 'Besedki EMIN API',
+        swaggerOptions: {
+            persistAuthorization: true,
+        },
+    });
     const port = process.env.PORT || 3000;
     await app.listen(port);
     console.log(`🚀 Application is running on: http://localhost:${port}`);
-    console.log(`📚 Swagger documentation: http://localhost:${port}/api`);
+    console.log(`📚 Swagger documentation: http://localhost:${port}/docs`);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

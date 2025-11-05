@@ -467,4 +467,41 @@ export class TelegramService implements OnModuleInit {
   removeLoginCode(code: string): void {
     this.loginCodes.delete(code);
   }
+
+  /**
+   * Отправляет уведомление всем администраторам
+   */
+  async notifyAdmins(message: string): Promise<void> {
+    try {
+      // Получаем admin ID из переменной окружения
+      const adminId = process.env.TELEGRAM_ADMIN_ID;
+
+      if (adminId) {
+        await this.bot.sendMessage(adminId, message, { parse_mode: 'HTML' });
+        this.logger.log(`Уведомление отправлено администратору: ${adminId}`);
+      }
+
+      // Также отправляем всем владельцам и менеджерам с привязанным Telegram
+      const admins = await this.prisma.user.findMany({
+        where: {
+          role: { in: ['OWNER', 'MANAGER'] },
+          telegramId: { not: null },
+        },
+      });
+
+      for (const admin of admins) {
+        if (admin.telegramId && admin.telegramId !== adminId) {
+          try {
+            await this.bot.sendMessage(admin.telegramId, message, { parse_mode: 'HTML' });
+            this.logger.log(`Уведомление отправлено: ${admin.firstName} ${admin.lastName}`);
+          } catch (error) {
+            this.logger.error(`Ошибка отправки уведомления пользователю ${admin.id}:`, error);
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Ошибка отправки уведомлений администраторам:', error);
+      throw error;
+    }
+  }
 }

@@ -21,7 +21,7 @@ export const DefectsPage = () => {
   const { data: defects, isLoading } = useQuery({
     queryKey: ['defects'],
     queryFn: async () => {
-      const response = await fetch('http://localhost:3000/tasks/defects', {
+      const response = await fetch('/api/tasks/defects', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -35,7 +35,7 @@ export const DefectsPage = () => {
   // Mutation for accepting defect rework
   const acceptReworkMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const response = await fetch(`http://localhost:3000/tasks/defects/${productId}/accept`, {
+      const response = await fetch(`/api/tasks/defects/${productId}/accept`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -133,6 +133,19 @@ export const DefectsPage = () => {
                       <div className="text-xs text-muted-foreground">Дата</div>
                       <div className="font-medium">
                         {defect.checkedAt ? new Date(defect.checkedAt).toLocaleDateString('ru-RU') : 'Н/Д'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-orange-500" />
+                    <div>
+                      <div className="text-xs text-muted-foreground">Текущая стадия</div>
+                      <div className="font-medium">
+                        {defect.product?.stage === 'PAINTING' && 'Покраска'}
+                        {defect.product?.stage === 'DESIGN' && 'Проектирование'}
+                        {defect.product?.stage === 'PREPARATION' && 'Заготовка'}
+                        {defect.product?.stage === 'PENDING' && 'Менеджер'}
+                        {!defect.product?.stage && 'Н/Д'}
                       </div>
                     </div>
                   </div>

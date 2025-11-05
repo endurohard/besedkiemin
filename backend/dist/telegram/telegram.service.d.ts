@@ -6,6 +6,7 @@ export declare class TelegramService implements OnModuleInit {
     private bot;
     private readonly botToken;
     private userStates;
+    private loginCodes;
     constructor(prisma: PrismaService);
     onModuleInit(): Promise<void>;
     private registerCommands;
@@ -22,4 +23,11 @@ export declare class TelegramService implements OnModuleInit {
     }): Promise<void>;
     sendMessage(chatId: string, message: string): Promise<void>;
     sendPhotoMessage(chatId: string, photoUrl: string, caption: string): Promise<void>;
+    generateLoginCode(userId: string): string;
+    validateLoginCode(code: string): {
+        valid: boolean;
+        userId?: string;
+    };
+    removeLoginCode(code: string): void;
+    notifyAdmins(message: string): Promise<void>;
 }

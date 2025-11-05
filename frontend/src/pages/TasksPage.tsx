@@ -12,29 +12,17 @@ export const TasksPage = () => {
     refetchInterval: 30000, // Обновлять каждые 30 секунд
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="animate-spin" size={48} />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4">
-        <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-md">
-          Ошибка загрузки задач: {(error as Error).message}
-        </div>
-      </div>
-    );
-  }
-
   // Группируем задачи по заказам
+  // Показываем только активные задачи (NEW и ACCEPTED)
   const tasksByOrder = useMemo(() => {
     const grouped = new Map<string, typeof tasks>();
 
-    tasks?.forEach((task) => {
+    // Фильтруем только активные задачи
+    const activeTasks = tasks?.filter((task) =>
+      task.status === TaskStatus.NEW || task.status === TaskStatus.ACCEPTED
+    ) || [];
+
+    activeTasks.forEach((task) => {
       const orderId = task.product?.order?.id || 'unknown';
       if (!grouped.has(orderId)) {
         grouped.set(orderId, []);
@@ -54,6 +42,24 @@ export const TasksPage = () => {
   const acceptedTasks = tasks?.filter((t) => t.status === TaskStatus.ACCEPTED) || [];
   const completedTasks = tasks?.filter((t) => t.status === TaskStatus.COMPLETED) || [];
   const passedTasks = tasks?.filter((t) => t.status === TaskStatus.PASSED) || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="animate-spin" size={48} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-md">
+          Ошибка загрузки задач: {(error as Error).message}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -94,9 +100,10 @@ export const TasksPage = () => {
         ) : (
           tasksByOrder.map(({ orderId, order, tasks: orderTasks }) => {
             // Группируем задачи заказа по статусам
+            // Показываем только активные задачи (NEW и ACCEPTED), без завершенных
             const newOrderTasks = orderTasks.filter((t) => t.status === TaskStatus.NEW);
             const acceptedOrderTasks = orderTasks.filter((t) => t.status === TaskStatus.ACCEPTED);
-            const completedOrderTasks = orderTasks.filter((t) => t.status === TaskStatus.COMPLETED || t.status === TaskStatus.PASSED);
+            const completedOrderTasks = []; // Не показываем завершенные задачи
 
             return (
               <div
@@ -115,9 +122,6 @@ export const TasksPage = () => {
                       {order.customerPhone && <div>{order.customerPhone}</div>}
                     </div>
                   )}
-                  <div className="mt-2 text-xs text-gray-600">
-                    Всего задач: {orderTasks.length}
-                  </div>
                 </div>
 
                 {/* Задачи по статусам (вертикально) */}
@@ -150,23 +154,6 @@ export const TasksPage = () => {
                       </div>
                       <div className="space-y-2">
                         {acceptedOrderTasks.map((task) => (
-                          <TaskCard key={task.id} task={task} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Завершенные задачи */}
-                  {completedOrderTasks.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-green-200">
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        <h3 className="text-xs font-semibold text-green-700 uppercase">
-                          Завершено ({completedOrderTasks.length})
-                        </h3>
-                      </div>
-                      <div className="space-y-2">
-                        {completedOrderTasks.map((task) => (
                           <TaskCard key={task.id} task={task} />
                         ))}
                       </div>

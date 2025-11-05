@@ -18,8 +18,8 @@ export class TasksController {
 
   @Get('defects')
   @ApiOperation({ summary: 'Получить все браки с фото' })
-  async getDefects() {
-    return this.tasksService.getDefectsWithPhotos();
+  async getDefects(@Req() req) {
+    return this.tasksService.getDefectsWithPhotos(req.user.userId);
   }
 
   @Get('defects/unaccepted/count')

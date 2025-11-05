@@ -9,12 +9,12 @@ export declare class InventoryController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
+            orderNumber: string;
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
-            notes: string | null;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            orderNumber: string;
             createdById: string;
         };
         productType: {
@@ -34,20 +34,20 @@ export declare class InventoryController {
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
+            productTypeId: string;
+            orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
-            productTypeId: string;
-            orderId: string;
         };
     } & {
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        quantity: number;
         notes: string | null;
         productId: string;
-        quantity: number;
         productTypeId: string;
         orderId: string;
         receivedAt: Date;
@@ -60,12 +60,12 @@ export declare class InventoryController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
+            orderNumber: string;
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
-            notes: string | null;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            orderNumber: string;
             createdById: string;
         };
         productType: {
@@ -85,20 +85,20 @@ export declare class InventoryController {
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
+            productTypeId: string;
+            orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
-            productTypeId: string;
-            orderId: string;
         };
     } & {
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        quantity: number;
         notes: string | null;
         productId: string;
-        quantity: number;
         productTypeId: string;
         orderId: string;
         receivedAt: Date;
@@ -110,12 +110,12 @@ export declare class InventoryController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
+            orderNumber: string;
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
-            notes: string | null;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            orderNumber: string;
             createdById: string;
         };
         productType: {
@@ -135,20 +135,20 @@ export declare class InventoryController {
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
+            productTypeId: string;
+            orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
-            productTypeId: string;
-            orderId: string;
         };
     } & {
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        quantity: number;
         notes: string | null;
         productId: string;
-        quantity: number;
         productTypeId: string;
         orderId: string;
         receivedAt: Date;
@@ -160,12 +160,12 @@ export declare class InventoryController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
+            orderNumber: string;
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
-            notes: string | null;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            orderNumber: string;
             createdById: string;
         };
         productType: {
@@ -185,11 +185,11 @@ export declare class InventoryController {
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
+            productTypeId: string;
+            orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
-            productTypeId: string;
-            orderId: string;
         };
         shipmentItems: ({
             shipment: {
@@ -203,9 +203,9 @@ export declare class InventoryController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                notes: string | null;
                 customerName: string;
                 customerPhone: string;
-                notes: string | null;
                 deliveryAddress: string;
                 deliveryDate: Date | null;
                 shippedById: string;
@@ -223,9 +223,9 @@ export declare class InventoryController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        quantity: number;
         notes: string | null;
         productId: string;
-        quantity: number;
         productTypeId: string;
         orderId: string;
         receivedAt: Date;

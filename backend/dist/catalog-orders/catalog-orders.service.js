@@ -44,7 +44,7 @@ let CatalogOrdersService = class CatalogOrdersService {
                 comment: item.comment,
             };
         });
-        return this.prisma.catalogOrder.create({
+        const order = await this.prisma.catalogOrder.create({
             data: {
                 orderNumber,
                 customerName: createDto.customerName,
@@ -65,6 +65,36 @@ let CatalogOrdersService = class CatalogOrdersService {
                 },
             },
         });
+        try {
+            let message = `🛒 <b>Новый заказ с сайта!</b>\n\n`;
+            message += `📋 Номер: <b>${orderNumber}</b>\n`;
+            message += `👤 Клиент: ${createDto.customerName}\n`;
+            message += `📞 Телефон: ${createDto.customerPhone}\n`;
+            if (createDto.customerEmail) {
+                message += `📧 Email: ${createDto.customerEmail}\n`;
+            }
+            if (createDto.comment) {
+                message += `💬 Комментарий: ${createDto.comment}\n`;
+            }
+            if (createDto.deliveryAddress) {
+                message += `📍 Адрес: ${createDto.deliveryAddress}\n`;
+            }
+            if (order.items.length > 0) {
+                message += `\n📦 <b>Товары:</b>\n`;
+                order.items.forEach((item) => {
+                    message += `   • ${item.product.name} x ${item.quantity} = ${(item.price * item.quantity).toLocaleString('ru-RU')} ₽\n`;
+                });
+                message += `\n💰 <b>Итого: ${totalAmount.toLocaleString('ru-RU')} ₽</b>`;
+            }
+            else {
+                message += `\n<i>Товары не указаны (быстрая заявка)</i>`;
+            }
+            await this.telegramService.notifyAdmins(message);
+        }
+        catch (error) {
+            console.error('Ошибка отправки уведомления в Telegram:', error);
+        }
+        return order;
     }
     async findAll(status) {
         const where = status ? { status: status } : {};
@@ -141,7 +171,21 @@ let CatalogOrdersService = class CatalogOrdersService {
             where: { orderNumber: productionOrderNumber },
         });
         if (existingProductionOrder) {
-            throw new common_1.BadRequestException('Производственный заказ уже был создан для этого заказа с сайта');
+            return this.prisma.catalogOrder.update({
+                where: { id },
+                data: {
+                    processedAt: new Date(),
+                    processedBy: userId,
+                    status: 'IN_WORK',
+                },
+                include: {
+                    items: {
+                        include: {
+                            product: true,
+                        },
+                    },
+                },
+            });
         }
         const productionOrder = await this.prisma.order.create({
             data: {
@@ -172,7 +216,14 @@ let CatalogOrdersService = class CatalogOrdersService {
                 isActive: true,
             },
         });
-        for (const item of catalogOrder.items) {
+        const itemsToProcess = catalogOrder.items.length > 0
+            ? catalogOrder.items
+            : [{
+                    product: { name: 'Заказ с сайта (уточнить состав)' },
+                    quantity: 1,
+                    price: 0
+                }];
+        for (const item of itemsToProcess) {
             const product = await this.prisma.product.create({
                 data: {
                     name: item.product.name,
