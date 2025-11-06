@@ -83,7 +83,7 @@ services:
     expose:
       - '5173'
     environment:
-      VITE_API_URL: http://localhost/api
+      VITE_API_URL: /api
     depends_on:
       - backend
     volumes:
