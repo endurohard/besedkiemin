@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { UserRole, TaskStatus, ShipmentStatus } from '@/types';
 import { tasksApi } from '@/lib/api';
-import { LayoutDashboard, BarChart3, Users, ClipboardList, Package, TruckIcon, Settings, Grid3x3, ShoppingCart, ShoppingBag, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Users, ClipboardList, Package, TruckIcon, Settings, Grid3x3, ShoppingCart, ShoppingBag, AlertTriangle, MessageCircle } from 'lucide-react';
 
 interface SidebarProps {
   userRole?: UserRole;
@@ -139,6 +139,10 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
             <Link to="/app/catalog-orders" className={linkClasses('/app/catalog-orders')}>
               <ShoppingBag size={20} />
               <span>Заказы с сайта</span>
+            </Link>
+            <Link to="/app/chat" className={linkClasses('/app/chat')}>
+              <MessageCircle size={20} />
+              <span>Чат с клиентами</span>
             </Link>
           </>
         )}

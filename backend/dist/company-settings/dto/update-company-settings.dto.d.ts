@@ -10,4 +10,11 @@ export declare class UpdateCompanySettingsDto {
     bank?: string;
     bik?: string;
     accountNumber?: string;
+    supportTelegram?: string;
+    chatEnabled?: boolean;
+    workingHoursStart?: string;
+    workingHoursEnd?: string;
+    workingDays?: string;
+    timezone?: string;
+    offlineMessage?: string;
 }

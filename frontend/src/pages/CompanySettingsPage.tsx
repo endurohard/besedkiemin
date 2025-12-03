@@ -38,6 +38,13 @@ export const CompanySettingsPage = () => {
     bik: '',
     accountNumber: '',
     logoUrl: '',
+    // Настройки чата
+    chatEnabled: true,
+    workingHoursStart: '08:00',
+    workingHoursEnd: '18:00',
+    workingDays: '1,2,3,4,5',
+    timezone: 'Europe/Moscow',
+    offlineMessage: 'Мы сейчас не в сети. Оставьте заявку на звонок, и мы свяжемся с вами!',
   });
 
   // Обновляем formData когда приходят данные
@@ -56,6 +63,13 @@ export const CompanySettingsPage = () => {
         bik: settings.bik,
         accountNumber: settings.accountNumber,
         logoUrl: settings.logoUrl || '',
+        // Настройки чата
+        chatEnabled: settings.chatEnabled ?? true,
+        workingHoursStart: settings.workingHoursStart || '08:00',
+        workingHoursEnd: settings.workingHoursEnd || '18:00',
+        workingDays: settings.workingDays || '1,2,3,4,5',
+        timezone: settings.timezone || 'Europe/Moscow',
+        offlineMessage: settings.offlineMessage || 'Мы сейчас не в сети. Оставьте заявку на звонок, и мы свяжемся с вами!',
       });
     }
   }, [settings]);
@@ -352,6 +366,131 @@ export const CompanySettingsPage = () => {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Настройки онлайн-чата */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5" />
+              <CardTitle>Настройки онлайн-чата</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.chatEnabled}
+                  onChange={(e) => setFormData({ ...formData, chatEnabled: e.target.checked })}
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-sm font-medium">Включить онлайн-чат на сайте</span>
+              </label>
+            </div>
+
+            {formData.chatEnabled && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Начало рабочего дня</label>
+                    <Input
+                      type="time"
+                      value={formData.workingHoursStart}
+                      onChange={(e) => setFormData({ ...formData, workingHoursStart: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Конец рабочего дня</label>
+                    <Input
+                      type="time"
+                      value={formData.workingHoursEnd}
+                      onChange={(e) => setFormData({ ...formData, workingHoursEnd: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Рабочие дни</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: '1', label: 'Пн' },
+                      { value: '2', label: 'Вт' },
+                      { value: '3', label: 'Ср' },
+                      { value: '4', label: 'Чт' },
+                      { value: '5', label: 'Пт' },
+                      { value: '6', label: 'Сб' },
+                      { value: '7', label: 'Вс' },
+                    ].map((day) => {
+                      const days = formData.workingDays.split(',');
+                      const isChecked = days.includes(day.value);
+
+                      return (
+                        <label
+                          key={day.value}
+                          className={`flex items-center justify-center w-12 h-10 border rounded cursor-pointer transition ${
+                            isChecked
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const newDays = e.target.checked
+                                ? [...days, day.value].sort()
+                                : days.filter((d) => d !== day.value);
+                              setFormData({ ...formData, workingDays: newDays.join(',') });
+                            }}
+                          />
+                          <span className="text-sm font-medium">{day.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Сообщение для нерабочего времени
+                  </label>
+                  <textarea
+                    value={formData.offlineMessage}
+                    onChange={(e) => setFormData({ ...formData, offlineMessage: e.target.value })}
+                    placeholder="Сообщение, которое увидят клиенты вне рабочих часов"
+                    className="w-full border rounded p-2 text-sm"
+                    rows={3}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    В нерабочее время клиенты смогут оставить заявку на обратный звонок
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Часовой пояс</label>
+                  <select
+                    value={formData.timezone}
+                    onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    <option value="Europe/Moscow">Москва (UTC+3)</option>
+                    <option value="Europe/Kaliningrad">Калининград (UTC+2)</option>
+                    <option value="Europe/Samara">Самара (UTC+4)</option>
+                    <option value="Asia/Yekaterinburg">Екатеринбург (UTC+5)</option>
+                    <option value="Asia/Omsk">Омск (UTC+6)</option>
+                    <option value="Asia/Krasnoyarsk">Красноярск (UTC+7)</option>
+                    <option value="Asia/Irkutsk">Иркутск (UTC+8)</option>
+                    <option value="Asia/Yakutsk">Якутск (UTC+9)</option>
+                    <option value="Asia/Vladivostok">Владивосток (UTC+10)</option>
+                    <option value="Asia/Magadan">Магадан (UTC+11)</option>
+                    <option value="Asia/Kamchatka">Камчатка (UTC+12)</option>
+                  </select>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 

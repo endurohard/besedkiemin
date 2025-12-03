@@ -18,6 +18,7 @@ import CatalogPage from './pages/CatalogPage';
 import CatalogManagementPage from './pages/CatalogManagementPage';
 import CatalogOrdersPage from './pages/CatalogOrdersPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import ChatPage from './pages/ChatPage';
 import { UserRole } from './types';
 
 const queryClient = new QueryClient({
@@ -173,6 +174,14 @@ function App() {
             element={
               <ManagerOwnerRoute>
                 <CatalogOrdersPage />
+              </ManagerOwnerRoute>
+            }
+          />
+          <Route
+            path="/app/chat"
+            element={
+              <ManagerOwnerRoute>
+                <ChatPage />
               </ManagerOwnerRoute>
             }
           />

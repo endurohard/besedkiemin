@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CatalogHeader } from '../components/CatalogHeader';
+import { CustomerChatWidget } from '../components/chat/CustomerChatWidget';
 import { MapPin, Phone, Mail, Clock, Check, MessageCircle } from 'lucide-react';
 import api from '../lib/api';
 import { CatalogCategory, CatalogProduct, CompanySettings } from '../types';
@@ -641,6 +642,13 @@ const CatalogPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Виджет чата */}
+      <CustomerChatWidget
+        catalogOrderId={undefined}
+        customerName="Посетитель"
+        customerPhone=""
+      />
     </div>
   );
 };

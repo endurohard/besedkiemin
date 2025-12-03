@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsBoolean } from 'class-validator';
 
 export class UpdateCompanySettingsDto {
   @IsOptional()
@@ -48,4 +48,29 @@ export class UpdateCompanySettingsDto {
   @IsOptional()
   @IsString()
   supportTelegram?: string;
+
+  // Настройки чата
+  @IsOptional()
+  @IsBoolean()
+  chatEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  workingHoursStart?: string;
+
+  @IsOptional()
+  @IsString()
+  workingHoursEnd?: string;
+
+  @IsOptional()
+  @IsString()
+  workingDays?: string;
+
+  @IsOptional()
+  @IsString()
+  timezone?: string;
+
+  @IsOptional()
+  @IsString()
+  offlineMessage?: string;
 }

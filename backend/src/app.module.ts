@@ -23,6 +23,7 @@ import { CatalogProductsModule } from './catalog-products/catalog-products.modul
 import { CatalogOrdersModule } from './catalog-orders/catalog-orders.module';
 import { ContactRequestsModule } from './contact-requests/contact-requests.module';
 import { PublicModule } from './public/public.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { PublicModule } from './public/public.module';
     CatalogOrdersModule,
     ContactRequestsModule,
     PublicModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

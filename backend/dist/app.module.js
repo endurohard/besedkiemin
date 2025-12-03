@@ -32,6 +32,7 @@ const catalog_products_module_1 = require("./catalog-products/catalog-products.m
 const catalog_orders_module_1 = require("./catalog-orders/catalog-orders.module");
 const contact_requests_module_1 = require("./contact-requests/contact-requests.module");
 const public_module_1 = require("./public/public.module");
+const chat_module_1 = require("./chat/chat.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -62,6 +63,7 @@ exports.AppModule = AppModule = __decorate([
             catalog_orders_module_1.CatalogOrdersModule,
             contact_requests_module_1.ContactRequestsModule,
             public_module_1.PublicModule,
+            chat_module_1.ChatModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

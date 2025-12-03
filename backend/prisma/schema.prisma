@@ -417,6 +417,14 @@ model CompanySettings {
   // Логотип компании
   logoUrl String? @map("logo_url")
 
+  // Рабочие часы для онлайн-чата
+  chatEnabled       Boolean @default(true) @map("chat_enabled") // Включен ли чат
+  workingHoursStart String  @default("08:00") @map("working_hours_start") // Начало рабочего дня (формат HH:mm)
+  workingHoursEnd   String  @default("18:00") @map("working_hours_end")   // Конец рабочего дня (формат HH:mm)
+  workingDays       String  @default("1,2,3,4,5") @map("working_days")     // Рабочие дни (1=пн, 7=вс), через запятую
+  timezone          String  @default("Europe/Moscow") // Часовой пояс
+  offlineMessage    String  @default("Мы сейчас не в сети. Оставьте заявку на звонок, и мы свяжемся с вами!") @map("offline_message")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -528,6 +536,9 @@ model CatalogOrder {
   // Позиции заказа
   items CatalogOrderItem[]
 
+  // Чат-комната для общения с клиентом
+  chatRoom ChatRoom?
+
   @@map("catalog_orders")
 }
 
@@ -567,4 +578,81 @@ model ContactRequest {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("contact_requests")
+}
+
+// =============================================
+// ОНЛАЙН ЧАТ С КЛИЕНТАМИ
+// =============================================
+
+// Комната чата (привязана к заказу с сайта)
+model ChatRoom {
+  id             String       @id @default(uuid())
+  catalogOrderId String       @unique @map("catalog_order_id")
+  catalogOrder   CatalogOrder @relation(fields: [catalogOrderId], references: [id], onDelete: Cascade)
+
+  isActive       Boolean      @default(true) @map("is_active") // Активна ли комната
+  customerName   String       @map("customer_name") // Имя клиента для быстрого доступа
+
+  // Последнее сообщение для превью
+  lastMessageAt  DateTime?    @map("last_message_at")
+  lastMessageText String?     @map("last_message_text")
+
+  // Непрочитанные сообщения для менеджера
+  unreadCount    Int          @default(0) @map("unread_count")
+
+  messages       ChatMessage[]
+
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@map("chat_rooms")
+}
+
+// Сообщение в чате
+model ChatMessage {
+  id         String   @id @default(uuid())
+  roomId     String   @map("room_id")
+  room       ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  // Отправитель
+  senderType String   @map("sender_type") // "CUSTOMER" | "MANAGER"
+  senderId   String?  @map("sender_id")   // userId для менеджера, null для клиента
+  senderName String   @map("sender_name") // Имя отправителя для отображения
+
+  // Контент
+  content    String   // Текст сообщения
+
+  // Статус
+  isRead     Boolean  @default(false) @map("is_read")
+  readAt     DateTime? @map("read_at")
+
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("chat_messages")
+  @@index([roomId, createdAt])
+}
+
+// Заявка на обратный звонок (для нерабочего времени)
+model CallbackRequest {
+  id            String   @id @default(uuid())
+  name          String   // Имя клиента
+  phone         String   // Телефон
+  message       String?  // Дополнительное сообщение
+
+  // Связь с заказом (если есть)
+  catalogOrderId String? @map("catalog_order_id")
+
+  // Предпочтительное время звонка
+  preferredTime String?  @map("preferred_time") // Например: "09:00-12:00" или "После 15:00"
+
+  // Статус обработки
+  status        String   @default("NEW") // "NEW" | "CONTACTED" | "COMPLETED" | "CANCELLED"
+  processedBy   String?  @map("processed_by") // ID менеджера
+  processedAt   DateTime? @map("processed_at")
+  notes         String?  // Примечания менеджера
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("callback_requests")
 }

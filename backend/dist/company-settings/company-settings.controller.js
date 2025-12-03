@@ -24,6 +24,9 @@ let CompanySettingsController = class CompanySettingsController {
     constructor(companySettingsService) {
         this.companySettingsService = companySettingsService;
     }
+    async getPublicSettings() {
+        return this.companySettingsService.getSettings();
+    }
     async getSettings() {
         return this.companySettingsService.getSettings();
     }
@@ -33,13 +36,21 @@ let CompanySettingsController = class CompanySettingsController {
 };
 exports.CompanySettingsController = CompanySettingsController;
 __decorate([
+    (0, common_1.Get)('public'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], CompanySettingsController.prototype, "getPublicSettings", null);
+__decorate([
     (0, common_1.Get)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], CompanySettingsController.prototype, "getSettings", null);
 __decorate([
     (0, common_1.Patch)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -48,7 +59,6 @@ __decorate([
 ], CompanySettingsController.prototype, "update", null);
 exports.CompanySettingsController = CompanySettingsController = __decorate([
     (0, common_1.Controller)('company-settings'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [company_settings_service_1.CompanySettingsService])
 ], CompanySettingsController);
 //# sourceMappingURL=company-settings.controller.js.map

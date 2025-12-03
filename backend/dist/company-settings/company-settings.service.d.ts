@@ -18,6 +18,13 @@ export declare class CompanySettingsService {
         bank: string;
         bik: string;
         accountNumber: string;
+        supportTelegram: string;
+        chatEnabled: boolean;
+        workingHoursStart: string;
+        workingHoursEnd: string;
+        workingDays: string;
+        timezone: string;
+        offlineMessage: string;
     }>;
     update(updateDto: UpdateCompanySettingsDto): Promise<{
         email: string;
@@ -34,5 +41,12 @@ export declare class CompanySettingsService {
         bank: string;
         bik: string;
         accountNumber: string;
+        supportTelegram: string;
+        chatEnabled: boolean;
+        workingHoursStart: string;
+        workingHoursEnd: string;
+        workingDays: string;
+        timezone: string;
+        offlineMessage: string;
     }>;
 }
