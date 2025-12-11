@@ -584,14 +584,21 @@ model ContactRequest {
 // ОНЛАЙН ЧАТ С КЛИЕНТАМИ
 // =============================================
 
-// Комната чата (привязана к заказу с сайта)
+// Комната чата (может быть гостевая или привязана к заказу)
 model ChatRoom {
   id             String       @id @default(uuid())
-  catalogOrderId String       @unique @map("catalog_order_id")
-  catalogOrder   CatalogOrder @relation(fields: [catalogOrderId], references: [id], onDelete: Cascade)
+
+  // Опциональная связь с заказом (если клиент оформил заказ)
+  catalogOrderId String?      @unique @map("catalog_order_id")
+  catalogOrder   CatalogOrder? @relation(fields: [catalogOrderId], references: [id], onDelete: Cascade)
+
+  // Информация о клиенте (для гостевых сессий)
+  customerName   String       @map("customer_name") // Имя клиента
+  customerPhone  String?      @map("customer_phone") // Телефон для идентификации
+  customerEmail  String?      @map("customer_email") // Email для идентификации
+  guestSessionId String?      @unique @map("guest_session_id") // Уникальный ID сессии гостя
 
   isActive       Boolean      @default(true) @map("is_active") // Активна ли комната
-  customerName   String       @map("customer_name") // Имя клиента для быстрого доступа
 
   // Последнее сообщение для превью
   lastMessageAt  DateTime?    @map("last_message_at")
@@ -606,6 +613,9 @@ model ChatRoom {
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
   @@map("chat_rooms")
+  @@index([guestSessionId])
+  @@index([customerPhone])
+  @@index([customerEmail])
 }
 
 // Сообщение в чате
