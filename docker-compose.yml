@@ -54,7 +54,7 @@ services:
     container_name: besedki_backend
     restart: unless-stopped
     working_dir: /app
-    command: sh -c "npm install && npx prisma generate && npm run start:dev"
+    command: sh -c "npm install && npx prisma generate && chmod +x node_modules/.bin/* && npm run start:dev"
     expose:
       - '3000'
     environment:
@@ -63,7 +63,7 @@ services:
       JWT_EXPIRATION: 7d
       PORT: 3000
       NODE_ENV: development
-      CORS_ORIGIN: http://192.168.5.35
+      CORS_ORIGIN: http://localhost
     depends_on:
       postgres:
         condition: service_healthy
