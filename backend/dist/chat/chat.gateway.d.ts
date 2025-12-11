@@ -51,7 +51,10 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
             createdAt: Date;
             updatedAt: Date;
             customerName: string;
-            catalogOrderId: string;
+            customerPhone: string | null;
+            customerEmail: string | null;
+            catalogOrderId: string | null;
+            guestSessionId: string | null;
             lastMessageAt: Date | null;
             lastMessageText: string | null;
             unreadCount: number;
