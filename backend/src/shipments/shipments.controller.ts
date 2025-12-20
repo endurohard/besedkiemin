@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards, Req } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -23,6 +23,7 @@ export class ShipmentsController {
     @Body('deliveryAddress') deliveryAddress: string,
     @Body('deliveryDate') deliveryDate: Date,
     @Body('notes') notes: string,
+    @Body('orderNumber') orderNumber: string,
     @Req() req
   ) {
     return this.shipmentsService.createShipment(req.user.userId, {
@@ -32,14 +33,27 @@ export class ShipmentsController {
       deliveryAddress,
       deliveryDate,
       notes,
+      orderNumber,
     });
   }
 
   @Get()
   @Roles(UserRole.OWNER, UserRole.MANAGER, UserRole.WAREHOUSE)
-  @ApiOperation({ summary: 'Получить все отгрузки' })
-  getAllShipments(@Req() req) {
-    return this.shipmentsService.getAllShipments(req.user.userId);
+  @ApiOperation({ summary: 'Получить все отгрузки с пагинацией' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Номер страницы (по умолчанию 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Количество на странице (по умолчанию 50)' })
+  @ApiQuery({ name: 'status', required: false, enum: ShipmentStatus, description: 'Фильтр по статусу' })
+  getAllShipments(
+    @Req() req,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: ShipmentStatus,
+  ) {
+    return this.shipmentsService.getAllShipments(req.user.userId, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      status,
+    });
   }
 
   @Get('status/:status')

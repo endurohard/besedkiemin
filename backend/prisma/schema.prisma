@@ -11,6 +11,7 @@ datasource db {
 
 // Роли пользователей в производстве
 enum UserRole {
+  SUPER_ADMIN   // Супер-админ - скрытая роль, управление функциями системы
   OWNER         // Владелец - полный доступ ко всему
   MANAGER       // Менеджер - принимает заказы
   DESIGNER      // Проектировщик - делает проекты
@@ -158,8 +159,41 @@ model ProductType {
   products       Product[]
   // Складские остатки этого типа
   inventoryItems InventoryItem[]
+  // Номенклатура этого типа
+  nomenclatures  Nomenclature[]
 
   @@map("product_types")
+}
+
+// Номенклатура товаров (конкретные модели внутри типа)
+model Nomenclature {
+  id          String   @id @default(uuid())
+  name        String   // Название номенклатуры (например, "Беседка 3x3", "Стол круглый")
+  sku         String?  @unique // Артикул
+  description String?  // Описание
+
+  // Связь с типом товара
+  productTypeId String      @map("product_type_id")
+  productType   ProductType @relation(fields: [productTypeId], references: [id])
+
+  // Характеристики
+  dimensions    String?  // Размеры (например, "3x3 м", "120x80 см")
+  materials     String?  // Материалы
+  color         String?  // Цвет/покрытие
+  weight        Float?   // Вес в кг
+
+  // Цены
+  basePrice     Float?   @map("base_price") // Базовая цена
+
+  // Нормативное время производства (в часах), переопределяет время из типа
+  productionTimeHours Float? @map("production_time_hours")
+
+  isActive    Boolean  @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("nomenclatures")
 }
 
 // Настраиваемые этапы производства (для владельца)
@@ -245,6 +279,8 @@ model ProductHistory {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([productId, stage])
+  @@index([userId])
   @@map("product_history")
 }
 
@@ -266,6 +302,7 @@ model QualityCheck {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([productId, status])
   @@map("quality_checks")
 }
 
@@ -311,26 +348,30 @@ model Task {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([assignedToId, stage])
+  @@index([productId, status])
+  @@index([productId, assignedToId])
+  @@index([status])
   @@map("tasks")
 }
 
 // Складские остатки (товары на складе)
 model InventoryItem {
   id       String @id @default(uuid())
-  name     String // Название товара (копия из продукта)
+  name     String // Название товара (копия из продукта или введённое вручную)
   quantity Int    @default(0) // Текущее количество на складе
 
-  // Связь с продуктом (из какого продукта поступило)
-  productId String  @map("product_id")
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Связь с продуктом (из какого продукта поступило) - опционально для ручного добавления
+  productId String?  @map("product_id")
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   // Связь с типом продукта
   productTypeId String      @map("product_type_id")
   productType   ProductType @relation(fields: [productTypeId], references: [id])
 
-  // Из какого заказа поступило
-  orderId String @map("order_id")
-  order   Order  @relation(fields: [orderId], references: [id])
+  // Из какого заказа поступило - опционально для ручного добавления
+  orderId String? @map("order_id")
+  order   Order?  @relation(fields: [orderId], references: [id])
 
   // Дата поступления на склад
   receivedAt DateTime @default(now()) @map("received_at")
@@ -344,6 +385,9 @@ model InventoryItem {
   // Позиции отгрузок этого товара
   shipmentItems ShipmentItem[]
 
+  @@index([productTypeId])
+  @@index([orderId])
+  @@index([productId])
   @@map("inventory_items")
 }
 
@@ -351,6 +395,9 @@ model InventoryItem {
 model Shipment {
   id     String         @id @default(uuid())
   status ShipmentStatus @default(PENDING)
+
+  // Номер заказа (опционально - может быть введён вручную или привязан к заказу)
+  orderNumber String? @map("order_number")
 
   // Позиции отгрузки (несколько товаров)
   items ShipmentItem[]
@@ -640,6 +687,7 @@ model ChatMessage {
 
   @@map("chat_messages")
   @@index([roomId, createdAt])
+  @@index([roomId, isRead, senderType])
 }
 
 // Заявка на обратный звонок (для нерабочего времени)
@@ -665,4 +713,23 @@ model CallbackRequest {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("callback_requests")
+}
+
+// =============================================
+// УПРАВЛЕНИЕ ФУНКЦИОНАЛЬНОСТЬЮ (FEATURE FLAGS)
+// =============================================
+
+// Флаги функций для супер-админа (OWNER)
+model FeatureFlag {
+  id          String   @id @default(uuid())
+  key         String   @unique // Уникальный ключ фичи (например: "chat", "catalog", "analytics")
+  name        String   // Название функции для отображения
+  description String?  // Описание функции
+  isEnabled   Boolean  @default(true) @map("is_enabled") // Включена ли функция
+  category    String   @default("general") // Категория (general, production, sales, etc.)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("feature_flags")
 }

@@ -1,22 +1,108 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class InventoryService {
   constructor(private prisma: PrismaService) {}
 
-  // Получить все складские остатки
-  async getAllInventory() {
-    return this.prisma.inventoryItem.findMany({
-      include: {
-        product: true,
-        productType: true,
-        order: true,
+  // Добавить товар на склад вручную (для менеджера)
+  async createInventoryItem(data: {
+    name: string;
+    productTypeId: string;
+    quantity: number;
+    notes?: string;
+  }) {
+    // Проверяем, что тип продукта существует
+    const productType = await this.prisma.productType.findUnique({
+      where: { id: data.productTypeId },
+    });
+
+    if (!productType) {
+      throw new NotFoundException('Тип товара не найден');
+    }
+
+    if (data.quantity <= 0) {
+      throw new BadRequestException('Количество должно быть больше 0');
+    }
+
+    // Создаём товар на складе без привязки к заказу/продукту
+    return this.prisma.inventoryItem.create({
+      data: {
+        name: data.name,
+        quantity: data.quantity,
+        productTypeId: data.productTypeId,
+        notes: data.notes,
+        receivedAt: new Date(),
       },
-      orderBy: {
-        receivedAt: 'desc',
+      include: {
+        productType: true,
       },
     });
+  }
+
+  // Получить все складские остатки с пагинацией
+  async getAllInventory(options?: {
+    page?: number;
+    limit?: number;
+    productTypeId?: string;
+  }) {
+    const page = options?.page || 1;
+    const limit = options?.limit || 50;
+    const skip = (page - 1) * limit;
+
+    const where = options?.productTypeId
+      ? { productTypeId: options.productTypeId }
+      : {};
+
+    const [items, total] = await Promise.all([
+      this.prisma.inventoryItem.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          quantity: true,
+          notes: true,
+          receivedAt: true,
+          createdAt: true,
+          productType: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          product: {
+            select: {
+              id: true,
+              name: true,
+              stage: true,
+            },
+          },
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              customerName: true,
+            },
+          },
+        },
+        orderBy: {
+          receivedAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.inventoryItem.count({ where }),
+    ]);
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   // Получить остатки по типу продукта
@@ -83,29 +169,37 @@ export class InventoryService {
     });
   }
 
-  // Получить сводку по остаткам (группировка по типам)
+  // Получить сводку по остаткам (группировка по типам) - оптимизированный
   async getInventorySummary() {
-    const inventory = await this.prisma.inventoryItem.findMany({
-      include: {
-        productType: true,
+    // Используем groupBy для агрегации на уровне БД
+    const aggregated = await this.prisma.inventoryItem.groupBy({
+      by: ['productTypeId'],
+      _sum: {
+        quantity: true,
+      },
+      _count: {
+        id: true,
       },
     });
 
-    // Группируем по типам продуктов
-    const summary = inventory.reduce((acc, item) => {
-      const typeName = item.productType.name;
-      if (!acc[typeName]) {
-        acc[typeName] = {
-          productType: item.productType,
-          totalQuantity: 0,
-          items: [],
-        };
-      }
-      acc[typeName].totalQuantity += item.quantity;
-      acc[typeName].items.push(item);
-      return acc;
-    }, {});
+    // Получаем типы продуктов одним запросом
+    const productTypeIds = aggregated.map(a => a.productTypeId);
+    const productTypes = await this.prisma.productType.findMany({
+      where: {
+        id: { in: productTypeIds },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
 
-    return Object.values(summary);
+    const productTypeMap = new Map(productTypes.map(pt => [pt.id, pt]));
+
+    return aggregated.map(a => ({
+      productType: productTypeMap.get(a.productTypeId),
+      totalQuantity: a._sum.quantity || 0,
+      itemCount: a._count.id,
+    }));
   }
 }

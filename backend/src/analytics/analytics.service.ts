@@ -94,8 +94,9 @@ export class AnalyticsService {
     };
   }
 
-  // Производительность по сотрудникам
+  // Производительность по сотрудникам (оптимизированный)
   async getUserPerformance() {
+    // Получаем пользователей с агрегированной статистикой productHistory
     const users = await this.prisma.user.findMany({
       where: { isActive: true },
       select: {
@@ -103,80 +104,60 @@ export class AnalyticsService {
         firstName: true,
         lastName: true,
         role: true,
-      },
-    });
-
-    const userStats = await Promise.all(
-      users.map(async (user) => {
-        const [completedTasks, avgTaskDuration, activeTask] = await Promise.all([
-          // Завершенные задачи
-          this.prisma.productHistory.count({
-            where: {
-              userId: user.id,
-              completedAt: { not: null },
-            },
-          }),
-
-          // Среднее время выполнения задачи
-          this.prisma.productHistory.findMany({
-            where: {
-              userId: user.id,
-              completedAt: { not: null },
-            },
-            select: {
-              startedAt: true,
-              completedAt: true,
-            },
-          }).then((tasks) => {
-            if (tasks.length === 0) return 0;
-            const totalDuration = tasks.reduce((sum, task) => {
-              if (!task.completedAt) return sum;
-              return sum + (task.completedAt.getTime() - task.startedAt.getTime());
-            }, 0);
-            return Math.round(totalDuration / tasks.length / 1000 / 60 / 60); // в часах
-          }),
-
-          // Текущая активная задача
-          this.prisma.productHistory.findFirst({
-            where: {
-              userId: user.id,
-              completedAt: null,
-            },
-            include: {
-              product: {
-                select: {
-                  name: true,
-                  order: {
-                    select: {
-                      orderNumber: true,
-                    },
+        productHistory: {
+          select: {
+            startedAt: true,
+            completedAt: true,
+            stage: true,
+            product: {
+              select: {
+                name: true,
+                order: {
+                  select: {
+                    orderNumber: true,
                   },
                 },
               },
             },
-          }),
-        ]);
+          },
+        },
+      },
+    });
 
-        return {
-          user: {
-            id: user.id,
-            name: `${user.firstName} ${user.lastName}`,
-            role: user.role,
-          },
-          stats: {
-            completedTasks,
-            avgTaskDurationHours: avgTaskDuration,
-            hasActiveTask: !!activeTask,
-            activeTask: activeTask ? {
-              productName: activeTask.product.name,
-              orderNumber: activeTask.product.order.orderNumber,
-              stage: activeTask.stage,
-              startedAt: activeTask.startedAt,
-            } : null,
-          },
-        };
-      }),
-    );
+    // Обрабатываем данные в памяти без дополнительных запросов
+    const userStats = users.map((user) => {
+      const completedHistory = user.productHistory.filter(h => h.completedAt !== null);
+      const activeHistory = user.productHistory.find(h => h.completedAt === null);
+
+      // Среднее время выполнения
+      let avgTaskDuration = 0;
+      if (completedHistory.length > 0) {
+        const totalDuration = completedHistory.reduce((sum, task) => {
+          if (!task.completedAt) return sum;
+          return sum + (task.completedAt.getTime() - task.startedAt.getTime());
+        }, 0);
+        avgTaskDuration = Math.round(totalDuration / completedHistory.length / 1000 / 60 / 60);
+      }
+
+      return {
+        user: {
+          id: user.id,
+          name: `${user.firstName} ${user.lastName}`,
+          role: user.role,
+        },
+        stats: {
+          completedTasks: completedHistory.length,
+          avgTaskDurationHours: avgTaskDuration,
+          hasActiveTask: !!activeHistory,
+          activeTask: activeHistory ? {
+            productName: activeHistory.product.name,
+            orderNumber: activeHistory.product.order.orderNumber,
+            stage: activeHistory.stage,
+            startedAt: activeHistory.startedAt,
+          } : null,
+        },
+      };
+    });
 
     return userStats;
   }
@@ -255,58 +236,40 @@ export class AnalyticsService {
     };
   }
 
-  // Статистика по типам продуктов
+  // Статистика по типам продуктов (оптимизированный)
   async getProductTypeStats() {
+    // Получаем типы продуктов с продуктами одним запросом
     const productTypes = await this.prisma.productType.findMany({
       where: { isActive: true },
       select: {
         id: true,
         name: true,
-        _count: {
-          select: { products: true },
+        products: {
+          select: {
+            stage: true,
+          },
         },
       },
     });
 
-    const typeStats = await Promise.all(
-      productTypes.map(async (type) => {
-        const [completed, inProduction, rejected] = await Promise.all([
-          this.prisma.product.count({
-            where: {
-              productTypeId: type.id,
-              stage: ProductionStage.COMPLETED,
-            },
-          }),
+    // Обрабатываем в памяти без дополнительных запросов
+    const typeStats = productTypes.map((type) => {
+      const products = type.products;
+      const total = products.length;
+      const completed = products.filter(p => p.stage === ProductionStage.COMPLETED).length;
+      const excludedStages: ProductionStage[] = [ProductionStage.PENDING, ProductionStage.COMPLETED, ProductionStage.REJECTED];
+      const inProduction = products.filter(p => !excludedStages.includes(p.stage)).length;
+      const rejected = products.filter(p => p.stage === ProductionStage.REJECTED).length;
 
-          this.prisma.product.count({
-            where: {
-              productTypeId: type.id,
-              stage: {
-                notIn: [ProductionStage.PENDING, ProductionStage.COMPLETED, ProductionStage.REJECTED],
-              },
-            },
-          }),
-
-          this.prisma.product.count({
-            where: {
-              productTypeId: type.id,
-              stage: ProductionStage.REJECTED,
-            },
-          }),
-        ]);
-
-        return {
-          type: type.name,
-          total: type._count.products,
-          completed,
-          inProduction,
-          rejected,
-          completionRate: type._count.products > 0
-            ? ((completed / type._count.products) * 100).toFixed(1)
-            : '0',
-        };
-      }),
-    );
+      return {
+        type: type.name,
+        total,
+        completed,
+        inProduction,
+        rejected,
+        completionRate: total > 0 ? ((completed / total) * 100).toFixed(1) : '0',
+      };
+    });
 
     return typeStats;
   }

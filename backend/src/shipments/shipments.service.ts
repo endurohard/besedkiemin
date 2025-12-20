@@ -19,6 +19,7 @@ export class ShipmentsService {
       deliveryAddress: string;
       deliveryDate?: Date;
       notes?: string;
+      orderNumber?: string;
     }
   ) {
     // Проверяем права пользователя
@@ -61,94 +62,146 @@ export class ShipmentsService {
       }
     }
 
-    // Создаём отгрузку с позициями
-    const shipment = await this.prisma.shipment.create({
-      data: {
-        customerName: data.customerName,
-        customerPhone: data.customerPhone,
-        deliveryAddress: data.deliveryAddress,
-        deliveryDate: data.deliveryDate,
-        notes: data.notes,
-        shippedById: userId,
-        items: {
-          create: data.items.map(item => ({
-            inventoryItemId: item.inventoryItemId,
-            quantity: item.quantity,
-          })),
+    // Используем транзакцию для атомарности операций
+    const shipment = await this.prisma.$transaction(async (tx) => {
+      // Создаём отгрузку с позициями
+      const newShipment = await tx.shipment.create({
+        data: {
+          customerName: data.customerName,
+          customerPhone: data.customerPhone,
+          deliveryAddress: data.deliveryAddress,
+          deliveryDate: data.deliveryDate,
+          notes: data.notes,
+          orderNumber: data.orderNumber,
+          shippedById: userId,
+          items: {
+            create: data.items.map(item => ({
+              inventoryItemId: item.inventoryItemId,
+              quantity: item.quantity,
+            })),
+          },
         },
-      },
-      include: {
-        items: {
-          include: {
-            inventoryItem: {
-              include: {
-                product: true,
-                productType: true,
+        include: {
+          items: {
+            include: {
+              inventoryItem: {
+                select: {
+                  id: true,
+                  name: true,
+                  quantity: true,
+                  productType: {
+                    select: { id: true, name: true },
+                  },
+                },
               },
             },
           },
-        },
-        shippedBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
+          shippedBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-      },
-    });
-
-    // Уменьшаем количество на складе для каждого товара
-    for (const itemData of data.items) {
-      const inventoryItem = inventoryItems.find(i => i.id === itemData.inventoryItemId);
-      await this.prisma.inventoryItem.update({
-        where: { id: itemData.inventoryItemId },
-        data: {
-          quantity: inventoryItem.quantity - itemData.quantity,
-        },
       });
-    }
+
+      // Уменьшаем количество на складе для каждого товара (в транзакции)
+      await Promise.all(
+        data.items.map(async (itemData) => {
+          const inventoryItem = inventoryItems.find(i => i.id === itemData.inventoryItemId);
+          return tx.inventoryItem.update({
+            where: { id: itemData.inventoryItemId },
+            data: {
+              quantity: inventoryItem.quantity - itemData.quantity,
+            },
+          });
+        })
+      );
+
+      return newShipment;
+    });
 
     return shipment;
   }
 
-  // Получить все отгрузки
-  async getAllShipments(userId: string) {
-    // Получаем информацию о пользователе
+  // Получить все отгрузки с пагинацией
+  async getAllShipments(userId: string, options?: {
+    page?: number;
+    limit?: number;
+    status?: ShipmentStatus;
+  }) {
+    // Проверяем права пользователя
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      select: { role: true },
     });
 
     if (!user) {
       throw new ForbiddenException('Пользователь не найден');
     }
 
-    // Все пользователи (WAREHOUSE, MANAGER, OWNER) видят все отгрузки
-    return this.prisma.shipment.findMany({
-      include: {
-        items: {
-          include: {
-            inventoryItem: {
-              include: {
-                product: true,
-                productType: true,
-                order: true,
+    const page = options?.page || 1;
+    const limit = options?.limit || 50;
+    const skip = (page - 1) * limit;
+
+    const where = options?.status ? { status: options.status } : {};
+
+    const [shipments, total] = await Promise.all([
+      this.prisma.shipment.findMany({
+        where,
+        select: {
+          id: true,
+          status: true,
+          customerName: true,
+          customerPhone: true,
+          deliveryAddress: true,
+          deliveryDate: true,
+          orderNumber: true,
+          notes: true,
+          createdAt: true,
+          items: {
+            select: {
+              id: true,
+              quantity: true,
+              inventoryItem: {
+                select: {
+                  id: true,
+                  name: true,
+                  productType: {
+                    select: { id: true, name: true },
+                  },
+                },
               },
             },
           },
-        },
-        shippedBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
+          shippedBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          _count: {
+            select: { items: true },
           },
         },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.shipment.count({ where }),
+    ]);
+
+    return {
+      shipments,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    };
   }
 
   // Получить отгрузки по статусу
@@ -298,21 +351,28 @@ export class ShipmentsService {
       throw new BadRequestException('Нельзя отменить доставленную отгрузку');
     }
 
-    // Обновляем статус отгрузки
-    const updatedShipment = await this.prisma.shipment.update({
-      where: { id },
-      data: { status: ShipmentStatus.CANCELLED },
-    });
-
-    // Возвращаем товары на склад
-    for (const item of shipment.items) {
-      await this.prisma.inventoryItem.update({
-        where: { id: item.inventoryItemId },
-        data: {
-          quantity: item.inventoryItem.quantity + item.quantity,
-        },
+    // Используем транзакцию для атомарности
+    const updatedShipment = await this.prisma.$transaction(async (tx) => {
+      // Обновляем статус отгрузки
+      const cancelled = await tx.shipment.update({
+        where: { id },
+        data: { status: ShipmentStatus.CANCELLED },
       });
-    }
+
+      // Возвращаем товары на склад параллельно
+      await Promise.all(
+        shipment.items.map((item) =>
+          tx.inventoryItem.update({
+            where: { id: item.inventoryItemId },
+            data: {
+              quantity: item.inventoryItem.quantity + item.quantity,
+            },
+          })
+        )
+      );
+
+      return cancelled;
+    });
 
     return updatedShipment;
   }
@@ -354,11 +414,12 @@ export class ShipmentsService {
       customerPhone: shipment.customerPhone,
       deliveryAddress: shipment.deliveryAddress,
       deliveryDate: shipment.deliveryDate?.toISOString(),
+      orderNumber: shipment.orderNumber || shipment.items[0]?.inventoryItem?.order?.orderNumber || '—',
       items: shipment.items.map(item => ({
         name: item.inventoryItem.name,
         quantity: item.quantity,
         productType: item.inventoryItem.productType.name,
-        orderNumber: item.inventoryItem.order.orderNumber,
+        orderNumber: item.inventoryItem.order?.orderNumber,
       })),
       shippedBy: `${shipment.shippedBy.firstName} ${shipment.shippedBy.lastName}`,
       notes: shipment.notes,

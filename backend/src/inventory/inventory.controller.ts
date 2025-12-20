@@ -1,5 +1,5 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -13,11 +13,39 @@ import { InventoryService } from './inventory.service';
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @Post()
+  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Добавить товар на склад вручную' })
+  createInventoryItem(
+    @Body('name') name: string,
+    @Body('productTypeId') productTypeId: string,
+    @Body('quantity') quantity: number,
+    @Body('notes') notes: string,
+  ) {
+    return this.inventoryService.createInventoryItem({
+      name,
+      productTypeId,
+      quantity,
+      notes,
+    });
+  }
+
   @Get()
   @Roles(UserRole.OWNER, UserRole.MANAGER, UserRole.WAREHOUSE)
-  @ApiOperation({ summary: 'Получить все складские остатки' })
-  getAllInventory() {
-    return this.inventoryService.getAllInventory();
+  @ApiOperation({ summary: 'Получить все складские остатки с пагинацией' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Номер страницы (по умолчанию 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Количество на странице (по умолчанию 50)' })
+  @ApiQuery({ name: 'productTypeId', required: false, type: String, description: 'Фильтр по типу продукта' })
+  getAllInventory(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('productTypeId') productTypeId?: string,
+  ) {
+    return this.inventoryService.getAllInventory({
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      productTypeId,
+    });
   }
 
   @Get('summary')

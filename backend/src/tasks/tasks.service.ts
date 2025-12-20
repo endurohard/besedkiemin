@@ -677,7 +677,7 @@ export class TasksService {
       user = await this.prisma.user.findUnique({ where: { id: userId } });
     }
 
-    // Получаем все забракованные задачи
+    // Оптимизированный запрос: получаем rejected tasks с включёнными qualityChecks через product
     const rejectedTasks = await this.prisma.task.findMany({
       where: {
         status: TaskStatus.REJECTED,
@@ -687,6 +687,18 @@ export class TasksService {
           include: {
             productType: true,
             order: true,
+            qualityChecks: {
+              where: {
+                status: 'REJECTED',
+              },
+              include: {
+                checkedBy: true,
+              },
+              orderBy: {
+                checkedAt: 'desc',
+              },
+              take: 1, // Берём только последний rejected check
+            },
           },
         },
         assignedTo: true,
@@ -696,34 +708,20 @@ export class TasksService {
       },
     });
 
-    // Получаем связанные QualityCheck для каждой задачи
-    const defects = await Promise.all(
-      rejectedTasks.map(async (task) => {
-        const qualityCheck = await this.prisma.qualityCheck.findFirst({
-          where: {
-            productId: task.productId,
-            status: 'REJECTED',
-          },
-          include: {
-            checkedBy: true,
-            product: {
-              include: {
-                productType: true,
-                order: true,
-              },
-            },
-          },
-          orderBy: {
-            checkedAt: 'desc',
-          },
-        });
-
+    // Преобразуем в нужный формат без дополнительных запросов
+    const defects = rejectedTasks
+      .filter(task => task.product.qualityChecks.length > 0)
+      .map(task => {
+        const qualityCheck = task.product.qualityChecks[0];
         return {
           ...qualityCheck,
+          product: {
+            ...task.product,
+            qualityChecks: undefined, // Убираем дублирование
+          },
           defectPhotos: task.defectPhotos,
         };
-      })
-    );
+      });
 
     let filteredDefects = defects.filter((d) => d.id); // Убираем null значения
 
@@ -896,7 +894,7 @@ export class TasksService {
         return { count: allDefects.length };
     }
 
-    // Получаем все забракованные задачи
+    // Оптимизированный запрос: получаем все уникальные productId из rejected tasks
     const rejectedTasks = await this.prisma.task.findMany({
       where: {
         status: TaskStatus.REJECTED,
@@ -904,27 +902,31 @@ export class TasksService {
       select: {
         productId: true,
       },
+      distinct: ['productId'],
     });
 
-    // Проверяем для каждого брака, есть ли у работника активная задача
-    let unacceptedCount = 0;
-    for (const rejectedTask of rejectedTasks) {
-      const existingTask = await this.prisma.task.findFirst({
-        where: {
-          productId: rejectedTask.productId,
-          assignedToId: userId,
-          status: {
-            in: [TaskStatus.NEW, TaskStatus.ACCEPTED],
-          },
-          stage: userStage,
-        },
-      });
-
-      // Если нет активной задачи, значит брак не принят
-      if (!existingTask) {
-        unacceptedCount++;
-      }
+    if (rejectedTasks.length === 0) {
+      return { count: 0 };
     }
+
+    const rejectedProductIds = rejectedTasks.map(t => t.productId);
+
+    // Одним запросом получаем все активные задачи пользователя на этих продуктах
+    const userActiveTasks = await this.prisma.task.findMany({
+      where: {
+        productId: { in: rejectedProductIds },
+        assignedToId: userId,
+        status: { in: [TaskStatus.NEW, TaskStatus.ACCEPTED] },
+        stage: userStage,
+      },
+      select: {
+        productId: true,
+      },
+    });
+
+    // Считаем количество продуктов без активных задач
+    const acceptedProductIds = new Set(userActiveTasks.map(t => t.productId));
+    const unacceptedCount = rejectedProductIds.filter(id => !acceptedProductIds.has(id)).length;
 
     return { count: unacceptedCount };
   }

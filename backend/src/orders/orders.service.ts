@@ -61,7 +61,13 @@ export class OrdersService {
     status?: OrderStatus;
     startDate?: string;
     endDate?: string;
+    page?: number;
+    limit?: number;
   }) {
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 50;
+    const skip = (page - 1) * limit;
+
     const where: any = {};
 
     if (filters?.status) {
@@ -78,41 +84,63 @@ export class OrdersService {
       }
     }
 
-    return this.prisma.order.findMany({
-      where,
-      include: {
-        products: {
-          include: {
-            history: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    role: true,
-                  },
+    const [orders, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        select: {
+          id: true,
+          orderNumber: true,
+          customerName: true,
+          customerPhone: true,
+          customerAddress: true,
+          status: true,
+          priority: true,
+          description: true,
+          createdAt: true,
+          updatedAt: true,
+          products: {
+            select: {
+              id: true,
+              name: true,
+              stage: true,
+              quantity: true,
+              productType: {
+                select: {
+                  id: true,
+                  name: true,
                 },
               },
-              orderBy: {
-                startedAt: 'desc',
-              },
-              take: 1, // Только последняя история
+            },
+          },
+          createdBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          _count: {
+            select: {
+              products: true,
             },
           },
         },
-        createdBy: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            role: true,
-          },
-        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+
+    return {
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: 'desc' },
-    });
+    };
   }
 
   async findOne(id: string) {
@@ -243,7 +271,9 @@ export class OrdersService {
       endDate?: string;
     }
   ) {
-    const orders = await this.findAll(filters);
+    // Для экспорта получаем все записи без пагинации
+    const result = await this.findAll({ ...filters, limit: 10000 });
+    const orders = result.orders;
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Заказы');
