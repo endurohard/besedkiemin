@@ -97,8 +97,12 @@ export class AnalyticsService {
   // Производительность по сотрудникам (оптимизированный)
   async getUserPerformance() {
     // Получаем пользователей с агрегированной статистикой productHistory
+    // Исключаем SUPER_ADMIN - это технический аккаунт
     const users = await this.prisma.user.findMany({
-      where: { isActive: true },
+      where: {
+        isActive: true,
+        role: { not: 'SUPER_ADMIN' },
+      },
       select: {
         id: true,
         firstName: true,
