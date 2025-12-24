@@ -121,15 +121,25 @@ export class WorkflowService {
       throw new BadRequestException('Некоторые этапы не найдены');
     }
 
-    // Обновляем порядок в транзакции
-    const updatePromises = stageIds.map((stageId, index) => {
-      return this.prisma.workflowStage.update({
-        where: { id: stageId },
-        data: { order: index + 1 },
-      });
-    });
+    // Используем транзакцию с временными отрицательными значениями
+    // чтобы избежать конфликта уникальности на поле order
+    await this.prisma.$transaction(async (tx) => {
+      // Сначала устанавливаем временные отрицательные значения
+      for (let i = 0; i < stageIds.length; i++) {
+        await tx.workflowStage.update({
+          where: { id: stageIds[i] },
+          data: { order: -(i + 1) },
+        });
+      }
 
-    await this.prisma.$transaction(updatePromises);
+      // Затем устанавливаем правильные положительные значения
+      for (let i = 0; i < stageIds.length; i++) {
+        await tx.workflowStage.update({
+          where: { id: stageIds[i] },
+          data: { order: i + 1 },
+        });
+      }
+    });
 
     return this.findActive();
   }

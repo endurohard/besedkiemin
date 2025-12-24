@@ -96,13 +96,20 @@ let WorkflowService = class WorkflowService {
         if (stages.length !== stageIds.length) {
             throw new common_1.BadRequestException('Некоторые этапы не найдены');
         }
-        const updatePromises = stageIds.map((stageId, index) => {
-            return this.prisma.workflowStage.update({
-                where: { id: stageId },
-                data: { order: index + 1 },
-            });
+        await this.prisma.$transaction(async (tx) => {
+            for (let i = 0; i < stageIds.length; i++) {
+                await tx.workflowStage.update({
+                    where: { id: stageIds[i] },
+                    data: { order: -(i + 1) },
+                });
+            }
+            for (let i = 0; i < stageIds.length; i++) {
+                await tx.workflowStage.update({
+                    where: { id: stageIds[i] },
+                    data: { order: i + 1 },
+                });
+            }
         });
-        await this.prisma.$transaction(updatePromises);
         return this.findActive();
     }
     async initializeDefaultWorkflow() {
