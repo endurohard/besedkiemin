@@ -38,7 +38,7 @@ export const CustomerCallCard = ({ phoneNumber }: CustomerCallCardProps) => {
       // Нормализуем номер для сравнения (убираем все кроме цифр)
       const normalizedPhone = phoneNumber.replace(/\D/g, '');
       return allOrders.filter((order: Order) => {
-        const orderPhone = order.customerPhone.replace(/\D/g, '');
+        const orderPhone = (order.customerPhone || '').replace(/\D/g, '');
         return orderPhone.includes(normalizedPhone) || normalizedPhone.includes(orderPhone);
       });
     },

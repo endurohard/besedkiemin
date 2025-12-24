@@ -33,23 +33,6 @@ let ProductsService = class ProductsService {
         if (!firstWorkflowStage) {
             throw new common_1.NotFoundException('Не найдены активные стадии workflow');
         }
-        const product = await this.prisma.product.create({
-            data: {
-                name: createProductDto.name,
-                productTypeId: createProductDto.productTypeId,
-                description: createProductDto.description,
-                quantity: createProductDto.quantity,
-                dimensions: createProductDto.dimensions,
-                schemaImageUrl: createProductDto.schemaImageUrl,
-                orderId: createProductDto.orderId,
-                deadline: createProductDto.deadline,
-                stage: firstWorkflowStage.legacyStage,
-            },
-            include: {
-                order: true,
-                productType: true,
-            },
-        });
         const secondWorkflowStage = await this.prisma.workflowStage.findFirst({
             where: {
                 isActive: true,
@@ -57,58 +40,81 @@ let ProductsService = class ProductsService {
             },
             orderBy: { order: 'asc' },
         });
-        if (secondWorkflowStage) {
-            await this.prisma.product.update({
-                where: { id: product.id },
-                data: { stage: secondWorkflowStage.legacyStage },
-            });
-            await this.prisma.productHistory.create({
-                data: {
-                    productId: product.id,
-                    userId: order.createdById,
-                    stage: firstWorkflowStage.legacyStage,
-                    status: 'PASSED',
-                    startedAt: new Date(),
-                    completedAt: new Date(),
-                    passedAt: new Date(),
-                },
-            });
-            const nextWorkers = await this.prisma.user.findMany({
+        const nextWorkers = secondWorkflowStage
+            ? await this.prisma.user.findMany({
                 where: {
                     role: secondWorkflowStage.role,
                     isActive: true,
                 },
+            })
+            : [];
+        const product = await this.prisma.$transaction(async (tx) => {
+            const newProduct = await tx.product.create({
+                data: {
+                    name: createProductDto.name,
+                    productTypeId: createProductDto.productTypeId,
+                    description: createProductDto.description,
+                    quantity: createProductDto.quantity,
+                    dimensions: createProductDto.dimensions,
+                    schemaImageUrl: createProductDto.schemaImageUrl,
+                    orderId: createProductDto.orderId,
+                    deadline: createProductDto.deadline,
+                    stage: secondWorkflowStage?.legacyStage || firstWorkflowStage.legacyStage,
+                },
+                include: {
+                    order: true,
+                    productType: true,
+                },
             });
-            for (const worker of nextWorkers) {
-                const newTask = await this.prisma.task.create({
+            if (secondWorkflowStage) {
+                await tx.productHistory.create({
                     data: {
-                        title: `${product.name} - ${secondWorkflowStage.name}`,
-                        description: `Новый продукт. Заказ: ${order.orderNumber}`,
-                        stage: secondWorkflowStage.legacyStage,
-                        productId: product.id,
-                        assignedToId: worker.id,
-                        quantity: product.quantity,
+                        productId: newProduct.id,
+                        userId: order.createdById,
+                        stage: firstWorkflowStage.legacyStage,
+                        status: 'PASSED',
+                        startedAt: new Date(),
+                        completedAt: new Date(),
+                        passedAt: new Date(),
                     },
                 });
-                if (worker.telegramId) {
-                    const message = `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
-                        `*Продукт:* ${product.name}\n` +
-                        `*Тип:* ${product.productType?.name || 'Н/Д'}\n` +
-                        `*Количество:* ${product.quantity} шт.\n` +
-                        `*Стадия:* ${secondWorkflowStage.name}\n` +
-                        `*Заказ:* ${order.orderNumber}\n` +
-                        `*Клиент:* ${order.customerName || 'Н/Д'}\n\n` +
-                        `✅ Откройте раздел "Мои задачи" для выполнения`;
-                    try {
-                        await this.telegramService.sendMessage(worker.telegramId, message);
-                        console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role})`);
-                    }
-                    catch (error) {
-                        console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
-                    }
-                }
+                await Promise.all(nextWorkers.map((worker) => tx.task.create({
+                    data: {
+                        title: `${newProduct.name} - ${secondWorkflowStage.name}`,
+                        description: `Новый продукт. Заказ: ${order.orderNumber}`,
+                        stage: secondWorkflowStage.legacyStage,
+                        productId: newProduct.id,
+                        assignedToId: worker.id,
+                        quantity: newProduct.quantity,
+                    },
+                })));
+                await tx.order.update({
+                    where: { id: order.id },
+                    data: { status: client_1.OrderStatus.IN_PRODUCTION },
+                });
             }
-            await this.updateOrderStatus(order.id);
+            return newProduct;
+        });
+        if (secondWorkflowStage) {
+            Promise.allSettled(nextWorkers
+                .filter((worker) => worker.telegramId)
+                .map(async (worker) => {
+                const message = `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
+                    `*Продукт:* ${product.name}\n` +
+                    `*Тип:* ${product.productType?.name || 'Н/Д'}\n` +
+                    `*Количество:* ${product.quantity} шт.\n` +
+                    `*Стадия:* ${secondWorkflowStage.name}\n` +
+                    `*Заказ:* ${order.orderNumber}\n` +
+                    `*Клиент:* ${order.customerName || 'Н/Д'}\n\n` +
+                    `✅ Откройте раздел "Мои задачи" для выполнения`;
+                try {
+                    await this.telegramService.sendMessage(worker.telegramId, message);
+                    console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role})`);
+                }
+                catch (error) {
+                    console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
+                }
+            }));
         }
         return product;
     }

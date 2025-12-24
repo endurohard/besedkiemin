@@ -24,7 +24,7 @@ let ShipmentsController = class ShipmentsController {
     constructor(shipmentsService) {
         this.shipmentsService = shipmentsService;
     }
-    async createShipment(items, customerName, customerPhone, deliveryAddress, deliveryDate, notes, req) {
+    async createShipment(items, customerName, customerPhone, deliveryAddress, deliveryDate, notes, orderNumber, req) {
         return this.shipmentsService.createShipment(req.user.userId, {
             items,
             customerName,
@@ -32,10 +32,13 @@ let ShipmentsController = class ShipmentsController {
             deliveryAddress,
             deliveryDate,
             notes,
+            orderNumber,
         });
     }
-    getAllShipments(req) {
-        return this.shipmentsService.getAllShipments(req.user.userId);
+    getAllShipments(req, status) {
+        return this.shipmentsService.getAllShipments(req.user.userId, {
+            status,
+        });
     }
     getShipmentsByStatus(status, req) {
         return this.shipmentsService.getShipmentsByStatus(req.user.userId, status);
@@ -64,18 +67,21 @@ __decorate([
     __param(3, (0, common_1.Body)('deliveryAddress')),
     __param(4, (0, common_1.Body)('deliveryDate')),
     __param(5, (0, common_1.Body)('notes')),
-    __param(6, (0, common_1.Req)()),
+    __param(6, (0, common_1.Body)('orderNumber')),
+    __param(7, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Array, String, String, String, Date, String, Object]),
+    __metadata("design:paramtypes", [Array, String, String, String, Date, String, String, Object]),
     __metadata("design:returntype", Promise)
 ], ShipmentsController.prototype, "createShipment", null);
 __decorate([
     (0, common_1.Get)(),
     (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все отгрузки' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Получить все отгрузки с пагинацией' }),
+    (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: client_1.ShipmentStatus, description: 'Фильтр по статусу' }),
     __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], ShipmentsController.prototype, "getAllShipments", null);
 __decorate([

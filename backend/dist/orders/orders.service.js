@@ -108,41 +108,49 @@ let OrdersService = class OrdersService {
                 where.createdAt.lte = new Date(filters.endDate);
             }
         }
-        return this.prisma.order.findMany({
+        const orders = await this.prisma.order.findMany({
             where,
-            include: {
+            select: {
+                id: true,
+                orderNumber: true,
+                customerName: true,
+                customerPhone: true,
+                customerAddress: true,
+                status: true,
+                priority: true,
+                description: true,
+                createdAt: true,
+                updatedAt: true,
                 products: {
-                    include: {
-                        history: {
-                            include: {
-                                user: {
-                                    select: {
-                                        id: true,
-                                        firstName: true,
-                                        lastName: true,
-                                        role: true,
-                                    },
-                                },
+                    select: {
+                        id: true,
+                        name: true,
+                        stage: true,
+                        quantity: true,
+                        productType: {
+                            select: {
+                                id: true,
+                                name: true,
                             },
-                            orderBy: {
-                                startedAt: 'desc',
-                            },
-                            take: 1,
                         },
                     },
                 },
                 createdBy: {
                     select: {
                         id: true,
-                        email: true,
                         firstName: true,
                         lastName: true,
-                        role: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        products: true,
                     },
                 },
             },
             orderBy: { createdAt: 'desc' },
         });
+        return orders;
     }
     async findOne(id) {
         const order = await this.prisma.order.findUnique({

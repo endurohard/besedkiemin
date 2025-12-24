@@ -65,43 +65,46 @@ export const TaskTimer = ({ createdAt, acceptedAt, productionTimeHours, priority
     return () => clearInterval(interval);
   }, [createdAt, acceptedAt, productionTimeHours]);
 
-  // Цвет приоритета (бордер для приоритета)
+  // Цвет приоритета (бордер для приоритета) - только для HIGH и URGENT
   const priorityColor = priority === 'URGENT' ? 'border-l-4 border-l-red-600' :
                         priority === 'HIGH' ? 'border-l-4 border-l-orange-500' :
-                        priority === 'NORMAL' ? 'border-l-4 border-l-blue-500' :
-                        'border-l-4 border-l-gray-400';
+                        '';
 
-  const priorityLabel = priority === 'URGENT' ? 'Срочно' :
+  // Показываем метку только для HIGH и URGENT
+  const priorityLabel = priority === 'URGENT' ? 'СРОЧНО' :
                         priority === 'HIGH' ? 'Высокий' :
-                        priority === 'NORMAL' ? 'Обычный' :
-                        'Низкий';
+                        null;
+
+  const priorityBadge = priority === 'URGENT' ? 'bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold animate-pulse' :
+                        priority === 'HIGH' ? 'bg-orange-500 text-white px-2 py-0.5 rounded text-[10px] font-bold' :
+                        null;
 
   return (
-    <div className={`${colorClass} ${priorityColor} border rounded-lg p-3 flex items-center justify-between`}>
-      <div className="flex items-center gap-2">
+    <div className={`${colorClass} ${priorityColor} border rounded-lg p-1.5 flex items-center justify-between mb-2`}>
+      <div className="flex items-center gap-1.5">
         {productionTimeHours && percentage >= 100 ? (
-          <AlertCircle size={18} className="flex-shrink-0" />
+          <AlertCircle size={14} className="flex-shrink-0" />
         ) : productionTimeHours && percentage < 70 ? (
-          <CheckCircle size={18} className="flex-shrink-0" />
+          <CheckCircle size={14} className="flex-shrink-0" />
         ) : (
-          <Clock size={18} className="flex-shrink-0" />
+          <Clock size={14} className="flex-shrink-0" />
         )}
         <div className="flex flex-col">
-          <span className="font-semibold text-sm">
-            {acceptedAt ? 'Время в работе' : 'Время с создания'}: {elapsedTime}
+          <span className="font-medium text-[11px]">
+            {acceptedAt ? 'В работе' : 'С создания'}: {elapsedTime}
           </span>
           {productionTimeHours && (
-            <span className="text-xs opacity-80">
-              Норма: {productionTimeHours} ч ({Math.round(percentage)}%)
+            <span className="text-[10px] opacity-80">
+              Норма: {productionTimeHours}ч ({Math.round(percentage)}%)
             </span>
           )}
         </div>
       </div>
-      <div className="text-right">
-        <span className="text-xs font-medium opacity-90">
+      {priorityLabel && priorityBadge && (
+        <span className={priorityBadge}>
           {priorityLabel}
         </span>
-      </div>
+      )}
     </div>
   );
 };

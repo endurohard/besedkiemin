@@ -24,6 +24,8 @@ import { CatalogOrdersModule } from './catalog-orders/catalog-orders.module';
 import { ContactRequestsModule } from './contact-requests/contact-requests.module';
 import { PublicModule } from './public/public.module';
 import { ChatModule } from './chat/chat.module';
+import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
+import { NomenclatureModule } from './nomenclature/nomenclature.module';
 
 @Module({
   imports: [
@@ -52,6 +54,8 @@ import { ChatModule } from './chat/chat.module';
     ContactRequestsModule,
     PublicModule,
     ChatModule,
+    FeatureFlagsModule,
+    NomenclatureModule,
   ],
   controllers: [AppController],
   providers: [AppService],

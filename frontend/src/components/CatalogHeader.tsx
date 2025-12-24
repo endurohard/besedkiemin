@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Phone, Mail, MapPin } from 'lucide-react';
+import { Menu, X, Phone, Mail } from 'lucide-react';
 
 export const CatalogHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

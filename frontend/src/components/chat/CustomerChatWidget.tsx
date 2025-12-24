@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useChat, ChatMessage, OnlineStatus } from '@/hooks/useChat';
+import { useChat, OnlineStatus } from '@/hooks/useChat';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import api from '@/lib/api';

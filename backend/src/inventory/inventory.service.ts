@@ -40,69 +40,50 @@ export class InventoryService {
     });
   }
 
-  // Получить все складские остатки с пагинацией
+  // Получить все складские остатки
   async getAllInventory(options?: {
-    page?: number;
-    limit?: number;
     productTypeId?: string;
   }) {
-    const page = options?.page || 1;
-    const limit = options?.limit || 50;
-    const skip = (page - 1) * limit;
-
     const where = options?.productTypeId
       ? { productTypeId: options.productTypeId }
       : {};
 
-    const [items, total] = await Promise.all([
-      this.prisma.inventoryItem.findMany({
-        where,
-        select: {
-          id: true,
-          name: true,
-          quantity: true,
-          notes: true,
-          receivedAt: true,
-          createdAt: true,
-          productType: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          product: {
-            select: {
-              id: true,
-              name: true,
-              stage: true,
-            },
-          },
-          order: {
-            select: {
-              id: true,
-              orderNumber: true,
-              customerName: true,
-            },
+    const items = await this.prisma.inventoryItem.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        quantity: true,
+        notes: true,
+        receivedAt: true,
+        createdAt: true,
+        productType: {
+          select: {
+            id: true,
+            name: true,
           },
         },
-        orderBy: {
-          receivedAt: 'desc',
+        product: {
+          select: {
+            id: true,
+            name: true,
+            stage: true,
+          },
         },
-        skip,
-        take: limit,
-      }),
-      this.prisma.inventoryItem.count({ where }),
-    ]);
-
-    return {
-      items,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        order: {
+          select: {
+            id: true,
+            orderNumber: true,
+            customerName: true,
+          },
+        },
       },
-    };
+      orderBy: {
+        receivedAt: 'desc',
+      },
+    });
+
+    return items;
   }
 
   // Получить остатки по типу продукта

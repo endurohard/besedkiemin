@@ -32,18 +32,12 @@ export class InventoryController {
 
   @Get()
   @Roles(UserRole.OWNER, UserRole.MANAGER, UserRole.WAREHOUSE)
-  @ApiOperation({ summary: 'Получить все складские остатки с пагинацией' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Номер страницы (по умолчанию 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Количество на странице (по умолчанию 50)' })
+  @ApiOperation({ summary: 'Получить все складские остатки' })
   @ApiQuery({ name: 'productTypeId', required: false, type: String, description: 'Фильтр по типу продукта' })
   getAllInventory(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
     @Query('productTypeId') productTypeId?: string,
   ) {
     return this.inventoryService.getAllInventory({
-      page: page ? parseInt(page, 10) : undefined,
-      limit: limit ? parseInt(limit, 10) : undefined,
       productTypeId,
     });
   }

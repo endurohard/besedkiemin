@@ -19,10 +19,11 @@ export const UserManagementPage = () => {
     role: UserRole.MANAGER,
   });
 
-  // Получение списка пользователей
+  // Получение списка пользователей (без супер админов)
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: usersApi.getAll,
+    select: (data) => data.filter((user) => user.role !== UserRole.SUPER_ADMIN),
   });
 
   // Создание пользователя
@@ -140,6 +141,7 @@ export const UserManagementPage = () => {
 
   const getRoleLabel = (role: UserRole): string => {
     const roleLabels: Record<UserRole, string> = {
+      [UserRole.SUPER_ADMIN]: 'Супер-админ',
       [UserRole.OWNER]: 'Владелец',
       [UserRole.MANAGER]: 'Менеджер',
       [UserRole.DESIGNER]: 'Проектировщик',
@@ -238,11 +240,13 @@ export const UserManagementPage = () => {
                     setFormData({ ...formData, role: e.target.value as UserRole })
                   }
                 >
-                  {Object.values(UserRole).map((role) => (
-                    <option key={role} value={role}>
-                      {getRoleLabel(role)}
-                    </option>
-                  ))}
+                  {Object.values(UserRole)
+                    .filter((role) => role !== UserRole.SUPER_ADMIN)
+                    .map((role) => (
+                      <option key={role} value={role}>
+                        {getRoleLabel(role)}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>

@@ -1,5 +1,6 @@
 // User roles
 export enum UserRole {
+  SUPER_ADMIN = 'SUPER_ADMIN', // Скрытая роль - управление функциями системы
   OWNER = 'OWNER',
   MANAGER = 'MANAGER',
   DESIGNER = 'DESIGNER',
@@ -173,6 +174,41 @@ export interface ContactRequest {
   updatedAt: string;
 }
 
+// Номенклатура товаров
+export interface Nomenclature {
+  id: string;
+  name: string;
+  sku?: string;
+  description?: string;
+  productTypeId: string;
+  productType?: ProductType;
+  dimensions?: string;
+  materials?: string;
+  color?: string;
+  weight?: number;
+  basePrice?: number;
+  productionTimeHours?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNomenclatureDto {
+  name: string;
+  sku?: string;
+  description?: string;
+  productTypeId: string;
+  dimensions?: string;
+  materials?: string;
+  color?: string;
+  weight?: number;
+  basePrice?: number;
+  productionTimeHours?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateNomenclatureDto extends Partial<CreateNomenclatureDto> {}
+
 // User interface
 export interface User {
   id: string;
@@ -183,6 +219,8 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  // Telegram для уведомлений
+  telegramId?: string;
   // SIP телефония (для менеджеров)
   sipServer?: string;
   sipUser?: string;
@@ -511,6 +549,7 @@ export interface ShipmentItem {
 export interface Shipment {
   id: string;
   status: ShipmentStatus;
+  orderNumber?: string;
   items: ShipmentItem[];
   customerName: string;
   customerPhone: string;
@@ -534,6 +573,7 @@ export interface CreateShipmentDto {
   deliveryAddress: string;
   deliveryDate?: string;
   notes?: string;
+  orderNumber?: string;
 }
 
 export interface UpdateShipmentStatusDto {
@@ -645,6 +685,13 @@ export interface CompanySettings {
   bik: string;
   accountNumber: string;
   logoUrl: string | null;
+  // Рабочие часы для онлайн-чата
+  chatEnabled: boolean;
+  workingHoursStart: string;
+  workingHoursEnd: string;
+  workingDays: string;
+  timezone: string;
+  offlineMessage: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -686,3 +733,24 @@ export interface TelegramCheckAuthResponse {
   access_token?: string;
   user?: User;
 }
+
+// Feature Flags (переключатели функций для супер-админа)
+export interface FeatureFlag {
+  id: string;
+  key: string;
+  name: string;
+  description?: string;
+  isEnabled: boolean;
+  category: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateFeatureFlagDto {
+  name?: string;
+  description?: string;
+  isEnabled?: boolean;
+  category?: string;
+}
+
+export type FeatureFlagsMap = Record<string, boolean>;

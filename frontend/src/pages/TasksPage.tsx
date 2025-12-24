@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { tasksApi } from '@/lib/api';
 import { TaskCard } from '@/components/TaskCard';
-import { TaskStatus } from '@/types';
-import { Loader2, Package } from 'lucide-react';
+import { TaskStatus, OrderPriority } from '@/types';
+import { Loader2, Package, AlertTriangle, Flame } from 'lucide-react';
 
 export const TasksPage = () => {
   const { data: tasks, isLoading, error } = useQuery({
@@ -30,18 +30,73 @@ export const TasksPage = () => {
       grouped.get(orderId)!.push(task);
     });
 
-    return Array.from(grouped.entries()).map(([orderId, orderTasks]) => ({
-      orderId,
-      order: orderTasks[0]?.product?.order,
-      tasks: orderTasks,
-    }));
+    // Сортируем заказы по приоритету (URGENT первым)
+    const priorityOrder = {
+      [OrderPriority.URGENT]: 0,
+      [OrderPriority.HIGH]: 1,
+      [OrderPriority.NORMAL]: 2,
+      [OrderPriority.LOW]: 3,
+    };
+
+    return Array.from(grouped.entries())
+      .map(([orderId, orderTasks]) => ({
+        orderId,
+        order: orderTasks?.[0]?.product?.order,
+        tasks: orderTasks,
+      }))
+      .sort((a, b) => {
+        const priorityA = priorityOrder[a.order?.priority as OrderPriority] ?? 2;
+        const priorityB = priorityOrder[b.order?.priority as OrderPriority] ?? 2;
+        return priorityA - priorityB;
+      });
   }, [tasks]);
 
-  // Статистика по статусам
-  const newTasks = tasks?.filter((t) => t.status === TaskStatus.NEW) || [];
-  const acceptedTasks = tasks?.filter((t) => t.status === TaskStatus.ACCEPTED) || [];
-  const completedTasks = tasks?.filter((t) => t.status === TaskStatus.COMPLETED) || [];
-  const passedTasks = tasks?.filter((t) => t.status === TaskStatus.PASSED) || [];
+  // Функция для получения стилей заказа по приоритету
+  const getOrderStyles = (priority?: string) => {
+    switch (priority) {
+      case OrderPriority.URGENT:
+        return {
+          border: 'border-red-400 border-2',
+          header: 'bg-gradient-to-r from-red-100 to-red-200 border-red-300',
+          icon: <Flame className="w-4 h-4 text-red-600" />,
+          text: 'text-red-900',
+          badge: 'bg-red-500 text-white',
+        };
+      case OrderPriority.HIGH:
+        return {
+          border: 'border-orange-400 border-2',
+          header: 'bg-gradient-to-r from-orange-100 to-orange-200 border-orange-300',
+          icon: <AlertTriangle className="w-4 h-4 text-orange-600" />,
+          text: 'text-orange-900',
+          badge: 'bg-orange-500 text-white',
+        };
+      case OrderPriority.LOW:
+        return {
+          border: 'border-gray-200',
+          header: 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200',
+          icon: <Package className="w-4 h-4 text-gray-500" />,
+          text: 'text-gray-700',
+          badge: 'bg-gray-400 text-white',
+        };
+      default: // NORMAL
+        return {
+          border: 'border-gray-200',
+          header: 'bg-gradient-to-r from-blue-50 to-blue-100 border-gray-200',
+          icon: <Package className="w-4 h-4 text-blue-600" />,
+          text: 'text-gray-900',
+          badge: 'bg-blue-500 text-white',
+        };
+    }
+  };
+
+  const getPriorityLabel = (priority?: string) => {
+    switch (priority) {
+      case OrderPriority.URGENT: return 'СРОЧНО';
+      case OrderPriority.HIGH: return 'Высокий';
+      case OrderPriority.LOW: return 'Низкий';
+      default: return null;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -62,80 +117,63 @@ export const TasksPage = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Мои задачи</h1>
-        <p className="text-muted-foreground mt-2">
-          Управляйте своими ежедневными задачами на производстве
-        </p>
-      </div>
-
-      {/* Статистика */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-          <div className="text-blue-600 text-sm font-medium">Новые</div>
-          <div className="text-3xl font-bold text-blue-900">{newTasks.length}</div>
-        </div>
-        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-          <div className="text-yellow-600 text-sm font-medium">В работе</div>
-          <div className="text-3xl font-bold text-yellow-900">{acceptedTasks.length}</div>
-        </div>
-        <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
-          <div className="text-green-600 text-sm font-medium">Завершено</div>
-          <div className="text-3xl font-bold text-green-900">{completedTasks.length}</div>
-        </div>
-        <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg">
-          <div className="text-purple-600 text-sm font-medium">Передано</div>
-          <div className="text-3xl font-bold text-purple-900">{passedTasks.length}</div>
-        </div>
-      </div>
-
+    <div>
       {/* Задачи как Kanban - каждый заказ это колонка */}
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-3 overflow-x-auto pb-2">
         {tasksByOrder.length === 0 ? (
-          <div className="flex-1 text-center p-12 bg-muted/50 rounded-lg">
-            <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-lg text-muted-foreground">Нет активных задач</p>
+          <div className="flex-1 text-center p-8 bg-muted/50 rounded-lg">
+            <Package className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Нет активных задач</p>
           </div>
         ) : (
           tasksByOrder.map(({ orderId, order, tasks: orderTasks }) => {
             // Группируем задачи заказа по статусам
             // Показываем только активные задачи (NEW и ACCEPTED), без завершенных
-            const newOrderTasks = orderTasks.filter((t) => t.status === TaskStatus.NEW);
-            const acceptedOrderTasks = orderTasks.filter((t) => t.status === TaskStatus.ACCEPTED);
+            const newOrderTasks = orderTasks?.filter((t) => t.status === TaskStatus.NEW) || [];
+            const acceptedOrderTasks = orderTasks?.filter((t) => t.status === TaskStatus.ACCEPTED) || [];
             const completedOrderTasks = []; // Не показываем завершенные задачи
+
+            const styles = getOrderStyles(order?.priority);
+            const priorityLabel = getPriorityLabel(order?.priority);
 
             return (
               <div
                 key={orderId}
-                className="flex-shrink-0 w-72 bg-white border-2 border-gray-200 rounded-lg"
+                className={`flex-shrink-0 w-64 bg-white rounded-lg ${styles.border}`}
               >
                 {/* Заголовок заказа */}
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b-2 border-gray-200 rounded-t-lg">
-                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <Package className="w-5 h-5 text-blue-600" />
-                    {order?.orderNumber || 'Заказ'}
-                  </h2>
+                <div className={`p-2 border-b rounded-t-lg ${styles.header}`}>
+                  <div className="flex items-center justify-between">
+                    <h2 className={`text-sm font-bold flex items-center gap-1.5 ${styles.text}`}>
+                      {styles.icon}
+                      {order?.orderNumber || 'Заказ'}
+                    </h2>
+                    {priorityLabel && (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${styles.badge}`}>
+                        {priorityLabel}
+                      </span>
+                    )}
+                  </div>
                   {order && (
-                    <div className="mt-2 space-y-1 text-xs text-gray-700">
-                      <div className="font-medium">{order.customerName}</div>
-                      {order.customerPhone && <div>{order.customerPhone}</div>}
+                    <div className="mt-1 text-xs text-gray-700">
+                      <span className="font-medium">{order.customerName}</span>
+                      {order.customerPhone && <span className="ml-2">{order.customerPhone}</span>}
                     </div>
                   )}
                 </div>
 
                 {/* Задачи по статусам (вертикально) */}
-                <div className="p-3 space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto">
+                <div className="p-2 space-y-2 max-h-[calc(100vh-220px)] overflow-y-auto">
                   {/* Новые задачи */}
                   {newOrderTasks.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-blue-200">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                        <h3 className="text-xs font-semibold text-blue-700 uppercase">
+                      <div className="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-blue-200">
+                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                        <h3 className="text-[10px] font-semibold text-blue-700 uppercase">
                           Новые ({newOrderTasks.length})
                         </h3>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         {newOrderTasks.map((task) => (
                           <TaskCard key={task.id} task={task} />
                         ))}
@@ -146,13 +184,13 @@ export const TasksPage = () => {
                   {/* Задачи в работе */}
                   {acceptedOrderTasks.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-yellow-200">
-                        <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                        <h3 className="text-xs font-semibold text-yellow-700 uppercase">
+                      <div className="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-yellow-200">
+                        <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>
+                        <h3 className="text-[10px] font-semibold text-yellow-700 uppercase">
                           В работе ({acceptedOrderTasks.length})
                         </h3>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         {acceptedOrderTasks.map((task) => (
                           <TaskCard key={task.id} task={task} />
                         ))}
@@ -164,7 +202,7 @@ export const TasksPage = () => {
                   {newOrderTasks.length === 0 &&
                     acceptedOrderTasks.length === 0 &&
                     completedOrderTasks.length === 0 && (
-                      <div className="text-center p-8 text-gray-400">
+                      <div className="text-center p-4 text-gray-400 text-xs">
                         Нет задач
                       </div>
                     )}

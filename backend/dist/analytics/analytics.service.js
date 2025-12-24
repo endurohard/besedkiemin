@@ -77,47 +77,20 @@ let AnalyticsService = class AnalyticsService {
     }
     async getUserPerformance() {
         const users = await this.prisma.user.findMany({
-            where: { isActive: true },
+            where: {
+                isActive: true,
+                role: { not: 'SUPER_ADMIN' },
+            },
             select: {
                 id: true,
                 firstName: true,
                 lastName: true,
                 role: true,
-            },
-        });
-        const userStats = await Promise.all(users.map(async (user) => {
-            const [completedTasks, avgTaskDuration, activeTask] = await Promise.all([
-                this.prisma.productHistory.count({
-                    where: {
-                        userId: user.id,
-                        completedAt: { not: null },
-                    },
-                }),
-                this.prisma.productHistory.findMany({
-                    where: {
-                        userId: user.id,
-                        completedAt: { not: null },
-                    },
+                productHistory: {
                     select: {
                         startedAt: true,
                         completedAt: true,
-                    },
-                }).then((tasks) => {
-                    if (tasks.length === 0)
-                        return 0;
-                    const totalDuration = tasks.reduce((sum, task) => {
-                        if (!task.completedAt)
-                            return sum;
-                        return sum + (task.completedAt.getTime() - task.startedAt.getTime());
-                    }, 0);
-                    return Math.round(totalDuration / tasks.length / 1000 / 60 / 60);
-                }),
-                this.prisma.productHistory.findFirst({
-                    where: {
-                        userId: user.id,
-                        completedAt: null,
-                    },
-                    include: {
+                        stage: true,
                         product: {
                             select: {
                                 name: true,
@@ -129,8 +102,21 @@ let AnalyticsService = class AnalyticsService {
                             },
                         },
                     },
-                }),
-            ]);
+                },
+            },
+        });
+        const userStats = users.map((user) => {
+            const completedHistory = user.productHistory.filter(h => h.completedAt !== null);
+            const activeHistory = user.productHistory.find(h => h.completedAt === null);
+            let avgTaskDuration = 0;
+            if (completedHistory.length > 0) {
+                const totalDuration = completedHistory.reduce((sum, task) => {
+                    if (!task.completedAt)
+                        return sum;
+                    return sum + (task.completedAt.getTime() - task.startedAt.getTime());
+                }, 0);
+                avgTaskDuration = Math.round(totalDuration / completedHistory.length / 1000 / 60 / 60);
+            }
             return {
                 user: {
                     id: user.id,
@@ -138,18 +124,18 @@ let AnalyticsService = class AnalyticsService {
                     role: user.role,
                 },
                 stats: {
-                    completedTasks,
+                    completedTasks: completedHistory.length,
                     avgTaskDurationHours: avgTaskDuration,
-                    hasActiveTask: !!activeTask,
-                    activeTask: activeTask ? {
-                        productName: activeTask.product.name,
-                        orderNumber: activeTask.product.order.orderNumber,
-                        stage: activeTask.stage,
-                        startedAt: activeTask.startedAt,
+                    hasActiveTask: !!activeHistory,
+                    activeTask: activeHistory ? {
+                        productName: activeHistory.product.name,
+                        orderNumber: activeHistory.product.order.orderNumber,
+                        stage: activeHistory.stage,
+                        startedAt: activeHistory.startedAt,
                     } : null,
                 },
             };
-        }));
+        });
         return userStats;
     }
     async getQualityStats() {
@@ -217,45 +203,29 @@ let AnalyticsService = class AnalyticsService {
             select: {
                 id: true,
                 name: true,
-                _count: {
-                    select: { products: true },
+                products: {
+                    select: {
+                        stage: true,
+                    },
                 },
             },
         });
-        const typeStats = await Promise.all(productTypes.map(async (type) => {
-            const [completed, inProduction, rejected] = await Promise.all([
-                this.prisma.product.count({
-                    where: {
-                        productTypeId: type.id,
-                        stage: client_1.ProductionStage.COMPLETED,
-                    },
-                }),
-                this.prisma.product.count({
-                    where: {
-                        productTypeId: type.id,
-                        stage: {
-                            notIn: [client_1.ProductionStage.PENDING, client_1.ProductionStage.COMPLETED, client_1.ProductionStage.REJECTED],
-                        },
-                    },
-                }),
-                this.prisma.product.count({
-                    where: {
-                        productTypeId: type.id,
-                        stage: client_1.ProductionStage.REJECTED,
-                    },
-                }),
-            ]);
+        const typeStats = productTypes.map((type) => {
+            const products = type.products;
+            const total = products.length;
+            const completed = products.filter(p => p.stage === client_1.ProductionStage.COMPLETED).length;
+            const excludedStages = [client_1.ProductionStage.PENDING, client_1.ProductionStage.COMPLETED, client_1.ProductionStage.REJECTED];
+            const inProduction = products.filter(p => !excludedStages.includes(p.stage)).length;
+            const rejected = products.filter(p => p.stage === client_1.ProductionStage.REJECTED).length;
             return {
                 type: type.name,
-                total: type._count.products,
+                total,
                 completed,
                 inProduction,
                 rejected,
-                completionRate: type._count.products > 0
-                    ? ((completed / type._count.products) * 100).toFixed(1)
-                    : '0',
+                completionRate: total > 0 ? ((completed / total) * 100).toFixed(1) : '0',
             };
-        }));
+        });
         return typeStats;
     }
     async getPerformanceSummary(startDate, endDate) {

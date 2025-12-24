@@ -6,43 +6,16 @@ export declare class ShipmentsController {
     createShipment(items: Array<{
         inventoryItemId: string;
         quantity: number;
-    }>, customerName: string, customerPhone: string, deliveryAddress: string, deliveryDate: Date, notes: string, req: any): Promise<{
+    }>, customerName: string, customerPhone: string, deliveryAddress: string, deliveryDate: Date, notes: string, orderNumber: string, req: any): Promise<{
         items: ({
             inventoryItem: {
                 productType: {
-                    description: string | null;
-                    name: string;
-                    isActive: boolean;
-                    id: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    productionTimeHours: number | null;
-                };
-                product: {
-                    description: string | null;
                     name: string;
                     id: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    stage: import(".prisma/client").$Enums.ProductionStage;
-                    quantity: number;
-                    productTypeId: string;
-                    orderId: string;
-                    dimensions: string | null;
-                    schemaImageUrl: string | null;
-                    deadline: Date | null;
                 };
-            } & {
                 name: string;
                 id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 quantity: number;
-                notes: string | null;
-                productId: string;
-                productTypeId: string;
-                orderId: string;
-                receivedAt: Date;
             };
         } & {
             id: string;
@@ -63,89 +36,44 @@ export declare class ShipmentsController {
         createdAt: Date;
         updatedAt: Date;
         notes: string | null;
+        orderNumber: string | null;
         customerName: string;
         customerPhone: string;
         deliveryAddress: string;
         deliveryDate: Date | null;
         shippedById: string;
     }>;
-    getAllShipments(req: any): Promise<({
-        items: ({
+    getAllShipments(req: any, status?: ShipmentStatus): Promise<{
+        status: import(".prisma/client").$Enums.ShipmentStatus;
+        items: {
             inventoryItem: {
-                order: {
-                    status: import(".prisma/client").$Enums.OrderStatus;
-                    description: string | null;
-                    id: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    priority: import(".prisma/client").$Enums.OrderPriority;
-                    notes: string | null;
-                    orderNumber: string;
-                    customerName: string;
-                    customerPhone: string | null;
-                    customerAddress: string | null;
-                    createdById: string;
-                };
                 productType: {
-                    description: string | null;
-                    name: string;
-                    isActive: boolean;
-                    id: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    productionTimeHours: number | null;
-                };
-                product: {
-                    description: string | null;
                     name: string;
                     id: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    stage: import(".prisma/client").$Enums.ProductionStage;
-                    quantity: number;
-                    productTypeId: string;
-                    orderId: string;
-                    dimensions: string | null;
-                    schemaImageUrl: string | null;
-                    deadline: Date | null;
                 };
-            } & {
                 name: string;
                 id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                quantity: number;
-                notes: string | null;
-                productId: string;
-                productTypeId: string;
-                orderId: string;
-                receivedAt: Date;
             };
-        } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             quantity: number;
-            shipmentId: string;
-            inventoryItemId: string;
-        })[];
+        }[];
+        id: string;
+        createdAt: Date;
+        _count: {
+            items: number;
+        };
+        notes: string;
+        orderNumber: string;
+        customerName: string;
+        customerPhone: string;
+        deliveryAddress: string;
+        deliveryDate: Date;
         shippedBy: {
             firstName: string;
             lastName: string;
             id: string;
         };
-    } & {
-        status: import(".prisma/client").$Enums.ShipmentStatus;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        notes: string | null;
-        customerName: string;
-        customerPhone: string;
-        deliveryAddress: string;
-        deliveryDate: Date | null;
-        shippedById: string;
-    })[]>;
+    }[]>;
     getShipmentsByStatus(status: ShipmentStatus, req: any): Promise<({
         items: ({
             inventoryItem: {
@@ -193,9 +121,9 @@ export declare class ShipmentsController {
                 updatedAt: Date;
                 quantity: number;
                 notes: string | null;
-                productId: string;
+                productId: string | null;
                 productTypeId: string;
-                orderId: string;
+                orderId: string | null;
                 receivedAt: Date;
             };
         } & {
@@ -217,6 +145,7 @@ export declare class ShipmentsController {
         createdAt: Date;
         updatedAt: Date;
         notes: string | null;
+        orderNumber: string | null;
         customerName: string;
         customerPhone: string;
         deliveryAddress: string;
@@ -270,9 +199,9 @@ export declare class ShipmentsController {
                 updatedAt: Date;
                 quantity: number;
                 notes: string | null;
-                productId: string;
+                productId: string | null;
                 productTypeId: string;
-                orderId: string;
+                orderId: string | null;
                 receivedAt: Date;
             };
         } & {
@@ -295,6 +224,7 @@ export declare class ShipmentsController {
         createdAt: Date;
         updatedAt: Date;
         notes: string | null;
+        orderNumber: string | null;
         customerName: string;
         customerPhone: string;
         deliveryAddress: string;
@@ -348,9 +278,9 @@ export declare class ShipmentsController {
                 updatedAt: Date;
                 quantity: number;
                 notes: string | null;
-                productId: string;
+                productId: string | null;
                 productTypeId: string;
-                orderId: string;
+                orderId: string | null;
                 receivedAt: Date;
             };
         } & {
@@ -372,6 +302,7 @@ export declare class ShipmentsController {
         createdAt: Date;
         updatedAt: Date;
         notes: string | null;
+        orderNumber: string | null;
         customerName: string;
         customerPhone: string;
         deliveryAddress: string;
@@ -384,6 +315,7 @@ export declare class ShipmentsController {
         createdAt: Date;
         updatedAt: Date;
         notes: string | null;
+        orderNumber: string | null;
         customerName: string;
         customerPhone: string;
         deliveryAddress: string;
@@ -397,6 +329,7 @@ export declare class ShipmentsController {
         customerPhone: string;
         deliveryAddress: string;
         deliveryDate: string;
+        orderNumber: string;
         items: {
             name: string;
             quantity: number;

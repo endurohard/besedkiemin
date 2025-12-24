@@ -19,8 +19,13 @@ export class RolesGuard implements CanActivate {
 
     const { user } = context.switchToHttp().getRequest();
 
-    // OWNER has full access to everything
-    if (user.role === UserRole.OWNER) {
+    // SUPER_ADMIN has full access to everything
+    if (user.role === UserRole.SUPER_ADMIN) {
+      return true;
+    }
+
+    // OWNER has full access to everything except SUPER_ADMIN-only routes
+    if (user.role === UserRole.OWNER && !requiredRoles.includes(UserRole.SUPER_ADMIN)) {
       return true;
     }
 

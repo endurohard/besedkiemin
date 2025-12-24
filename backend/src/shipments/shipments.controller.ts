@@ -40,18 +40,12 @@ export class ShipmentsController {
   @Get()
   @Roles(UserRole.OWNER, UserRole.MANAGER, UserRole.WAREHOUSE)
   @ApiOperation({ summary: 'Получить все отгрузки с пагинацией' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Номер страницы (по умолчанию 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Количество на странице (по умолчанию 50)' })
   @ApiQuery({ name: 'status', required: false, enum: ShipmentStatus, description: 'Фильтр по статусу' })
   getAllShipments(
     @Req() req,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
     @Query('status') status?: ShipmentStatus,
   ) {
     return this.shipmentsService.getAllShipments(req.user.userId, {
-      page: page ? parseInt(page, 10) : undefined,
-      limit: limit ? parseInt(limit, 10) : undefined,
       status,
     });
   }

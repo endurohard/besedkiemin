@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { CatalogHeader } from '../components/CatalogHeader';
 import { CustomerChatWidget } from '../components/chat/CustomerChatWidget';
-import { MapPin, Phone, Mail, Clock, Check, MessageCircle } from 'lucide-react';
-import api from '../lib/api';
-import { CatalogCategory, CatalogProduct, CompanySettings } from '../types';
+import { MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react';
+import api, { featureFlagsApi } from '../lib/api';
+import { CatalogCategory, CatalogProduct, CompanySettings, FeatureFlagsMap } from '../types';
 
 // Образцы товаров с изображениями
 const sampleProducts = [
@@ -119,12 +120,10 @@ const sampleProducts = [
 ];
 
 const CatalogPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [categories, setCategories] = useState<CatalogCategory[]>([]);
-  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [, setCategories] = useState<CatalogCategory[]>([]);
+  const [, setProducts] = useState<CatalogProduct[]>([]);
   const [displayProducts, setDisplayProducts] = useState(sampleProducts);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [formData, setFormData] = useState({
@@ -134,11 +133,23 @@ const CatalogPage: React.FC = () => {
     message: '',
   });
 
+  // Check if catalog is enabled
+  const { data: featureFlags, isLoading: flagsLoading } = useQuery<FeatureFlagsMap>({
+    queryKey: ['feature-flags-public'],
+    queryFn: featureFlagsApi.getPublic,
+    staleTime: 60000,
+  });
+
   useEffect(() => {
     fetchCategories();
     fetchProducts();
     fetchCompanySettings();
   }, []);
+
+  // Redirect to login if catalog is disabled
+  if (!flagsLoading && featureFlags?.catalog === false) {
+    return <Navigate to="/app/login" replace />;
+  }
 
   const fetchCategories = async () => {
     try {

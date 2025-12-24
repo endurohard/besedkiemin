@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../lib/api';
-import { CatalogProduct } from '../types';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import api, { featureFlagsApi } from '../lib/api';
+import { CatalogProduct, FeatureFlagsMap } from '../types';
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -13,11 +14,23 @@ const ProductDetailPage: React.FC = () => {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
 
+  // Check if catalog is enabled
+  const { data: featureFlags, isLoading: flagsLoading } = useQuery<FeatureFlagsMap>({
+    queryKey: ['feature-flags-public'],
+    queryFn: featureFlagsApi.getPublic,
+    staleTime: 60000,
+  });
+
   useEffect(() => {
     if (slug) {
       fetchProduct(slug);
     }
   }, [slug]);
+
+  // Redirect to login if catalog is disabled
+  if (!flagsLoading && featureFlags?.catalog === false) {
+    return <Navigate to="/app/login" replace />;
+  }
 
   const fetchProduct = async (slug: string) => {
     try {

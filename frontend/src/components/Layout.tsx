@@ -18,16 +18,16 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Besedki EMIN</h1>
-          <div className="flex items-center gap-4">
+        <div className="px-3 py-2 flex items-center justify-between">
+          <h1 className="text-lg font-bold">Besedki EMIN</h1>
+          <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
               <p className="text-xs text-muted-foreground">{user?.role}</p>
             </div>
             <TelegramLinkWidget />
-            <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-2">
-              <LogOut size={16} />
+            <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1.5">
+              <LogOut size={14} />
               Выход
             </Button>
           </div>
@@ -35,7 +35,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       </header>
       <div className="flex">
         <Sidebar userRole={user?.role} />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 overflow-auto">{children}</main>
       </div>
 
       {/* Phone Widget - показывается только для пользователей с SIP данными */}

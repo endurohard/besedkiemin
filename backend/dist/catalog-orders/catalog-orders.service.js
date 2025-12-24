@@ -187,26 +187,19 @@ let CatalogOrdersService = class CatalogOrdersService {
                 },
             });
         }
-        const productionOrder = await this.prisma.order.create({
-            data: {
-                orderNumber: productionOrderNumber,
-                customerName: catalogOrder.customerName,
-                customerPhone: catalogOrder.customerPhone,
-                customerAddress: catalogOrder.deliveryAddress || '',
-                status: 'NEW',
-                createdById: userId,
-            },
-        });
-        const defaultProductType = await this.prisma.productType.findFirst({
-            where: { isActive: true },
-        });
+        const [defaultProductType, firstStage] = await Promise.all([
+            this.prisma.productType.findFirst({
+                where: { isActive: true },
+                select: { id: true, name: true },
+            }),
+            this.prisma.workflowStage.findFirst({
+                where: { isActive: true },
+                orderBy: { order: 'asc' },
+            }),
+        ]);
         if (!defaultProductType) {
             throw new common_1.BadRequestException('Не найдено активных типов продукции');
         }
-        const firstStage = await this.prisma.workflowStage.findFirst({
-            where: { isActive: true },
-            orderBy: { order: 'asc' },
-        });
         if (!firstStage) {
             throw new common_1.BadRequestException('Не найдено активных стадий производства');
         }
@@ -214,6 +207,12 @@ let CatalogOrdersService = class CatalogOrdersService {
             where: {
                 role: firstStage.role,
                 isActive: true,
+            },
+            select: {
+                id: true,
+                email: true,
+                role: true,
+                telegramId: true,
             },
         });
         const itemsToProcess = catalogOrder.items.length > 0
@@ -223,8 +222,18 @@ let CatalogOrdersService = class CatalogOrdersService {
                     quantity: 1,
                     price: 0
                 }];
-        for (const item of itemsToProcess) {
-            const product = await this.prisma.product.create({
+        const result = await this.prisma.$transaction(async (tx) => {
+            const productionOrder = await tx.order.create({
+                data: {
+                    orderNumber: productionOrderNumber,
+                    customerName: catalogOrder.customerName,
+                    customerPhone: catalogOrder.customerPhone,
+                    customerAddress: catalogOrder.deliveryAddress || '',
+                    status: 'NEW',
+                    createdById: userId,
+                },
+            });
+            const products = await Promise.all(itemsToProcess.map((item) => tx.product.create({
                 data: {
                     name: item.product.name,
                     orderId: productionOrder.id,
@@ -232,56 +241,55 @@ let CatalogOrdersService = class CatalogOrdersService {
                     productTypeId: defaultProductType.id,
                     stage: firstStage.legacyStage,
                 },
+            })));
+            const taskPromises = products.flatMap((product) => workers.map((worker) => tx.task.create({
+                data: {
+                    title: `${product.name} - ${firstStage.name}`,
+                    description: `Новый продукт для обработки. Заказ: ${productionOrder.orderNumber}`,
+                    stage: firstStage.legacyStage,
+                    productId: product.id,
+                    assignedToId: worker.id,
+                },
+            })));
+            await Promise.all(taskPromises);
+            const updatedOrder = await tx.catalogOrder.update({
+                where: { id },
+                data: {
+                    processedAt: new Date(),
+                    processedBy: userId,
+                    status: 'IN_WORK',
+                },
                 include: {
-                    productType: true,
-                    order: true,
+                    items: {
+                        include: {
+                            product: true,
+                        },
+                    },
                 },
             });
-            for (const worker of workers) {
-                const newTask = await this.prisma.task.create({
-                    data: {
-                        title: `${product.name} - ${firstStage.name}`,
-                        description: `Новый продукт для обработки. Заказ: ${productionOrder.orderNumber}`,
-                        stage: firstStage.legacyStage,
-                        productId: product.id,
-                        assignedToId: worker.id,
-                    },
-                });
-                if (worker.telegramId) {
-                    const message = `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
-                        `*Продукт:* ${product.name}\n` +
-                        `*Тип:* ${product.productType?.name || 'Н/Д'}\n` +
-                        `*Количество:* ${product.quantity} шт.\n` +
-                        `*Стадия:* ${firstStage.name}\n` +
-                        `*Заказ:* ${productionOrder.orderNumber}\n` +
-                        `*Клиент:* ${productionOrder.customerName || 'Н/Д'}\n` +
-                        `*Источник:* Заказ с сайта\n\n` +
-                        `✅ Откройте раздел "Мои задачи" для выполнения`;
-                    try {
-                        await this.telegramService.sendMessage(worker.telegramId, message);
-                        console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role})`);
-                    }
-                    catch (error) {
-                        console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
-                    }
-                }
-            }
-        }
-        return this.prisma.catalogOrder.update({
-            where: { id },
-            data: {
-                processedAt: new Date(),
-                processedBy: userId,
-                status: 'IN_WORK',
-            },
-            include: {
-                items: {
-                    include: {
-                        product: true,
-                    },
-                },
-            },
+            return { updatedOrder, products, productionOrder };
         });
+        Promise.allSettled(result.products.flatMap((product) => workers
+            .filter((worker) => worker.telegramId)
+            .map(async (worker) => {
+            const message = `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
+                `*Продукт:* ${product.name}\n` +
+                `*Тип:* ${defaultProductType.name || 'Н/Д'}\n` +
+                `*Количество:* ${product.quantity} шт.\n` +
+                `*Стадия:* ${firstStage.name}\n` +
+                `*Заказ:* ${result.productionOrder.orderNumber}\n` +
+                `*Клиент:* ${result.productionOrder.customerName || 'Н/Д'}\n` +
+                `*Источник:* Заказ с сайта\n\n` +
+                `✅ Откройте раздел "Мои задачи" для выполнения`;
+            try {
+                await this.telegramService.sendMessage(worker.telegramId, message);
+                console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role})`);
+            }
+            catch (error) {
+                console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
+            }
+        })));
+        return result.updatedOrder;
     }
     async cancelOrder(id, cancellationReason, userId) {
         await this.findOne(id);

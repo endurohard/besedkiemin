@@ -14,10 +14,17 @@ export default defineConfig({
     strictPort: false,
     host: true,
     cors: true,
+    allowedHosts: ['it005.ru', 'localhost', '127.0.0.1', '192.168.5.43'],
     watch: {
       usePolling: true, // Используем polling вместо file system events в Docker
     },
     hmr: false, // Отключаем HMR для работы через Kong
-    // Прокси не нужен, т.к. API идет через Kong
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
 })

@@ -77,9 +77,12 @@ const CatalogManagementPage: React.FC = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
-        Управление каталогом
+      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+        Витрина сайта
       </h1>
+      <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '20px' }}>
+        Управление публичным каталогом товаров на сайте
+      </p>
 
       {/* Табы */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>

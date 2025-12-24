@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { inventoryApi, shipmentsApi } from '@/lib/api';
-import { CreateShipmentDto, InventoryItem, UserRole } from '@/types';
+import { inventoryApi, shipmentsApi, productTypesApi } from '@/lib/api';
+import { CreateShipmentDto, InventoryItem, UserRole, ProductType } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AddressInput } from '@/components/AddressInput';
 import { CustomerNameInput } from '@/components/CustomerNameInput';
-import { Loader2, Package, TruckIcon, XIcon, Search, Plus } from 'lucide-react';
+import { Loader2, Package, TruckIcon, XIcon, Search, Plus, PackagePlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAuthStore } from '@/store/authStore';
@@ -18,6 +18,7 @@ export const InventoryPage = () => {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [showShipmentModal, setShowShipmentModal] = useState(false);
   const [showGroupShipmentModal, setShowGroupShipmentModal] = useState(false);
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItems, setSelectedItems] = useState<Array<{ item: InventoryItem; quantity: number }>>([]);
   const [groupShipmentForm, setGroupShipmentForm] = useState({
@@ -25,6 +26,7 @@ export const InventoryPage = () => {
     customerPhone: '',
     deliveryAddress: '',
     notes: '',
+    orderNumber: '',
   });
   const [shipmentForm, setShipmentForm] = useState<CreateShipmentDto>({
     items: [{
@@ -34,6 +36,12 @@ export const InventoryPage = () => {
     customerName: '',
     customerPhone: '',
     deliveryAddress: '',
+    notes: '',
+  });
+  const [addItemForm, setAddItemForm] = useState({
+    name: '',
+    productTypeId: '',
+    quantity: 1,
     notes: '',
   });
 
@@ -46,6 +54,23 @@ export const InventoryPage = () => {
   const { data: summary } = useQuery({
     queryKey: ['inventory-summary'],
     queryFn: inventoryApi.getSummary,
+  });
+
+  // Получаем список типов товаров для формы добавления
+  const { data: productTypes } = useQuery({
+    queryKey: ['product-types'],
+    queryFn: () => productTypesApi.getAll(),
+  });
+
+  // Мутация для добавления товара на склад
+  const addItemMutation = useMutation({
+    mutationFn: inventoryApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-summary'] });
+      setShowAddItemModal(false);
+      setAddItemForm({ name: '', productTypeId: '', quantity: 1, notes: '' });
+    },
   });
 
   const filteredInventory = useMemo(() => {
@@ -94,6 +119,7 @@ export const InventoryPage = () => {
       customerPhone: '',
       deliveryAddress: '',
       notes: '',
+      orderNumber: '',
     });
   };
 
@@ -112,6 +138,7 @@ export const InventoryPage = () => {
       customerPhone: phone,
       deliveryAddress: item.order?.customerAddress || '',
       notes: '',
+      orderNumber: item.order?.orderNumber || '',
     });
     setShowShipmentModal(true);
   };
@@ -194,13 +221,23 @@ export const InventoryPage = () => {
           </p>
         </div>
         {(user?.role === UserRole.OWNER || user?.role === UserRole.MANAGER) && (
-          <Button
-            onClick={() => setShowGroupShipmentModal(true)}
-            className="gap-2"
-          >
-            <Plus size={16} />
-            Создать отгрузку
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowAddItemModal(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <PackagePlus size={16} />
+              Добавить товар
+            </Button>
+            <Button
+              onClick={() => setShowGroupShipmentModal(true)}
+              className="gap-2"
+            >
+              <Plus size={16} />
+              Создать отгрузку
+            </Button>
+          </div>
         )}
       </div>
 
@@ -432,6 +469,24 @@ export const InventoryPage = () => {
                   )}
                 </div>
 
+                {/* Номер заказа */}
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Номер заказа</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Номер заказа (можно ввести вручную)</label>
+                      <Input
+                        value={groupShipmentForm.orderNumber}
+                        onChange={(e) =>
+                          setGroupShipmentForm({ ...groupShipmentForm, orderNumber: e.target.value })
+                        }
+                        placeholder="ORD-001 или свой номер"
+                        className="h-8"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Данные клиента */}
                 <div>
                   <h3 className="text-sm font-semibold mb-2">Информация о получателе</h3>
@@ -591,6 +646,24 @@ export const InventoryPage = () => {
                   </div>
                 </div>
 
+                {/* Номер заказа */}
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Номер заказа</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Номер заказа</label>
+                      <Input
+                        value={shipmentForm.orderNumber || ''}
+                        onChange={(e) =>
+                          setShipmentForm({ ...shipmentForm, orderNumber: e.target.value })
+                        }
+                        placeholder="ORD-001 или свой номер"
+                        className="h-8"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Данные клиента */}
                 <div>
                   <h3 className="text-sm font-semibold mb-2">Информация о получателе</h3>
@@ -699,6 +772,116 @@ export const InventoryPage = () => {
                   >
                     {createShipmentMutation.isPending && <Loader2 className="animate-spin" size={14} />}
                     Создать отгрузку
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Модальное окно добавления товара на склад */}
+      {showAddItemModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="flex flex-row items-center justify-between border-b pb-3">
+              <CardTitle className="text-lg">Добавить товар на склад</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowAddItemModal(false);
+                  setAddItemForm({ name: '', productTypeId: '', quantity: 1, notes: '' });
+                }}
+              >
+                <XIcon size={18} />
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  addItemMutation.mutate(addItemForm);
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-xs font-medium mb-1">Название товара *</label>
+                  <Input
+                    value={addItemForm.name}
+                    onChange={(e) => setAddItemForm({ ...addItemForm, name: e.target.value })}
+                    placeholder="Введите название товара"
+                    required
+                    className="h-9"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1">Тип товара *</label>
+                  <select
+                    value={addItemForm.productTypeId}
+                    onChange={(e) => setAddItemForm({ ...addItemForm, productTypeId: e.target.value })}
+                    className="w-full h-9 px-3 border rounded-md text-sm"
+                    required
+                  >
+                    <option value="">Выберите тип товара</option>
+                    {productTypes?.map((type: ProductType) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1">Количество *</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={addItemForm.quantity}
+                    onChange={(e) => setAddItemForm({ ...addItemForm, quantity: parseInt(e.target.value) || 1 })}
+                    required
+                    className="h-9"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1">Примечания</label>
+                  <textarea
+                    className="w-full px-3 py-2 border rounded-md text-sm"
+                    rows={2}
+                    value={addItemForm.notes}
+                    onChange={(e) => setAddItemForm({ ...addItemForm, notes: e.target.value })}
+                    placeholder="Дополнительная информация"
+                  />
+                </div>
+
+                {addItemMutation.isError && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 p-2 rounded-md text-xs">
+                    Ошибка: {(addItemMutation.error as Error).message}
+                  </div>
+                )}
+
+                <div className="flex gap-2 justify-end pt-3 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowAddItemModal(false);
+                      setAddItemForm({ name: '', productTypeId: '', quantity: 1, notes: '' });
+                    }}
+                  >
+                    Отмена
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={addItemMutation.isPending}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    {addItemMutation.isPending && <Loader2 className="animate-spin" size={14} />}
+                    Добавить
                   </Button>
                 </div>
               </form>

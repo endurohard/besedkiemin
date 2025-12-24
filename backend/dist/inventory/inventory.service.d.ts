@@ -2,21 +2,12 @@ import { PrismaService } from '../prisma/prisma.service';
 export declare class InventoryService {
     private prisma;
     constructor(prisma: PrismaService);
-    getAllInventory(): Promise<({
-        order: {
-            status: import(".prisma/client").$Enums.OrderStatus;
-            description: string | null;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            notes: string | null;
-            orderNumber: string;
-            customerName: string;
-            customerPhone: string | null;
-            customerAddress: string | null;
-            createdById: string;
-        };
+    createInventoryItem(data: {
+        name: string;
+        productTypeId: string;
+        quantity: number;
+        notes?: string;
+    }): Promise<{
         productType: {
             description: string | null;
             name: string;
@@ -26,20 +17,6 @@ export declare class InventoryService {
             updatedAt: Date;
             productionTimeHours: number | null;
         };
-        product: {
-            description: string | null;
-            name: string;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            stage: import(".prisma/client").$Enums.ProductionStage;
-            quantity: number;
-            productTypeId: string;
-            orderId: string;
-            dimensions: string | null;
-            schemaImageUrl: string | null;
-            deadline: Date | null;
-        };
     } & {
         name: string;
         id: string;
@@ -47,11 +24,35 @@ export declare class InventoryService {
         updatedAt: Date;
         quantity: number;
         notes: string | null;
-        productId: string;
+        productId: string | null;
         productTypeId: string;
-        orderId: string;
+        orderId: string | null;
         receivedAt: Date;
-    })[]>;
+    }>;
+    getAllInventory(options?: {
+        productTypeId?: string;
+    }): Promise<{
+        order: {
+            id: string;
+            orderNumber: string;
+            customerName: string;
+        };
+        productType: {
+            name: string;
+            id: string;
+        };
+        product: {
+            name: string;
+            id: string;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+        };
+        name: string;
+        id: string;
+        createdAt: Date;
+        quantity: number;
+        notes: string;
+        receivedAt: Date;
+    }[]>;
     getInventoryByType(productTypeId: string): Promise<({
         order: {
             status: import(".prisma/client").$Enums.OrderStatus;
@@ -97,9 +98,9 @@ export declare class InventoryService {
         updatedAt: Date;
         quantity: number;
         notes: string | null;
-        productId: string;
+        productId: string | null;
         productTypeId: string;
-        orderId: string;
+        orderId: string | null;
         receivedAt: Date;
     })[]>;
     getInventoryByOrder(orderId: string): Promise<({
@@ -147,9 +148,9 @@ export declare class InventoryService {
         updatedAt: Date;
         quantity: number;
         notes: string | null;
-        productId: string;
+        productId: string | null;
         productTypeId: string;
-        orderId: string;
+        orderId: string | null;
         receivedAt: Date;
     })[]>;
     getInventoryItem(id: string): Promise<{
@@ -203,6 +204,7 @@ export declare class InventoryService {
                 createdAt: Date;
                 updatedAt: Date;
                 notes: string | null;
+                orderNumber: string | null;
                 customerName: string;
                 customerPhone: string;
                 deliveryAddress: string;
@@ -224,10 +226,17 @@ export declare class InventoryService {
         updatedAt: Date;
         quantity: number;
         notes: string | null;
-        productId: string;
+        productId: string | null;
         productTypeId: string;
-        orderId: string;
+        orderId: string | null;
         receivedAt: Date;
     }>;
-    getInventorySummary(): Promise<unknown[]>;
+    getInventorySummary(): Promise<{
+        productType: {
+            name: string;
+            id: string;
+        };
+        totalQuantity: number;
+        itemCount: number;
+    }[]>;
 }

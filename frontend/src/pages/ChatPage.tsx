@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { useChat, ChatMessage } from '@/hooks/useChat';
+import { useChat } from '@/hooks/useChat';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -91,7 +91,7 @@ const ChatPage: React.FC = () => {
 
     // Присоединиться к новой комнате
     setSelectedRoom(room);
-    joinRoom(room.id, 'manager', user?.userId);
+    joinRoom(room.id, 'manager', user?.id);
   };
 
   const handleSendMessage = () => {
@@ -102,7 +102,7 @@ const ChatPage: React.FC = () => {
       messageText,
       'MANAGER',
       `${user.firstName} ${user.lastName}`,
-      user.userId,
+      user.id,
     );
     setMessageText('');
 

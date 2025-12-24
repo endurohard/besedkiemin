@@ -1,8 +1,25 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { UserRole, TaskStatus, ShipmentStatus } from '@/types';
-import { tasksApi } from '@/lib/api';
-import { LayoutDashboard, BarChart3, Users, ClipboardList, Package, TruckIcon, Settings, Grid3x3, ShoppingCart, ShoppingBag, AlertTriangle, MessageCircle } from 'lucide-react';
+import { UserRole, TaskStatus, ShipmentStatus, FeatureFlagsMap } from '@/types';
+import { tasksApi, featureFlagsApi } from '@/lib/api';
+import {
+  LayoutDashboard,
+  BarChart3,
+  Users,
+  ClipboardList,
+  Package,
+  TruckIcon,
+  Settings,
+  Grid3x3,
+  ShoppingCart,
+  ShoppingBag,
+  AlertTriangle,
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  Shield
+} from 'lucide-react';
 
 interface SidebarProps {
   userRole?: UserRole;
@@ -10,6 +27,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ userRole }: SidebarProps) => {
   const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Fetch task counts for production workers
   const { data: tasks } = useQuery({
@@ -49,15 +67,16 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
     refetchInterval: 30000,
   });
 
+  // Fetch feature flags to determine which menu items to show
+  const { data: featureFlags } = useQuery<FeatureFlagsMap>({
+    queryKey: ['feature-flags-public'],
+    queryFn: featureFlagsApi.getPublic,
+    staleTime: 5000, // Cache for 5 seconds
+    refetchOnMount: true,
+  });
+
   const isActive = (path: string) => {
     return location.pathname === path;
-  };
-
-  const linkClasses = (path: string) => {
-    const base = "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors";
-    return isActive(path)
-      ? `${base} bg-primary text-primary-foreground`
-      : `${base} text-muted-foreground hover:bg-accent hover:text-accent-foreground`;
   };
 
   // Calculate task count (NEW + ACCEPTED)
@@ -73,99 +92,139 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
   // Calculate defects count (unaccepted defects for painter)
   const defectCount = defectsCountData?.count || 0;
 
+  const NavLink = ({
+    to,
+    icon: Icon,
+    label,
+    badge,
+    badgeColor = 'bg-red-500'
+  }: {
+    to: string;
+    icon: any;
+    label: string;
+    badge?: number;
+    badgeColor?: string;
+  }) => {
+    const active = isActive(to);
+
+    return (
+      <Link
+        to={to}
+        className={`
+          relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all
+          ${active
+            ? 'bg-primary text-primary-foreground'
+            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+          }
+          ${isCollapsed ? 'justify-center' : ''}
+        `}
+        title={isCollapsed ? label : undefined}
+      >
+        <div className="relative">
+          <Icon size={18} />
+          {badge !== undefined && badge > 0 && isCollapsed && (
+            <span className={`absolute -top-2 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white ${badgeColor} rounded-full`}>
+              {badge > 99 ? '99+' : badge}
+            </span>
+          )}
+        </div>
+        {!isCollapsed && (
+          <>
+            <span className="flex-1 text-sm font-medium truncate">{label}</span>
+            {badge !== undefined && badge > 0 && (
+              <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white ${badgeColor} rounded-full`}>
+                {badge > 99 ? '99+' : badge}
+              </span>
+            )}
+          </>
+        )}
+      </Link>
+    );
+  };
+
   return (
-    <aside className="w-64 border-r bg-card min-h-[calc(100vh-73px)] p-4">
-      <nav className="space-y-1">
-        {userRole !== UserRole.OWNER && userRole !== UserRole.MANAGER && (
-          <Link to="/app" className={`${linkClasses('/app')} relative`}>
-            <ClipboardList size={20} />
-            <span className="flex-1">Мои задачи</span>
-            {taskCount > 0 && (
-              <span className="ml-auto flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-bold text-white bg-red-500 rounded-full">
-                {taskCount}
-              </span>
+    <aside className={`
+      border-r bg-card min-h-[calc(100vh-49px)] transition-all duration-200
+      ${isCollapsed ? 'w-14' : 'w-48'}
+    `}>
+      {/* Toggle button */}
+      <div className="p-2 border-b">
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="w-full flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          title={isCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
+        >
+          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
+      </div>
+
+      <nav className="p-2 space-y-0.5">
+        {userRole !== UserRole.OWNER && userRole !== UserRole.MANAGER && userRole !== UserRole.SUPER_ADMIN && (
+          <NavLink
+            to="/app"
+            icon={ClipboardList}
+            label="Мои задачи"
+            badge={taskCount}
+          />
+        )}
+
+        {(userRole === UserRole.OWNER || userRole === UserRole.MANAGER || userRole === UserRole.SUPER_ADMIN) && (
+          <NavLink to="/app/kanban" icon={LayoutDashboard} label="Канбан" />
+        )}
+
+        {(userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER || userRole === UserRole.SUPER_ADMIN) && (
+          <>
+            <NavLink to="/app/inventory" icon={Package} label="Склад" />
+            <NavLink
+              to="/app/shipments"
+              icon={TruckIcon}
+              label="Отгрузки"
+              badge={shipmentCount}
+              badgeColor="bg-orange-500"
+            />
+          </>
+        )}
+
+        {(userRole === UserRole.PAINTER || userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER || userRole === UserRole.SUPER_ADMIN) && (
+          <NavLink
+            to="/app/defects"
+            icon={AlertTriangle}
+            label="Брак"
+            badge={defectCount}
+          />
+        )}
+
+        {(userRole === UserRole.OWNER || userRole === UserRole.MANAGER || userRole === UserRole.SUPER_ADMIN) && (
+          <>
+            <NavLink to="/app/product-types" icon={Grid3x3} label="Типы товаров" />
+            {featureFlags?.product_types !== false && (
+              <NavLink to="/app/nomenclature" icon={Package} label="Каталог" />
             )}
-          </Link>
-        )}
-
-        {(userRole === UserRole.OWNER || userRole === UserRole.MANAGER) && (
-          <Link to="/app/kanban" className={linkClasses('/app/kanban')}>
-            <LayoutDashboard size={20} />
-            <span>Канбан</span>
-          </Link>
-        )}
-
-        {(userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER) && (
-          <>
-            <Link to="/app/inventory" className={linkClasses('/app/inventory')}>
-              <Package size={20} />
-              <span>Склад</span>
-            </Link>
-            <Link to="/app/shipments" className={`${linkClasses('/app/shipments')} relative`}>
-              <TruckIcon size={20} />
-              <span className="flex-1">Отгрузки</span>
-              {shipmentCount > 0 && (
-                <span className="ml-auto flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-bold text-white bg-orange-500 rounded-full">
-                  {shipmentCount}
-                </span>
-              )}
-            </Link>
-          </>
-        )}
-
-        {/* Брак - доступен для маляра, складиста, менеджера и владельца */}
-        {(userRole === UserRole.PAINTER || userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER) && (
-          <Link to="/app/defects" className={`${linkClasses('/app/defects')} relative`}>
-            <AlertTriangle size={20} />
-            <span className="flex-1">Брак</span>
-            {defectCount > 0 && (
-              <span className="ml-auto flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-bold text-white bg-red-500 rounded-full">
-                {defectCount}
-              </span>
+            {featureFlags?.catalog !== false && (
+              <NavLink to="/app/catalog-management" icon={ShoppingCart} label="Витрина" />
             )}
-          </Link>
-        )}
-
-        {(userRole === UserRole.OWNER || userRole === UserRole.MANAGER) && (
-          <>
-            <Link to="/app/product-types" className={linkClasses('/app/product-types')}>
-              <Grid3x3 size={20} />
-              <span>Типы товаров</span>
-            </Link>
-            <Link to="/app/catalog-management" className={linkClasses('/app/catalog-management')}>
-              <ShoppingCart size={20} />
-              <span>Каталог товаров</span>
-            </Link>
-            <Link to="/app/catalog-orders" className={linkClasses('/app/catalog-orders')}>
-              <ShoppingBag size={20} />
-              <span>Заказы с сайта</span>
-            </Link>
-            <Link to="/app/chat" className={linkClasses('/app/chat')}>
-              <MessageCircle size={20} />
-              <span>Чат с клиентами</span>
-            </Link>
+            {featureFlags?.catalog_orders !== false && (
+              <NavLink to="/app/catalog-orders" icon={ShoppingBag} label="Заказы" />
+            )}
+            {featureFlags?.chat !== false && (
+              <NavLink to="/app/chat" icon={MessageCircle} label="Чат" />
+            )}
           </>
         )}
 
-        {userRole === UserRole.OWNER && (
+        {(userRole === UserRole.OWNER || userRole === UserRole.SUPER_ADMIN) && (
           <>
-            <Link to="/app/analytics" className={linkClasses('/app/analytics')}>
-              <BarChart3 size={20} />
-              <span>Аналитика</span>
-            </Link>
-            <Link to="/app/users" className={linkClasses('/app/users')}>
-              <Users size={20} />
-              <span>Пользователи</span>
-            </Link>
-            <Link to="/app/workflow" className={linkClasses('/app/workflow')}>
-              <Settings size={20} />
-              <span>Производственный цикл</span>
-            </Link>
-            <Link to="/app/company-settings" className={linkClasses('/app/company-settings')}>
-              <Settings size={20} />
-              <span>Настройки компании</span>
-            </Link>
+            {featureFlags?.analytics !== false && (
+              <NavLink to="/app/analytics" icon={BarChart3} label="Аналитика" />
+            )}
+            <NavLink to="/app/users" icon={Users} label="Пользователи" />
+            <NavLink to="/app/workflow" icon={Settings} label="Цикл" />
+            <NavLink to="/app/company-settings" icon={Settings} label="Настройки" />
           </>
+        )}
+
+        {userRole === UserRole.SUPER_ADMIN && (
+          <NavLink to="/app/feature-flags" icon={Shield} label="Функции" />
         )}
       </nav>
     </aside>

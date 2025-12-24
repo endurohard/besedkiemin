@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ordersApi, productsApi } from '@/lib/api';
+import { ordersApi, productsApi, tasksApi } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -32,14 +32,7 @@ export const KanbanPage = () => {
   // Получаем задачи текущего пользователя для фильтрации
   const { data: myTasks = [] } = useQuery({
     queryKey: ['my-tasks'],
-    queryFn: async () => {
-      const response = await fetch('http://localhost:3000/tasks/my', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      return response.json();
-    },
+    queryFn: () => tasksApi.getMyTasks(),
     enabled: user?.role !== UserRole.OWNER && user?.role !== UserRole.MANAGER,
   });
 

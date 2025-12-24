@@ -19,6 +19,8 @@ import CatalogManagementPage from './pages/CatalogManagementPage';
 import CatalogOrdersPage from './pages/CatalogOrdersPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ChatPage from './pages/ChatPage';
+import { FeatureFlagsPage } from './pages/FeatureFlagsPage';
+import { NomenclaturePage } from './pages/NomenclaturePage';
 import { UserRole } from './types';
 
 const queryClient = new QueryClient({
@@ -38,14 +40,24 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 const NonOwnerRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuthStore();
   if (!user) return <Navigate to="/app/login" />;
-  // OWNER и MANAGER не имеют производственных задач, перенаправляем на Канбан
-  if (user.role === UserRole.OWNER || user.role === UserRole.MANAGER) return <Navigate to="/app/kanban" />;
+  // OWNER, MANAGER и SUPER_ADMIN не имеют производственных задач, перенаправляем на Канбан
+  if (user.role === UserRole.OWNER || user.role === UserRole.MANAGER || user.role === UserRole.SUPER_ADMIN) return <Navigate to="/app/kanban" />;
   return <Layout>{children}</Layout>;
 };
 
 const OwnerRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuthStore();
-  return user?.role === UserRole.OWNER ? (
+  // SUPER_ADMIN имеет доступ ко всему что имеет OWNER
+  return (user?.role === UserRole.OWNER || user?.role === UserRole.SUPER_ADMIN) ? (
+    <Layout>{children}</Layout>
+  ) : (
+    <Navigate to="/app" />
+  );
+};
+
+const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuthStore();
+  return user?.role === UserRole.SUPER_ADMIN ? (
     <Layout>{children}</Layout>
   ) : (
     <Navigate to="/app" />
@@ -55,7 +67,8 @@ const OwnerRoute = ({ children }: { children: React.ReactNode }) => {
 const ManagerOwnerRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuthStore();
   if (!user) return <Navigate to="/app/login" />;
-  if (user.role !== UserRole.OWNER && user.role !== UserRole.MANAGER) {
+  // SUPER_ADMIN тоже имеет доступ
+  if (user.role !== UserRole.OWNER && user.role !== UserRole.MANAGER && user.role !== UserRole.SUPER_ADMIN) {
     return <Navigate to="/app" />;
   }
   return <Layout>{children}</Layout>;
@@ -162,6 +175,14 @@ function App() {
             }
           />
           <Route
+            path="/app/nomenclature"
+            element={
+              <ManagerOwnerRoute>
+                <NomenclaturePage />
+              </ManagerOwnerRoute>
+            }
+          />
+          <Route
             path="/app/catalog-management"
             element={
               <ManagerOwnerRoute>
@@ -183,6 +204,14 @@ function App() {
               <ManagerOwnerRoute>
                 <ChatPage />
               </ManagerOwnerRoute>
+            }
+          />
+          <Route
+            path="/app/feature-flags"
+            element={
+              <SuperAdminRoute>
+                <FeatureFlagsPage />
+              </SuperAdminRoute>
             }
           />
         </Routes>

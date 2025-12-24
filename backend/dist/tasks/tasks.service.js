@@ -554,6 +554,18 @@ let TasksService = class TasksService {
                     include: {
                         productType: true,
                         order: true,
+                        qualityChecks: {
+                            where: {
+                                status: 'REJECTED',
+                            },
+                            include: {
+                                checkedBy: true,
+                            },
+                            orderBy: {
+                                checkedAt: 'desc',
+                            },
+                            take: 1,
+                        },
                     },
                 },
                 assignedTo: true,
@@ -562,30 +574,19 @@ let TasksService = class TasksService {
                 rejectedAt: 'desc',
             },
         });
-        const defects = await Promise.all(rejectedTasks.map(async (task) => {
-            const qualityCheck = await this.prisma.qualityCheck.findFirst({
-                where: {
-                    productId: task.productId,
-                    status: 'REJECTED',
-                },
-                include: {
-                    checkedBy: true,
-                    product: {
-                        include: {
-                            productType: true,
-                            order: true,
-                        },
-                    },
-                },
-                orderBy: {
-                    checkedAt: 'desc',
-                },
-            });
+        const defects = rejectedTasks
+            .filter(task => task.product.qualityChecks.length > 0)
+            .map(task => {
+            const qualityCheck = task.product.qualityChecks[0];
             return {
                 ...qualityCheck,
+                product: {
+                    ...task.product,
+                    qualityChecks: undefined,
+                },
                 defectPhotos: task.defectPhotos,
             };
-        }));
+        });
         let filteredDefects = defects.filter((d) => d.id);
         if (user && (user.role === client_1.UserRole.OWNER || user.role === client_1.UserRole.MANAGER)) {
             return filteredDefects;
@@ -733,23 +734,25 @@ let TasksService = class TasksService {
             select: {
                 productId: true,
             },
+            distinct: ['productId'],
         });
-        let unacceptedCount = 0;
-        for (const rejectedTask of rejectedTasks) {
-            const existingTask = await this.prisma.task.findFirst({
-                where: {
-                    productId: rejectedTask.productId,
-                    assignedToId: userId,
-                    status: {
-                        in: [client_1.TaskStatus.NEW, client_1.TaskStatus.ACCEPTED],
-                    },
-                    stage: userStage,
-                },
-            });
-            if (!existingTask) {
-                unacceptedCount++;
-            }
+        if (rejectedTasks.length === 0) {
+            return { count: 0 };
         }
+        const rejectedProductIds = rejectedTasks.map(t => t.productId);
+        const userActiveTasks = await this.prisma.task.findMany({
+            where: {
+                productId: { in: rejectedProductIds },
+                assignedToId: userId,
+                status: { in: [client_1.TaskStatus.NEW, client_1.TaskStatus.ACCEPTED] },
+                stage: userStage,
+            },
+            select: {
+                productId: true,
+            },
+        });
+        const acceptedProductIds = new Set(userActiveTasks.map(t => t.productId));
+        const unacceptedCount = rejectedProductIds.filter(id => !acceptedProductIds.has(id)).length;
         return { count: unacceptedCount };
     }
 };

@@ -47,10 +47,16 @@ import type {
   TelegramLoginCodeResponse,
   TelegramCheckAuthRequest,
   TelegramCheckAuthResponse,
+  FeatureFlag,
+  UpdateFeatureFlagDto,
+  FeatureFlagsMap,
+  Nomenclature,
+  CreateNomenclatureDto,
+  UpdateNomenclatureDto,
 } from '@/types';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -228,6 +234,47 @@ export const productTypesApi = {
 
   delete: async (id: string): Promise<void> => {
     await api.delete(`/product-types/${id}`);
+  },
+};
+
+// Nomenclature API
+export const nomenclatureApi = {
+  getAll: async (includeInactive = false): Promise<Nomenclature[]> => {
+    const response = await api.get<Nomenclature[]>('/nomenclature', {
+      params: { includeInactive },
+    });
+    return response.data;
+  },
+
+  getByProductType: async (productTypeId: string, includeInactive = false): Promise<Nomenclature[]> => {
+    const response = await api.get<Nomenclature[]>(`/nomenclature/by-type/${productTypeId}`, {
+      params: { includeInactive },
+    });
+    return response.data;
+  },
+
+  getOne: async (id: string): Promise<Nomenclature> => {
+    const response = await api.get<Nomenclature>(`/nomenclature/${id}`);
+    return response.data;
+  },
+
+  create: async (data: CreateNomenclatureDto): Promise<Nomenclature> => {
+    const response = await api.post<Nomenclature>('/nomenclature', data);
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdateNomenclatureDto): Promise<Nomenclature> => {
+    const response = await api.patch<Nomenclature>(`/nomenclature/${id}`, data);
+    return response.data;
+  },
+
+  toggleActive: async (id: string): Promise<Nomenclature> => {
+    const response = await api.patch<Nomenclature>(`/nomenclature/${id}/toggle-active`);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/nomenclature/${id}`);
   },
 };
 
@@ -449,6 +496,16 @@ export const inventoryApi = {
     const response = await api.get<InventoryItem>(`/inventory/${id}`);
     return response.data;
   },
+
+  create: async (data: {
+    name: string;
+    productTypeId: string;
+    quantity: number;
+    notes?: string;
+  }): Promise<InventoryItem> => {
+    const response = await api.post<InventoryItem>('/inventory', data);
+    return response.data;
+  },
 };
 
 // Shipments API (отгрузки)
@@ -558,6 +615,45 @@ export const companySettingsApi = {
 export const telegramApi = {
   getLink: async (): Promise<{ link: string; botUsername: string }> => {
     const response = await api.get('/telegram/link');
+    return response.data;
+  },
+};
+
+// Feature Flags API (только для OWNER)
+export const featureFlagsApi = {
+  // Получить публичное состояние флагов (для любого пользователя)
+  getPublic: async (): Promise<FeatureFlagsMap> => {
+    const response = await api.get<FeatureFlagsMap>('/feature-flags/public');
+    return response.data;
+  },
+
+  // Получить все флаги с детальной информацией (только OWNER)
+  getAll: async (): Promise<FeatureFlag[]> => {
+    const response = await api.get<FeatureFlag[]>('/feature-flags');
+    return response.data;
+  },
+
+  // Получить флаг по ключу
+  getByKey: async (key: string): Promise<FeatureFlag> => {
+    const response = await api.get<FeatureFlag>(`/feature-flags/${key}`);
+    return response.data;
+  },
+
+  // Обновить флаг
+  update: async (key: string, data: UpdateFeatureFlagDto): Promise<FeatureFlag> => {
+    const response = await api.patch<FeatureFlag>(`/feature-flags/${key}`, data);
+    return response.data;
+  },
+
+  // Переключить состояние флага
+  toggle: async (key: string): Promise<FeatureFlag> => {
+    const response = await api.post<FeatureFlag>(`/feature-flags/${key}/toggle`);
+    return response.data;
+  },
+
+  // Массовое обновление флагов
+  bulkUpdate: async (updates: { key: string; isEnabled: boolean }[]): Promise<FeatureFlag[]> => {
+    const response = await api.post<FeatureFlag[]>('/feature-flags/bulk-update', updates);
     return response.data;
   },
 };

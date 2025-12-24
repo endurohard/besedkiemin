@@ -4,9 +4,9 @@ import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Input } from './ui/Input';
 import { useAuthStore } from '@/store/authStore';
-import { tasksApi, uploadApi } from '@/lib/api';
+import { tasksApi } from '@/lib/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Clock, CheckCircle, XCircle, ArrowRight, Package } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, Package } from 'lucide-react';
 import { TaskTimer } from './TaskTimer';
 
 interface TaskCardProps {
@@ -137,17 +137,14 @@ export const TaskCard = ({ task }: TaskCardProps) => {
   };
 
   return (
-    <Card className="mb-3">
-      <CardHeader className="p-3 pb-2">
-        <div className="flex items-start justify-between gap-2">
+    <Card className="mb-1.5">
+      <CardHeader className="p-2 pb-1">
+        <div className="flex items-start justify-between gap-1">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-sm font-semibold truncate">{task.title}</CardTitle>
-            {task.description && (
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
-            )}
+            <CardTitle className="text-xs font-semibold truncate">{task.title}</CardTitle>
           </div>
           <span
-            className={`px-2 py-0.5 rounded-full text-xs font-medium border flex-shrink-0 ${getStatusColor(
+            className={`px-1.5 py-0.5 rounded text-[10px] font-medium border flex-shrink-0 ${getStatusColor(
               task.status
             )}`}
           >
@@ -155,71 +152,41 @@ export const TaskCard = ({ task }: TaskCardProps) => {
           </span>
         </div>
       </CardHeader>
-      <CardContent className="p-3 pt-0">
-        {/* Таймер задачи с приоритетом */}
+      <CardContent className="p-2 pt-0">
+        {/* Таймер задачи с приоритетом заказа */}
         <TaskTimer
           createdAt={task.createdAt}
           acceptedAt={task.acceptedAt}
           productionTimeHours={task.product?.productType?.productionTimeHours}
-          priority={task.priority}
+          priority={task.product?.order?.priority || task.priority}
         />
 
         {/* Информация о продукте и заказе */}
         {task.product && (
-          <div className="mb-3 p-2 bg-muted/50 rounded-md">
-            <div className="space-y-1 text-xs">
-              <div>
+          <div className="mb-2 p-1.5 bg-muted/50 rounded text-[11px]">
+            <div className="space-y-0.5">
+              <div className="flex gap-1">
                 <span className="text-muted-foreground">Продукт:</span>
-                <p className="font-medium truncate">{task.product.name}</p>
+                <span className="font-medium truncate">{task.product.name}</span>
               </div>
-              {task.product.productType && (
-                <div>
-                  <span className="text-muted-foreground">Тип:</span>
-                  <p className="font-medium truncate">{task.product.productType.name}</p>
-                </div>
-              )}
-              <div>
-                <span className="text-muted-foreground">Количество:</span>
-                <span className="font-medium ml-1">{task.quantity || task.product.quantity} шт.</span>
+              <div className="flex gap-1">
+                <span className="text-muted-foreground">Кол-во:</span>
+                <span className="font-medium">{task.quantity || task.product.quantity} шт.</span>
               </div>
-              {task.product.dimensions && (
-                <div>
-                  <span className="text-muted-foreground">Размеры:</span>
-                  <p className="font-medium text-xs">{task.product.dimensions}</p>
-                </div>
-              )}
             </div>
 
             {/* Фото схемы - только ссылка */}
             {task.product.schemaImageUrl && (
-              <div className="mt-2 pt-2 border-t">
+              <div className="mt-1 pt-1 border-t">
                 <a
                   href={`http://localhost:3000${task.product.schemaImageUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                  className="text-[10px] text-blue-600 hover:text-blue-800 underline flex items-center gap-0.5"
                 >
-                  <Package size={12} />
-                  Схема продукта
+                  <Package size={10} />
+                  Схема
                 </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Временная информация - компактная */}
-        {(task.acceptedAt || task.completedAt) && (
-          <div className="flex flex-col gap-1 text-xs text-muted-foreground mb-3">
-            {task.acceptedAt && (
-              <div className="flex items-center gap-1">
-                <Clock size={12} />
-                <span>Принято: {new Date(task.acceptedAt).toLocaleString('ru', { dateStyle: 'short', timeStyle: 'short' })}</span>
-              </div>
-            )}
-            {task.completedAt && (
-              <div className="flex items-center gap-1">
-                <CheckCircle size={12} />
-                <span>Завершено: {new Date(task.completedAt).toLocaleString('ru', { dateStyle: 'short', timeStyle: 'short' })}</span>
               </div>
             )}
           </div>
@@ -227,31 +194,33 @@ export const TaskCard = ({ task }: TaskCardProps) => {
 
         {/* Примечания */}
         {task.notes && (
-          <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+          <div className="mb-2 p-1.5 bg-yellow-50 border border-yellow-200 rounded text-[10px]">
             <p className="font-medium text-yellow-900">Примечание:</p>
-            <p className="text-yellow-800">{task.notes}</p>
+            <p className="text-yellow-800 truncate">{task.notes}</p>
           </div>
         )}
 
         {/* Кнопки действий */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* Для складиста - особая логика */}
           {isWarehouse && task.status === TaskStatus.NEW && !showRejectForm && !showApproveForm && (
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <Button
                 onClick={() => setShowApproveForm(true)}
-                className="flex-1 flex items-center justify-center gap-2"
+                className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5"
                 variant="default"
+                size="sm"
               >
-                <CheckCircle size={16} />
-                Принять на склад
+                <CheckCircle size={12} />
+                Принять
               </Button>
               <Button
                 onClick={() => setShowRejectForm(true)}
-                className="flex-1 flex items-center justify-center gap-2"
+                className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5"
                 variant="destructive"
+                size="sm"
               >
-                <XCircle size={16} />
+                <XCircle size={12} />
                 Брак
               </Button>
             </div>
@@ -414,10 +383,11 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                 <Button
                   onClick={() => acceptMutation.mutate()}
                   disabled={acceptMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2"
+                  className="w-full flex items-center justify-center gap-1 text-xs py-1.5"
+                  size="sm"
                 >
-                  <Package size={16} />
-                  {acceptMutation.isPending ? 'Принятие...' : 'Принять в работу'}
+                  <Package size={12} />
+                  {acceptMutation.isPending ? 'Принятие...' : 'Принять'}
                 </Button>
               )}
 
@@ -433,9 +403,10 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                     }
                   }}
                   disabled={completeMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2"
+                  className="w-full flex items-center justify-center gap-1 text-xs py-1.5"
+                  size="sm"
                 >
-                  <CheckCircle size={16} />
+                  <CheckCircle size={12} />
                   {completeMutation.isPending ? 'Завершение...' : 'Завершить'}
                 </Button>
               )}
@@ -503,11 +474,12 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                 <Button
                   onClick={() => passMutation.mutate()}
                   disabled={passMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2"
+                  className="w-full flex items-center justify-center gap-1 text-xs py-1.5"
                   variant="default"
+                  size="sm"
                 >
-                  <ArrowRight size={16} />
-                  {passMutation.isPending ? 'Передача...' : 'Передать дальше'}
+                  <ArrowRight size={12} />
+                  {passMutation.isPending ? 'Передача...' : 'Передать'}
                 </Button>
               )}
             </>
@@ -515,8 +487,8 @@ export const TaskCard = ({ task }: TaskCardProps) => {
 
           {/* Статус завершенных задач */}
           {task.status === TaskStatus.PASSED && (
-            <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded text-sm text-purple-800 font-medium">
-              Задача передана на следующий этап
+            <div className="text-center p-1.5 bg-purple-50 border border-purple-200 rounded text-[10px] text-purple-800 font-medium">
+              Передано
             </div>
           )}
         </div>

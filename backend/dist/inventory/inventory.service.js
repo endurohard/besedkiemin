@@ -16,17 +16,68 @@ let InventoryService = class InventoryService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getAllInventory() {
-        return this.prisma.inventoryItem.findMany({
+    async createInventoryItem(data) {
+        const productType = await this.prisma.productType.findUnique({
+            where: { id: data.productTypeId },
+        });
+        if (!productType) {
+            throw new common_1.NotFoundException('Тип товара не найден');
+        }
+        if (data.quantity <= 0) {
+            throw new common_1.BadRequestException('Количество должно быть больше 0');
+        }
+        return this.prisma.inventoryItem.create({
+            data: {
+                name: data.name,
+                quantity: data.quantity,
+                productTypeId: data.productTypeId,
+                notes: data.notes,
+                receivedAt: new Date(),
+            },
             include: {
-                product: true,
                 productType: true,
-                order: true,
+            },
+        });
+    }
+    async getAllInventory(options) {
+        const where = options?.productTypeId
+            ? { productTypeId: options.productTypeId }
+            : {};
+        const items = await this.prisma.inventoryItem.findMany({
+            where,
+            select: {
+                id: true,
+                name: true,
+                quantity: true,
+                notes: true,
+                receivedAt: true,
+                createdAt: true,
+                productType: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                product: {
+                    select: {
+                        id: true,
+                        name: true,
+                        stage: true,
+                    },
+                },
+                order: {
+                    select: {
+                        id: true,
+                        orderNumber: true,
+                        customerName: true,
+                    },
+                },
             },
             orderBy: {
                 receivedAt: 'desc',
             },
         });
+        return items;
     }
     async getInventoryByType(productTypeId) {
         return this.prisma.inventoryItem.findMany({
@@ -87,25 +138,31 @@ let InventoryService = class InventoryService {
         });
     }
     async getInventorySummary() {
-        const inventory = await this.prisma.inventoryItem.findMany({
-            include: {
-                productType: true,
+        const aggregated = await this.prisma.inventoryItem.groupBy({
+            by: ['productTypeId'],
+            _sum: {
+                quantity: true,
+            },
+            _count: {
+                id: true,
             },
         });
-        const summary = inventory.reduce((acc, item) => {
-            const typeName = item.productType.name;
-            if (!acc[typeName]) {
-                acc[typeName] = {
-                    productType: item.productType,
-                    totalQuantity: 0,
-                    items: [],
-                };
-            }
-            acc[typeName].totalQuantity += item.quantity;
-            acc[typeName].items.push(item);
-            return acc;
-        }, {});
-        return Object.values(summary);
+        const productTypeIds = aggregated.map(a => a.productTypeId);
+        const productTypes = await this.prisma.productType.findMany({
+            where: {
+                id: { in: productTypeIds },
+            },
+            select: {
+                id: true,
+                name: true,
+            },
+        });
+        const productTypeMap = new Map(productTypes.map(pt => [pt.id, pt]));
+        return aggregated.map(a => ({
+            productType: productTypeMap.get(a.productTypeId),
+            totalQuantity: a._sum.quantity || 0,
+            itemCount: a._count.id,
+        }));
     }
 };
 exports.InventoryService = InventoryService;

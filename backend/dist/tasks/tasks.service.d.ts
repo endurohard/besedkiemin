@@ -247,8 +247,8 @@ export declare class TasksService {
     }>;
     private updateOrderStatus;
     getDefectsWithPhotos(userId?: string): Promise<{
-        defectPhotos: string[];
         product: {
+            qualityChecks: any;
             order: {
                 status: import(".prisma/client").$Enums.OrderStatus;
                 description: string | null;
@@ -272,7 +272,6 @@ export declare class TasksService {
                 updatedAt: Date;
                 productionTimeHours: number | null;
             };
-        } & {
             description: string | null;
             name: string;
             id: string;
@@ -286,6 +285,7 @@ export declare class TasksService {
             schemaImageUrl: string | null;
             deadline: Date | null;
         };
+        defectPhotos: string[];
         checkedBy: {
             email: string;
             password: string;

@@ -127,8 +127,6 @@ export class ShipmentsService {
 
   // Получить все отгрузки с пагинацией
   async getAllShipments(userId: string, options?: {
-    page?: number;
-    limit?: number;
     status?: ShipmentStatus;
   }) {
     // Проверяем права пользователя
@@ -141,67 +139,50 @@ export class ShipmentsService {
       throw new ForbiddenException('Пользователь не найден');
     }
 
-    const page = options?.page || 1;
-    const limit = options?.limit || 50;
-    const skip = (page - 1) * limit;
-
     const where = options?.status ? { status: options.status } : {};
 
-    const [shipments, total] = await Promise.all([
-      this.prisma.shipment.findMany({
-        where,
-        select: {
-          id: true,
-          status: true,
-          customerName: true,
-          customerPhone: true,
-          deliveryAddress: true,
-          deliveryDate: true,
-          orderNumber: true,
-          notes: true,
-          createdAt: true,
-          items: {
-            select: {
-              id: true,
-              quantity: true,
-              inventoryItem: {
-                select: {
-                  id: true,
-                  name: true,
-                  productType: {
-                    select: { id: true, name: true },
-                  },
+    const shipments = await this.prisma.shipment.findMany({
+      where,
+      select: {
+        id: true,
+        status: true,
+        customerName: true,
+        customerPhone: true,
+        deliveryAddress: true,
+        deliveryDate: true,
+        orderNumber: true,
+        notes: true,
+        createdAt: true,
+        items: {
+          select: {
+            id: true,
+            quantity: true,
+            inventoryItem: {
+              select: {
+                id: true,
+                name: true,
+                productType: {
+                  select: { id: true, name: true },
                 },
               },
             },
           },
-          shippedBy: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-          _count: {
-            select: { items: true },
+        },
+        shippedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
           },
         },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      this.prisma.shipment.count({ where }),
-    ]);
-
-    return {
-      shipments,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        _count: {
+          select: { items: true },
+        },
       },
-    };
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return shipments;
   }
 
   // Получить отгрузки по статусу

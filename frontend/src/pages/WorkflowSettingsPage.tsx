@@ -44,6 +44,7 @@ function SortableStageItem({ stage, onEdit, onToggle, onDelete }: SortableStageI
   };
 
   const roleLabels: Record<UserRole, string> = {
+    SUPER_ADMIN: 'Супер-админ',
     OWNER: 'Владелец',
     MANAGER: 'Менеджер',
     DESIGNER: 'Проектировщик',

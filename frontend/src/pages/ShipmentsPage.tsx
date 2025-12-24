@@ -169,6 +169,7 @@ export const ShipmentsPage = () => {
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium text-gray-600">Дата</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600">Заказ</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-600">Статус</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-600">Клиент</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-600">Телефон</th>
@@ -180,19 +181,19 @@ export const ShipmentsPage = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center">
+                    <td colSpan={8} className="px-4 py-12 text-center">
                       <Loader2 className="w-8 h-8 animate-spin mx-auto" />
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-red-600">
+                    <td colSpan={8} className="px-4 py-12 text-center text-red-600">
                       Ошибка загрузки отгрузок
                     </td>
                   </tr>
                 ) : filteredShipments.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
                       <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                       <p>{searchQuery || statusFilter !== 'ALL' ? 'Ничего не найдено' : 'Отгрузок пока нет'}</p>
                     </td>
@@ -208,6 +209,15 @@ export const ShipmentsPage = () => {
                             {format(new Date(shipment.createdAt), 'HH:mm', { locale: ru })}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {shipment.orderNumber ? (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                            {shipment.orderNumber}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {getStatusBadge(shipment.status)}

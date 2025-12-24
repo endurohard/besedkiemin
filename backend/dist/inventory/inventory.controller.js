@@ -24,8 +24,18 @@ let InventoryController = class InventoryController {
     constructor(inventoryService) {
         this.inventoryService = inventoryService;
     }
-    getAllInventory() {
-        return this.inventoryService.getAllInventory();
+    createInventoryItem(name, productTypeId, quantity, notes) {
+        return this.inventoryService.createInventoryItem({
+            name,
+            productTypeId,
+            quantity,
+            notes,
+        });
+    }
+    getAllInventory(productTypeId) {
+        return this.inventoryService.getAllInventory({
+            productTypeId,
+        });
     }
     getInventorySummary() {
         return this.inventoryService.getInventorySummary();
@@ -42,11 +52,25 @@ let InventoryController = class InventoryController {
 };
 exports.InventoryController = InventoryController;
 __decorate([
+    (0, common_1.Post)(),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, swagger_1.ApiOperation)({ summary: 'Добавить товар на склад вручную' }),
+    __param(0, (0, common_1.Body)('name')),
+    __param(1, (0, common_1.Body)('productTypeId')),
+    __param(2, (0, common_1.Body)('quantity')),
+    __param(3, (0, common_1.Body)('notes')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Number, String]),
+    __metadata("design:returntype", void 0)
+], InventoryController.prototype, "createInventoryItem", null);
+__decorate([
     (0, common_1.Get)(),
     (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
     (0, swagger_1.ApiOperation)({ summary: 'Получить все складские остатки' }),
+    (0, swagger_1.ApiQuery)({ name: 'productTypeId', required: false, type: String, description: 'Фильтр по типу продукта' }),
+    __param(0, (0, common_1.Query)('productTypeId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], InventoryController.prototype, "getAllInventory", null);
 __decorate([

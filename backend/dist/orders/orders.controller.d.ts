@@ -64,64 +64,36 @@ export declare class OrdersController {
         customerAddress: string | null;
         createdById: string;
     }>;
-    findAll(status?: OrderStatus, startDate?: string, endDate?: string): Promise<({
-        createdBy: {
-            email: string;
-            firstName: string;
-            lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
-            id: string;
-        };
-        products: ({
-            history: ({
-                user: {
-                    firstName: string;
-                    lastName: string;
-                    role: import(".prisma/client").$Enums.UserRole;
-                    id: string;
-                };
-            } & {
-                status: import(".prisma/client").$Enums.TaskStatus;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                stage: import(".prisma/client").$Enums.ProductionStage;
-                completedAt: Date | null;
-                passedAt: Date | null;
-                notes: string | null;
-                productId: string;
-                workflowStageId: string | null;
-                startedAt: Date;
-                userId: string;
-            })[];
-        } & {
-            description: string | null;
-            name: string;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            stage: import(".prisma/client").$Enums.ProductionStage;
-            quantity: number;
-            productTypeId: string;
-            orderId: string;
-            dimensions: string | null;
-            schemaImageUrl: string | null;
-            deadline: Date | null;
-        })[];
-    } & {
+    findAll(status?: OrderStatus, startDate?: string, endDate?: string): Promise<{
         status: import(".prisma/client").$Enums.OrderStatus;
-        description: string | null;
+        description: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        _count: {
+            products: number;
+        };
         priority: import(".prisma/client").$Enums.OrderPriority;
-        notes: string | null;
         orderNumber: string;
         customerName: string;
-        customerPhone: string | null;
-        customerAddress: string | null;
-        createdById: string;
-    })[]>;
+        customerPhone: string;
+        customerAddress: string;
+        createdBy: {
+            firstName: string;
+            lastName: string;
+            id: string;
+        };
+        products: {
+            productType: {
+                name: string;
+                id: string;
+            };
+            name: string;
+            id: string;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            quantity: number;
+        }[];
+    }[]>;
     getStatistics(startDate?: string, endDate?: string): Promise<{
         total: number;
         new: number;

@@ -61,8 +61,8 @@ export declare class TasksController {
         workflowStageId: string | null;
     })[]>;
     getDefects(req: any): Promise<{
-        defectPhotos: string[];
         product: {
+            qualityChecks: any;
             order: {
                 status: import(".prisma/client").$Enums.OrderStatus;
                 description: string | null;
@@ -86,7 +86,6 @@ export declare class TasksController {
                 updatedAt: Date;
                 productionTimeHours: number | null;
             };
-        } & {
             description: string | null;
             name: string;
             id: string;
@@ -100,6 +99,7 @@ export declare class TasksController {
             schemaImageUrl: string | null;
             deadline: Date | null;
         };
+        defectPhotos: string[];
         checkedBy: {
             email: string;
             password: string;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { QualityCheck, QualityStatus, UserRole } from '@/types';
+import { QualityCheck, UserRole } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { AlertTriangle, X, Eye, Calendar, User, Package, FileText, CheckCircle } from 'lucide-react';
