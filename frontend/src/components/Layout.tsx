@@ -23,7 +23,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-muted-foreground">{user?.role}</p>
+              <p className="text-xs text-muted-foreground">{user?.role?.name}</p>
             </div>
             <TelegramLinkWidget />
             <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1.5">
@@ -34,7 +34,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </header>
       <div className="flex">
-        <Sidebar userRole={user?.role} />
+        <Sidebar userRole={user?.role?.code} permissions={user?.role?.permissions as string[] || []} />
         <main className="flex-1 p-4 overflow-auto">{children}</main>
       </div>
 

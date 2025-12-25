@@ -15,7 +15,7 @@ import { UpdateProductTypeDto } from './dto/update-product-type.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('product-types')
@@ -26,7 +26,7 @@ export class ProductTypesController {
   constructor(private readonly productTypesService: ProductTypesService) {}
 
   @Post()
-  @Roles(UserRole.MANAGER)
+  @Roles('MANAGER')
   @ApiOperation({ summary: 'Создать новый тип продукта (только менеджер)' })
   create(@Body() createProductTypeDto: CreateProductTypeDto) {
     return this.productTypesService.create(createProductTypeDto);
@@ -46,21 +46,21 @@ export class ProductTypesController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.MANAGER)
+  @Roles('MANAGER')
   @ApiOperation({ summary: 'Обновить тип продукта (только менеджер)' })
   update(@Param('id') id: string, @Body() updateProductTypeDto: UpdateProductTypeDto) {
     return this.productTypesService.update(id, updateProductTypeDto);
   }
 
   @Post(':id/toggle-active')
-  @Roles(UserRole.MANAGER)
+  @Roles('MANAGER')
   @ApiOperation({ summary: 'Переключить активность типа продукта (только менеджер)' })
   toggleActive(@Param('id') id: string) {
     return this.productTypesService.toggleActive(id);
   }
 
   @Delete(':id')
-  @Roles(UserRole.MANAGER)
+  @Roles('MANAGER')
   @ApiOperation({ summary: 'Удалить тип продукта (только менеджер)' })
   remove(@Param('id') id: string) {
     return this.productTypesService.remove(id);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Task, TaskStatus, UserRole } from '@/types';
+import { Task, TaskStatus } from '@/types';
 import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Input } from './ui/Input';
@@ -30,9 +30,9 @@ export const TaskCard = ({ task }: TaskCardProps) => {
   // Доступное количество для обработки
   const availableQuantity = (task.quantity || task.product?.quantity || 0) - (task.quantityProcessed || 0);
 
-  const isWarehouse = user?.role === UserRole.WAREHOUSE;
-  const isPreparer = user?.role === UserRole.PREPARER;
-  const isPainter = user?.role === UserRole.PAINTER;
+  const isWarehouse = user?.role?.code === 'WAREHOUSE';
+  const isPreparer = user?.role?.code === 'PREPARER';
+  const isPainter = user?.role?.code === 'PAINTER';
   const isSimplifiedRole = isPreparer || isPainter; // Упрощенный интерфейс для заготовщика и маляра
 
   // Мутации для действий с задачами

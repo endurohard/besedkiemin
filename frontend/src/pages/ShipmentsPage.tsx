@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { shipmentsApi } from '@/lib/api';
-import { Shipment, ShipmentStatus, UserRole } from '@/types';
+import { Shipment, ShipmentStatus } from '@/types';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -279,7 +279,7 @@ export const ShipmentsPage = () => {
 
                           {/* Кнопка "Доставлено" для статуса IN_TRANSIT (только для MANAGER и OWNER) */}
                           {shipment.status === ShipmentStatus.IN_TRANSIT &&
-                            (user?.role === UserRole.MANAGER || user?.role === UserRole.OWNER) && (
+                            (user?.role?.code === 'MANAGER' || user?.role?.code === 'OWNER') && (
                               <Button
                                 onClick={() => handleUpdateStatus(shipment.id, ShipmentStatus.DELIVERED)}
                                 disabled={updateStatusMutation.isPending}

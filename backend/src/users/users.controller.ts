@@ -7,7 +7,7 @@ import { UserEntity } from './entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @ApiTags('Users')
 @Controller('users')
@@ -17,28 +17,28 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Создать нового пользователя (только OWNER)' })
   create(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.usersService.create(createUserDto);
   }
 
   @Get()
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Получить всех пользователей (только OWNER)' })
   findAll(): Promise<UserEntity[]> {
     return this.usersService.findAll();
   }
 
   @Get(':id')
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Получить пользователя по ID (только OWNER)' })
   findOne(@Param('id') id: string): Promise<UserEntity> {
     return this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Обновить пользователя (только OWNER)' })
   update(
     @Param('id') id: string,
@@ -48,7 +48,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Удалить пользователя (только OWNER)' })
   async remove(@Param('id') id: string): Promise<{ message: string }> {
     await this.usersService.remove(id);
@@ -56,7 +56,7 @@ export class UsersController {
   }
 
   @Post(':id/toggle-active')
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Переключить активность пользователя (только OWNER)' })
   toggleActive(@Param('id') id: string): Promise<UserEntity> {
     return this.usersService.toggleActive(id);

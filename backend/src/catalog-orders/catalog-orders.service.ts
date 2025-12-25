@@ -222,6 +222,7 @@ export class CatalogOrdersService {
       this.prisma.workflowStage.findFirst({
         where: { isActive: true },
         orderBy: { order: 'asc' },
+        include: { roles: { include: { role: true } } },
       }),
     ]);
 
@@ -233,16 +234,17 @@ export class CatalogOrdersService {
       throw new BadRequestException('Не найдено активных стадий производства');
     }
 
-    // Получаем работников для первой стадии
+    // Получаем работников для первой стадии (через many-to-many связь ролей)
+    const firstStageRoleIds = firstStage.roles.map(r => r.roleId);
     const workers = await this.prisma.user.findMany({
       where: {
-        role: firstStage.role,
+        roleId: { in: firstStageRoleIds },
         isActive: true,
       },
       select: {
         id: true,
         email: true,
-        role: true,
+        role: { select: { code: true, name: true } },
         telegramId: true,
       },
     });

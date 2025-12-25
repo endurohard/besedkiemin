@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserRole, ShipmentStatus } from '@prisma/client';
+import { ShipmentStatus } from '@prisma/client';
 
 @Injectable()
 export class ShipmentsService {
@@ -25,9 +25,10 @@ export class ShipmentsService {
     // Проверяем права пользователя
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: { role: true },
     });
 
-    if (!user || (user.role !== UserRole.WAREHOUSE && user.role !== UserRole.OWNER && user.role !== UserRole.MANAGER)) {
+    if (!user || (user.role.code !== 'WAREHOUSE' && user.role.code !== 'OWNER' && user.role.code !== 'MANAGER')) {
       throw new ForbiddenException('Только складист, менеджер и владелец могут создавать отгрузки');
     }
 
@@ -132,7 +133,7 @@ export class ShipmentsService {
     // Проверяем права пользователя
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true },
+      include: { role: true },
     });
 
     if (!user) {
@@ -263,9 +264,10 @@ export class ShipmentsService {
   async updateShipmentStatus(id: string, userId: string, status: ShipmentStatus) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: { role: true },
     });
 
-    if (!user || (user.role !== UserRole.WAREHOUSE && user.role !== UserRole.OWNER && user.role !== UserRole.MANAGER)) {
+    if (!user || (user.role.code !== 'WAREHOUSE' && user.role.code !== 'OWNER' && user.role.code !== 'MANAGER')) {
       throw new ForbiddenException('Только складист, менеджер и владелец могут обновлять статус отгрузки');
     }
 
@@ -307,9 +309,10 @@ export class ShipmentsService {
   async cancelShipment(id: string, userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: { role: true },
     });
 
-    if (!user || (user.role !== UserRole.WAREHOUSE && user.role !== UserRole.OWNER && user.role !== UserRole.MANAGER)) {
+    if (!user || (user.role.code !== 'WAREHOUSE' && user.role.code !== 'OWNER' && user.role.code !== 'MANAGER')) {
       throw new ForbiddenException('Только складист, менеджер и владелец могут отменять отгрузки');
     }
 

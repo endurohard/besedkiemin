@@ -9,15 +9,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Роли пользователей в производстве
-enum UserRole {
-  SUPER_ADMIN   // Супер-админ - скрытая роль, управление функциями системы
-  OWNER         // Владелец - полный доступ ко всему
-  MANAGER       // Менеджер - принимает заказы
-  DESIGNER      // Проектировщик - делает проекты
-  PREPARER      // Заготовщик - делает заготовки
-  PAINTER       // Маляр - красит
-  WAREHOUSE     // Складист - принимает или бракует
+// =============================================
+// ДИНАМИЧЕСКИЕ РОЛИ
+// =============================================
+
+// Роли пользователей (настраиваемые)
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique // Название роли ("Менеджер", "Маляр" и т.д.)
+  code        String   @unique // Код роли для программной идентификации (MANAGER, PAINTER)
+  description String?  // Описание роли
+  color       String?  // Цвет для UI (#3B82F6)
+  isSystem    Boolean  @default(false) @map("is_system") // Системные роли нельзя удалить
+  isActive    Boolean  @default(true) @map("is_active")
+  order       Int      @default(0) // Для сортировки
+
+  // Дополнительные права доступа (JSON массив строк)
+  // Например: ["users:view", "analytics:view", "orders:create"]
+  permissions Json     @default("[]")
+
+  // Связь с пользователями
+  users       User[]
+
+  // Связь с этапами workflow (многие-ко-многим)
+  workflowStages RoleWorkflowStage[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+// Связь роли с этапами workflow (многие-ко-многим)
+model RoleWorkflowStage {
+  id              String        @id @default(uuid())
+  roleId          String        @map("role_id")
+  workflowStageId String        @map("workflow_stage_id")
+
+  role            Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  workflowStage   WorkflowStage @relation(fields: [workflowStageId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, workflowStageId])
+  @@map("role_workflow_stages")
 }
 
 // Статусы заказа
@@ -86,8 +119,11 @@ model User {
   password  String
   firstName String   @map("first_name")
   lastName  String   @map("last_name")
-  role      UserRole
   isActive  Boolean  @default(true) @map("is_active")
+
+  // Связь с ролью (динамические роли)
+  roleId    String   @map("role_id")
+  role      Role     @relation(fields: [roleId], references: [id])
 
   // Telegram для уведомлений
   telegramId String? @map("telegram_id")
@@ -202,7 +238,6 @@ model WorkflowStage {
   name        String   // Название этапа (например, "Менеджер", "Заготовка", "Маляр")
   description String?  // Описание этапа
   order       Int      // Порядковый номер этапа (1, 2, 3...)
-  role        UserRole // Роль, которая работает на этом этапе
   isActive    Boolean  @default(true) @map("is_active")
 
   // Старое значение ProductionStage для совместимости
@@ -210,6 +245,9 @@ model WorkflowStage {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Роли, которые могут работать на этом этапе (многие-ко-многим)
+  roles          RoleWorkflowStage[]
 
   // История прохождения продуктов через этот этап
   productHistory ProductHistory[]

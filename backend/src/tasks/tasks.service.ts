@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
-import { TaskStatus, ProductionStage, UserRole } from '@prisma/client';
+import { TaskStatus, ProductionStage } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
@@ -13,7 +13,7 @@ export class TasksService {
   // Получить задачи текущего пользователя
   async getMyTasks(userId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId }, include: { role: true },
     });
 
     if (!user) {
@@ -22,18 +22,18 @@ export class TasksService {
 
     // Определяем стадию по роли
     const stageMapping = {
-      [UserRole.DESIGNER]: ProductionStage.DESIGN,
-      [UserRole.PREPARER]: ProductionStage.PREPARATION,
-      [UserRole.PAINTER]: ProductionStage.PAINTING,
-      [UserRole.WAREHOUSE]: ProductionStage.QUALITY_CHECK,
+      ['DESIGNER']: ProductionStage.DESIGN,
+      ['PREPARER']: ProductionStage.PREPARATION,
+      ['PAINTER']: ProductionStage.PAINTING,
+      ['WAREHOUSE']: ProductionStage.QUALITY_CHECK,
     };
 
-    const stage = stageMapping[user.role];
+    const stage = stageMapping[user.role.code];
 
     if (!stage) {
       // Для MANAGER возвращаем пустой массив - у них нет производственных задач
       // Менеджеры работают с заказами с сайта через отдельную страницу /catalog-orders
-      if (user.role === UserRole.MANAGER) {
+      if (user.role.code === 'MANAGER') {
         return [];
       }
 
@@ -58,7 +58,7 @@ export class TasksService {
               id: true,
               firstName: true,
               lastName: true,
-              role: true,
+              role: { select: { code: true, name: true } },
             },
           },
         },
@@ -102,7 +102,7 @@ export class TasksService {
             id: true,
             firstName: true,
             lastName: true,
-            role: true,
+            role: { select: { code: true, name: true } },
           },
         },
       },
@@ -251,12 +251,13 @@ export class TasksService {
       throw new BadRequestException('Текущая стадия workflow не найдена');
     }
 
-    // Получаем следующую стадию workflow
+    // Получаем следующую стадию workflow с ролями
     const nextWorkflowStage = await this.prisma.workflowStage.findFirst({
       where: {
         order: currentWorkflowStage.order + 1,
         isActive: true,
       },
+      include: { roles: { include: { role: true } } },
     });
 
     if (!nextWorkflowStage) {
@@ -298,11 +299,13 @@ export class TasksService {
     await this.updateOrderStatus(task.product.orderId);
 
     // Создаем новые задачи для всех работников следующей стадии
+    const nextStageRoleIds = nextWorkflowStage.roles.map(r => r.roleId);
     const nextWorkers = await this.prisma.user.findMany({
       where: {
-        role: nextWorkflowStage.role,
+        roleId: { in: nextStageRoleIds },
         isActive: true,
       },
+      include: { role: true },
     });
 
     // Создаем задачу для каждого работника (общий цех) с переданным количеством
@@ -355,12 +358,12 @@ export class TasksService {
     console.log('🚨 rejectTask called:', { taskId, userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage });
 
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId }, include: { role: true },
     });
 
-    console.log('👤 User found:', user ? `${user.email} (${user.role})` : 'NOT FOUND');
+    console.log('👤 User found:', user ? `${user.email} (${user.role.code})` : 'NOT FOUND');
 
-    if (!user || user.role !== UserRole.WAREHOUSE) {
+    if (!user || user.role.code !== 'WAREHOUSE') {
       console.error('❌ User is not warehouse');
       throw new ForbiddenException('Только складист может браковать товар');
     }
@@ -480,29 +483,29 @@ export class TasksService {
     }
 
     // Определяем роль, которой вернуть брак
-    let targetRole: UserRole = UserRole.PAINTER; // По умолчанию маляр
+    let targetRoleCode = 'PAINTER'; // По умолчанию маляр
     let targetStageName = 'Покраска';
 
     if (returnToStage) {
       switch (returnToStage) {
         case ProductionStage.PENDING:
-          targetRole = UserRole.MANAGER;
+          targetRoleCode = 'MANAGER';
           targetStageName = 'Менеджер';
           break;
         case ProductionStage.DESIGN:
-          targetRole = UserRole.DESIGNER;
+          targetRoleCode = 'DESIGNER';
           targetStageName = 'Проектирование';
           break;
         case ProductionStage.PREPARATION:
-          targetRole = UserRole.PREPARER;
+          targetRoleCode = 'PREPARER';
           targetStageName = 'Заготовка';
           break;
         case ProductionStage.PAINTING:
-          targetRole = UserRole.PAINTER;
+          targetRoleCode = 'PAINTER';
           targetStageName = 'Покраска';
           break;
         default:
-          targetRole = UserRole.PAINTER;
+          targetRoleCode = 'PAINTER';
           targetStageName = 'Покраска';
       }
     }
@@ -510,7 +513,7 @@ export class TasksService {
     // Отправляем уведомление работникам выбранной стадии о новом браке
     const targetWorkers = await this.prisma.user.findMany({
       where: {
-        role: targetRole,
+        role: { code: targetRoleCode },
         isActive: true,
       },
     });
@@ -541,10 +544,10 @@ export class TasksService {
   // Принять товар на склад (для складиста)
   async approveTask(taskId: string, userId: string, quantity: number) {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId }, include: { role: true },
     });
 
-    if (!user || user.role !== UserRole.WAREHOUSE) {
+    if (!user || user.role.code !== 'WAREHOUSE') {
       throw new ForbiddenException('Только складист может принять товар');
     }
 
@@ -726,7 +729,7 @@ export class TasksService {
     let filteredDefects = defects.filter((d) => d.id); // Убираем null значения
 
     // Владелец и менеджер видят все браки
-    if (user && (user.role === UserRole.OWNER || user.role === UserRole.MANAGER)) {
+    if (user && (user.role.code === 'OWNER' || user.role.code === 'MANAGER')) {
       return filteredDefects;
     }
 
@@ -734,17 +737,17 @@ export class TasksService {
     if (user) {
       let userStage: ProductionStage | null = null;
 
-      switch (user.role) {
-        case UserRole.DESIGNER:
+      switch (user.role.code) {
+        case 'DESIGNER':
           userStage = ProductionStage.DESIGN;
           break;
-        case UserRole.PREPARER:
+        case 'PREPARER':
           userStage = ProductionStage.PREPARATION;
           break;
-        case UserRole.PAINTER:
+        case 'PAINTER':
           userStage = ProductionStage.PAINTING;
           break;
-        case UserRole.WAREHOUSE:
+        case 'WAREHOUSE':
           userStage = ProductionStage.QUALITY_CHECK;
           break;
         default:
@@ -761,7 +764,7 @@ export class TasksService {
   // Принять брак на доработку (для любого работника)
   async acceptDefectRework(productId: string, userId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId }, include: { role: true },
     });
 
     if (!user) {
@@ -772,20 +775,20 @@ export class TasksService {
     let userStage: ProductionStage;
     let stageName: string;
 
-    switch (user.role) {
-      case UserRole.MANAGER:
+    switch (user.role.code) {
+      case 'MANAGER':
         userStage = ProductionStage.PENDING;
         stageName = 'ПРОВЕРКА (МЕНЕДЖЕР)';
         break;
-      case UserRole.DESIGNER:
+      case 'DESIGNER':
         userStage = ProductionStage.DESIGN;
         stageName = 'ПРОЕКТИРОВАНИЕ';
         break;
-      case UserRole.PREPARER:
+      case 'PREPARER':
         userStage = ProductionStage.PREPARATION;
         stageName = 'ЗАГОТОВКА';
         break;
-      case UserRole.PAINTER:
+      case 'PAINTER':
         userStage = ProductionStage.PAINTING;
         stageName = 'ПОКРАСКА';
         break;
@@ -861,7 +864,7 @@ export class TasksService {
   // Получить количество непринятых браков (для любого работника)
   async getUnacceptedDefectsCount(userId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId }, include: { role: true },
     });
 
     if (!user) {
@@ -871,17 +874,17 @@ export class TasksService {
     // Определяем стадию на основе роли пользователя
     let userStage: ProductionStage | null = null;
 
-    switch (user.role) {
-      case UserRole.MANAGER:
+    switch (user.role.code) {
+      case 'MANAGER':
         userStage = ProductionStage.PENDING;
         break;
-      case UserRole.DESIGNER:
+      case 'DESIGNER':
         userStage = ProductionStage.DESIGN;
         break;
-      case UserRole.PREPARER:
+      case 'PREPARER':
         userStage = ProductionStage.PREPARATION;
         break;
-      case UserRole.PAINTER:
+      case 'PAINTER':
         userStage = ProductionStage.PAINTING;
         break;
       default:

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { UserRole, TaskStatus, ShipmentStatus, FeatureFlagsMap } from '@/types';
+import { TaskStatus, ShipmentStatus, FeatureFlagsMap } from '@/types';
 import { tasksApi, featureFlagsApi } from '@/lib/api';
 import {
   LayoutDashboard,
@@ -18,14 +18,21 @@ import {
   MessageCircle,
   ChevronLeft,
   ChevronRight,
-  Shield
+  Shield,
+  UserCog
 } from 'lucide-react';
 
 interface SidebarProps {
-  userRole?: UserRole;
+  userRole?: string; // Role code string
+  permissions?: string[]; // User permissions array
 }
 
-export const Sidebar = ({ userRole }: SidebarProps) => {
+export const Sidebar = ({ userRole, permissions = [] }: SidebarProps) => {
+  // Проверка наличия permission
+  const hasPermission = (perm: string) => {
+    if (userRole === 'SUPER_ADMIN' || userRole === 'OWNER') return true;
+    return permissions.includes(perm);
+  };
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -33,11 +40,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
   const { data: tasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: tasksApi.getMyTasks,
-    enabled: userRole !== UserRole.OWNER && userRole !== UserRole.MANAGER,
+    enabled: hasPermission('tasks:view_own') && !hasPermission('kanban:view'),
     refetchInterval: 30000,
   });
 
-  // Fetch shipments for warehouse/manager/owner
+  // Fetch shipments for users with shipments:view permission
   const { data: shipments } = useQuery({
     queryKey: ['shipments'],
     queryFn: async () => {
@@ -48,11 +55,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       });
       return response.json();
     },
-    enabled: userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER,
+    enabled: hasPermission('shipments:view'),
     refetchInterval: 30000,
   });
 
-  // Fetch unaccepted defects count for painter
+  // Fetch unaccepted defects count for users with defects:view permission
   const { data: defectsCountData } = useQuery({
     queryKey: ['defects-count'],
     queryFn: async () => {
@@ -63,7 +70,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       });
       return response.json();
     },
-    enabled: userRole === UserRole.PAINTER || userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER,
+    enabled: hasPermission('defects:view'),
     refetchInterval: 30000,
   });
 
@@ -159,7 +166,8 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       </div>
 
       <nav className="p-2 space-y-0.5">
-        {userRole !== UserRole.OWNER && userRole !== UserRole.MANAGER && userRole !== UserRole.SUPER_ADMIN && (
+        {/* Мои задачи - для работников производства */}
+        {hasPermission('tasks:view_own') && !hasPermission('kanban:view') && (
           <NavLink
             to="/app"
             icon={ClipboardList}
@@ -168,24 +176,27 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
           />
         )}
 
-        {(userRole === UserRole.OWNER || userRole === UserRole.MANAGER || userRole === UserRole.SUPER_ADMIN) && (
+        {/* Канбан - для тех кто может просматривать */}
+        {hasPermission('kanban:view') && (
           <NavLink to="/app/kanban" icon={LayoutDashboard} label="Канбан" />
         )}
 
-        {(userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER || userRole === UserRole.SUPER_ADMIN) && (
-          <>
-            <NavLink to="/app/inventory" icon={Package} label="Склад" />
-            <NavLink
-              to="/app/shipments"
-              icon={TruckIcon}
-              label="Отгрузки"
-              badge={shipmentCount}
-              badgeColor="bg-orange-500"
-            />
-          </>
+        {/* Склад и Отгрузки */}
+        {hasPermission('inventory:view') && (
+          <NavLink to="/app/inventory" icon={Package} label="Склад" />
+        )}
+        {hasPermission('shipments:view') && (
+          <NavLink
+            to="/app/shipments"
+            icon={TruckIcon}
+            label="Отгрузки"
+            badge={shipmentCount}
+            badgeColor="bg-orange-500"
+          />
         )}
 
-        {(userRole === UserRole.PAINTER || userRole === UserRole.WAREHOUSE || userRole === UserRole.MANAGER || userRole === UserRole.OWNER || userRole === UserRole.SUPER_ADMIN) && (
+        {/* Брак/Дефекты */}
+        {hasPermission('defects:view') && (
           <NavLink
             to="/app/defects"
             icon={AlertTriangle}
@@ -194,36 +205,49 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
           />
         )}
 
-        {(userRole === UserRole.OWNER || userRole === UserRole.MANAGER || userRole === UserRole.SUPER_ADMIN) && (
+        {/* Заказы и каталог */}
+        {hasPermission('orders:view') && (
           <>
             <NavLink to="/app/product-types" icon={Grid3x3} label="Типы товаров" />
             {featureFlags?.product_types !== false && (
               <NavLink to="/app/nomenclature" icon={Package} label="Каталог" />
             )}
-            {featureFlags?.catalog !== false && (
-              <NavLink to="/app/catalog-management" icon={ShoppingCart} label="Витрина" />
-            )}
-            {featureFlags?.catalog_orders !== false && (
-              <NavLink to="/app/catalog-orders" icon={ShoppingBag} label="Заказы" />
-            )}
-            {featureFlags?.chat !== false && (
-              <NavLink to="/app/chat" icon={MessageCircle} label="Чат" />
-            )}
           </>
         )}
 
-        {(userRole === UserRole.OWNER || userRole === UserRole.SUPER_ADMIN) && (
-          <>
-            {featureFlags?.analytics !== false && (
-              <NavLink to="/app/analytics" icon={BarChart3} label="Аналитика" />
-            )}
-            <NavLink to="/app/users" icon={Users} label="Пользователи" />
-            <NavLink to="/app/workflow" icon={Settings} label="Цикл" />
-            <NavLink to="/app/company-settings" icon={Settings} label="Настройки" />
-          </>
+        {hasPermission('catalog:view') && featureFlags?.catalog !== false && (
+          <NavLink to="/app/catalog-management" icon={ShoppingCart} label="Витрина" />
         )}
 
-        {userRole === UserRole.SUPER_ADMIN && (
+        {hasPermission('orders:view') && featureFlags?.catalog_orders !== false && (
+          <NavLink to="/app/catalog-orders" icon={ShoppingBag} label="Заказы" />
+        )}
+
+        {hasPermission('chat:view') && featureFlags?.chat !== false && (
+          <NavLink to="/app/chat" icon={MessageCircle} label="Чат" />
+        )}
+
+        {/* Аналитика */}
+        {hasPermission('analytics:view') && featureFlags?.analytics !== false && (
+          <NavLink to="/app/analytics" icon={BarChart3} label="Аналитика" />
+        )}
+
+        {/* Управление */}
+        {hasPermission('users:view') && (
+          <NavLink to="/app/users" icon={Users} label="Пользователи" />
+        )}
+        {hasPermission('roles:view') && (
+          <NavLink to="/app/roles" icon={UserCog} label="Роли" />
+        )}
+        {hasPermission('workflow:manage') && (
+          <NavLink to="/app/workflow" icon={Settings} label="Цикл" />
+        )}
+        {hasPermission('settings:view') && (
+          <NavLink to="/app/company-settings" icon={Settings} label="Настройки" />
+        )}
+
+        {/* Feature Flags - только SUPER_ADMIN */}
+        {userRole === 'SUPER_ADMIN' && (
           <NavLink to="/app/feature-flags" icon={Shield} label="Функции" />
         )}
       </nav>

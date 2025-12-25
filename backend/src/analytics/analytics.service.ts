@@ -101,13 +101,13 @@ export class AnalyticsService {
     const users = await this.prisma.user.findMany({
       where: {
         isActive: true,
-        role: { not: 'SUPER_ADMIN' },
+        role: { code: { not: 'SUPER_ADMIN' } },
       },
       select: {
         id: true,
         firstName: true,
         lastName: true,
-        role: true,
+        role: { select: { code: true, name: true } },
         productHistory: {
           select: {
             startedAt: true,

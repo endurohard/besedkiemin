@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { QualityCheck, UserRole } from '@/types';
+import { QualityCheck } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { AlertTriangle, X, Eye, Calendar, User, Package, FileText, CheckCircle } from 'lucide-react';
@@ -15,7 +15,7 @@ export const DefectsPage = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   // Проверяем, может ли пользователь принимать браки на доработку
-  const canAcceptDefects = user?.role === UserRole.PAINTER || user?.role === UserRole.DESIGNER || user?.role === UserRole.PREPARER || user?.role === UserRole.MANAGER;
+  const canAcceptDefects = user?.role?.code === 'PAINTER' || user?.role?.code === 'DESIGNER' || user?.role?.code === 'PREPARER' || user?.role?.code === 'MANAGER';
 
   // Fetch all defects with photos using dedicated endpoint
   const { data: defects, isLoading } = useQuery({
@@ -217,7 +217,7 @@ export const DefectsPage = () => {
                   {selectedDefect.checkedBy ? (
                     <span>
                       {selectedDefect.checkedBy.firstName} {selectedDefect.checkedBy.lastName}
-                      {' '}({selectedDefect.checkedBy.role})
+                      {' '}({selectedDefect.checkedBy.role?.name || 'Н/Д'})
                     </span>
                   ) : 'Н/Д'}
                 </div>

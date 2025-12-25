@@ -4,7 +4,7 @@ import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @Controller('company-settings')
 export class CompanySettingsController {
@@ -25,7 +25,7 @@ export class CompanySettingsController {
 
   @Patch()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   async update(@Body() updateDto: UpdateCompanySettingsDto) {
     return this.companySettingsService.update(updateDto);
   }

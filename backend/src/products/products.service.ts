@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductionStage, OrderStatus, UserRole } from '@prisma/client';
+import { ProductionStage, OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
@@ -32,22 +32,27 @@ export class ProductsService {
       throw new NotFoundException('Не найдены активные стадии workflow');
     }
 
-    // Получаем вторую стадию workflow заранее
+    // Получаем вторую стадию workflow с ролями
     const secondWorkflowStage = await this.prisma.workflowStage.findFirst({
       where: {
         isActive: true,
         order: { gt: firstWorkflowStage.order }
       },
       orderBy: { order: 'asc' },
+      include: {
+        roles: { include: { role: true } },
+      },
     });
 
-    // Получаем работников следующей стадии заранее
-    const nextWorkers = secondWorkflowStage
+    // Получаем работников следующей стадии заранее (через many-to-many связь ролей)
+    const roleIds = secondWorkflowStage?.roles.map(r => r.roleId) || [];
+    const nextWorkers = roleIds.length > 0
       ? await this.prisma.user.findMany({
           where: {
-            role: secondWorkflowStage.role,
+            roleId: { in: roleIds },
             isActive: true,
           },
+          include: { role: true },
         })
       : [];
 
@@ -130,7 +135,7 @@ export class ProductsService {
 
             try {
               await this.telegramService.sendMessage(worker.telegramId, message);
-              console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role})`);
+              console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role.code})`);
             } catch (error) {
               console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
             }

@@ -12,7 +12,7 @@ import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @ApiTags('Chat')
 @Controller('chat')
@@ -42,7 +42,7 @@ export class ChatController {
    */
   @Get('rooms')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить все активные комнаты чата (OWNER/MANAGER)' })
   async getAllRooms() {
@@ -63,7 +63,7 @@ export class ChatController {
    */
   @Get('rooms/:roomId/unread')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить непрочитанные сообщения для комнаты (OWNER/MANAGER)' })
   async getUnreadMessages(@Param('roomId') roomId: string) {
@@ -75,7 +75,7 @@ export class ChatController {
    */
   @Get('unread/total')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить общее количество непрочитанных сообщений (OWNER/MANAGER)' })
   async getTotalUnreadCount() {
@@ -88,7 +88,7 @@ export class ChatController {
    */
   @Post('rooms/:roomId/mark-read')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить сообщения как прочитанные (OWNER/MANAGER)' })
   async markAsRead(
@@ -103,7 +103,7 @@ export class ChatController {
    */
   @Post('rooms/:roomId/close')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Закрыть комнату чата (OWNER/MANAGER)' })
   async closeRoom(@Param('roomId') roomId: string) {

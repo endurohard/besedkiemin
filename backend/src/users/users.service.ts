@@ -45,6 +45,13 @@ export class UsersService {
     });
   }
 
+  async findByEmailWithRole(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+      include: { role: true },
+    });
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     // Проверяем существование пользователя
     await this.findOne(id);

@@ -16,7 +16,7 @@ import { UpdateCatalogCategoryDto } from './dto/update-catalog-category.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @ApiTags('Catalog Categories')
 @Controller('catalog-categories')
@@ -25,7 +25,7 @@ export class CatalogCategoriesController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Создать категорию (только OWNER/MANAGER)' })
   create(@Body() createDto: CreateCatalogCategoryDto) {
@@ -52,7 +52,7 @@ export class CatalogCategoriesController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Обновить категорию (только OWNER/MANAGER)' })
   update(@Param('id') id: string, @Body() updateDto: UpdateCatalogCategoryDto) {
@@ -61,7 +61,7 @@ export class CatalogCategoriesController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Удалить категорию (только OWNER)' })
   remove(@Param('id') id: string) {

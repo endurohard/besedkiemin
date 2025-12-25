@@ -256,7 +256,7 @@ export const AnalyticsPage = () => {
                       <td className="p-2 font-medium">{perf.user.name}</td>
                       <td className="p-2">
                         <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
-                          {perf.user.role}
+                          {typeof perf.user.role === 'object' ? perf.user.role.name : perf.user.role}
                         </span>
                       </td>
                       <td className="p-2 text-center font-semibold">

@@ -12,7 +12,7 @@ import { UpdateFeatureFlagDto } from './dto/update-feature-flag.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @Controller('feature-flags')
 export class FeatureFlagsController {
@@ -28,7 +28,7 @@ export class FeatureFlagsController {
   // Получить все feature flags (только для SUPER_ADMIN)
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles('SUPER_ADMIN')
   async findAll() {
     return this.featureFlagsService.findAll();
   }
@@ -36,7 +36,7 @@ export class FeatureFlagsController {
   // Получить конкретный флаг по ключу
   @Get(':key')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles('SUPER_ADMIN')
   async findByKey(@Param('key') key: string) {
     return this.featureFlagsService.findByKey(key);
   }
@@ -44,7 +44,7 @@ export class FeatureFlagsController {
   // Обновить флаг
   @Patch(':key')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles('SUPER_ADMIN')
   async update(
     @Param('key') key: string,
     @Body() updateDto: UpdateFeatureFlagDto,
@@ -55,7 +55,7 @@ export class FeatureFlagsController {
   // Переключить состояние флага (toggle)
   @Post(':key/toggle')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles('SUPER_ADMIN')
   async toggle(@Param('key') key: string) {
     return this.featureFlagsService.toggle(key);
   }
@@ -63,7 +63,7 @@ export class FeatureFlagsController {
   // Массовое обновление флагов
   @Post('bulk-update')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles('SUPER_ADMIN')
   async bulkUpdate(@Body() updates: { key: string; isEnabled: boolean }[]) {
     return this.featureFlagsService.bulkUpdate(updates);
   }

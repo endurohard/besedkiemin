@@ -1,29 +1,39 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usersApi } from '@/lib/api';
+import { usersApi, rolesApi } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { User, UserRole, CreateUserDto, UpdateUserDto } from '@/types';
+import { User, Role, CreateUserDto, UpdateUserDto } from '@/types';
 import { Pencil, Trash2, Plus, X, Check } from 'lucide-react';
 
 export const UserManagementPage = () => {
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState<CreateUserDto>({
+  const [formData, setFormData] = useState<CreateUserDto & { sipServer?: string; sipUser?: string; sipPassword?: string; sipPort?: number }>({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
-    role: UserRole.MANAGER,
+    roleId: '',
+    sipServer: '',
+    sipUser: '',
+    sipPassword: '',
+    sipPort: 5060,
+  });
+
+  // Получение списка ролей
+  const { data: roles = [] } = useQuery({
+    queryKey: ['roles'],
+    queryFn: rolesApi.getAll,
   });
 
   // Получение списка пользователей (без супер админов)
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: usersApi.getAll,
-    select: (data) => data.filter((user) => user.role !== UserRole.SUPER_ADMIN),
+    select: (data) => data.filter((user) => user.role?.code !== 'SUPER_ADMIN'),
   });
 
   // Создание пользователя
@@ -63,13 +73,19 @@ export const UserManagementPage = () => {
     },
   });
 
+  // Доступные роли (исключаем SUPER_ADMIN)
+  const availableRoles = roles.filter((r: Role) => r.code !== 'SUPER_ADMIN');
+
+  // Роль по умолчанию
+  const defaultRoleId = availableRoles.find((r: Role) => r.code === 'MANAGER')?.id || availableRoles[0]?.id || '';
+
   const resetForm = () => {
     setFormData({
       email: '',
       password: '',
       firstName: '',
       lastName: '',
-      role: UserRole.MANAGER,
+      roleId: defaultRoleId,
       sipServer: '',
       sipUser: '',
       sipPassword: '',
@@ -82,7 +98,8 @@ export const UserManagementPage = () => {
       !formData.email ||
       !formData.password ||
       !formData.firstName ||
-      !formData.lastName
+      !formData.lastName ||
+      !formData.roleId
     ) {
       alert('Заполните все обязательные поля');
       return;
@@ -97,7 +114,7 @@ export const UserManagementPage = () => {
       password: '', // Пароль не заполняем при редактировании
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role,
+      roleId: user.roleId,
       sipServer: user.sipServer || '',
       sipUser: user.sipUser || '',
       sipPassword: user.sipPassword || '',
@@ -112,7 +129,7 @@ export const UserManagementPage = () => {
       email: formData.email,
       firstName: formData.firstName,
       lastName: formData.lastName,
-      role: formData.role,
+      roleId: formData.roleId,
       sipServer: formData.sipServer,
       sipUser: formData.sipUser,
       sipPassword: formData.sipPassword,
@@ -139,17 +156,10 @@ export const UserManagementPage = () => {
     resetForm();
   };
 
-  const getRoleLabel = (role: UserRole): string => {
-    const roleLabels: Record<UserRole, string> = {
-      [UserRole.SUPER_ADMIN]: 'Супер-админ',
-      [UserRole.OWNER]: 'Владелец',
-      [UserRole.MANAGER]: 'Менеджер',
-      [UserRole.DESIGNER]: 'Проектировщик',
-      [UserRole.PREPARER]: 'Заготовщик',
-      [UserRole.PAINTER]: 'Маляр',
-      [UserRole.WAREHOUSE]: 'Складист',
-    };
-    return roleLabels[role];
+  // Проверяем, является ли выбранная роль менеджером
+  const isManagerRole = () => {
+    const selectedRole = roles.find((r: Role) => r.id === formData.roleId);
+    return selectedRole?.code === 'MANAGER';
   };
 
   if (isLoading) {
@@ -166,7 +176,10 @@ export const UserManagementPage = () => {
         <h1 className="text-3xl font-bold">Управление пользователями</h1>
         {!isCreating && !editingUser && (
           <Button
-            onClick={() => setIsCreating(true)}
+            onClick={() => {
+              resetForm();
+              setIsCreating(true);
+            }}
             className="flex items-center gap-2"
           >
             <Plus size={16} />
@@ -235,24 +248,23 @@ export const UserManagementPage = () => {
                 <label className="block text-sm font-medium mb-2">Роль *</label>
                 <select
                   className="w-full px-3 py-2 border rounded-md"
-                  value={formData.role}
+                  value={formData.roleId}
                   onChange={(e) =>
-                    setFormData({ ...formData, role: e.target.value as UserRole })
+                    setFormData({ ...formData, roleId: e.target.value })
                   }
                 >
-                  {Object.values(UserRole)
-                    .filter((role) => role !== UserRole.SUPER_ADMIN)
-                    .map((role) => (
-                      <option key={role} value={role}>
-                        {getRoleLabel(role)}
-                      </option>
-                    ))}
+                  <option value="">Выберите роль</option>
+                  {availableRoles.map((role: Role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
             {/* SIP настройки для менеджеров */}
-            {formData.role === UserRole.MANAGER && (
+            {isManagerRole() && (
               <div className="border-t pt-4 mt-4">
                 <h3 className="text-lg font-semibold mb-4">Настройки SIP телефонии</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -297,7 +309,7 @@ export const UserManagementPage = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, sipPassword: e.target.value })
                       }
-                      placeholder="••••••••"
+                      placeholder="********"
                     />
                   </div>
                 </div>
@@ -356,8 +368,11 @@ export const UserManagementPage = () => {
                     </td>
                     <td className="p-2 text-sm text-muted-foreground">{user.email}</td>
                     <td className="p-2">
-                      <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
-                        {getRoleLabel(user.role)}
+                      <span
+                        className="text-xs px-2 py-1 rounded text-white"
+                        style={{ backgroundColor: user.role?.color || '#6B7280' }}
+                      >
+                        {user.role?.name || 'Не указана'}
                       </span>
                     </td>
                     <td className="p-2 text-center">

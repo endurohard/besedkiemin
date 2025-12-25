@@ -20,7 +20,7 @@ import { UpdateQualityCheckDto } from './dto/update-quality-check.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole, QualityStatus } from '@prisma/client';
+import { QualityStatus } from '@prisma/client';
 import { UploadService } from '../upload/upload.service';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -36,7 +36,7 @@ export class QualityChecksController {
   ) {}
 
   @Post()
-  @Roles(UserRole.WAREHOUSE)
+  @Roles('WAREHOUSE')
   @UseInterceptors(
     FileInterceptor('photo', {
       storage: diskStorage({
@@ -110,7 +110,7 @@ export class QualityChecksController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.WAREHOUSE)
+  @Roles('WAREHOUSE')
   @UseInterceptors(
     FileInterceptor('photo', {
       storage: diskStorage({
@@ -150,7 +150,7 @@ export class QualityChecksController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.WAREHOUSE, UserRole.MANAGER)
+  @Roles('WAREHOUSE', 'MANAGER')
   @ApiOperation({ summary: 'Удалить проверку качества (складист или менеджер)' })
   remove(@Param('id') id: string) {
     return this.qualityChecksService.remove(id);

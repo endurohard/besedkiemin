@@ -16,7 +16,7 @@ import { UpdateContactRequestDto } from './dto/update-contact-request.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @ApiTags('Contact Requests')
 @Controller('contact-requests')
@@ -31,7 +31,7 @@ export class ContactRequestsController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить все запросы (только OWNER/MANAGER)' })
   findAll(@Query('onlyUnprocessed') onlyUnprocessed?: string) {
@@ -40,7 +40,7 @@ export class ContactRequestsController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить запрос по ID (только OWNER/MANAGER)' })
   findOne(@Param('id') id: string) {
@@ -49,7 +49,7 @@ export class ContactRequestsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Обновить запрос (только OWNER/MANAGER)' })
   update(@Param('id') id: string, @Body() updateDto: UpdateContactRequestDto) {
@@ -58,7 +58,7 @@ export class ContactRequestsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Удалить запрос (только OWNER)' })
   remove(@Param('id') id: string) {

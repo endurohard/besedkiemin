@@ -44,7 +44,7 @@ export class TelegramService implements OnModuleInit {
       }
 
       if (userId) {
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
         if (!user) {
           await this.bot.sendMessage(chatId, '❌ Пользователь не найден');
           return;
@@ -57,7 +57,7 @@ export class TelegramService implements OnModuleInit {
 
         await this.bot.sendMessage(
           chatId,
-          `✅ Telegram успешно привязан!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role}\n\nТеперь вы будете получать уведомления.`
+          `✅ Telegram успешно привязан!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role.code}\n\nТеперь вы будете получать уведомления.`
         );
       }
     });
@@ -68,11 +68,11 @@ export class TelegramService implements OnModuleInit {
       const telegramId = msg.from?.id.toString();
       if (!telegramId) return;
 
-      const user = await this.prisma.user.findFirst({ where: { telegramId } });
+      const user = await this.prisma.user.findFirst({ where: { telegramId }, include: { role: true } });
       if (user) {
         await this.bot.sendMessage(
           chatId,
-          `✅ Аккаунт привязан:\n👤 ${user.firstName} ${user.lastName}\n🏢 ${user.role}\n\nИспользуйте /tasks`
+          `✅ Аккаунт привязан:\n👤 ${user.firstName} ${user.lastName}\n🏢 ${user.role.code}\n\nИспользуйте /tasks`
         );
       } else {
         await this.bot.sendMessage(
@@ -89,7 +89,7 @@ export class TelegramService implements OnModuleInit {
       const telegramId = msg.from?.id.toString();
       if (!telegramId) return;
 
-      const user = await this.prisma.user.findFirst({ where: { telegramId } });
+      const user = await this.prisma.user.findFirst({ where: { telegramId }, include: { role: true } });
       if (!user) {
         await this.bot.sendMessage(chatId, '❌ Аккаунт не привязан');
         return;
@@ -146,7 +146,7 @@ export class TelegramService implements OnModuleInit {
       }
 
       // Привязываем Telegram к пользователю
-      const user = await this.prisma.user.findUnique({ where: { id: loginData.userId } });
+      const user = await this.prisma.user.findUnique({ where: { id: loginData.userId }, include: { role: true } });
       if (!user) {
         await this.bot.sendMessage(chatId, '❌ Пользователь не найден');
         this.loginCodes.delete(code);
@@ -163,7 +163,7 @@ export class TelegramService implements OnModuleInit {
 
       await this.bot.sendMessage(
         chatId,
-        `✅ Авторизация успешна!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role}\n\n🔔 Вы будете получать уведомления о задачах`
+        `✅ Авторизация успешна!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role.code}\n\n🔔 Вы будете получать уведомления о задачах`
       );
     });
 
@@ -315,7 +315,7 @@ export class TelegramService implements OnModuleInit {
       } else {
         // Проверяем, привязан ли пользователь
         const telegramId = msg.from?.id.toString();
-        const user = await this.prisma.user.findFirst({ where: { telegramId } });
+        const user = await this.prisma.user.findFirst({ where: { telegramId }, include: { role: true } });
 
         if (user) {
           await this.bot.sendMessage(
@@ -333,7 +333,7 @@ export class TelegramService implements OnModuleInit {
   }
 
   async notifyNewTask(userId: string, taskTitle: string, orderNumber: string, quantity: number) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
     if (!user || !user.telegramId) return;
 
     try {
@@ -348,7 +348,7 @@ export class TelegramService implements OnModuleInit {
   }
 
   async requestDefectPhoto(userId: string, taskId: string, reason: string, quantity: number) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
     if (!user || !user.telegramId) return false;
 
     const chatId = parseInt(user.telegramId);
@@ -484,7 +484,7 @@ export class TelegramService implements OnModuleInit {
       // Также отправляем всем владельцам и менеджерам с привязанным Telegram
       const admins = await this.prisma.user.findMany({
         where: {
-          role: { in: ['OWNER', 'MANAGER'] },
+          role: { code: { in: ['OWNER', 'MANAGER'] } },
           telegramId: { not: null },
         },
       });

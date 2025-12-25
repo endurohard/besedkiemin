@@ -14,7 +14,7 @@ import { CallbackService } from './callback.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @ApiTags('Callback Requests')
 @Controller('callback-requests')
@@ -44,7 +44,7 @@ export class CallbackController {
    */
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить все заявки на звонок (OWNER/MANAGER)' })
   async findAll(@Query('status') status?: string) {
@@ -56,7 +56,7 @@ export class CallbackController {
    */
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить заявку по ID (OWNER/MANAGER)' })
   async findOne(@Param('id') id: string) {
@@ -68,7 +68,7 @@ export class CallbackController {
    */
   @Post(':id/contacted')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Связались с клиентом" (OWNER/MANAGER)' })
   async markContacted(
@@ -84,7 +84,7 @@ export class CallbackController {
    */
   @Post(':id/completed')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Завершено" (OWNER/MANAGER)' })
   async markCompleted(
@@ -100,7 +100,7 @@ export class CallbackController {
    */
   @Post(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отменить заявку (OWNER/MANAGER)' })
   async cancel(
@@ -116,7 +116,7 @@ export class CallbackController {
    */
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Удалить заявку (OWNER)' })
   async remove(@Param('id') id: string) {

@@ -1,6 +1,30 @@
-// User roles
+// Role interface (dynamic roles)
+export interface Role {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  color?: string;
+  isSystem: boolean;
+  isActive: boolean;
+  order: number;
+  permissions: string[];
+  workflowStages?: { workflowStage: WorkflowStage }[];
+  _count?: { users: number };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Permission interface
+export interface Permission {
+  code: string;
+  name: string;
+  group: string;
+}
+
+// User roles - kept for backward compatibility (use role.code instead)
 export enum UserRole {
-  SUPER_ADMIN = 'SUPER_ADMIN', // Скрытая роль - управление функциями системы
+  SUPER_ADMIN = 'SUPER_ADMIN',
   OWNER = 'OWNER',
   MANAGER = 'MANAGER',
   DESIGNER = 'DESIGNER',
@@ -215,7 +239,8 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
+  roleId: string;
+  role: Role; // Dynamic role object
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -371,7 +396,7 @@ export interface CreateUserDto {
   password: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
+  roleId: string; // ID роли
   // SIP телефония (для менеджеров)
   sipServer?: string;
   sipUser?: string;
@@ -382,11 +407,6 @@ export interface CreateUserDto {
 export interface UpdateUserDto extends Partial<CreateUserDto> {
   isActive?: boolean;
   telegramId?: string;
-  // SIP телефония (для менеджеров)
-  sipServer?: string;
-  sipUser?: string;
-  sipPassword?: string;
-  sipPort?: number;
 }
 
 // Task interface
@@ -462,7 +482,7 @@ export interface UserPerformance {
   user: {
     id: string;
     name: string;
-    role: UserRole;
+    role: { code: string; name: string }; // Dynamic role
   };
   stats: {
     completedTasks: number;

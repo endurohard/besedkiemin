@@ -4,7 +4,7 @@ import { ordersApi, productsApi, tasksApi } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { OrderStatus, ProductionStage, UserRole, Product, Order } from '@/types';
+import { OrderStatus, ProductionStage, Product, Order } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { Package, Clock, CheckCircle, ArrowRight, Plus, Search, Calendar, X } from 'lucide-react';
 import { CreateOrderModal } from '@/components/CreateOrderModal';
@@ -33,7 +33,7 @@ export const KanbanPage = () => {
   const { data: myTasks = [] } = useQuery({
     queryKey: ['my-tasks'],
     queryFn: () => tasksApi.getMyTasks(),
-    enabled: user?.role !== UserRole.OWNER && user?.role !== UserRole.MANAGER,
+    enabled: user?.role?.code !== 'OWNER' && user?.role?.code !== 'MANAGER',
   });
 
   const moveProductMutation = useMutation({
@@ -46,17 +46,19 @@ export const KanbanPage = () => {
   });
 
   // Определяем какие этапы доступны для текущей роли
-  const getRoleStages = (role: UserRole) => {
-    switch (role) {
-      case UserRole.MANAGER:
+  const getRoleStages = (roleCode: string | undefined) => {
+    switch (roleCode) {
+      case 'OWNER':
+      case 'MANAGER':
+      case 'SUPER_ADMIN':
         return Object.values(ProductionStage);
-      case UserRole.DESIGNER:
+      case 'DESIGNER':
         return [ProductionStage.PENDING, ProductionStage.DESIGN];
-      case UserRole.PREPARER:
+      case 'PREPARER':
         return [ProductionStage.DESIGN, ProductionStage.PREPARATION];
-      case UserRole.PAINTER:
+      case 'PAINTER':
         return [ProductionStage.PREPARATION, ProductionStage.PAINTING, ProductionStage.REJECTED];
-      case UserRole.WAREHOUSE:
+      case 'WAREHOUSE':
         return [ProductionStage.PAINTING, ProductionStage.QUALITY_CHECK, ProductionStage.COMPLETED, ProductionStage.REJECTED];
       default:
         return [];
@@ -64,22 +66,22 @@ export const KanbanPage = () => {
   };
 
   // Определяем следующий этап для перемещения
-  const getNextStage = (currentStage: ProductionStage, role: UserRole): ProductionStage | null => {
-    switch (role) {
-      case UserRole.DESIGNER:
+  const getNextStage = (currentStage: ProductionStage, roleCode: string | undefined): ProductionStage | null => {
+    switch (roleCode) {
+      case 'DESIGNER':
         if (currentStage === ProductionStage.PENDING) return ProductionStage.DESIGN;
         if (currentStage === ProductionStage.DESIGN) return ProductionStage.PREPARATION;
         break;
-      case UserRole.PREPARER:
+      case 'PREPARER':
         if (currentStage === ProductionStage.DESIGN) return ProductionStage.PREPARATION;
         if (currentStage === ProductionStage.PREPARATION) return ProductionStage.PAINTING;
         break;
-      case UserRole.PAINTER:
+      case 'PAINTER':
         if (currentStage === ProductionStage.PREPARATION || currentStage === ProductionStage.REJECTED)
           return ProductionStage.PAINTING;
         if (currentStage === ProductionStage.PAINTING) return ProductionStage.QUALITY_CHECK;
         break;
-      case UserRole.WAREHOUSE:
+      case 'WAREHOUSE':
         if (currentStage === ProductionStage.PAINTING) return ProductionStage.QUALITY_CHECK;
         if (currentStage === ProductionStage.QUALITY_CHECK) return ProductionStage.COMPLETED;
         break;
@@ -89,12 +91,12 @@ export const KanbanPage = () => {
 
   const canMoveProduct = (product: Product) => {
     if (!user) return false;
-    return getNextStage(product.stage, user.role) !== null;
+    return getNextStage(product.stage, user.role?.code) !== null;
   };
 
   const handleMoveProduct = (product: Product) => {
     if (!user) return;
-    const nextStage = getNextStage(product.stage, user.role);
+    const nextStage = getNextStage(product.stage, user.role?.code);
     if (nextStage) {
       moveProductMutation.mutate({ productId: product.id, stage: nextStage });
     }
@@ -104,20 +106,20 @@ export const KanbanPage = () => {
   const getButtonText = (product: Product) => {
     if (!user) return 'Перевести далее';
     const currentStage = product.stage;
-    const nextStage = getNextStage(currentStage, user.role);
+    const nextStage = getNextStage(currentStage, user.role?.code);
 
     // Определяем основные рабочие этапы для каждой роли
-    const roleMainStage: Record<UserRole, ProductionStage | null> = {
-      [UserRole.SUPER_ADMIN]: null,
-      [UserRole.OWNER]: null,
-      [UserRole.MANAGER]: null,
-      [UserRole.DESIGNER]: ProductionStage.DESIGN,
-      [UserRole.PREPARER]: ProductionStage.PREPARATION,
-      [UserRole.PAINTER]: ProductionStage.PAINTING,
-      [UserRole.WAREHOUSE]: ProductionStage.QUALITY_CHECK,
+    const roleMainStage: Record<string, ProductionStage | null> = {
+      'SUPER_ADMIN': null,
+      'OWNER': null,
+      'MANAGER': null,
+      'DESIGNER': ProductionStage.DESIGN,
+      'PREPARER': ProductionStage.PREPARATION,
+      'PAINTER': ProductionStage.PAINTING,
+      'WAREHOUSE': ProductionStage.QUALITY_CHECK,
     };
 
-    const mainStage = roleMainStage[user.role];
+    const mainStage = user.role?.code ? roleMainStage[user.role.code] : null;
 
     // Если переходим В свой основной этап - это "Принять в работу"
     if (nextStage === mainStage) {
@@ -134,8 +136,8 @@ export const KanbanPage = () => {
 
   // Получаем список заказов с текущими задачами пользователя
   const myOrderIds = useMemo(() => {
-    if (!user || user.role === UserRole.OWNER || user.role === UserRole.MANAGER) {
-      return null; // OWNER и MANAGER видят все
+    if (!user || user.role?.code === 'OWNER' || user.role?.code === 'MANAGER' || user.role?.code === 'SUPER_ADMIN') {
+      return null; // OWNER, MANAGER и SUPER_ADMIN видят все
     }
     const orderIds = new Set<string>();
     myTasks.forEach((task: any) => {
@@ -152,7 +154,7 @@ export const KanbanPage = () => {
     return products.filter((product) => myOrderIds.has(product.orderId));
   }, [products, myOrderIds]);
 
-  const allowedStages = user ? getRoleStages(user.role) : [];
+  const allowedStages = user ? getRoleStages(user.role?.code) : [];
   const myProducts = filteredProducts.filter((p) => allowedStages.includes(p.stage));
 
   const getProductsByStage = (stage: ProductionStage) => {
@@ -208,21 +210,8 @@ export const KanbanPage = () => {
     }
   };
 
-  const getRoleName = (role: UserRole) => {
-    switch (role) {
-      case UserRole.MANAGER:
-        return 'Менеджер';
-      case UserRole.DESIGNER:
-        return 'Дизайнер';
-      case UserRole.PREPARER:
-        return 'Заготовщик';
-      case UserRole.PAINTER:
-        return 'Маляр';
-      case UserRole.WAREHOUSE:
-        return 'Складист';
-      default:
-        return role;
-    }
+  const getRoleName = () => {
+    return user?.role?.name || 'Не указана';
   };
 
   // Функция для расчета прогресса заказа
@@ -293,13 +282,13 @@ export const KanbanPage = () => {
           <div className="mb-4">
             <h1 className="text-xl font-bold text-gray-900">Управление производством</h1>
             <p className="text-gray-600 text-sm">
-              Роль: <span className="font-medium">{getRoleName(user!.role)}</span> |{' '}
+              Роль: <span className="font-medium">{getRoleName()}</span> |{' '}
               {user?.firstName} {user?.lastName}
             </p>
           </div>
 
           {/* Мои продукты для работы (скрываем для менеджера и владельца) */}
-          {user?.role !== UserRole.MANAGER && user?.role !== UserRole.OWNER && (
+          {user?.role?.code !== 'MANAGER' && user?.role?.code !== 'OWNER' && user?.role?.code !== 'SUPER_ADMIN' && (
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-3">
                 Мои задачи ({myProducts.length})
@@ -378,7 +367,7 @@ export const KanbanPage = () => {
           )}
 
           {/* Управление заказами (для менеджера и владельца) */}
-          {(user?.role === UserRole.MANAGER || user?.role === UserRole.OWNER) && (
+          {(user?.role?.code === 'MANAGER' || user?.role?.code === 'OWNER' || user?.role?.code === 'SUPER_ADMIN') && (
             <div className="space-y-4">
               {/* Шапка с кнопкой создания заказа */}
               <div className="flex items-center justify-between">

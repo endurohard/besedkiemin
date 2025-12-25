@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, OrderStatus, ProductionStage, QualityStatus } from '@prisma/client';
+import { PrismaClient, OrderStatus, ProductionStage, QualityStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -6,7 +6,163 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Начинаем заполнение базы данных...');
 
-  // Создание типов продуктов
+  // =============================================
+  // СОЗДАНИЕ СИСТЕМНЫХ РОЛЕЙ
+  // =============================================
+
+  const allPermissions = [
+    'users:view', 'users:create', 'users:edit', 'users:delete',
+    'orders:view', 'orders:create', 'orders:edit', 'orders:delete',
+    'kanban:view',
+    'analytics:view',
+    'inventory:view', 'inventory:manage',
+    'shipments:view', 'shipments:create',
+    'tasks:view_own', 'tasks:manage',
+    'defects:view', 'defects:manage',
+    'quality:manage',
+    'settings:view', 'settings:manage',
+    'workflow:manage',
+    'roles:view', 'roles:manage',
+    'chat:view', 'chat:manage',
+    'catalog:view', 'catalog:manage',
+  ];
+
+  const superAdminRole = await prisma.role.upsert({
+    where: { code: 'SUPER_ADMIN' },
+    update: {},
+    create: {
+      id: 'role-super-admin',
+      name: 'Супер-администратор',
+      code: 'SUPER_ADMIN',
+      description: 'Полный доступ ко всем функциям системы',
+      color: '#EF4444',
+      isSystem: true,
+      order: 0,
+      permissions: allPermissions,
+    },
+  });
+
+  const ownerRole = await prisma.role.upsert({
+    where: { code: 'OWNER' },
+    update: {},
+    create: {
+      id: 'role-owner',
+      name: 'Владелец',
+      code: 'OWNER',
+      description: 'Владелец бизнеса с полным доступом',
+      color: '#8B5CF6',
+      isSystem: true,
+      order: 1,
+      permissions: allPermissions.filter(p => !p.includes('feature_flags')),
+    },
+  });
+
+  const managerRole = await prisma.role.upsert({
+    where: { code: 'MANAGER' },
+    update: {},
+    create: {
+      id: 'role-manager',
+      name: 'Менеджер',
+      code: 'MANAGER',
+      description: 'Менеджер по работе с клиентами и заказами',
+      color: '#3B82F6',
+      isSystem: true,
+      order: 2,
+      permissions: [
+        'orders:view', 'orders:create', 'orders:edit',
+        'kanban:view',
+        'analytics:view',
+        'chat:view', 'chat:manage',
+        'tasks:view_own',
+        'shipments:view',
+      ],
+    },
+  });
+
+  const designerRole = await prisma.role.upsert({
+    where: { code: 'DESIGNER' },
+    update: {},
+    create: {
+      id: 'role-designer',
+      name: 'Проектировщик',
+      code: 'DESIGNER',
+      description: 'Проектировщик изделий',
+      color: '#10B981',
+      isSystem: true,
+      order: 3,
+      permissions: [
+        'tasks:view_own',
+        'kanban:view',
+        'defects:view', 'defects:manage',
+      ],
+    },
+  });
+
+  const preparerRole = await prisma.role.upsert({
+    where: { code: 'PREPARER' },
+    update: {},
+    create: {
+      id: 'role-preparer',
+      name: 'Заготовщик',
+      code: 'PREPARER',
+      description: 'Заготовщик материалов',
+      color: '#F59E0B',
+      isSystem: true,
+      order: 4,
+      permissions: [
+        'tasks:view_own',
+        'kanban:view',
+        'defects:view', 'defects:manage',
+      ],
+    },
+  });
+
+  const painterRole = await prisma.role.upsert({
+    where: { code: 'PAINTER' },
+    update: {},
+    create: {
+      id: 'role-painter',
+      name: 'Маляр',
+      code: 'PAINTER',
+      description: 'Маляр по покраске изделий',
+      color: '#EC4899',
+      isSystem: true,
+      order: 5,
+      permissions: [
+        'tasks:view_own',
+        'kanban:view',
+        'defects:view', 'defects:manage',
+      ],
+    },
+  });
+
+  const warehouseRole = await prisma.role.upsert({
+    where: { code: 'WAREHOUSE' },
+    update: {},
+    create: {
+      id: 'role-warehouse',
+      name: 'Складист',
+      code: 'WAREHOUSE',
+      description: 'Работник склада, контроль качества и отгрузки',
+      color: '#6366F1',
+      isSystem: true,
+      order: 6,
+      permissions: [
+        'tasks:view_own',
+        'kanban:view',
+        'inventory:view', 'inventory:manage',
+        'shipments:view', 'shipments:create',
+        'quality:manage',
+      ],
+    },
+  });
+
+  console.log('✅ Системные роли созданы');
+
+  // =============================================
+  // СОЗДАНИЕ ТИПОВ ПРОДУКТОВ
+  // =============================================
+
   const tableType = await prisma.productType.upsert({
     where: { name: 'Стол' },
     update: {},
@@ -36,7 +192,10 @@ async function main() {
 
   console.log('✅ Типы продуктов созданы');
 
-  // Создание этапов производственного цикла (workflow stages)
+  // =============================================
+  // СОЗДАНИЕ ЭТАПОВ WORKFLOW
+  // =============================================
+
   const stage1 = await prisma.workflowStage.upsert({
     where: { order: 1 },
     update: {},
@@ -44,7 +203,6 @@ async function main() {
       name: 'Проектирование',
       description: 'Создание чертежей и проектной документации',
       order: 1,
-      role: UserRole.DESIGNER,
       legacyStage: ProductionStage.DESIGN,
       isActive: true,
     },
@@ -57,7 +215,6 @@ async function main() {
       name: 'Заготовка',
       description: 'Подготовка материалов и заготовок',
       order: 2,
-      role: UserRole.PREPARER,
       legacyStage: ProductionStage.PREPARATION,
       isActive: true,
     },
@@ -70,7 +227,6 @@ async function main() {
       name: 'Покраска',
       description: 'Покраска и финишная обработка',
       order: 3,
-      role: UserRole.PAINTER,
       legacyStage: ProductionStage.PAINTING,
       isActive: true,
     },
@@ -83,7 +239,6 @@ async function main() {
       name: 'Склад',
       description: 'Проверка качества, упаковка и отгрузка',
       order: 4,
-      role: UserRole.WAREHOUSE,
       legacyStage: ProductionStage.QUALITY_CHECK,
       isActive: true,
     },
@@ -91,7 +246,76 @@ async function main() {
 
   console.log('✅ Этапы производственного цикла созданы');
 
-  // Создание пользователей
+  // =============================================
+  // СВЯЗЬ РОЛЕЙ С ЭТАПАМИ WORKFLOW
+  // =============================================
+
+  // Проектировщик -> Проектирование
+  await prisma.roleWorkflowStage.upsert({
+    where: {
+      roleId_workflowStageId: {
+        roleId: designerRole.id,
+        workflowStageId: stage1.id,
+      },
+    },
+    update: {},
+    create: {
+      roleId: designerRole.id,
+      workflowStageId: stage1.id,
+    },
+  });
+
+  // Заготовщик -> Заготовка
+  await prisma.roleWorkflowStage.upsert({
+    where: {
+      roleId_workflowStageId: {
+        roleId: preparerRole.id,
+        workflowStageId: stage2.id,
+      },
+    },
+    update: {},
+    create: {
+      roleId: preparerRole.id,
+      workflowStageId: stage2.id,
+    },
+  });
+
+  // Маляр -> Покраска
+  await prisma.roleWorkflowStage.upsert({
+    where: {
+      roleId_workflowStageId: {
+        roleId: painterRole.id,
+        workflowStageId: stage3.id,
+      },
+    },
+    update: {},
+    create: {
+      roleId: painterRole.id,
+      workflowStageId: stage3.id,
+    },
+  });
+
+  // Складист -> Склад
+  await prisma.roleWorkflowStage.upsert({
+    where: {
+      roleId_workflowStageId: {
+        roleId: warehouseRole.id,
+        workflowStageId: stage4.id,
+      },
+    },
+    update: {},
+    create: {
+      roleId: warehouseRole.id,
+      workflowStageId: stage4.id,
+    },
+  });
+
+  console.log('✅ Связи ролей с этапами созданы');
+
+  // =============================================
+  // СОЗДАНИЕ ПОЛЬЗОВАТЕЛЕЙ
+  // =============================================
+
   const hashedPassword = await bcrypt.hash('password123', 10);
 
   const owner = await prisma.user.upsert({
@@ -102,7 +326,7 @@ async function main() {
       password: hashedPassword,
       firstName: 'Владелец',
       lastName: 'Главный',
-      role: UserRole.OWNER,
+      roleId: ownerRole.id,
     },
   });
 
@@ -114,7 +338,7 @@ async function main() {
       password: hashedPassword,
       firstName: 'Иван',
       lastName: 'Менеджер',
-      role: UserRole.MANAGER,
+      roleId: managerRole.id,
     },
   });
 
@@ -126,7 +350,7 @@ async function main() {
       password: hashedPassword,
       firstName: 'Анна',
       lastName: 'Проектировщик',
-      role: UserRole.DESIGNER,
+      roleId: designerRole.id,
     },
   });
 
@@ -138,7 +362,7 @@ async function main() {
       password: hashedPassword,
       firstName: 'Сергей',
       lastName: 'Заготовщик',
-      role: UserRole.PREPARER,
+      roleId: preparerRole.id,
     },
   });
 
@@ -150,7 +374,7 @@ async function main() {
       password: hashedPassword,
       firstName: 'Мария',
       lastName: 'Маляр',
-      role: UserRole.PAINTER,
+      roleId: painterRole.id,
     },
   });
 
@@ -162,13 +386,16 @@ async function main() {
       password: hashedPassword,
       firstName: 'Петр',
       lastName: 'Складист',
-      role: UserRole.WAREHOUSE,
+      roleId: warehouseRole.id,
     },
   });
 
   console.log('✅ Пользователи созданы');
 
-  // Создание заказов
+  // =============================================
+  // СОЗДАНИЕ ЗАКАЗОВ
+  // =============================================
+
   const order1 = await prisma.order.create({
     data: {
       orderNumber: 'ORD-001',
@@ -328,7 +555,10 @@ async function main() {
     order3: order3.orderNumber,
   });
 
-  // Создание категорий каталога
+  // =============================================
+  // СОЗДАНИЕ КАТЕГОРИЙ КАТАЛОГА
+  // =============================================
+
   const besedkiCategory = await prisma.catalogCategory.upsert({
     where: { slug: 'besedki' },
     update: {},
@@ -391,7 +621,10 @@ async function main() {
 
   console.log('✅ Категории каталога созданы');
 
-  // Создание товаров каталога
+  // =============================================
+  // СОЗДАНИЕ ТОВАРОВ КАТАЛОГА
+  // =============================================
+
   await prisma.catalogProduct.upsert({
     where: { slug: 'besedka-vosmigrannik' },
     update: {},

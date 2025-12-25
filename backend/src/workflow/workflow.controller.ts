@@ -15,7 +15,7 @@ import { ReorderWorkflowStagesDto } from './dto/reorder-workflow-stages.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @Controller('workflow')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -42,14 +42,14 @@ export class WorkflowController {
 
   // Создать этап (только для владельца)
   @Post()
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   create(@Body() createWorkflowStageDto: CreateWorkflowStageDto) {
     return this.workflowService.create(createWorkflowStageDto);
   }
 
   // Обновить этап (только для владельца)
   @Patch(':id')
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   update(
     @Param('id') id: string,
     @Body() updateWorkflowStageDto: UpdateWorkflowStageDto,
@@ -59,21 +59,21 @@ export class WorkflowController {
 
   // Удалить этап (только для владельца)
   @Delete(':id')
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   remove(@Param('id') id: string) {
     return this.workflowService.remove(id);
   }
 
   // Изменить порядок этапов (только для владельца)
   @Post('reorder')
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   reorder(@Body() reorderWorkflowStagesDto: ReorderWorkflowStagesDto) {
     return this.workflowService.reorder(reorderWorkflowStagesDto);
   }
 
   // Инициализировать workflow по умолчанию (только для владельца)
   @Post('initialize')
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   initializeDefaultWorkflow() {
     return this.workflowService.initializeDefaultWorkflow();
   }

@@ -11,7 +11,7 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findByEmailWithRole(email);
 
     if (user && await bcrypt.compare(password, user.password)) {
       const { password, ...result } = user;
@@ -25,7 +25,7 @@ export class AuthService {
     const payload = {
       email: user.email,
       sub: user.id,
-      role: user.role
+      role: user.role.code, // Код роли для JWT
     };
 
     return {
@@ -35,7 +35,7 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role,
+        role: user.role, // Полный объект роли
         telegramId: user.telegramId,
         sipServer: user.sipServer,
         sipUser: user.sipUser,

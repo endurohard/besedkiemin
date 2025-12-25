@@ -11,7 +11,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagg
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 import { UploadService } from './upload.service';
 
 @ApiTags('Upload')
@@ -22,7 +22,7 @@ export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post('schema-image')
-  @Roles(UserRole.OWNER, UserRole.MANAGER, UserRole.WAREHOUSE)
+  @Roles('OWNER', 'MANAGER', 'WAREHOUSE')
   @ApiOperation({ summary: 'Загрузить фото схемы или фото брака' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', {}))

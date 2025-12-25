@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 
 export class UserEntity {
   @ApiProperty()
@@ -14,8 +13,11 @@ export class UserEntity {
   @ApiProperty()
   lastName: string;
 
-  @ApiProperty({ enum: UserRole })
-  role: UserRole;
+  @ApiProperty()
+  roleId: string;
+
+  @ApiProperty()
+  role?: any; // Role object
 
   @ApiProperty()
   isActive: boolean;

@@ -19,7 +19,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { UserRole, OrderStatus } from '@prisma/client';
+import { OrderStatus } from '@prisma/client';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -48,7 +48,7 @@ export class OrdersController {
   }
 
   @Get('statistics')
-  @Roles(UserRole.MANAGER)
+  @Roles('MANAGER')
   @ApiOperation({ summary: 'Получить статистику (только для менеджера)' })
   @ApiQuery({ name: 'startDate', required: false })
   @ApiQuery({ name: 'endDate', required: false })
@@ -60,7 +60,7 @@ export class OrdersController {
   }
 
   @Get('export')
-  @Roles(UserRole.MANAGER)
+  @Roles('MANAGER')
   @ApiOperation({ summary: 'Экспорт заказов в Excel (только для менеджера)' })
   @ApiQuery({ name: 'status', required: false, enum: OrderStatus })
   @ApiQuery({ name: 'startDate', required: false })

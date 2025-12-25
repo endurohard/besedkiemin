@@ -16,7 +16,7 @@ import { UpdateCatalogProductDto } from './dto/update-catalog-product.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @ApiTags('Catalog Products')
 @Controller('catalog-products')
@@ -25,7 +25,7 @@ export class CatalogProductsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Создать товар (только OWNER/MANAGER)' })
   create(@Body() createDto: CreateCatalogProductDto) {
@@ -66,7 +66,7 @@ export class CatalogProductsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Обновить товар (только OWNER/MANAGER)' })
   update(@Param('id') id: string, @Body() updateDto: UpdateCatalogProductDto) {
@@ -75,7 +75,7 @@ export class CatalogProductsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Удалить товар (только OWNER)' })
   remove(@Param('id') id: string) {

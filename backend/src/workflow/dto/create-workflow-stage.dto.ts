@@ -1,5 +1,5 @@
-import { IsString, IsInt, IsEnum, IsOptional, IsBoolean, Min } from 'class-validator';
-import { UserRole, ProductionStage } from '@prisma/client';
+import { IsString, IsInt, IsOptional, IsBoolean, Min, IsArray } from 'class-validator';
+import { ProductionStage } from '@prisma/client';
 
 export class CreateWorkflowStageDto {
   @IsString()
@@ -13,11 +13,12 @@ export class CreateWorkflowStageDto {
   @Min(1)
   order: number;
 
-  @IsEnum(UserRole)
-  role: UserRole;
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  roleIds?: string[]; // Массив ID ролей для этапа
 
   @IsOptional()
-  @IsEnum(ProductionStage)
   legacyStage?: ProductionStage;
 
   @IsOptional()

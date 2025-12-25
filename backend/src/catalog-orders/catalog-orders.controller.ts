@@ -17,7 +17,7 @@ import { UpdateCatalogOrderDto } from './dto/update-catalog-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+
 
 @ApiTags('Catalog Orders')
 @Controller('catalog-orders')
@@ -32,7 +32,7 @@ export class CatalogOrdersController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить все заказы (только OWNER/MANAGER)' })
   findAll(@Query('status') status?: string) {
@@ -41,7 +41,7 @@ export class CatalogOrdersController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить заказ по ID (только OWNER/MANAGER)' })
   findOne(@Param('id') id: string) {
@@ -50,7 +50,7 @@ export class CatalogOrdersController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Обновить заказ (только OWNER/MANAGER)' })
   update(@Param('id') id: string, @Body() updateDto: UpdateCatalogOrderDto) {
@@ -59,7 +59,7 @@ export class CatalogOrdersController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER)
+  @Roles('OWNER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Удалить заказ (только OWNER)' })
   remove(@Param('id') id: string) {
@@ -68,7 +68,7 @@ export class CatalogOrdersController {
 
   @Post(':id/mark-contacted')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Связались с клиентом"' })
   markContacted(@Param('id') id: string, @Request() req) {
@@ -77,7 +77,7 @@ export class CatalogOrdersController {
 
   @Post(':id/mark-processed')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Оформили заказ" и создать производственный заказ' })
   markProcessed(@Param('id') id: string, @Request() req) {
@@ -86,7 +86,7 @@ export class CatalogOrdersController {
 
   @Post(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.MANAGER)
+  @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отменить заказ с указанием причины' })
   cancelOrder(

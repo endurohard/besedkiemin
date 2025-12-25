@@ -53,6 +53,8 @@ import type {
   Nomenclature,
   CreateNomenclatureDto,
   UpdateNomenclatureDto,
+  Role,
+  Permission,
 } from '@/types';
 
 const api = axios.create({
@@ -655,6 +657,56 @@ export const featureFlagsApi = {
   bulkUpdate: async (updates: { key: string; isEnabled: boolean }[]): Promise<FeatureFlag[]> => {
     const response = await api.post<FeatureFlag[]>('/feature-flags/bulk-update', updates);
     return response.data;
+  },
+};
+
+// Roles API
+export const rolesApi = {
+  getAll: async (): Promise<Role[]> => {
+    const response = await api.get<Role[]>('/roles');
+    return response.data;
+  },
+
+  getOne: async (id: string): Promise<Role> => {
+    const response = await api.get<Role>(`/roles/${id}`);
+    return response.data;
+  },
+
+  getPermissions: async (): Promise<Permission[]> => {
+    const response = await api.get<Permission[]>('/roles/permissions');
+    return response.data;
+  },
+
+  create: async (data: {
+    name: string;
+    code: string;
+    description?: string;
+    color?: string;
+    isActive?: boolean;
+    order?: number;
+    permissions?: string[];
+    workflowStageIds?: string[];
+  }): Promise<Role> => {
+    const response = await api.post<Role>('/roles', data);
+    return response.data;
+  },
+
+  update: async (id: string, data: {
+    name?: string;
+    code?: string;
+    description?: string;
+    color?: string;
+    isActive?: boolean;
+    order?: number;
+    permissions?: string[];
+    workflowStageIds?: string[];
+  }): Promise<Role> => {
+    const response = await api.put<Role>(`/roles/${id}`, data);
+    return response.data;
+  },
+
+  remove: async (id: string): Promise<void> => {
+    await api.delete(`/roles/${id}`);
   },
 };
 

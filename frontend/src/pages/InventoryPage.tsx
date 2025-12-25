@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { inventoryApi, shipmentsApi, productTypesApi } from '@/lib/api';
-import { CreateShipmentDto, InventoryItem, UserRole, ProductType } from '@/types';
+import { CreateShipmentDto, InventoryItem, ProductType } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -220,7 +220,7 @@ export const InventoryPage = () => {
             Управление товарами на складе и создание отгрузок
           </p>
         </div>
-        {(user?.role === UserRole.OWNER || user?.role === UserRole.MANAGER) && (
+        {(user?.role?.code === 'OWNER' || user?.role?.code === 'MANAGER') && (
           <div className="flex gap-2">
             <Button
               onClick={() => setShowAddItemModal(true)}

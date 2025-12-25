@@ -26,6 +26,7 @@ import { PublicModule } from './public/public.module';
 import { ChatModule } from './chat/chat.module';
 import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { NomenclatureModule } from './nomenclature/nomenclature.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { NomenclatureModule } from './nomenclature/nomenclature.module';
     ChatModule,
     FeatureFlagsModule,
     NomenclatureModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

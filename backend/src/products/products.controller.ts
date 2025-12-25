@@ -16,7 +16,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole, ProductionStage } from '@prisma/client';
+import { ProductionStage } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('products')
@@ -27,7 +27,7 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @Roles(UserRole.MANAGER)
+  @Roles('MANAGER')
   @ApiOperation({ summary: 'Создать новый продукт (только менеджер)' })
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
@@ -63,7 +63,7 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.MANAGER)
+  @Roles('MANAGER')
   @ApiOperation({ summary: 'Обновить продукт (только менеджер)' })
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productsService.update(id, updateProductDto);
@@ -85,7 +85,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.MANAGER)
+  @Roles('MANAGER')
   @ApiOperation({ summary: 'Удалить продукт (только менеджер)' })
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
