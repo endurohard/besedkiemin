@@ -1,5 +1,7 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import * as https from 'https';
 
 interface YeastarConfig {
   host: string; // IP адрес Yeastar S100
@@ -15,8 +17,21 @@ interface YeastarCallResponse {
 
 @Injectable()
 export class YeastarService {
+  private readonly logger = new Logger(YeastarService.name);
   private accessToken: string | null = null;
   private tokenExpiry: Date | null = null;
+  private httpsAgent: https.Agent;
+
+  constructor(private configService: ConfigService) {
+    // SSL проверка управляется через env переменную
+    const skipSSL = this.configService.get<string>('YEASTAR_SKIP_SSL') === 'true';
+    this.httpsAgent = new https.Agent({
+      rejectUnauthorized: !skipSSL,
+    });
+    if (skipSSL) {
+      this.logger.warn('Yeastar SSL verification disabled. Use only for self-signed certificates.');
+    }
+  }
 
   /**
    * Получить токен доступа к Yeastar API
@@ -38,10 +53,7 @@ export class YeastarService {
           headers: {
             'Content-Type': 'application/json',
           },
-          // Отключаем проверку SSL для локальных сертификатов
-          httpsAgent: new (require('https').Agent)({
-            rejectUnauthorized: false,
-          }),
+          httpsAgent: this.httpsAgent,
         }
       );
 
@@ -51,7 +63,7 @@ export class YeastarService {
 
       return this.accessToken;
     } catch (error: any) {
-      console.error('Yeastar login error:', error.response?.data || error.message);
+      this.logger.error('Yeastar login error:', error.response?.data || error.message);
       throw new HttpException(
         'Не удалось подключиться к Yeastar API',
         error.response?.status || 500
@@ -80,9 +92,7 @@ export class YeastarService {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          httpsAgent: new (require('https').Agent)({
-            rejectUnauthorized: false,
-          }),
+          httpsAgent: this.httpsAgent,
         }
       );
 
@@ -91,7 +101,7 @@ export class YeastarService {
         status: 'calling',
       };
     } catch (error: any) {
-      console.error('Yeastar call error:', error.response?.data || error.message);
+      this.logger.error('Yeastar call error:', error.response?.data || error.message);
       throw new HttpException(
         'Не удалось совершить звонок через Yeastar',
         error.response?.status || 500
@@ -116,13 +126,11 @@ export class YeastarService {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          httpsAgent: new (require('https').Agent)({
-            rejectUnauthorized: false,
-          }),
+          httpsAgent: this.httpsAgent,
         }
       );
     } catch (error: any) {
-      console.error('Yeastar hangup error:', error.response?.data || error.message);
+      this.logger.error('Yeastar hangup error:', error.response?.data || error.message);
       throw new HttpException(
         'Не удалось завершить звонок',
         error.response?.status || 500
@@ -143,15 +151,13 @@ export class YeastarService {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
-          httpsAgent: new (require('https').Agent)({
-            rejectUnauthorized: false,
-          }),
+          httpsAgent: this.httpsAgent,
         }
       );
 
       return response.data.calls || [];
     } catch (error: any) {
-      console.error('Yeastar query error:', error.response?.data || error.message);
+      this.logger.error('Yeastar query error:', error.response?.data || error.message);
       return [];
     }
   }
@@ -163,6 +169,6 @@ export class YeastarService {
   async subscribeToEvents(config: YeastarConfig): Promise<void> {
     // Здесь можно реализовать подписку на события через Yeastar Event API
     // Это позволит получать уведомления о входящих звонках
-    console.log('Subscribe to Yeastar events not implemented yet');
+    this.logger.log('Subscribe to Yeastar events not implemented yet');
   }
 }

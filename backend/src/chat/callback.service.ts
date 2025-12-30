@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 
 @Injectable()
 export class CallbackService {
+  private readonly logger = new Logger(CallbackService.name);
+
   constructor(
     private prisma: PrismaService,
     private telegramService: TelegramService,
@@ -59,7 +61,7 @@ export class CallbackService {
 
       await this.telegramService.notifyAdmins(telegramMessage);
     } catch (error) {
-      console.error('Ошибка отправки уведомления в Telegram:', error);
+      this.logger.error('Ошибка отправки уведомления в Telegram:', error);
       // Не прерываем создание заявки
     }
 

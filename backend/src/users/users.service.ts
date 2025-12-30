@@ -4,13 +4,14 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
+import { AUTH, SYSTEM_ROLES } from '../common/constants';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserEntity> {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const hashedPassword = await bcrypt.hash(createUserDto.password, AUTH.BCRYPT_SALT_ROUNDS);
 
     const user = await this.prisma.user.create({
       data: {
@@ -23,7 +24,14 @@ export class UsersService {
   }
 
   async findAll(): Promise<UserEntity[]> {
-    const users = await this.prisma.user.findMany();
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: {
+          code: { not: SYSTEM_ROLES.SUPER_ADMIN }, // Скрываем SUPER_ADMIN из списка
+        },
+      },
+      include: { role: true },
+    });
     return users.map((user) => new UserEntity(user));
   }
 
@@ -71,7 +79,7 @@ export class UsersService {
 
     // Если есть пароль, хешируем его
     if (updateUserDto.password) {
-      updateData.password = await bcrypt.hash(updateUserDto.password, 10);
+      updateData.password = await bcrypt.hash(updateUserDto.password, AUTH.BCRYPT_SALT_ROUNDS);
     }
 
     const user = await this.prisma.user.update({

@@ -2,9 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, Prisma } from '@prisma/client';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
+import { PAGINATION, ORDER } from '../common/constants';
 
 @Injectable()
 export class OrdersService {
@@ -61,8 +62,12 @@ export class OrdersService {
     status?: OrderStatus;
     startDate?: string;
     endDate?: string;
+    page?: number;
+    limit?: number;
   }) {
-    const where: any = {};
+    const where: Prisma.OrderWhereInput = {};
+    const page = Math.max(1, filters?.page || PAGINATION.DEFAULT_PAGE);
+    const limit = Math.min(PAGINATION.MAX_PAGE_SIZE, Math.max(1, filters?.limit || PAGINATION.DEFAULT_PAGE_SIZE));
 
     if (filters?.status) {
       where.status = filters.status;
@@ -78,50 +83,63 @@ export class OrdersService {
       }
     }
 
-    const orders = await this.prisma.order.findMany({
-      where,
-      select: {
-        id: true,
-        orderNumber: true,
-        customerName: true,
-        customerPhone: true,
-        customerAddress: true,
-        status: true,
-        priority: true,
-        description: true,
-        createdAt: true,
-        updatedAt: true,
-        products: {
-          select: {
-            id: true,
-            name: true,
-            stage: true,
-            quantity: true,
-            productType: {
-              select: {
-                id: true,
-                name: true,
+    const [orders, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          orderNumber: true,
+          customerName: true,
+          customerPhone: true,
+          customerAddress: true,
+          status: true,
+          priority: true,
+          description: true,
+          createdAt: true,
+          updatedAt: true,
+          products: {
+            select: {
+              id: true,
+              name: true,
+              stage: true,
+              quantity: true,
+              productType: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
-        },
-        createdBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
+          createdBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          _count: {
+            select: {
+              products: true,
+            },
           },
         },
-        _count: {
-          select: {
-            products: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.order.count({ where }),
+    ]);
 
-    return orders;
+    return {
+      data: orders,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
@@ -252,7 +270,8 @@ export class OrdersService {
       endDate?: string;
     }
   ) {
-    const orders = await this.findAll(filters);
+    // Для экспорта получаем все записи без пагинации
+    const result = await this.findAll({ ...filters, limit: PAGINATION.EXPORT_MAX_SIZE });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Заказы');
@@ -278,7 +297,7 @@ export class OrdersService {
     };
 
     // Данные
-    orders.forEach((order) => {
+    result.data.forEach((order) => {
       worksheet.addRow({
         orderNumber: order.orderNumber,
         customerName: order.customerName,

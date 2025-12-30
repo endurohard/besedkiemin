@@ -29,6 +29,14 @@ services:
         protocols:
           - http
           - https
+      - name: backend-socket-route
+        paths:
+          - /socket.io
+        strip_path: false
+        preserve_host: false
+        protocols:
+          - http
+          - https
     plugins:
       - name: cors
         config:

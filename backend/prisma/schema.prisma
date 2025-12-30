@@ -149,6 +149,8 @@ model User {
   // Отгрузки оформленные складистом
   shipments         Shipment[]
 
+  @@index([roleId])
+  @@index([isActive])
   @@map("users")
 }
 
@@ -175,6 +177,9 @@ model Order {
   // Складские остатки из этого заказа
   inventoryItems InventoryItem[]
 
+  @@index([status])
+  @@index([createdAt])
+  @@index([createdById])
   @@map("orders")
 }
 
@@ -290,6 +295,9 @@ model Product {
   // Складские остатки
   inventoryItems InventoryItem[]
 
+  @@index([stage])
+  @@index([orderId])
+  @@index([productTypeId])
   @@map("products")
 }
 

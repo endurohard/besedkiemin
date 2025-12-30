@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   Res,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -19,6 +20,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import { OrderStatus } from '@prisma/client';
 
 @ApiTags('Orders')
@@ -30,7 +32,7 @@ export class OrdersController {
 
   @Post()
   @ApiOperation({ summary: 'Создать новый заказ' })
-  create(@Body() createOrderDto: CreateOrderDto, @CurrentUser() user: any) {
+  create(@Body() createOrderDto: CreateOrderDto, @CurrentUser() user: AuthenticatedUser) {
     return this.ordersService.create(createOrderDto, user.userId);
   }
 
@@ -39,12 +41,22 @@ export class OrdersController {
   @ApiQuery({ name: 'status', required: false, enum: OrderStatus })
   @ApiQuery({ name: 'startDate', required: false })
   @ApiQuery({ name: 'endDate', required: false })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Номер страницы (начиная с 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Количество записей на странице (макс. 100)' })
   findAll(
     @Query('status') status?: OrderStatus,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.ordersService.findAll({ status, startDate, endDate });
+    return this.ordersService.findAll({
+      status,
+      startDate,
+      endDate,
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
   }
 
   @Get('statistics')
@@ -76,19 +88,19 @@ export class OrdersController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Получить заказ по ID' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Обновить заказ' })
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateOrderDto: UpdateOrderDto) {
     return this.ordersService.update(id, updateOrderDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Удалить заказ' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.remove(id);
   }
 }

@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { CreateCatalogOrderDto } from './dto/create-catalog-order.dto';
 import { UpdateCatalogOrderDto } from './dto/update-catalog-order.dto';
+import { Prisma } from '@prisma/client';
+import { PAGINATION, ORDER } from '../common/constants';
 
 @Injectable()
 export class CatalogOrdersService {
+  private readonly logger = new Logger(CatalogOrdersService.name);
+
   constructor(
     private prisma: PrismaService,
     private telegramService: TelegramService,
@@ -99,27 +103,44 @@ export class CatalogOrdersService {
 
       await this.telegramService.notifyAdmins(message);
     } catch (error) {
-      console.error('Ошибка отправки уведомления в Telegram:', error);
+      this.logger.error('Ошибка отправки уведомления в Telegram:', error);
       // Не прерываем создание заказа, если не удалось отправить уведомление
     }
 
     return order;
   }
 
-  async findAll(status?: string) {
-    const where = status ? { status: status as any } : {};
+  async findAll(filters?: { status?: string; page?: number; limit?: number }) {
+    const where: Prisma.CatalogOrderWhereInput = filters?.status ? { status: filters.status as any } : {};
+    const page = Math.max(1, filters?.page || PAGINATION.DEFAULT_PAGE);
+    const limit = Math.min(PAGINATION.MAX_PAGE_SIZE, Math.max(1, filters?.limit || PAGINATION.DEFAULT_PAGE_SIZE));
 
-    return this.prisma.catalogOrder.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        items: {
-          include: {
-            product: true,
+    const [orders, total] = await Promise.all([
+      this.prisma.catalogOrder.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
+      }),
+      this.prisma.catalogOrder.count({ where }),
+    ]);
+
+    return {
+      data: orders,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
   async findOne(id: string) {
@@ -342,9 +363,9 @@ export class CatalogOrdersService {
 
             try {
               await this.telegramService.sendMessage(worker.telegramId, message);
-              console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role})`);
+              this.logger.log(`Уведомление отправлено работнику ${worker.email}`);
             } catch (error) {
-              console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
+              this.logger.error(`Ошибка отправки уведомления работнику ${worker.email}:`, error);
             }
           })
       )

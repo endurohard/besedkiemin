@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 
 export class UserEntity {
   @ApiProperty()
@@ -17,7 +18,7 @@ export class UserEntity {
   roleId: string;
 
   @ApiProperty()
-  role?: any; // Role object
+  role?: Role;
 
   @ApiProperty()
   isActive: boolean;
@@ -27,6 +28,9 @@ export class UserEntity {
 
   @ApiProperty()
   updatedAt: Date;
+
+  @ApiProperty({ required: false })
+  telegramId?: string | null;
 
   // SIP телефония (для менеджеров)
   @ApiProperty({ required: false })

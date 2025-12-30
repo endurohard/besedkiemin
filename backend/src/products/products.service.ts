@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -7,6 +7,8 @@ import { ProductionStage, OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
+
   constructor(
     private prisma: PrismaService,
     private telegramService: TelegramService,
@@ -135,9 +137,9 @@ export class ProductsService {
 
             try {
               await this.telegramService.sendMessage(worker.telegramId, message);
-              console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role.code})`);
+              this.logger.log(`Уведомление отправлено работнику ${worker.email}`);
             } catch (error) {
-              console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
+              this.logger.error(`Ошибка отправки уведомления работнику ${worker.email}:`, error);
             }
           })
       );

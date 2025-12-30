@@ -25,9 +25,11 @@ import {
 interface SidebarProps {
   userRole?: string; // Role code string
   permissions?: string[]; // User permissions array
+  onNavigate?: () => void; // Callback when navigating (for mobile menu close)
+  isMobile?: boolean; // Is mobile view
 }
 
-export const Sidebar = ({ userRole, permissions = [] }: SidebarProps) => {
+export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = false }: SidebarProps) => {
   // Проверка наличия permission
   const hasPermission = (perm: string) => {
     if (userRole === 'SUPER_ADMIN' || userRole === 'OWNER') return true;
@@ -117,15 +119,16 @@ export const Sidebar = ({ userRole, permissions = [] }: SidebarProps) => {
     return (
       <Link
         to={to}
+        onClick={onNavigate}
         className={`
           relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all
           ${active
             ? 'bg-primary text-primary-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
           }
-          ${isCollapsed ? 'justify-center' : ''}
+          ${isCollapsed && !isMobile ? 'justify-center' : ''}
         `}
-        title={isCollapsed ? label : undefined}
+        title={isCollapsed && !isMobile ? label : undefined}
       >
         <div className="relative">
           <Icon size={18} />
@@ -135,7 +138,7 @@ export const Sidebar = ({ userRole, permissions = [] }: SidebarProps) => {
             </span>
           )}
         </div>
-        {!isCollapsed && (
+        {(!isCollapsed || isMobile) && (
           <>
             <span className="flex-1 text-sm font-medium truncate">{label}</span>
             {badge !== undefined && badge > 0 && (
@@ -152,18 +155,20 @@ export const Sidebar = ({ userRole, permissions = [] }: SidebarProps) => {
   return (
     <aside className={`
       border-r bg-card min-h-[calc(100vh-49px)] transition-all duration-200
-      ${isCollapsed ? 'w-14' : 'w-48'}
+      ${isMobile ? 'w-56' : (isCollapsed ? 'w-14' : 'w-48')}
     `}>
-      {/* Toggle button */}
-      <div className="p-2 border-b">
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="w-full flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-          title={isCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
-        >
-          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
-      </div>
+      {/* Toggle button - hidden on mobile */}
+      {!isMobile && (
+        <div className="p-2 border-b">
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="w-full flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            title={isCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
+          >
+            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        </div>
+      )}
 
       <nav className="p-2 space-y-0.5">
         {/* Мои задачи - для работников производства */}

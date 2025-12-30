@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import TelegramBot from 'node-telegram-bot-api';
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskStatus } from '@prisma/client';
@@ -7,7 +8,8 @@ import { TaskStatus } from '@prisma/client';
 export class TelegramService implements OnModuleInit {
   private readonly logger = new Logger(TelegramService.name);
   private bot: TelegramBot;
-  private readonly botToken = '8406603601:AAEdJDXar7oTYkxyFPW6Gn-m5bXwFZrQX9U';
+  private readonly botToken: string;
+  private readonly adminId: string;
 
   // Хранилище состояний пользователей для обработки фото
   private userStates = new Map<number, {
@@ -22,9 +24,19 @@ export class TelegramService implements OnModuleInit {
   // Хранилище кодов авторизации: код -> { userId, expiresAt }
   private loginCodes = new Map<string, { userId: string; expiresAt: Date }>();
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {
+    this.botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN') || '';
+    this.adminId = this.configService.get<string>('TELEGRAM_ADMIN_ID') || '';
+  }
 
   async onModuleInit() {
+    if (!this.botToken) {
+      this.logger.warn('TELEGRAM_BOT_TOKEN not configured. Telegram bot disabled.');
+      return;
+    }
     this.logger.log('Initializing Telegram Bot...');
     this.bot = new TelegramBot(this.botToken, { polling: true });
     this.logger.log('Telegram Bot is running!');
@@ -57,7 +69,7 @@ export class TelegramService implements OnModuleInit {
 
         await this.bot.sendMessage(
           chatId,
-          `✅ Telegram успешно привязан!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role.code}\n\nТеперь вы будете получать уведомления.`
+          `✅ Telegram успешно привязан!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role?.name || user.role?.code || 'Не указана'}\n\nТеперь вы будете получать уведомления.`
         );
       }
     });
@@ -72,7 +84,7 @@ export class TelegramService implements OnModuleInit {
       if (user) {
         await this.bot.sendMessage(
           chatId,
-          `✅ Аккаунт привязан:\n👤 ${user.firstName} ${user.lastName}\n🏢 ${user.role.code}\n\nИспользуйте /tasks`
+          `✅ Аккаунт привязан:\n👤 ${user.firstName} ${user.lastName}\n🏢 ${user.role?.name || user.role?.code || 'Не указана'}\n\nИспользуйте /tasks`
         );
       } else {
         await this.bot.sendMessage(
@@ -163,7 +175,7 @@ export class TelegramService implements OnModuleInit {
 
       await this.bot.sendMessage(
         chatId,
-        `✅ Авторизация успешна!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role.code}\n\n🔔 Вы будете получать уведомления о задачах`
+        `✅ Авторизация успешна!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role?.name || user.role?.code || 'Не указана'}\n\n🔔 Вы будете получать уведомления о задачах`
       );
     });
 
@@ -472,13 +484,16 @@ export class TelegramService implements OnModuleInit {
    * Отправляет уведомление всем администраторам
    */
   async notifyAdmins(message: string): Promise<void> {
-    try {
-      // Получаем admin ID из переменной окружения
-      const adminId = process.env.TELEGRAM_ADMIN_ID;
+    if (!this.bot) {
+      this.logger.warn('Telegram bot not configured. Skipping admin notification.');
+      return;
+    }
 
-      if (adminId) {
-        await this.bot.sendMessage(adminId, message, { parse_mode: 'HTML' });
-        this.logger.log(`Уведомление отправлено администратору: ${adminId}`);
+    try {
+      // Отправляем главному администратору
+      if (this.adminId) {
+        await this.bot.sendMessage(this.adminId, message, { parse_mode: 'HTML' });
+        this.logger.log(`Уведомление отправлено администратору: ${this.adminId}`);
       }
 
       // Также отправляем всем владельцам и менеджерам с привязанным Telegram
@@ -490,7 +505,7 @@ export class TelegramService implements OnModuleInit {
       });
 
       for (const admin of admins) {
-        if (admin.telegramId && admin.telegramId !== adminId) {
+        if (admin.telegramId && admin.telegramId !== this.adminId) {
           try {
             await this.bot.sendMessage(admin.telegramId, message, { parse_mode: 'HTML' });
             this.logger.log(`Уведомление отправлено: ${admin.firstName} ${admin.lastName}`);

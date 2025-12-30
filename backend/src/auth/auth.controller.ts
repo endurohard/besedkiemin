@@ -6,6 +6,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { TelegramService } from '../telegram/telegram.service';
+import { AuthenticatedUser } from './strategies/jwt.strategy';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -26,7 +27,7 @@ export class AuthController {
   @Get('profile')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить профиль текущего пользователя' })
-  getProfile(@CurrentUser() user: any) {
+  getProfile(@CurrentUser() user: AuthenticatedUser) {
     return user;
   }
 

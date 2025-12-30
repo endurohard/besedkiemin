@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { TaskStatus, ProductionStage } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
+  private readonly logger = new Logger(TasksService.name);
+
   constructor(
     private prisma: PrismaService,
     private telegramService: TelegramService,
@@ -28,12 +30,13 @@ export class TasksService {
       ['WAREHOUSE']: ProductionStage.QUALITY_CHECK,
     };
 
-    const stage = stageMapping[user.role.code];
+    const roleCode = user.role?.code;
+    const stage = roleCode ? stageMapping[roleCode] : undefined;
 
     if (!stage) {
       // Для MANAGER возвращаем пустой массив - у них нет производственных задач
       // Менеджеры работают с заказами с сайта через отдельную страницу /catalog-orders
-      if (user.role.code === 'MANAGER') {
+      if (roleCode === 'MANAGER') {
         return [];
       }
 
@@ -343,9 +346,9 @@ export class TasksService {
 
         try {
           await this.telegramService.sendMessage(worker.telegramId, message);
-          console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role})`);
+          this.logger.log(`Уведомление отправлено работнику ${worker.email}`);
         } catch (error) {
-          console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
+          this.logger.error(`Ошибка отправки уведомления работнику ${worker.email}:`, error);
         }
       }
     }
@@ -355,16 +358,16 @@ export class TasksService {
 
   // Забраковать задачу (только для складиста)
   async rejectTask(taskId: string, userId: string, notes: string, quantity?: number, defectPhotoUrl?: string, requestPhoto?: boolean, returnToStage?: string) {
-    console.log('🚨 rejectTask called:', { taskId, userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage });
+    this.logger.debug('rejectTask called', { taskId, userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage });
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId }, include: { role: true },
     });
 
-    console.log('👤 User found:', user ? `${user.email} (${user.role.code})` : 'NOT FOUND');
+    this.logger.debug('User found', { email: user?.email, role: user?.role?.code });
 
-    if (!user || user.role.code !== 'WAREHOUSE') {
-      console.error('❌ User is not warehouse');
+    if (!user || user.role?.code !== 'WAREHOUSE') {
+      this.logger.warn('Attempted reject by non-warehouse user', { userId });
       throw new ForbiddenException('Только складист может браковать товар');
     }
 
@@ -380,24 +383,24 @@ export class TasksService {
       },
     });
 
-    console.log('📋 Task found:', task ? `${task.title} (status: ${task.status}, stage: ${task.stage})` : 'NOT FOUND');
+    this.logger.debug('Task found', { title: task?.title, status: task?.status, stage: task?.stage });
 
     if (!task) {
-      console.error('❌ Task not found');
+      this.logger.warn('Task not found', { taskId });
       throw new NotFoundException('Задача не найдена');
     }
 
     if (task.assignedToId !== userId) {
-      console.error('❌ Task not assigned to user');
+      this.logger.warn('Task not assigned to user', { taskId, userId });
       throw new ForbiddenException('Вы не можете забраковать эту задачу');
     }
 
     if (task.stage !== ProductionStage.QUALITY_CHECK) {
-      console.error('❌ Task is not at QUALITY_CHECK stage:', task.stage);
+      this.logger.warn('Task not at QUALITY_CHECK stage', { taskId, stage: task.stage });
       throw new BadRequestException('Браковать можно только на стадии проверки качества');
     }
 
-    console.log('✅ All validations passed, proceeding with rejection...');
+    this.logger.debug('All validations passed, proceeding with rejection');
 
     // Проверяем доступное количество для брака
     const availableQuantity = task.quantity - task.quantityProcessed;
@@ -407,7 +410,7 @@ export class TasksService {
       throw new BadRequestException(`Нельзя забраковать ${rejectQuantity} шт. Доступно только ${availableQuantity} шт.`);
     }
 
-    console.log(`🔢 Rejecting ${rejectQuantity} out of ${availableQuantity} available (total: ${task.quantity})`);
+    this.logger.debug(`Rejecting ${rejectQuantity} out of ${availableQuantity} available (total: ${task.quantity})`);
 
     // Увеличиваем количество обработанного
     const newQuantityProcessed = task.quantityProcessed + rejectQuantity;
@@ -467,7 +470,7 @@ export class TasksService {
 
     // Запрашиваем фото брака у складиста, если нужно
     if (requestPhoto && user.telegramId) {
-      console.log(`📸 Requesting ${rejectQuantity} defect photos from warehouse ${user.email} via Telegram...`);
+      this.logger.log(`Requesting ${rejectQuantity} defect photos from warehouse ${user.email}`);
       const photoRequested = await this.telegramService.requestDefectPhoto(
         userId,
         taskId,
@@ -476,9 +479,9 @@ export class TasksService {
       );
 
       if (photoRequested) {
-        console.log(`✅ Photo request sent to warehouse ${user.email}`);
+        this.logger.log(`Photo request sent to warehouse ${user.email}`);
       } else {
-        console.log(`⚠️ Failed to request photo from warehouse ${user.email}`);
+        this.logger.warn(`Failed to request photo from warehouse ${user.email}`);
       }
     }
 
@@ -537,7 +540,7 @@ export class TasksService {
       }
     }
 
-    console.log('✅ Task rejected successfully');
+    this.logger.log('Task rejected successfully', { taskId });
     return updatedTask;
   }
 
@@ -547,7 +550,7 @@ export class TasksService {
       where: { id: userId }, include: { role: true },
     });
 
-    if (!user || user.role.code !== 'WAREHOUSE') {
+    if (!user || user.role?.code !== 'WAREHOUSE') {
       throw new ForbiddenException('Только складист может принять товар');
     }
 
@@ -677,7 +680,7 @@ export class TasksService {
     // Получаем информацию о пользователе
     let user = null;
     if (userId) {
-      user = await this.prisma.user.findUnique({ where: { id: userId } });
+      user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
     }
 
     // Оптимизированный запрос: получаем rejected tasks с включёнными qualityChecks через product
@@ -729,7 +732,7 @@ export class TasksService {
     let filteredDefects = defects.filter((d) => d.id); // Убираем null значения
 
     // Владелец и менеджер видят все браки
-    if (user && (user.role.code === 'OWNER' || user.role.code === 'MANAGER')) {
+    if (user && (user.role?.code === 'OWNER' || user.role?.code === 'MANAGER')) {
       return filteredDefects;
     }
 
@@ -737,7 +740,7 @@ export class TasksService {
     if (user) {
       let userStage: ProductionStage | null = null;
 
-      switch (user.role.code) {
+      switch (user.role?.code) {
         case 'DESIGNER':
           userStage = ProductionStage.DESIGN;
           break;
@@ -775,7 +778,7 @@ export class TasksService {
     let userStage: ProductionStage;
     let stageName: string;
 
-    switch (user.role.code) {
+    switch (user.role?.code) {
       case 'MANAGER':
         userStage = ProductionStage.PENDING;
         stageName = 'ПРОВЕРКА (МЕНЕДЖЕР)';
@@ -857,7 +860,7 @@ export class TasksService {
       },
     });
 
-    console.log(`✅ Painter ${user.email} accepted defect rework for product ${productId}`);
+    this.logger.log(`User ${user.email} accepted defect rework for product ${productId}`);
     return newTask;
   }
 
@@ -874,7 +877,7 @@ export class TasksService {
     // Определяем стадию на основе роли пользователя
     let userStage: ProductionStage | null = null;
 
-    switch (user.role.code) {
+    switch (user.role?.code) {
       case 'MANAGER':
         userStage = ProductionStage.PENDING;
         break;

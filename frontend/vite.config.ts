@@ -21,7 +21,7 @@ export default defineConfig({
     hmr: false, // Отключаем HMR для работы через Kong
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://backend:3000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

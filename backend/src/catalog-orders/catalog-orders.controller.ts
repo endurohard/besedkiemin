@@ -9,8 +9,9 @@ import {
   Query,
   UseGuards,
   Request,
+  ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CatalogOrdersService } from './catalog-orders.service';
 import { CreateCatalogOrderDto } from './dto/create-catalog-order.dto';
 import { UpdateCatalogOrderDto } from './dto/update-catalog-order.dto';
@@ -35,8 +36,19 @@ export class CatalogOrdersController {
   @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить все заказы (только OWNER/MANAGER)' })
-  findAll(@Query('status') status?: string) {
-    return this.ordersService.findAll(status);
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  findAll(
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.ordersService.findAll({
+      status,
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
   }
 
   @Get(':id')
@@ -44,7 +56,7 @@ export class CatalogOrdersController {
   @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить заказ по ID (только OWNER/MANAGER)' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.findOne(id);
   }
 
@@ -53,7 +65,7 @@ export class CatalogOrdersController {
   @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Обновить заказ (только OWNER/MANAGER)' })
-  update(@Param('id') id: string, @Body() updateDto: UpdateCatalogOrderDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateDto: UpdateCatalogOrderDto) {
     return this.ordersService.update(id, updateDto);
   }
 
@@ -62,7 +74,7 @@ export class CatalogOrdersController {
   @Roles('OWNER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Удалить заказ (только OWNER)' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.remove(id);
   }
 
@@ -71,7 +83,7 @@ export class CatalogOrdersController {
   @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Связались с клиентом"' })
-  markContacted(@Param('id') id: string, @Request() req) {
+  markContacted(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
     return this.ordersService.markContacted(id, req.user.userId);
   }
 
@@ -80,7 +92,7 @@ export class CatalogOrdersController {
   @Roles('OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Оформили заказ" и создать производственный заказ' })
-  markProcessed(@Param('id') id: string, @Request() req) {
+  markProcessed(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
     return this.ordersService.markProcessed(id, req.user.userId);
   }
 
@@ -90,7 +102,7 @@ export class CatalogOrdersController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отменить заказ с указанием причины' })
   cancelOrder(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body('cancellationReason') cancellationReason: string,
     @Request() req
   ) {

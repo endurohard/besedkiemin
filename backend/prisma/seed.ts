@@ -71,7 +71,6 @@ async function main() {
       permissions: [
         'orders:view', 'orders:create', 'orders:edit',
         'kanban:view',
-        'analytics:view',
         'chat:view', 'chat:manage',
         'tasks:view_own',
         'shipments:view',

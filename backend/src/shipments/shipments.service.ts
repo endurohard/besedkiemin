@@ -28,7 +28,7 @@ export class ShipmentsService {
       include: { role: true },
     });
 
-    if (!user || (user.role.code !== 'WAREHOUSE' && user.role.code !== 'OWNER' && user.role.code !== 'MANAGER')) {
+    if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
       throw new ForbiddenException('Только складист, менеджер и владелец могут создавать отгрузки');
     }
 
@@ -267,7 +267,7 @@ export class ShipmentsService {
       include: { role: true },
     });
 
-    if (!user || (user.role.code !== 'WAREHOUSE' && user.role.code !== 'OWNER' && user.role.code !== 'MANAGER')) {
+    if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
       throw new ForbiddenException('Только складист, менеджер и владелец могут обновлять статус отгрузки');
     }
 
@@ -312,7 +312,7 @@ export class ShipmentsService {
       include: { role: true },
     });
 
-    if (!user || (user.role.code !== 'WAREHOUSE' && user.role.code !== 'OWNER' && user.role.code !== 'MANAGER')) {
+    if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
       throw new ForbiddenException('Только складист, менеджер и владелец могут отменять отгрузки');
     }
 

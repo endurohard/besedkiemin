@@ -109,15 +109,28 @@ export const authApi = {
   },
 };
 
+// Paginated response type
+interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 // Orders API
 export const ordersApi = {
   getAll: async (params?: {
     status?: OrderStatus;
     startDate?: string;
     endDate?: string;
+    page?: number;
+    limit?: number;
   }): Promise<Order[]> => {
-    const response = await api.get<Order[]>('/orders', { params });
-    return response.data;
+    const response = await api.get<PaginatedResponse<Order>>('/orders', { params });
+    return response.data.data;
   },
 
   getOne: async (id: string): Promise<Order> => {

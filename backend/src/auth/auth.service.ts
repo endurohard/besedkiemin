@@ -1,7 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { User, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+
+type UserWithRole = User & { role: Role | null };
+type UserWithoutPassword = Omit<UserWithRole, 'password'>;
+
+// Минимальный интерфейс для login
+interface LoginUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role?: Role | null;
+  telegramId?: string | null;
+  sipServer?: string | null;
+  sipUser?: string | null;
+  sipPassword?: string | null;
+  sipPort?: number | null;
+  sipWsPort?: number | null;
+}
 
 @Injectable()
 export class AuthService {
@@ -10,22 +29,22 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<UserWithoutPassword | null> {
     const user = await this.usersService.findByEmailWithRole(email);
 
     if (user && await bcrypt.compare(password, user.password)) {
-      const { password, ...result } = user;
+      const { password: _, ...result } = user;
       return result;
     }
 
     return null;
   }
 
-  async login(user: any) {
+  async login(user: LoginUser) {
     const payload = {
       email: user.email,
       sub: user.id,
-      role: user.role.code, // Код роли для JWT
+      role: user.role?.code, // Код роли для JWT
     };
 
     return {
@@ -46,7 +65,7 @@ export class AuthService {
     };
   }
 
-  async findUserById(userId: string): Promise<any> {
+  async findUserById(userId: string) {
     return await this.usersService.findOne(userId);
   }
 }
