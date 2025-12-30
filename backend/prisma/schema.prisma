@@ -75,6 +75,7 @@ enum ProductionStage {
   DESIGN        // Проектирование
   PREPARATION   // Заготовка
   PAINTING      // Покраска
+  ASSEMBLY      // Сборка
   QUALITY_CHECK // Проверка качества на складе
   COMPLETED     // Завершено
   REJECTED      // Брак

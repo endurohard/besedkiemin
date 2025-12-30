@@ -50,6 +50,7 @@ function SortableStageItem({ stage, onEdit, onToggle, onDelete }: SortableStageI
     DESIGNER: 'Проектировщик',
     PREPARER: 'Заготовка',
     PAINTER: 'Маляр',
+    ASSEMBLER: 'Сборщик',
     WAREHOUSE: 'Склад',
   };
 

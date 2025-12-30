@@ -58,8 +58,10 @@ export const KanbanPage = () => {
         return [ProductionStage.DESIGN, ProductionStage.PREPARATION];
       case 'PAINTER':
         return [ProductionStage.PREPARATION, ProductionStage.PAINTING, ProductionStage.REJECTED];
+      case 'ASSEMBLER':
+        return [ProductionStage.PAINTING, ProductionStage.ASSEMBLY, ProductionStage.REJECTED];
       case 'WAREHOUSE':
-        return [ProductionStage.PAINTING, ProductionStage.QUALITY_CHECK, ProductionStage.COMPLETED, ProductionStage.REJECTED];
+        return [ProductionStage.ASSEMBLY, ProductionStage.QUALITY_CHECK, ProductionStage.COMPLETED, ProductionStage.REJECTED];
       default:
         return [];
     }
@@ -79,10 +81,15 @@ export const KanbanPage = () => {
       case 'PAINTER':
         if (currentStage === ProductionStage.PREPARATION || currentStage === ProductionStage.REJECTED)
           return ProductionStage.PAINTING;
-        if (currentStage === ProductionStage.PAINTING) return ProductionStage.QUALITY_CHECK;
+        if (currentStage === ProductionStage.PAINTING) return ProductionStage.ASSEMBLY;
+        break;
+      case 'ASSEMBLER':
+        if (currentStage === ProductionStage.PAINTING || currentStage === ProductionStage.REJECTED)
+          return ProductionStage.ASSEMBLY;
+        if (currentStage === ProductionStage.ASSEMBLY) return ProductionStage.QUALITY_CHECK;
         break;
       case 'WAREHOUSE':
-        if (currentStage === ProductionStage.PAINTING) return ProductionStage.QUALITY_CHECK;
+        if (currentStage === ProductionStage.ASSEMBLY) return ProductionStage.QUALITY_CHECK;
         if (currentStage === ProductionStage.QUALITY_CHECK) return ProductionStage.COMPLETED;
         break;
     }
@@ -116,6 +123,7 @@ export const KanbanPage = () => {
       'DESIGNER': ProductionStage.DESIGN,
       'PREPARER': ProductionStage.PREPARATION,
       'PAINTER': ProductionStage.PAINTING,
+      'ASSEMBLER': ProductionStage.ASSEMBLY,
       'WAREHOUSE': ProductionStage.QUALITY_CHECK,
     };
 
@@ -178,6 +186,8 @@ export const KanbanPage = () => {
         return 'bg-blue-100 text-blue-700';
       case ProductionStage.PAINTING:
         return 'bg-yellow-100 text-yellow-700';
+      case ProductionStage.ASSEMBLY:
+        return 'bg-teal-100 text-teal-700';
       case ProductionStage.QUALITY_CHECK:
         return 'bg-orange-100 text-orange-700';
       case ProductionStage.COMPLETED:
@@ -199,6 +209,8 @@ export const KanbanPage = () => {
         return 'Заготовка';
       case ProductionStage.PAINTING:
         return 'Покраска';
+      case ProductionStage.ASSEMBLY:
+        return 'Сборка';
       case ProductionStage.QUALITY_CHECK:
         return 'Проверка качества';
       case ProductionStage.COMPLETED:
@@ -305,6 +317,8 @@ export const KanbanPage = () => {
                         ? '#3b82f6'
                         : getStageColor(product.stage).includes('yellow')
                         ? '#eab308'
+                        : getStageColor(product.stage).includes('teal')
+                        ? '#14b8a6'
                         : getStageColor(product.stage).includes('red')
                         ? '#ef4444'
                         : '#6b7280',
