@@ -391,14 +391,15 @@ export class ProductsService {
       [ProductionStage.PENDING]: [ProductionStage.DESIGN],
       [ProductionStage.DESIGN]: [ProductionStage.PREPARATION, ProductionStage.PENDING],
       [ProductionStage.PREPARATION]: [ProductionStage.PAINTING, ProductionStage.DESIGN],
-      [ProductionStage.PAINTING]: [ProductionStage.QUALITY_CHECK, ProductionStage.PREPARATION],
+      [ProductionStage.PAINTING]: [ProductionStage.ASSEMBLY, ProductionStage.PREPARATION],
+      [ProductionStage.ASSEMBLY]: [ProductionStage.QUALITY_CHECK, ProductionStage.PAINTING],
       [ProductionStage.QUALITY_CHECK]: [
         ProductionStage.COMPLETED,
         ProductionStage.REJECTED,
-        ProductionStage.PAINTING, // Возврат на покраску при браке
+        ProductionStage.ASSEMBLY, // Возврат на сборку при браке
       ],
       [ProductionStage.COMPLETED]: [], // Финальный этап
-      [ProductionStage.REJECTED]: [ProductionStage.PAINTING], // Можно вернуть на покраску
+      [ProductionStage.REJECTED]: [ProductionStage.ASSEMBLY], // Можно вернуть на сборку
     };
 
     const allowedTransitions = validTransitions[currentStage] || [];

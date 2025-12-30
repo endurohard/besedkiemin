@@ -235,6 +235,11 @@ export const KanbanPage = () => {
 
   // Фильтрация заказов
   const filteredOrders = useMemo(() => {
+    // Ensure orders is an array
+    if (!Array.isArray(orders)) {
+      return [];
+    }
+
     let ordersToFilter = orders;
 
     // Для сотрудников показываем только заказы с их задачами
