@@ -91,55 +91,6 @@ export const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
-        {/* Демо учетные данные */}
-        <div className="mx-4 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-xs font-semibold text-amber-800 mb-2">Демо доступ:</p>
-          <div className="grid grid-cols-2 gap-1 text-xs text-amber-700">
-            <button
-              type="button"
-              onClick={() => { setEmail('owner@factory.com'); setPassword('password123'); }}
-              className="text-left hover:bg-amber-100 px-1 rounded cursor-pointer"
-            >
-              <span className="font-medium">Владелец:</span> owner@factory.com
-            </button>
-            <button
-              type="button"
-              onClick={() => { setEmail('manager@factory.com'); setPassword('password123'); }}
-              className="text-left hover:bg-amber-100 px-1 rounded cursor-pointer"
-            >
-              <span className="font-medium">Менеджер:</span> manager@factory.com
-            </button>
-            <button
-              type="button"
-              onClick={() => { setEmail('designer@factory.com'); setPassword('password123'); }}
-              className="text-left hover:bg-amber-100 px-1 rounded cursor-pointer"
-            >
-              <span className="font-medium">Проектировщик:</span> designer@factory.com
-            </button>
-            <button
-              type="button"
-              onClick={() => { setEmail('preparer@factory.com'); setPassword('password123'); }}
-              className="text-left hover:bg-amber-100 px-1 rounded cursor-pointer"
-            >
-              <span className="font-medium">Заготовщик:</span> preparer@factory.com
-            </button>
-            <button
-              type="button"
-              onClick={() => { setEmail('painter@factory.com'); setPassword('password123'); }}
-              className="text-left hover:bg-amber-100 px-1 rounded cursor-pointer"
-            >
-              <span className="font-medium">Маляр:</span> painter@factory.com
-            </button>
-            <button
-              type="button"
-              onClick={() => { setEmail('warehouse@factory.com'); setPassword('password123'); }}
-              className="text-left hover:bg-amber-100 px-1 rounded cursor-pointer"
-            >
-              <span className="font-medium">Складист:</span> warehouse@factory.com
-            </button>
-          </div>
-          <p className="text-xs text-amber-600 mt-2">Пароль для всех: <code className="bg-amber-100 px-1 rounded">password123</code></p>
-        </div>
         <CardHeader>
           <CardTitle className="text-center">Besedki EMIN</CardTitle>
           <p className="text-center text-sm text-muted-foreground mt-2">
