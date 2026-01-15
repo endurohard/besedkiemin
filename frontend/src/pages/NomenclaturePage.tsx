@@ -22,6 +22,7 @@ export const NomenclaturePage = () => {
     dimensions: '',
     materials: '',
     color: '',
+    upholsteryMaterial: '',
     weight: undefined,
     basePrice: undefined,
     productionTimeHours: undefined,
@@ -87,6 +88,7 @@ export const NomenclaturePage = () => {
       dimensions: '',
       materials: '',
       color: '',
+      upholsteryMaterial: '',
       weight: undefined,
       basePrice: undefined,
       productionTimeHours: undefined,
@@ -112,6 +114,7 @@ export const NomenclaturePage = () => {
       dimensions: item.dimensions || '',
       materials: item.materials || '',
       color: item.color || '',
+      upholsteryMaterial: item.upholsteryMaterial || '',
       weight: item.weight || undefined,
       basePrice: item.basePrice || undefined,
       productionTimeHours: item.productionTimeHours || undefined,
@@ -359,13 +362,25 @@ export const NomenclaturePage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Цвет/покрытие</label>
+                  <label className="block text-sm font-medium mb-1">Цвет/покрытие (для маляра)</label>
                   <Input
                     value={formData.color || ''}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    placeholder="Орех, Палисандр"
+                    placeholder="Орех, Палисандр, код 906"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Материал обшивки (для швеи)</label>
+                <Input
+                  value={formData.upholsteryMaterial || ''}
+                  onChange={(e) => setFormData({ ...formData, upholsteryMaterial: e.target.value })}
+                  placeholder="Экокожа черная, Велюр бежевый, код 1140"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Если указан - автоматически включается этап пошива
+                </p>
               </div>
 
               <div className="grid grid-cols-3 gap-4">

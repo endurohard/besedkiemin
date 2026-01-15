@@ -58,11 +58,19 @@ export class NomenclatureService {
   }
 
   async update(id: string, updateDto: UpdateNomenclatureDto) {
-    await this.findOne(id);
+    const current = await this.findOne(id);
+
+    // Автоматически устанавливаем дату прекращения выпуска при деактивации
+    const data: any = { ...updateDto };
+    if (updateDto.isActive === false && current.isActive === true) {
+      data.discontinuedAt = new Date();
+    } else if (updateDto.isActive === true && current.isActive === false) {
+      data.discontinuedAt = null;
+    }
 
     return this.prisma.nomenclature.update({
       where: { id },
-      data: updateDto,
+      data,
       include: {
         productType: true,
       },
@@ -79,10 +87,15 @@ export class NomenclatureService {
 
   async toggleActive(id: string) {
     const nomenclature = await this.findOne(id);
+    const newIsActive = !nomenclature.isActive;
 
     return this.prisma.nomenclature.update({
       where: { id },
-      data: { isActive: !nomenclature.isActive },
+      data: {
+        isActive: newIsActive,
+        // При деактивации - ставим дату, при активации - очищаем
+        discontinuedAt: newIsActive ? null : new Date(),
+      },
       include: {
         productType: true,
       },

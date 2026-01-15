@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
+import { PayrollService } from '../payroll/payroll.service';
 import { TaskStatus, ProductionStage } from '@prisma/client';
 
 @Injectable()
@@ -10,6 +11,8 @@ export class TasksService {
   constructor(
     private prisma: PrismaService,
     private telegramService: TelegramService,
+    @Inject(forwardRef(() => PayrollService))
+    private payrollService: PayrollService,
   ) {}
 
   // Получить задачи текущего пользователя
@@ -27,6 +30,8 @@ export class TasksService {
       ['DESIGNER']: ProductionStage.DESIGN,
       ['PREPARER']: ProductionStage.PREPARATION,
       ['PAINTER']: ProductionStage.PAINTING,
+      ['SEWER']: ProductionStage.SEWING,
+      ['ASSEMBLER']: ProductionStage.ASSEMBLY,
       ['WAREHOUSE']: ProductionStage.QUALITY_CHECK,
     };
 
@@ -119,23 +124,84 @@ export class TasksService {
     return tasks.filter(task => task.product.stage === task.stage);
   }
 
+  // Получить сотрудников своего отдела (той же роли)
+  async getDepartmentWorkers(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    // Получаем всех активных пользователей с той же ролью
+    return this.prisma.user.findMany({
+      where: {
+        roleId: user.roleId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+      },
+      orderBy: [
+        { lastName: 'asc' },
+        { firstName: 'asc' },
+      ],
+    });
+  }
+
   // Принять задачу в работу
-  async acceptTask(taskId: string, userId: string) {
+  async acceptTask(taskId: string, workerId: string, requesterId?: string) {
     const task = await this.prisma.task.findUnique({
       where: { id: taskId },
-      include: { product: true },
+      include: {
+        product: true,
+        assignedTo: { include: { role: true } },
+      },
     });
 
     if (!task) {
       throw new NotFoundException('Задача не найдена');
     }
 
-    if (task.assignedToId !== userId) {
-      throw new ForbiddenException('Вы не можете принять эту задачу');
-    }
-
     if (task.status !== TaskStatus.NEW) {
       throw new BadRequestException('Задача уже принята или завершена');
+    }
+
+    // Получаем информацию о выбранном работнике
+    const worker = await this.prisma.user.findUnique({
+      where: { id: workerId },
+      include: { role: true },
+    });
+
+    if (!worker) {
+      throw new NotFoundException('Работник не найден');
+    }
+
+    // Проверяем что выбранный работник из того же отдела (та же роль)
+    if (task.assignedTo?.roleId !== worker.roleId) {
+      throw new ForbiddenException('Работник не из этого отдела');
+    }
+
+    // Если передан requesterId, проверяем что запрашивающий тоже из того же отдела
+    if (requesterId && requesterId !== workerId) {
+      const requester = await this.prisma.user.findUnique({
+        where: { id: requesterId },
+        include: { role: true },
+      });
+      if (!requester || requester.roleId !== worker.roleId) {
+        throw new ForbiddenException('Вы не можете назначить задачу работнику из другого отдела');
+      }
     }
 
     // Удаляем копии этой задачи у других работников той же роли
@@ -148,11 +214,13 @@ export class TasksService {
       },
     });
 
+    // Обновляем задачу и назначаем выбранному работнику
     return this.prisma.task.update({
       where: { id: taskId },
       data: {
         status: TaskStatus.ACCEPTED,
         acceptedAt: new Date(),
+        assignedToId: workerId, // Назначаем выбранному работнику
       },
       include: {
         product: {
@@ -227,7 +295,7 @@ export class TasksService {
   async passTask(taskId: string, userId: string) {
     const task = await this.prisma.task.findUnique({
       where: { id: taskId },
-      include: { product: true },
+      include: { product: { include: { productType: true } } },
     });
 
     if (!task) {
@@ -255,7 +323,7 @@ export class TasksService {
     }
 
     // Получаем следующую стадию workflow с ролями
-    const nextWorkflowStage = await this.prisma.workflowStage.findFirst({
+    let nextWorkflowStage = await this.prisma.workflowStage.findFirst({
       where: {
         order: currentWorkflowStage.order + 1,
         isActive: true,
@@ -265,6 +333,32 @@ export class TasksService {
 
     if (!nextWorkflowStage) {
       throw new BadRequestException('Следующая стадия workflow не найдена');
+    }
+
+    // Пропускаем этап SEWING если продукт не требует пошива
+    // Приоритет: upholsteryMaterial > product.requiresSewing > productType.requiresSewing
+    // Если указан материал обшивки - пошив обязателен
+    const product = task.product;
+    const productType = product.productType;
+    const needsSewing = product.upholsteryMaterial
+      ? true  // Если указан материал обшивки - пошив обязателен
+      : (product.requiresSewing !== null
+          ? product.requiresSewing
+          : productType?.requiresSewing ?? false);
+
+    if (nextWorkflowStage.legacyStage === ProductionStage.SEWING && !needsSewing) {
+      this.logger.log(`Skipping SEWING stage for product ${product.name} - requiresSewing is false`);
+      const afterSewingStage = await this.prisma.workflowStage.findFirst({
+        where: {
+          order: nextWorkflowStage.order + 1,
+          isActive: true,
+        },
+        include: { roles: { include: { role: true } } },
+      });
+
+      if (afterSewingStage) {
+        nextWorkflowStage = afterSewingStage;
+      }
     }
 
     const completedQuantity = task.quantity || task.product.quantity;
@@ -289,6 +383,25 @@ export class TasksService {
         passedAt: new Date(),
       },
     });
+
+    // Создаем запись в журнале работ для расчета зарплаты
+    try {
+      await this.payrollService.createWorkLog({
+        userId,
+        productId: task.productId,
+        taskId: task.id,
+        productTypeId: task.product.productTypeId,
+        stage: task.stage,
+        workflowStageId: currentWorkflowStage.id,
+        quantity: completedQuantity,
+        completedAt: new Date(),
+        notes: task.notes || undefined,
+      });
+      this.logger.log(`WorkLog created for user ${userId}, task ${taskId}, stage ${task.stage}`);
+    } catch (error) {
+      this.logger.error(`Failed to create WorkLog for task ${taskId}:`, error);
+      // Не прерываем процесс, если не удалось создать WorkLog
+    }
 
     // Обновляем стадию продукта
     await this.prisma.product.update({
@@ -340,8 +453,7 @@ export class TasksService {
           `*Тип:* ${(newTask.product as any).productType?.name || 'Н/Д'}\n` +
           `*Количество:* ${completedQuantity} шт.\n` +
           `*Стадия:* ${nextWorkflowStage.name}\n` +
-          `*Заказ:* ${(newTask.product as any).order?.orderNumber || 'Н/Д'}\n` +
-          `*Клиент:* ${(newTask.product as any).order?.customerName || 'Н/Д'}\n\n` +
+          `*Заказ:* ${(newTask.product as any).order?.orderNumber || 'Н/Д'}\n\n` +
           `✅ Откройте раздел "Мои задачи" для выполнения`;
 
         try {
@@ -608,6 +720,28 @@ export class TasksService {
       },
     });
 
+    // Создаем запись в журнале работ для расчета зарплаты складиста
+    try {
+      // Получаем workflow stage для QUALITY_CHECK
+      const workflowStage = await this.prisma.workflowStage.findFirst({
+        where: { legacyStage: ProductionStage.QUALITY_CHECK, isActive: true },
+      });
+
+      await this.payrollService.createWorkLog({
+        userId,
+        productId: task.productId,
+        taskId: task.id,
+        productTypeId: task.product.productTypeId,
+        stage: ProductionStage.QUALITY_CHECK,
+        workflowStageId: workflowStage?.id,
+        quantity,
+        completedAt: new Date(),
+      });
+      this.logger.log(`WorkLog created for warehouse user ${userId}, task ${taskId}`);
+    } catch (error) {
+      this.logger.error(`Failed to create WorkLog for warehouse task ${taskId}:`, error);
+    }
+
     // Добавляем товар на склад (создаём или обновляем складской остаток)
     const existingInventory = await this.prisma.inventoryItem.findFirst({
       where: {
@@ -750,6 +884,9 @@ export class TasksService {
         case 'PAINTER':
           userStage = ProductionStage.PAINTING;
           break;
+        case 'SEWER':
+          userStage = ProductionStage.SEWING;
+          break;
         case 'WAREHOUSE':
           userStage = ProductionStage.QUALITY_CHECK;
           break;
@@ -794,6 +931,10 @@ export class TasksService {
       case 'PAINTER':
         userStage = ProductionStage.PAINTING;
         stageName = 'ПОКРАСКА';
+        break;
+      case 'SEWER':
+        userStage = ProductionStage.SEWING;
+        stageName = 'ПОШИВ';
         break;
       default:
         throw new ForbiddenException('Ваша роль не может принимать браки на доработку');
@@ -889,6 +1030,9 @@ export class TasksService {
         break;
       case 'PAINTER':
         userStage = ProductionStage.PAINTING;
+        break;
+      case 'SEWER':
+        userStage = ProductionStage.SEWING;
         break;
       default:
         // Для OWNER, WAREHOUSE и других - показываем все браки

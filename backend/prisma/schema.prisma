@@ -34,6 +34,9 @@ model Role {
   // Связь с этапами workflow (многие-ко-многим)
   workflowStages RoleWorkflowStage[]
 
+  // Настройки комиссии для роли
+  managerCommissions ManagerCommission[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -75,6 +78,7 @@ enum ProductionStage {
   DESIGN        // Проектирование
   PREPARATION   // Заготовка
   PAINTING      // Покраска
+  SEWING        // Пошив (для продуктов с обивкой)
   ASSEMBLY      // Сборка
   QUALITY_CHECK // Проверка качества на складе
   COMPLETED     // Завершено
@@ -150,9 +154,36 @@ model User {
   // Отгрузки оформленные складистом
   shipments         Shipment[]
 
+  // Расчет зарплаты
+  workLogs          WorkLog[]
+  penalties         Penalty[]
+  penaltiesCreated  Penalty[] @relation("PenaltyCreatedBy")
+  payrollPeriods    PayrollPeriod[]
+  managerCommission ManagerCommission?
+
   @@index([roleId])
   @@index([isActive])
   @@map("users")
+}
+
+// Источники заказов (справочник)
+model OrderSource {
+  id          String   @id @default(uuid())
+  name        String   @unique // Название источника (Авито, Инстаграм, и т.д.)
+  code        String   @unique // Код для программной идентификации (AVITO, INSTAGRAM)
+  description String?  // Описание
+  color       String?  // Цвет для UI (#3B82F6)
+  icon        String?  // Иконка (имя иконки или emoji)
+  isActive    Boolean  @default(true) @map("is_active")
+  order       Int      @default(0) // Для сортировки
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Заказы из этого источника
+  orders Order[]
+
+  @@map("order_sources")
 }
 
 // Заказы
@@ -166,6 +197,13 @@ model Order {
   priority        OrderPriority @default(NORMAL)
   description     String?
   notes           String?
+
+  // Источник заказа
+  sourceId String?      @map("source_id")
+  source   OrderSource? @relation(fields: [sourceId], references: [id])
+
+  // Сумма заказа (для расчета комиссии менеджера)
+  totalAmount Float? @map("total_amount")
 
   createdById String @map("created_by_id")
   createdBy   User   @relation(fields: [createdById], references: [id])
@@ -181,6 +219,7 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([createdById])
+  @@index([sourceId])
   @@map("orders")
 }
 
@@ -194,6 +233,9 @@ model ProductType {
   // Нормативное время производства (в часах)
   productionTimeHours Float? @map("production_time_hours")
 
+  // Требуется ли этап пошива для этого типа продукта
+  requiresSewing Boolean @default(false) @map("requires_sewing")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -203,6 +245,10 @@ model ProductType {
   inventoryItems InventoryItem[]
   // Номенклатура этого типа
   nomenclatures  Nomenclature[]
+  // Расценки за работу
+  workRates      WorkRate[]
+  // Журнал работ
+  workLogs       WorkLog[]
 
   @@map("product_types")
 }
@@ -219,10 +265,11 @@ model Nomenclature {
   productType   ProductType @relation(fields: [productTypeId], references: [id])
 
   // Характеристики
-  dimensions    String?  // Размеры (например, "3x3 м", "120x80 см")
-  materials     String?  // Материалы
-  color         String?  // Цвет/покрытие
-  weight        Float?   // Вес в кг
+  dimensions         String?  // Размеры (например, "3x3 м", "120x80 см")
+  materials          String?  // Материалы
+  color              String?  // Цвет/покрытие
+  upholsteryMaterial String?  @map("upholstery_material") // Материал обшивки (ткань/кожа)
+  weight             Float?   // Вес в кг
 
   // Цены
   basePrice     Float?   @map("base_price") // Базовая цена
@@ -230,7 +277,8 @@ model Nomenclature {
   // Нормативное время производства (в часах), переопределяет время из типа
   productionTimeHours Float? @map("production_time_hours")
 
-  isActive    Boolean  @default(true) @map("is_active")
+  isActive       Boolean   @default(true) @map("is_active")
+  discontinuedAt DateTime? @map("discontinued_at") // Дата прекращения выпуска
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -259,6 +307,10 @@ model WorkflowStage {
   productHistory ProductHistory[]
   // Задачи на этом этапе
   tasks          Task[]
+  // Расценки за работу
+  workRates      WorkRate[]
+  // Журнал работ
+  workLogs       WorkLog[]
 
   @@unique([order])
   @@map("workflow_stages")
@@ -281,6 +333,15 @@ model Product {
   productTypeId String      @map("product_type_id")
   productType   ProductType @relation(fields: [productTypeId], references: [id])
 
+  // Требуется ли пошив (если null - берётся из типа продукта)
+  requiresSewing Boolean? @map("requires_sewing")
+
+  // Цвет/покрытие (для маляра)
+  color String?
+
+  // Материал обшивки (ткань/кожа) - если указан, автоматически включается пошив
+  upholsteryMaterial String? @map("upholstery_material")
+
   orderId String @map("order_id")
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -295,6 +356,10 @@ model Product {
   tasks          Task[]
   // Складские остатки
   inventoryItems InventoryItem[]
+  // Журнал работ
+  workLogs       WorkLog[]
+  // Штрафы за брак
+  penalties      Penalty[]
 
   @@index([stage])
   @@index([orderId])
@@ -391,6 +456,9 @@ model Task {
   // Связь с настраиваемым этапом workflow
   workflowStageId String?        @map("workflow_stage_id")
   workflowStage   WorkflowStage? @relation(fields: [workflowStageId], references: [id])
+
+  // Журнал работ (записи о выполнении)
+  workLogs        WorkLog[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -779,4 +847,228 @@ model FeatureFlag {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("feature_flags")
+}
+
+// =============================================
+// РАСЧЕТ ЗАРПЛАТЫ
+// =============================================
+
+// Статус расчетного периода
+enum PayrollStatus {
+  DRAFT      // Черновик (можно редактировать)
+  APPROVED   // Утвержден (ожидает выплаты)
+  PAID       // Выплачен
+  CANCELLED  // Отменен
+}
+
+// Расценки за работу (цена за изделие по типу/этапу)
+model WorkRate {
+  id              String   @id @default(uuid())
+
+  // Тип продукта
+  productTypeId   String   @map("product_type_id")
+  productType     ProductType @relation(fields: [productTypeId], references: [id])
+
+  // Этап производства (старый enum для совместимости)
+  stage           ProductionStage
+
+  // Этап workflow (новый, опционально)
+  workflowStageId String?  @map("workflow_stage_id")
+  workflowStage   WorkflowStage? @relation(fields: [workflowStageId], references: [id])
+
+  // Цена за единицу изделия на этом этапе
+  pricePerUnit    Float    @map("price_per_unit")
+
+  // Описание (например "Покраска беседки 3x3")
+  description     String?
+
+  isActive        Boolean  @default(true) @map("is_active")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([productTypeId, stage])
+  @@map("work_rates")
+}
+
+// Журнал выполненных работ (автоматически создается при завершении задачи)
+model WorkLog {
+  id              String   @id @default(uuid())
+
+  // Работник
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id])
+
+  // Продукт
+  productId       String   @map("product_id")
+  product         Product  @relation(fields: [productId], references: [id])
+
+  // Задача (опционально, для связи)
+  taskId          String?  @map("task_id")
+  task            Task?    @relation(fields: [taskId], references: [id])
+
+  // Тип продукта (для быстрого доступа)
+  productTypeId   String   @map("product_type_id")
+  productType     ProductType @relation(fields: [productTypeId], references: [id])
+
+  // Этап производства
+  stage           ProductionStage
+
+  // Этап workflow (опционально)
+  workflowStageId String?  @map("workflow_stage_id")
+  workflowStage   WorkflowStage? @relation(fields: [workflowStageId], references: [id])
+
+  // Количество обработанных единиц
+  quantity        Int      @default(1)
+
+  // Цена за единицу (на момент выполнения работы)
+  pricePerUnit    Float    @map("price_per_unit")
+
+  // Итоговая сумма (quantity * pricePerUnit)
+  totalAmount     Float    @map("total_amount")
+
+  // Когда работа выполнена
+  completedAt     DateTime @map("completed_at")
+
+  // Примечания
+  notes           String?
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Связь с расчетным периодом
+  payrollPeriodId String?  @map("payroll_period_id")
+  payrollPeriod   PayrollPeriod? @relation(fields: [payrollPeriodId], references: [id])
+
+  @@index([userId, completedAt])
+  @@index([productTypeId, stage])
+  @@map("work_logs")
+}
+
+// Штрафы
+model Penalty {
+  id              String   @id @default(uuid())
+
+  // Работник, которому назначен штраф
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id])
+
+  // Сумма штрафа
+  amount          Float
+
+  // Причина штрафа
+  reason          String
+
+  // За какой продукт (опционально - для брака)
+  productId       String?  @map("product_id")
+  product         Product? @relation(fields: [productId], references: [id])
+
+  // Кто назначил штраф
+  createdById     String   @map("created_by_id")
+  createdBy       User     @relation("PenaltyCreatedBy", fields: [createdById], references: [id])
+
+  // Дата штрафа
+  date            DateTime @default(now())
+
+  // Примечания
+  notes           String?
+
+  // Отменен ли штраф
+  isCancelled     Boolean  @default(false) @map("is_cancelled")
+  cancelledAt     DateTime? @map("cancelled_at")
+  cancelledById   String?  @map("cancelled_by_id")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Связь с расчетным периодом
+  payrollPeriodId String?  @map("payroll_period_id")
+  payrollPeriod   PayrollPeriod? @relation(fields: [payrollPeriodId], references: [id])
+
+  @@index([userId, date])
+  @@map("penalties")
+}
+
+// Расчетный период (ведомость на зарплату)
+model PayrollPeriod {
+  id              String   @id @default(uuid())
+
+  // Работник
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id])
+
+  // Период расчета
+  periodStart     DateTime @map("period_start")
+  periodEnd       DateTime @map("period_end")
+
+  // Базовый оклад (для менеджеров)
+  baseSalary      Float    @default(0) @map("base_salary")
+
+  // Сумма за работу (для производственников)
+  workAmount      Float    @default(0) @map("work_amount")
+
+  // Комиссия с заказов (для менеджеров)
+  commissionAmount Float   @default(0) @map("commission_amount")
+
+  // Сумма заказов менеджера за период (для расчета комиссии)
+  ordersAmount    Float    @default(0) @map("orders_amount")
+
+  // Сумма штрафов
+  penaltyAmount   Float    @default(0) @map("penalty_amount")
+
+  // Итого к выплате
+  totalAmount     Float    @default(0) @map("total_amount")
+
+  // Статус
+  status          PayrollStatus @default(DRAFT)
+
+  // Кто утвердил/выплатил
+  approvedById    String?  @map("approved_by_id")
+  approvedAt      DateTime? @map("approved_at")
+  paidById        String?  @map("paid_by_id")
+  paidAt          DateTime? @map("paid_at")
+
+  // Примечания
+  notes           String?
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Связанные записи
+  workLogs        WorkLog[]
+  penalties       Penalty[]
+
+  @@unique([userId, periodStart, periodEnd])
+  @@index([userId, status])
+  @@index([periodStart, periodEnd])
+  @@map("payroll_periods")
+}
+
+// Настройки комиссии менеджера
+model ManagerCommission {
+  id              String   @id @default(uuid())
+
+  // Менеджер (если для конкретного пользователя)
+  userId          String?  @unique @map("user_id")
+  user            User?    @relation(fields: [userId], references: [id])
+
+  // Или роль (если для всей роли)
+  roleId          String?  @map("role_id")
+  role            Role?    @relation(fields: [roleId], references: [id])
+
+  // Базовый оклад
+  baseSalary      Float    @default(0) @map("base_salary")
+
+  // Процент комиссии от суммы заказов
+  commissionPercent Float  @default(0) @map("commission_percent")
+
+  // Минимальная сумма заказа для комиссии
+  minOrderAmount  Float?   @map("min_order_amount")
+
+  isActive        Boolean  @default(true) @map("is_active")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("manager_commissions")
 }

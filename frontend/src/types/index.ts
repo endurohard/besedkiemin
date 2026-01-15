@@ -30,6 +30,7 @@ export enum UserRole {
   DESIGNER = 'DESIGNER',
   PREPARER = 'PREPARER',
   PAINTER = 'PAINTER',
+  SEWER = 'SEWER',
   ASSEMBLER = 'ASSEMBLER',
   WAREHOUSE = 'WAREHOUSE',
 }
@@ -56,6 +57,7 @@ export enum ProductionStage {
   DESIGN = 'DESIGN',
   PREPARATION = 'PREPARATION',
   PAINTING = 'PAINTING',
+  SEWING = 'SEWING',
   ASSEMBLY = 'ASSEMBLY',
   QUALITY_CHECK = 'QUALITY_CHECK',
   COMPLETED = 'COMPLETED',
@@ -69,6 +71,7 @@ export interface ProductType {
   description?: string;
   isActive: boolean;
   productionTimeHours?: number; // Нормативное время производства
+  requiresSewing?: boolean; // Требуется ли этап пошива для этого типа
   createdAt: string;
   updatedAt: string;
 }
@@ -211,10 +214,12 @@ export interface Nomenclature {
   dimensions?: string;
   materials?: string;
   color?: string;
+  upholsteryMaterial?: string; // Материал обшивки (ткань/кожа)
   weight?: number;
   basePrice?: number;
   productionTimeHours?: number;
   isActive: boolean;
+  discontinuedAt?: string | null; // Дата прекращения выпуска
   createdAt: string;
   updatedAt: string;
 }
@@ -227,6 +232,7 @@ export interface CreateNomenclatureDto {
   dimensions?: string;
   materials?: string;
   color?: string;
+  upholsteryMaterial?: string; // Материал обшивки
   weight?: number;
   basePrice?: number;
   productionTimeHours?: number;
@@ -268,6 +274,9 @@ export interface Product {
   stage: ProductionStage;
   orderId: string;
   deadline?: string;
+  requiresSewing?: boolean | null; // null = берётся из типа продукта
+  color?: string; // Цвет/покрытие (для маляра)
+  upholsteryMaterial?: string; // Материал обшивки (ткань/кожа) - если указан, автоматически включается пошив
   createdAt: string;
   updatedAt: string;
   order?: Order;
@@ -302,6 +311,34 @@ export interface QualityCheck {
   checkedBy?: User;
 }
 
+// Order Source interface (источник заказа)
+export interface OrderSource {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  isActive: boolean;
+  order: number;
+  _count?: { orders: number };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Order Source DTOs
+export interface CreateOrderSourceDto {
+  name: string;
+  code: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  isActive?: boolean;
+  order?: number;
+}
+
+export interface UpdateOrderSourceDto extends Partial<CreateOrderSourceDto> {}
+
 // Order interface
 export interface Order {
   id: string;
@@ -312,6 +349,9 @@ export interface Order {
   status: OrderStatus;
   priority: OrderPriority;
   description?: string;
+  sourceId?: string;
+  source?: OrderSource;
+  totalAmount?: number;
   createdById: string;
   createdAt: string;
   updatedAt: string;
@@ -332,11 +372,14 @@ export interface LoginResponse {
 
 // Order DTOs
 export interface CreateOrderDto {
+  orderNumber?: string;
   customerName: string;
   customerPhone?: string;
   customerAddress?: string;
   description?: string;
   priority?: OrderPriority;
+  sourceId?: string;
+  totalAmount?: number;
 }
 
 export interface UpdateOrderDto extends Partial<CreateOrderDto> {
@@ -353,10 +396,14 @@ export interface CreateProductDto {
   deadline?: string;
   dimensions?: string;
   schemaImageUrl?: string;
+  requiresSewing?: boolean | null;
+  color?: string; // Цвет/покрытие (для маляра)
+  upholsteryMaterial?: string; // Материал обшивки (для швеи)
 }
 
 export interface UpdateProductDto extends Partial<CreateProductDto> {
   stage?: ProductionStage;
+  requiresSewing?: boolean | null;
 }
 
 export interface MoveProductDto {
@@ -776,3 +823,193 @@ export interface UpdateFeatureFlagDto {
 }
 
 export type FeatureFlagsMap = Record<string, boolean>;
+
+// =============================================
+// РАСЧЕТ ЗАРПЛАТЫ (PAYROLL)
+// =============================================
+
+// Статус расчетного периода
+export enum PayrollStatus {
+  DRAFT = 'DRAFT',
+  APPROVED = 'APPROVED',
+  PAID = 'PAID',
+  CANCELLED = 'CANCELLED',
+}
+
+// Расценка за работу
+export interface WorkRate {
+  id: string;
+  productTypeId: string;
+  productType?: ProductType;
+  stage: ProductionStage;
+  workflowStageId?: string;
+  workflowStage?: WorkflowStage;
+  pricePerUnit: number;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Журнал выполненных работ
+export interface WorkLog {
+  id: string;
+  userId: string;
+  user?: User;
+  productId: string;
+  product?: Product;
+  taskId?: string;
+  task?: Task;
+  productTypeId: string;
+  productType?: ProductType;
+  stage: ProductionStage;
+  workflowStageId?: string;
+  workflowStage?: WorkflowStage;
+  quantity: number;
+  pricePerUnit: number;
+  totalAmount: number;
+  completedAt: string;
+  notes?: string;
+  payrollPeriodId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Штраф
+export interface Penalty {
+  id: string;
+  userId: string;
+  user?: User;
+  amount: number;
+  reason: string;
+  productId?: string;
+  product?: Product;
+  date: string;
+  isCancelled: boolean;
+  cancelledAt?: string;
+  cancelledById?: string;
+  cancelledBy?: User;
+  notes?: string;
+  createdById: string;
+  createdBy?: User;
+  payrollPeriodId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Расчетный период
+export interface PayrollPeriod {
+  id: string;
+  userId: string;
+  user?: User;
+  periodStart: string;
+  periodEnd: string;
+  baseSalary: number;
+  workAmount: number;
+  commissionAmount: number;
+  penaltyAmount: number;
+  totalAmount: number;
+  status: PayrollStatus;
+  approvedById?: string;
+  approvedBy?: User;
+  approvedAt?: string;
+  paidById?: string;
+  paidBy?: User;
+  paidAt?: string;
+  notes?: string;
+  workLogs?: WorkLog[];
+  penalties?: Penalty[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Настройки комиссии менеджера
+export interface ManagerCommission {
+  id: string;
+  userId?: string;
+  user?: User;
+  roleId?: string;
+  role?: Role;
+  baseSalary: number;
+  commissionPercent: number;
+  minOrderAmount: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Сводка по зарплате
+export interface PayrollSummary {
+  periodStart: string;
+  periodEnd: string;
+  users: Array<{
+    userId: string;
+    userName: string;
+    role: string;
+    workAmount: number;
+    commissionAmount: number;
+    penaltyAmount: number;
+    totalAmount: number;
+    workLogsCount: number;
+    penaltiesCount: number;
+  }>;
+  totals: {
+    workAmount: number;
+    commissionAmount: number;
+    penaltyAmount: number;
+    totalAmount: number;
+  };
+}
+
+// DTOs для Payroll
+export interface CreateWorkRateDto {
+  productTypeId: string;
+  stage: ProductionStage;
+  workflowStageId?: string;
+  pricePerUnit: number;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateWorkRateDto {
+  pricePerUnit?: number;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface CreatePenaltyDto {
+  userId: string;
+  amount: number;
+  reason: string;
+  productId?: string;
+  date?: string;
+  notes?: string;
+}
+
+export interface UpdatePenaltyDto {
+  amount?: number;
+  reason?: string;
+  notes?: string;
+}
+
+export interface CalculatePayrollDto {
+  periodStart: string;
+  periodEnd: string;
+  userIds?: string[];
+}
+
+export interface CreateManagerCommissionDto {
+  userId?: string;
+  roleId?: string;
+  baseSalary?: number;
+  commissionPercent: number;
+  minOrderAmount?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateManagerCommissionDto {
+  baseSalary?: number;
+  commissionPercent?: number;
+  minOrderAmount?: number;
+  isActive?: boolean;
+}

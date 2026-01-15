@@ -19,7 +19,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
-  UserCog
+  UserCog,
+  Wallet,
+  HardHat,
+  Globe
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -237,6 +240,16 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
           <NavLink to="/app/analytics" icon={BarChart3} label="Аналитика" />
         )}
 
+        {/* Зарплата - только для OWNER и SUPER_ADMIN */}
+        {(userRole === 'OWNER' || userRole === 'SUPER_ADMIN') && (
+          <NavLink to="/app/payroll" icon={Wallet} label="Зарплата" />
+        )}
+
+        {/* Сотрудники производства - только для OWNER и SUPER_ADMIN */}
+        {(userRole === 'OWNER' || userRole === 'SUPER_ADMIN') && (
+          <NavLink to="/app/workers" icon={HardHat} label="Работники" />
+        )}
+
         {/* Управление */}
         {hasPermission('users:view') && (
           <NavLink to="/app/users" icon={Users} label="Пользователи" />
@@ -246,6 +259,9 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
         )}
         {hasPermission('workflow:manage') && (
           <NavLink to="/app/workflow" icon={Settings} label="Цикл" />
+        )}
+        {hasPermission('orders:view') && (
+          <NavLink to="/app/order-sources" icon={Globe} label="Источники" />
         )}
         {hasPermission('settings:view') && (
           <NavLink to="/app/company-settings" icon={Settings} label="Настройки" />

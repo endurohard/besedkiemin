@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ordersApi, productsApi, productTypesApi, uploadApi } from '@/lib/api';
+import { ordersApi, productsApi, productTypesApi, uploadApi, orderSourcesApi, nomenclatureApi } from '@/lib/api';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { AddressInput } from './AddressInput';
 import { CustomerNameInput } from './CustomerNameInput';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
-import { OrderPriority } from '@/types';
+import { OrderPriority, Nomenclature } from '@/types';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
@@ -14,12 +14,16 @@ interface CreateOrderModalProps {
 }
 
 interface ProductFormData {
+  nomenclatureId?: string; // ID из каталога (номенклатуры)
   name: string;
   productTypeId: string;
   quantity: number;
   dimensions?: string;
   schemaImageUrl?: string;
   schemaFile?: File;
+  requiresSewing?: boolean | null; // null = берётся из типа продукта
+  color?: string; // Цвет/покрытие (для маляра)
+  upholsteryMaterial?: string; // Материал обшивки (для швеи)
 }
 
 export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => {
@@ -32,22 +36,43 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     enabled: isOpen,
   });
 
+  // Fetch order sources
+  const { data: orderSources = [] } = useQuery({
+    queryKey: ['order-sources-active'],
+    queryFn: () => orderSourcesApi.getActive(),
+    enabled: isOpen,
+  });
+
+  // Fetch nomenclature (catalog items)
+  const { data: nomenclature = [] } = useQuery({
+    queryKey: ['nomenclature'],
+    queryFn: () => nomenclatureApi.getAll(),
+    enabled: isOpen,
+  });
+
   const [isInternalOrder, setIsInternalOrder] = useState(false);
+  const [autoGenerateOrderNumber, setAutoGenerateOrderNumber] = useState(true);
+  const [orderNumber, setOrderNumber] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<OrderPriority>(OrderPriority.NORMAL);
+  const [sourceId, setSourceId] = useState<string>('');
+  const [totalAmount, setTotalAmount] = useState<string>('');
   const [products, setProducts] = useState<ProductFormData[]>([]);
 
   const createOrderMutation = useMutation({
     mutationFn: async (orderData: any) => {
       const order = await ordersApi.create({
+        orderNumber: orderData.orderNumber || undefined,
         customerName: orderData.customerName,
         customerPhone: orderData.customerPhone,
         customerAddress: orderData.customerAddress,
         description: orderData.description,
         priority: orderData.priority,
+        sourceId: orderData.sourceId,
+        totalAmount: orderData.totalAmount,
       });
 
       // Создаем продукты для заказа (если есть)
@@ -67,6 +92,9 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             dimensions: product.dimensions,
             schemaImageUrl,
             orderId: order.id,
+            requiresSewing: product.requiresSewing,
+            color: product.color || undefined,
+            upholsteryMaterial: product.upholsteryMaterial || undefined,
           });
         }
       }
@@ -82,11 +110,15 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
 
   const handleClose = () => {
     setIsInternalOrder(false);
+    setAutoGenerateOrderNumber(true);
+    setOrderNumber('');
     setCustomerName('');
     setCustomerPhone('');
     setCustomerAddress('');
     setDescription('');
     setPriority(OrderPriority.NORMAL);
+    setSourceId('');
+    setTotalAmount('');
     setProducts([]);
     onClose();
   };
@@ -97,19 +129,55 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     // Для внутренних заказов используем название компании
     const finalCustomerName = isInternalOrder ? 'Внутренний заказ' : customerName;
     const finalCustomerPhone = isInternalOrder ? '' : customerPhone;
+    // Номер заказа - только если не автогенерация и поле заполнено
+    const finalOrderNumber = autoGenerateOrderNumber ? '' : orderNumber.trim();
 
     createOrderMutation.mutate({
+      orderNumber: finalOrderNumber,
       customerName: finalCustomerName,
       customerPhone: finalCustomerPhone,
       customerAddress,
       description,
       priority,
+      sourceId: sourceId || undefined,
+      totalAmount: totalAmount ? parseFloat(totalAmount) : undefined,
       products: products.filter((p) => p.name.trim() !== '' && p.productTypeId),
     });
   };
 
   const addProduct = () => {
-    setProducts([...products, { name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '' }]);
+    setProducts([...products, { nomenclatureId: '', name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '', requiresSewing: null, color: '', upholsteryMaterial: '' }]);
+  };
+
+  // Обработчик выбора из номенклатуры
+  const handleNomenclatureSelect = (index: number, nomenclatureId: string) => {
+    const item = nomenclature.find((n: Nomenclature) => n.id === nomenclatureId);
+    if (item) {
+      const updated = [...products];
+      updated[index] = {
+        ...updated[index],
+        nomenclatureId,
+        name: item.name,
+        productTypeId: item.productTypeId,
+        dimensions: item.dimensions || '',
+        color: item.color || '',
+        upholsteryMaterial: item.upholsteryMaterial || '',
+      };
+      setProducts(updated);
+    } else {
+      // Если выбрано "Ввести вручную"
+      const updated = [...products];
+      updated[index] = {
+        ...updated[index],
+        nomenclatureId: '',
+        name: '',
+        productTypeId: '',
+        dimensions: '',
+        color: '',
+        upholsteryMaterial: '',
+      };
+      setProducts(updated);
+    }
   };
 
   const removeProduct = (index: number) => {
@@ -158,6 +226,35 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             <label htmlFor="internalOrder" className="text-sm font-medium text-blue-900 cursor-pointer">
               Внутренний заказ (для собственного производства)
             </label>
+          </div>
+
+          {/* Номер заказа */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="autoGenerateOrderNumber"
+                checked={autoGenerateOrderNumber}
+                onChange={(e) => setAutoGenerateOrderNumber(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="autoGenerateOrderNumber" className="text-sm font-medium text-gray-700 cursor-pointer">
+                Сгенерировать номер заказа автоматически
+              </label>
+            </div>
+            {!autoGenerateOrderNumber && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Номер заказа *
+                </label>
+                <Input
+                  value={orderNumber}
+                  onChange={(e) => setOrderNumber(e.target.value)}
+                  placeholder="Например: ORD-001 или ваш номер"
+                  required
+                />
+              </div>
+            )}
           </div>
 
           {/* Информация о клиенте */}
@@ -220,21 +317,59 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             />
           </div>
 
-          {/* Приоритет */}
+          {/* Приоритет и Источник */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Приоритет заказа
+              </label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as OrderPriority)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={OrderPriority.LOW}>Низкий</option>
+                <option value={OrderPriority.NORMAL}>Обычный</option>
+                <option value={OrderPriority.HIGH}>Высокий</option>
+                <option value={OrderPriority.URGENT}>Срочный</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Источник заказа
+              </label>
+              <select
+                value={sourceId}
+                onChange={(e) => setSourceId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Не указан</option>
+                {orderSources.map((source) => (
+                  <option key={source.id} value={source.id}>
+                    {source.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Сумма заказа */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Приоритет заказа
+              Сумма заказа (руб.)
             </label>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as OrderPriority)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={OrderPriority.LOW}>Низкий</option>
-              <option value={OrderPriority.NORMAL}>Обычный</option>
-              <option value={OrderPriority.HIGH}>Высокий</option>
-              <option value={OrderPriority.URGENT}>Срочный</option>
-            </select>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={totalAmount}
+              onChange={(e) => setTotalAmount(e.target.value)}
+              placeholder="Например: 50000"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Используется для расчета комиссии менеджера
+            </p>
           </div>
 
           {/* Продукты */}
@@ -271,6 +406,25 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                   </button>
                 </div>
 
+                {/* Выбор из каталога */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Выберите из каталога
+                  </label>
+                  <select
+                    value={product.nomenclatureId || ''}
+                    onChange={(e) => handleNomenclatureSelect(index, e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    <option value="">-- Ввести вручную --</option>
+                    {nomenclature.map((item: Nomenclature) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} {item.productType?.name ? `(${item.productType.name})` : ''} {item.color ? `- ${item.color}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-3 gap-3">
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -281,6 +435,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                       onChange={(e) => updateProduct(index, 'name', e.target.value)}
                       placeholder="Стол обеденный"
                       required
+                      disabled={!!product.nomenclatureId}
                     />
                   </div>
 
@@ -309,8 +464,9 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     onChange={(e) =>
                       updateProduct(index, 'productTypeId', e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                     required
+                    disabled={!!product.nomenclatureId}
                   >
                     <option value="">Выберите тип</option>
                     {productTypes.map((type) => (
@@ -319,6 +475,35 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Цвет/покрытие для маляра */}
+                <div className="p-2 bg-amber-50 border border-amber-200 rounded-md space-y-2">
+                  <label className="block text-xs font-medium text-amber-900">
+                    🎨 Цвет/покрытие (для маляра)
+                  </label>
+                  <Input
+                    value={product.color || ''}
+                    onChange={(e) => updateProduct(index, 'color', e.target.value)}
+                    placeholder="Например: Орех, Палисандр, код 906"
+                    className="text-sm"
+                  />
+                </div>
+
+                {/* Материал обшивки для швеи */}
+                <div className="p-2 bg-purple-50 border border-purple-200 rounded-md space-y-2">
+                  <label className="block text-xs font-medium text-purple-900">
+                    🧵 Материал обшивки (для швеи)
+                  </label>
+                  <Input
+                    value={product.upholsteryMaterial || ''}
+                    onChange={(e) => updateProduct(index, 'upholsteryMaterial', e.target.value)}
+                    placeholder="Например: Экокожа черная, Велюр бежевый, код 1140"
+                    className="text-sm"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Если указан материал - этап пошива включается автоматически
+                  </p>
                 </div>
 
                 <div>

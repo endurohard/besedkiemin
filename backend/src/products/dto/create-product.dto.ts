@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateProductDto {
   @ApiProperty({ example: 'Обеденный стол' })
@@ -40,4 +40,19 @@ export class CreateProductDto {
   @ApiProperty({ example: '2024-12-31', required: false })
   @IsOptional()
   deadline?: Date;
+
+  @ApiProperty({ example: true, required: false, description: 'Требуется ли пошив (null = из типа продукта)' })
+  @IsBoolean()
+  @IsOptional()
+  requiresSewing?: boolean | null;
+
+  @ApiProperty({ example: 'Орех, код 906', required: false, description: 'Цвет/покрытие (для маляра)' })
+  @IsString()
+  @IsOptional()
+  color?: string;
+
+  @ApiProperty({ example: 'Экокожа черная', required: false, description: 'Материал обшивки (ткань/кожа) - если указан, автоматически включается пошив' })
+  @IsString()
+  @IsOptional()
+  upholsteryMaterial?: string;
 }

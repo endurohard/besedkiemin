@@ -28,6 +28,10 @@ export class CreateNomenclatureDto {
   color?: string;
 
   @IsOptional()
+  @IsString()
+  upholsteryMaterial?: string;
+
+  @IsOptional()
   @IsNumber()
   weight?: number;
 

@@ -21,7 +21,10 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import ChatPage from './pages/ChatPage';
 import { FeatureFlagsPage } from './pages/FeatureFlagsPage';
 import { NomenclaturePage } from './pages/NomenclaturePage';
+import { OrderSourcesPage } from './pages/OrderSourcesPage';
 import RolesPage from './pages/RolesPage';
+import PayrollPage from './pages/PayrollPage';
+import ProductionWorkersPage from './pages/ProductionWorkersPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -186,6 +189,14 @@ function App() {
             }
           />
           <Route
+            path="/app/order-sources"
+            element={
+              <ManagerOwnerRoute>
+                <OrderSourcesPage />
+              </ManagerOwnerRoute>
+            }
+          />
+          <Route
             path="/app/catalog-management"
             element={
               <ManagerOwnerRoute>
@@ -222,6 +233,22 @@ function App() {
             element={
               <OwnerRoute>
                 <RolesPage />
+              </OwnerRoute>
+            }
+          />
+          <Route
+            path="/app/payroll"
+            element={
+              <OwnerRoute>
+                <PayrollPage />
+              </OwnerRoute>
+            }
+          />
+          <Route
+            path="/app/workers"
+            element={
+              <OwnerRoute>
+                <ProductionWorkersPage />
               </OwnerRoute>
             }
           />

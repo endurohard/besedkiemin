@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Input } from './ui/Input';
 import { useAuthStore } from '@/store/authStore';
 import { tasksApi } from '@/lib/api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle, XCircle, ArrowRight, Package } from 'lucide-react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { CheckCircle, XCircle, ArrowRight, Package, User } from 'lucide-react';
 import { TaskTimer } from './TaskTimer';
 
 interface TaskCardProps {
@@ -26,6 +26,15 @@ export const TaskCard = ({ task }: TaskCardProps) => {
   const [showNotesInput, setShowNotesInput] = useState(false);
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [showApproveForm, setShowApproveForm] = useState(false);
+  const [showWorkerSelectModal, setShowWorkerSelectModal] = useState(false);
+  const [selectedWorkerId, setSelectedWorkerId] = useState('');
+
+  // Загружаем сотрудников отдела когда открывается модальное окно
+  const { data: departmentWorkers, isLoading: isLoadingWorkers } = useQuery({
+    queryKey: ['department-workers'],
+    queryFn: tasksApi.getDepartmentWorkers,
+    enabled: showWorkerSelectModal,
+  });
 
   // Доступное количество для обработки
   const availableQuantity = (task.quantity || task.product?.quantity || 0) - (task.quantityProcessed || 0);
@@ -33,13 +42,20 @@ export const TaskCard = ({ task }: TaskCardProps) => {
   const isWarehouse = user?.role?.code === 'WAREHOUSE';
   const isPreparer = user?.role?.code === 'PREPARER';
   const isPainter = user?.role?.code === 'PAINTER';
-  const isSimplifiedRole = isPreparer || isPainter; // Упрощенный интерфейс для заготовщика и маляра
+  const isAssembler = user?.role?.code === 'ASSEMBLER';
+  const isSewer = user?.role?.code === 'SEWER'; // Пошив
+  const isLogist = user?.role?.code === 'LOGIST'; // Логист
+  const isSimplifiedRole = isPreparer || isPainter || isAssembler || isSewer; // Упрощенный интерфейс
+  // Роли которые выбирают сотрудника при принятии задачи
+  const needsWorkerSelection = isPreparer || isPainter || isAssembler || isSewer || isLogist;
 
   // Мутации для действий с задачами
   const acceptMutation = useMutation({
-    mutationFn: () => tasksApi.acceptTask(task.id),
+    mutationFn: (workerId?: string) => tasksApi.acceptTask(task.id, workerId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setShowWorkerSelectModal(false);
+      setSelectedWorkerId('');
     },
   });
 
@@ -174,6 +190,26 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                 <span className="font-medium">{task.quantity || task.product.quantity} шт.</span>
               </div>
             </div>
+
+            {/* Цвет/покрытие - для маляра */}
+            {isPainter && task.product.color && (
+              <div className="mt-1 pt-1 border-t border-orange-200 bg-orange-50 p-1 rounded">
+                <div className="flex gap-1 items-center">
+                  <span className="text-orange-700 font-medium">🎨 Цвет:</span>
+                  <span className="font-bold text-orange-900">{task.product.color}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Материал обшивки - для швеи */}
+            {isSewer && task.product.upholsteryMaterial && (
+              <div className="mt-1 pt-1 border-t border-purple-200 bg-purple-50 p-1 rounded">
+                <div className="flex gap-1 items-center">
+                  <span className="text-purple-700 font-medium">🧵 Обшивка:</span>
+                  <span className="font-bold text-purple-900">{task.product.upholsteryMaterial}</span>
+                </div>
+              </div>
+            )}
 
             {/* Фото схемы - только ссылка */}
             {task.product.schemaImageUrl && (
@@ -317,6 +353,7 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                   <option value="DESIGN">Проектирование</option>
                   <option value="PREPARATION">Заготовка</option>
                   <option value="PAINTING">Покраска</option>
+                  <option value="SEWING">Пошив</option>
                 </select>
               </div>
 
@@ -381,7 +418,13 @@ export const TaskCard = ({ task }: TaskCardProps) => {
             <>
               {task.status === TaskStatus.NEW && (
                 <Button
-                  onClick={() => acceptMutation.mutate()}
+                  onClick={() => {
+                    if (needsWorkerSelection) {
+                      setShowWorkerSelectModal(true);
+                    } else {
+                      acceptMutation.mutate(undefined);
+                    }
+                  }}
                   disabled={acceptMutation.isPending}
                   className="w-full flex items-center justify-center gap-1 text-xs py-1.5"
                   size="sm"
@@ -389,6 +432,62 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                   <Package size={12} />
                   {acceptMutation.isPending ? 'Принятие...' : 'Принять'}
                 </Button>
+              )}
+
+              {/* Модальное окно выбора сотрудника */}
+              {showWorkerSelectModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg p-4 w-full max-w-sm mx-4 shadow-xl">
+                    <div className="flex items-center gap-2 mb-4">
+                      <User size={20} className="text-blue-600" />
+                      <h3 className="text-lg font-bold">Выберите сотрудника</h3>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 mb-2">
+                        Кто принимает задачу "{task.title}"?
+                      </p>
+
+                      {isLoadingWorkers ? (
+                        <div className="flex items-center justify-center py-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : (
+                        <select
+                          value={selectedWorkerId}
+                          onChange={(e) => setSelectedWorkerId(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-lg bg-white text-base"
+                        >
+                          <option value="">-- Выберите себя --</option>
+                          {departmentWorkers?.map((worker) => (
+                            <option key={worker.id} value={worker.id}>
+                              {worker.lastName} {worker.firstName}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => acceptMutation.mutate(selectedWorkerId)}
+                        disabled={!selectedWorkerId || acceptMutation.isPending}
+                        className="flex-1"
+                      >
+                        {acceptMutation.isPending ? 'Принятие...' : 'Подтвердить'}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setShowWorkerSelectModal(false);
+                          setSelectedWorkerId('');
+                        }}
+                        variant="outline"
+                      >
+                        Отмена
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {task.status === TaskStatus.ACCEPTED && !showNotesInput && (
