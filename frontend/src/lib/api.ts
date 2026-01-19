@@ -55,6 +55,23 @@ import type {
   UpdateNomenclatureDto,
   Role,
   Permission,
+  OrderSource,
+  CreateOrderSourceDto,
+  UpdateOrderSourceDto,
+  WorkRate,
+  WorkLog,
+  Penalty,
+  PayrollPeriod,
+  ManagerCommission,
+  PayrollSummary,
+  PayrollStatus,
+  CreateWorkRateDto,
+  UpdateWorkRateDto,
+  CreatePenaltyDto,
+  UpdatePenaltyDto,
+  CalculatePayrollDto,
+  CreateManagerCommissionDto,
+  UpdateManagerCommissionDto,
 } from '@/types';
 
 const api = axios.create({
@@ -401,8 +418,18 @@ export const tasksApi = {
     return response.data;
   },
 
-  acceptTask: async (id: string): Promise<Task> => {
-    const response = await api.post<Task>(`/tasks/${id}/accept`);
+  acceptTask: async (id: string, selectedUserId?: string): Promise<Task> => {
+    const response = await api.post<Task>(`/tasks/${id}/accept`, { selectedUserId });
+    return response.data;
+  },
+
+  getDepartmentWorkers: async (): Promise<Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    role: { id: string; name: string; code: string };
+  }>> => {
+    const response = await api.get('/tasks/department-workers');
     return response.data;
   },
 
@@ -720,6 +747,188 @@ export const rolesApi = {
 
   remove: async (id: string): Promise<void> => {
     await api.delete(`/roles/${id}`);
+  },
+};
+
+// Order Sources API (источники заказов)
+export const orderSourcesApi = {
+  getAll: async (): Promise<OrderSource[]> => {
+    const response = await api.get<OrderSource[]>('/order-sources');
+    return response.data;
+  },
+
+  getActive: async (): Promise<OrderSource[]> => {
+    const response = await api.get<OrderSource[]>('/order-sources/active');
+    return response.data;
+  },
+
+  getOne: async (id: string): Promise<OrderSource> => {
+    const response = await api.get<OrderSource>(`/order-sources/${id}`);
+    return response.data;
+  },
+
+  create: async (data: CreateOrderSourceDto): Promise<OrderSource> => {
+    const response = await api.post<OrderSource>('/order-sources', data);
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdateOrderSourceDto): Promise<OrderSource> => {
+    const response = await api.put<OrderSource>(`/order-sources/${id}`, data);
+    return response.data;
+  },
+
+  remove: async (id: string): Promise<void> => {
+    await api.delete(`/order-sources/${id}`);
+  },
+
+  initialize: async (): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post<{ success: boolean; message: string }>('/order-sources/initialize');
+    return response.data;
+  },
+};
+
+// Payroll API (Расчет зарплаты)
+export const payrollApi = {
+  // Расценки
+  getWorkRates: async (): Promise<WorkRate[]> => {
+    const response = await api.get<WorkRate[]>('/payroll/work-rates');
+    return response.data;
+  },
+
+  getActiveWorkRates: async (): Promise<WorkRate[]> => {
+    const response = await api.get<WorkRate[]>('/payroll/work-rates/active');
+    return response.data;
+  },
+
+  getWorkRate: async (productTypeId: string, stage: ProductionStage): Promise<WorkRate | null> => {
+    const response = await api.get<WorkRate>(`/payroll/work-rates/${productTypeId}/${stage}`);
+    return response.data;
+  },
+
+  createWorkRate: async (data: CreateWorkRateDto): Promise<WorkRate> => {
+    const response = await api.post<WorkRate>('/payroll/work-rates', data);
+    return response.data;
+  },
+
+  updateWorkRate: async (id: string, data: UpdateWorkRateDto): Promise<WorkRate> => {
+    const response = await api.put<WorkRate>(`/payroll/work-rates/${id}`, data);
+    return response.data;
+  },
+
+  deleteWorkRate: async (id: string): Promise<void> => {
+    await api.delete(`/payroll/work-rates/${id}`);
+  },
+
+  // Штрафы
+  getPenalties: async (params?: {
+    userId?: string;
+    startDate?: string;
+    endDate?: string;
+    includeCancelled?: boolean;
+  }): Promise<Penalty[]> => {
+    const response = await api.get<Penalty[]>('/payroll/penalties', { params });
+    return response.data;
+  },
+
+  createPenalty: async (data: CreatePenaltyDto): Promise<Penalty> => {
+    const response = await api.post<Penalty>('/payroll/penalties', data);
+    return response.data;
+  },
+
+  updatePenalty: async (id: string, data: UpdatePenaltyDto): Promise<Penalty> => {
+    const response = await api.put<Penalty>(`/payroll/penalties/${id}`, data);
+    return response.data;
+  },
+
+  cancelPenalty: async (id: string, notes?: string): Promise<Penalty> => {
+    const response = await api.post<Penalty>(`/payroll/penalties/${id}/cancel`, { notes });
+    return response.data;
+  },
+
+  // Настройки комиссии менеджера
+  getManagerCommissions: async (): Promise<ManagerCommission[]> => {
+    const response = await api.get<ManagerCommission[]>('/payroll/commissions');
+    return response.data;
+  },
+
+  getManagerCommission: async (userId: string): Promise<ManagerCommission | null> => {
+    const response = await api.get<ManagerCommission>(`/payroll/commissions/user/${userId}`);
+    return response.data;
+  },
+
+  createManagerCommission: async (data: CreateManagerCommissionDto): Promise<ManagerCommission> => {
+    const response = await api.post<ManagerCommission>('/payroll/commissions', data);
+    return response.data;
+  },
+
+  updateManagerCommission: async (id: string, data: UpdateManagerCommissionDto): Promise<ManagerCommission> => {
+    const response = await api.put<ManagerCommission>(`/payroll/commissions/${id}`, data);
+    return response.data;
+  },
+
+  deleteManagerCommission: async (id: string): Promise<void> => {
+    await api.delete(`/payroll/commissions/${id}`);
+  },
+
+  // Расчетные периоды
+  getPayrollPeriods: async (params?: {
+    userId?: string;
+    status?: PayrollStatus;
+    periodStart?: string;
+    periodEnd?: string;
+  }): Promise<PayrollPeriod[]> => {
+    const response = await api.get<PayrollPeriod[]>('/payroll/periods', { params });
+    return response.data;
+  },
+
+  getPayrollPeriod: async (id: string): Promise<PayrollPeriod> => {
+    const response = await api.get<PayrollPeriod>(`/payroll/periods/${id}`);
+    return response.data;
+  },
+
+  calculatePayroll: async (data: CalculatePayrollDto): Promise<PayrollPeriod[]> => {
+    const response = await api.post<PayrollPeriod[]>('/payroll/calculate', data);
+    return response.data;
+  },
+
+  approvePayrollPeriod: async (id: string, notes?: string): Promise<PayrollPeriod> => {
+    const response = await api.post<PayrollPeriod>(`/payroll/periods/${id}/approve`, { notes });
+    return response.data;
+  },
+
+  markPayrollAsPaid: async (id: string, notes?: string): Promise<PayrollPeriod> => {
+    const response = await api.post<PayrollPeriod>(`/payroll/periods/${id}/pay`, { notes });
+    return response.data;
+  },
+
+  cancelPayrollPeriod: async (id: string): Promise<PayrollPeriod> => {
+    const response = await api.post<PayrollPeriod>(`/payroll/periods/${id}/cancel`);
+    return response.data;
+  },
+
+  deletePayrollPeriod: async (id: string): Promise<void> => {
+    await api.delete(`/payroll/periods/${id}`);
+  },
+
+  // Журнал работ
+  getWorkLogs: async (params?: {
+    userId?: string;
+    productTypeId?: string;
+    stage?: ProductionStage;
+    startDate?: string;
+    endDate?: string;
+    unassigned?: boolean;
+  }): Promise<WorkLog[]> => {
+    const response = await api.get<WorkLog[]>('/payroll/work-logs', { params });
+    return response.data;
+  },
+
+  // Сводка
+  getPayrollSummary: async (periodStart: string, periodEnd: string): Promise<PayrollSummary> => {
+    const response = await api.get<PayrollSummary>('/payroll/summary', {
+      params: { periodStart, periodEnd },
+    });
+    return response.data;
   },
 };
 

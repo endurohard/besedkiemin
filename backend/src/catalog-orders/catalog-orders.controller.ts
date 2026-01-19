@@ -33,9 +33,9 @@ export class CatalogOrdersController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Получить все заказы (только OWNER/MANAGER)' })
+  @ApiOperation({ summary: 'Получить все заказы (SUPER_ADMIN/OWNER/MANAGER)' })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -53,34 +53,34 @@ export class CatalogOrdersController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Получить заказ по ID (только OWNER/MANAGER)' })
+  @ApiOperation({ summary: 'Получить заказ по ID (SUPER_ADMIN/OWNER/MANAGER)' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.findOne(id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Обновить заказ (только OWNER/MANAGER)' })
+  @ApiOperation({ summary: 'Обновить заказ (SUPER_ADMIN/OWNER/MANAGER)' })
   update(@Param('id', ParseUUIDPipe) id: string, @Body() updateDto: UpdateCatalogOrderDto) {
     return this.ordersService.update(id, updateDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER')
+  @Roles('SUPER_ADMIN', 'OWNER')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Удалить заказ (только OWNER)' })
+  @ApiOperation({ summary: 'Удалить заказ (SUPER_ADMIN/OWNER)' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.remove(id);
   }
 
   @Post(':id/mark-contacted')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Связались с клиентом"' })
   markContacted(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
@@ -89,7 +89,7 @@ export class CatalogOrdersController {
 
   @Post(':id/mark-processed')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Оформили заказ" и создать производственный заказ' })
   markProcessed(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
@@ -98,7 +98,7 @@ export class CatalogOrdersController {
 
   @Post(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отменить заказ с указанием причины' })
   cancelOrder(

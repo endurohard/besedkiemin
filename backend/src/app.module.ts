@@ -27,6 +27,8 @@ import { ChatModule } from './chat/chat.module';
 import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { NomenclatureModule } from './nomenclature/nomenclature.module';
 import { RolesModule } from './roles/roles.module';
+import { OrderSourcesModule } from './order-sources/order-sources.module';
+import { PayrollModule } from './payroll/payroll.module';
 
 @Module({
   imports: [
@@ -58,6 +60,8 @@ import { RolesModule } from './roles/roles.module';
     FeatureFlagsModule,
     NomenclatureModule,
     RolesModule,
+    OrderSourcesModule,
+    PayrollModule,
   ],
   controllers: [AppController],
   providers: [AppService],

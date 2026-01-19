@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from './ui/Button';
 import { LogOut, Menu, X } from 'lucide-react';
@@ -7,10 +7,35 @@ import { PhoneWidget } from './PhoneWidget';
 import { Sidebar } from './Sidebar';
 import { TelegramLinkWidget } from './TelegramLinkWidget';
 
+// Роли рабочих которые должны всегда попадать на страницу задач
+const WORKER_ROLES = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'DESIGNER'];
+
+// Разрешённые страницы для каждой роли (кроме стандартных /app и /app/defects)
+const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
+  WAREHOUSE: ['/app/inventory', '/app/shipments'],
+};
+
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Редирект рабочих на страницу задач при загрузке
+  useEffect(() => {
+    const roleCode = user?.role?.code;
+    if (roleCode && WORKER_ROLES.includes(roleCode)) {
+      // Базовые разрешенные страницы для рабочих
+      const basePaths = ['/app', '/app/defects'];
+      // Дополнительные страницы для конкретной роли
+      const rolePaths = ROLE_ALLOWED_PATHS[roleCode] || [];
+      const allowedPaths = [...basePaths, ...rolePaths];
+
+      if (!allowedPaths.includes(location.pathname)) {
+        navigate('/app', { replace: true });
+      }
+    }
+  }, [user?.role?.code, location.pathname, navigate]);
 
   const handleLogout = () => {
     logout();

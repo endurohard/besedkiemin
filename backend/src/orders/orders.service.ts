@@ -12,18 +12,25 @@ export class OrdersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createOrderDto: CreateOrderDto, userId: string) {
-    // Генерация номера заказа
-    const lastOrder = await this.prisma.order.findFirst({
-      orderBy: { createdAt: 'desc' },
-    });
+    let orderNumber = createOrderDto.orderNumber?.trim();
 
-    const orderNumber = lastOrder
-      ? `ORD-${String(parseInt(lastOrder.orderNumber.split('-')[1]) + 1).padStart(3, '0')}`
-      : 'ORD-001';
+    // Если номер заказа не передан - генерируем автоматически
+    if (!orderNumber) {
+      const lastOrder = await this.prisma.order.findFirst({
+        orderBy: { createdAt: 'desc' },
+      });
+
+      orderNumber = lastOrder
+        ? `ORD-${String(parseInt(lastOrder.orderNumber.split('-')[1]) + 1).padStart(3, '0')}`
+        : 'ORD-001';
+    }
+
+    // Извлекаем orderNumber из DTO чтобы не дублировать
+    const { orderNumber: _, ...restDto } = createOrderDto;
 
     return this.prisma.order.create({
       data: {
-        ...createOrderDto,
+        ...restDto,
         orderNumber,
         status: OrderStatus.NEW,
         createdById: userId,
@@ -54,6 +61,7 @@ export class OrdersService {
             role: true,
           },
         },
+        source: true,
       },
     });
   }
@@ -97,6 +105,17 @@ export class OrdersService {
           status: true,
           priority: true,
           description: true,
+          totalAmount: true,
+          sourceId: true,
+          source: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+              color: true,
+              icon: true,
+            },
+          },
           createdAt: true,
           updatedAt: true,
           products: {
@@ -188,6 +207,7 @@ export class OrdersService {
             role: true,
           },
         },
+        source: true,
       },
     });
 
@@ -215,6 +235,7 @@ export class OrdersService {
             role: true,
           },
         },
+        source: true,
       },
     });
   }
@@ -283,6 +304,8 @@ export class OrdersService {
       { header: 'Телефон', key: 'customerPhone', width: 20 },
       { header: 'Адрес', key: 'customerAddress', width: 35 },
       { header: 'Статус', key: 'status', width: 20 },
+      { header: 'Источник', key: 'source', width: 15 },
+      { header: 'Сумма', key: 'totalAmount', width: 15 },
       { header: 'Описание', key: 'description', width: 35 },
       { header: 'Кол-во продуктов', key: 'productCount', width: 20 },
       { header: 'Дата создания', key: 'createdAt', width: 20 },
@@ -297,13 +320,15 @@ export class OrdersService {
     };
 
     // Данные
-    result.data.forEach((order) => {
+    result.data.forEach((order: any) => {
       worksheet.addRow({
         orderNumber: order.orderNumber,
         customerName: order.customerName,
         customerPhone: order.customerPhone,
         customerAddress: order.customerAddress || '-',
         status: this.translateStatus(order.status),
+        source: order.source?.name || '-',
+        totalAmount: order.totalAmount ? `${order.totalAmount.toLocaleString('ru-RU')} ₽` : '-',
         description: order.description || '-',
         productCount: order.products?.length || 0,
         createdAt: order.createdAt.toLocaleDateString('ru-RU'),

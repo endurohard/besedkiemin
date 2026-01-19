@@ -529,16 +529,19 @@ export const KanbanPage = () => {
                                   </span>
                                 )}
                               </div>
-                              <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-600">
-                                <div>
-                                  <span className="font-medium">Клиент:</span> {order.customerName}
-                                </div>
-                                {order.customerPhone && (
+                              {/* Информация о клиенте - только для MANAGER и LOGIST */}
+                              {(user?.role?.code === 'MANAGER' || user?.role?.code === 'LOGIST') && (
+                                <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-600">
                                   <div>
-                                    <span className="font-medium">Тел:</span> {order.customerPhone}
+                                    <span className="font-medium">Клиент:</span> {order.customerName}
                                   </div>
-                                )}
-                              </div>
+                                  {order.customerPhone && (
+                                    <div>
+                                      <span className="font-medium">Тел:</span> {order.customerPhone}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </CardHeader>

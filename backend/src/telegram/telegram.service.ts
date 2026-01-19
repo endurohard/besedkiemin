@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import TelegramBot from 'node-telegram-bot-api';
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskStatus } from '@prisma/client';
+import { ClaudeCodeService } from '../claude-code/claude-code.service';
 
 @Injectable()
 export class TelegramService implements OnModuleInit {
@@ -27,6 +28,7 @@ export class TelegramService implements OnModuleInit {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    private claudeCodeService: ClaudeCodeService,
   ) {
     this.botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN') || '';
     this.adminId = this.configService.get<string>('TELEGRAM_ADMIN_ID') || '';
@@ -236,6 +238,237 @@ export class TelegramService implements OnModuleInit {
       }
     });
 
+    // ========== CLAUDE CODE COMMANDS ==========
+
+    // /claude <prompt> - спросить Claude о коде (без изменений)
+    this.bot.onText(/\/claude (.+)/, async (msg, match) => {
+      const chatId = msg.chat.id;
+      const telegramId = msg.from?.id.toString();
+      const prompt = match?.[1];
+
+      if (!telegramId || !prompt) return;
+
+      // Проверяем права - только OWNER
+      const hasAccess = await this.checkClaudeAccess(telegramId);
+      if (!hasAccess) {
+        await this.bot.sendMessage(chatId, '❌ Доступ запрещён. Только владелец может использовать Claude Code.');
+        return;
+      }
+
+      await this.bot.sendMessage(chatId, '🤖 Обрабатываю запрос к Claude Code...');
+
+      const result = await this.claudeCodeService.askClaude(prompt);
+
+      if (result.success) {
+        // Разбиваем длинные сообщения
+        const chunks = this.splitMessage(result.output, 4000);
+        for (const chunk of chunks) {
+          await this.bot.sendMessage(chatId, chunk);
+        }
+      } else {
+        await this.bot.sendMessage(chatId, `❌ Ошибка: ${result.error}`);
+      }
+    });
+
+    // /change <prompt> - внести изменения в код с preview и подтверждением
+    this.bot.onText(/\/change (.+)/, async (msg, match) => {
+      const chatId = msg.chat.id;
+      const telegramId = msg.from?.id.toString();
+      const prompt = match?.[1];
+
+      if (!telegramId || !prompt) return;
+
+      const hasAccess = await this.checkClaudeAccess(telegramId);
+      if (!hasAccess) {
+        await this.bot.sendMessage(chatId, '❌ Доступ запрещён. Только владелец может использовать Claude Code.');
+        return;
+      }
+
+      await this.bot.sendMessage(chatId, '🔄 Анализирую изменения через Claude Code...\n\nЭто может занять несколько минут.');
+
+      const result = await this.claudeCodeService.previewChange(prompt, true);
+
+      if (result.success) {
+        if (!result.previewId || !result.filesChanged?.length) {
+          await this.bot.sendMessage(chatId, '✅ Claude проанализировал запрос, но изменений в коде не требуется.');
+          return;
+        }
+
+        let message = '📋 *Preview изменений*\n\n';
+        message += `📝 *Запрос:* ${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}\n\n`;
+
+        message += `📁 *Изменённые файлы (${result.filesChanged.length}):*\n`;
+        message += result.filesChanged.slice(0, 8).map(f => `• \`${f}\``).join('\n');
+        if (result.filesChanged.length > 8) {
+          message += `\n...и ещё ${result.filesChanged.length - 8} файлов`;
+        }
+
+        if (result.diff) {
+          message += '\n\n📄 *Diff:*\n```\n';
+          message += result.diff.substring(0, 1500);
+          if (result.diff.length > 1500) {
+            message += '\n... (обрезано)';
+          }
+          message += '\n```';
+        }
+
+        message += '\n\n⏳ *Preview истечёт через 30 минут*';
+
+        // Отправляем с inline кнопками
+        await this.bot.sendMessage(chatId, message, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '✅ Применить и создать PR', callback_data: `claude_apply:${result.previewId}` },
+              ],
+              [
+                { text: '❌ Отменить', callback_data: `claude_cancel:${result.previewId}` },
+              ],
+            ],
+          },
+        });
+      } else {
+        await this.bot.sendMessage(chatId, `❌ Ошибка: ${result.error}`);
+      }
+    });
+
+    // Обработчик callback для кнопок подтверждения Claude
+    this.bot.on('callback_query', async (query) => {
+      if (!query.data?.startsWith('claude_')) return;
+
+      const chatId = query.message?.chat.id;
+      const messageId = query.message?.message_id;
+      const telegramId = query.from?.id.toString();
+
+      if (!chatId || !messageId || !telegramId) return;
+
+      const hasAccess = await this.checkClaudeAccess(telegramId);
+      if (!hasAccess) {
+        await this.bot.answerCallbackQuery(query.id, { text: '❌ Нет доступа' });
+        return;
+      }
+
+      const [action, previewId] = query.data.split(':');
+
+      if (action === 'claude_apply') {
+        await this.bot.answerCallbackQuery(query.id, { text: '⏳ Применяю изменения...' });
+
+        // Обновляем сообщение
+        await this.bot.editMessageText('⏳ *Применяю изменения и создаю PR...*', {
+          chat_id: chatId,
+          message_id: messageId,
+          parse_mode: 'Markdown',
+        });
+
+        const result = await this.claudeCodeService.applyPreview(previewId);
+
+        if (result.success) {
+          let message = '✅ *Изменения применены!*\n\n';
+
+          if (result.filesChanged && result.filesChanged.length > 0) {
+            message += `📁 *Изменённые файлы:*\n`;
+            message += result.filesChanged.slice(0, 10).map(f => `• \`${f}\``).join('\n');
+            message += '\n\n';
+          }
+
+          if (result.branch) {
+            message += `🌿 Ветка: \`${result.branch}\`\n`;
+          }
+
+          if (result.prUrl) {
+            message += `\n🔗 [Открыть Pull Request](${result.prUrl})`;
+          }
+
+          await this.bot.editMessageText(message, {
+            chat_id: chatId,
+            message_id: messageId,
+            parse_mode: 'Markdown',
+          });
+        } else {
+          await this.bot.editMessageText(`❌ *Ошибка:* ${result.error}`, {
+            chat_id: chatId,
+            message_id: messageId,
+            parse_mode: 'Markdown',
+          });
+        }
+      } else if (action === 'claude_cancel') {
+        await this.bot.answerCallbackQuery(query.id, { text: '🗑 Отменяю...' });
+
+        await this.claudeCodeService.cancelPreview(previewId);
+
+        await this.bot.editMessageText('🗑 *Preview отменён*\n\nИзменения не были применены.', {
+          chat_id: chatId,
+          message_id: messageId,
+          parse_mode: 'Markdown',
+        });
+      }
+    });
+
+    // /apply <prompt> - применить изменения напрямую без PR
+    this.bot.onText(/\/apply (.+)/, async (msg, match) => {
+      const chatId = msg.chat.id;
+      const telegramId = msg.from?.id.toString();
+      const prompt = match?.[1];
+
+      if (!telegramId || !prompt) return;
+
+      const hasAccess = await this.checkClaudeAccess(telegramId);
+      if (!hasAccess) {
+        await this.bot.sendMessage(chatId, '❌ Доступ запрещён. Только владелец может использовать Claude Code.');
+        return;
+      }
+
+      await this.bot.sendMessage(chatId, '⚡ Применяю изменения напрямую...\n\n⚠️ Изменения будут в текущей ветке без PR!');
+
+      const result = await this.claudeCodeService.executeDirectChange(prompt);
+
+      if (result.success) {
+        let message = '✅ *Изменения применены!*\n\n';
+
+        if (result.filesChanged && result.filesChanged.length > 0) {
+          message += `📁 *Изменённые файлы:*\n`;
+          message += result.filesChanged.slice(0, 10).map(f => `• \`${f}\``).join('\n');
+          if (result.filesChanged.length > 10) {
+            message += `\n...и ещё ${result.filesChanged.length - 10} файлов`;
+          }
+        } else {
+          message += 'Нет изменений в файлах.';
+        }
+
+        await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+      } else {
+        await this.bot.sendMessage(chatId, `❌ Ошибка: ${result.error}`);
+      }
+    });
+
+    // /gitstatus - показать текущий статус git
+    this.bot.onText(/\/gitstatus/, async (msg) => {
+      const chatId = msg.chat.id;
+      const telegramId = msg.from?.id.toString();
+
+      if (!telegramId) return;
+
+      const hasAccess = await this.checkClaudeAccess(telegramId);
+      if (!hasAccess) {
+        await this.bot.sendMessage(chatId, '❌ Доступ запрещён.');
+        return;
+      }
+
+      const [branch, status] = await Promise.all([
+        this.claudeCodeService.getCurrentBranch(),
+        this.claudeCodeService.getGitStatus(),
+      ]);
+
+      await this.bot.sendMessage(
+        chatId,
+        `📊 *Git Status*\n\n🌿 Ветка: \`${branch}\`\n\n\`\`\`\n${status || 'Чисто'}\n\`\`\``,
+        { parse_mode: 'Markdown' }
+      );
+    });
+
+    // ========== END CLAUDE CODE COMMANDS ==========
+
     // Текстовые сообщения - проверка статуса заказа
     this.bot.on('text', async (msg) => {
       if (msg.text?.startsWith('/')) return;
@@ -311,15 +544,22 @@ export class TelegramService implements OnModuleInit {
           p => p.stage === 'COMPLETED' || p.stage === 'QUALITY_CHECK'
         ).length;
 
+        // Проверяем роль пользователя для показа данных клиента
+        const telegramId = msg.from?.id.toString();
+        const currentUser = telegramId ? await this.prisma.user.findFirst({ where: { telegramId }, include: { role: true } }) : null;
+        const canSeeCustomerInfo = currentUser?.role?.code === 'MANAGER' || currentUser?.role?.code === 'LOGIST';
+
         let message = `${statusEmoji} *Заказ №${order.orderNumber}*\n\n`;
         message += `📊 Статус: *${statusText}*\n`;
-        message += `👤 Клиент: ${order.customerName}\n`;
+        if (canSeeCustomerInfo) {
+          message += `👤 Клиент: ${order.customerName}\n`;
+        }
 
         if (order.status === 'IN_PRODUCTION') {
           message += `🔧 Прогресс: ${completedProducts}/${totalProducts} изделий готово\n`;
         }
 
-        if (order.customerAddress) {
+        if (canSeeCustomerInfo && order.customerAddress) {
           message += `📍 Адрес доставки: ${order.customerAddress}\n`;
         }
 
@@ -478,6 +718,63 @@ export class TelegramService implements OnModuleInit {
    */
   removeLoginCode(code: string): void {
     this.loginCodes.delete(code);
+  }
+
+  /**
+   * Проверяет, имеет ли пользователь доступ к командам Claude Code
+   * Только OWNER имеет доступ
+   */
+  private async checkClaudeAccess(telegramId: string): Promise<boolean> {
+    // Проверяем, является ли пользователь главным админом
+    if (telegramId === this.adminId) {
+      return true;
+    }
+
+    // Проверяем роль пользователя в базе
+    const user = await this.prisma.user.findFirst({
+      where: { telegramId },
+      include: { role: true },
+    });
+
+    return user?.role?.code === 'OWNER';
+  }
+
+  /**
+   * Разбивает длинное сообщение на части
+   */
+  private splitMessage(text: string, maxLength: number): string[] {
+    if (text.length <= maxLength) {
+      return [text];
+    }
+
+    const chunks: string[] = [];
+    let currentChunk = '';
+
+    const lines = text.split('\n');
+    for (const line of lines) {
+      if (currentChunk.length + line.length + 1 > maxLength) {
+        if (currentChunk) {
+          chunks.push(currentChunk);
+        }
+        // Если одна строка больше maxLength, разбиваем её
+        if (line.length > maxLength) {
+          for (let i = 0; i < line.length; i += maxLength) {
+            chunks.push(line.substring(i, i + maxLength));
+          }
+          currentChunk = '';
+        } else {
+          currentChunk = line;
+        }
+      } else {
+        currentChunk += (currentChunk ? '\n' : '') + line;
+      }
+    }
+
+    if (currentChunk) {
+      chunks.push(currentChunk);
+    }
+
+    return chunks;
   }
 
   /**

@@ -3,9 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { tasksApi } from '@/lib/api';
 import { TaskCard } from '@/components/TaskCard';
 import { TaskStatus, OrderPriority } from '@/types';
+import { useAuthStore } from '@/store/authStore';
 import { Loader2, Package, AlertTriangle, Flame } from 'lucide-react';
 
 export const TasksPage = () => {
+  const { user } = useAuthStore();
   const { data: tasks, isLoading, error } = useQuery({
     queryKey: ['tasks'],
     queryFn: tasksApi.getMyTasks,
@@ -154,7 +156,8 @@ export const TasksPage = () => {
                       </span>
                     )}
                   </div>
-                  {order && (
+                  {/* Информация о клиенте - только для MANAGER и LOGIST */}
+                  {order && (user?.role?.code === 'MANAGER' || user?.role?.code === 'LOGIST') && (
                     <div className="mt-1 text-xs text-gray-700">
                       <span className="font-medium">{order.customerName}</span>
                       {order.customerPhone && <span className="ml-2">{order.customerPhone}</span>}

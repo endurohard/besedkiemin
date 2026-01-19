@@ -357,7 +357,6 @@ export class CatalogOrdersService {
               `*Количество:* ${product.quantity} шт.\n` +
               `*Стадия:* ${firstStage.name}\n` +
               `*Заказ:* ${result.productionOrder.orderNumber}\n` +
-              `*Клиент:* ${result.productionOrder.customerName || 'Н/Д'}\n` +
               `*Источник:* Заказ с сайта\n\n` +
               `✅ Откройте раздел "Мои задачи" для выполнения`;
 

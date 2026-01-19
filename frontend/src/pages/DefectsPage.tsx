@@ -15,7 +15,7 @@ export const DefectsPage = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   // Проверяем, может ли пользователь принимать браки на доработку
-  const canAcceptDefects = user?.role?.code === 'PAINTER' || user?.role?.code === 'DESIGNER' || user?.role?.code === 'PREPARER' || user?.role?.code === 'MANAGER';
+  const canAcceptDefects = user?.role?.code === 'PAINTER' || user?.role?.code === 'DESIGNER' || user?.role?.code === 'PREPARER' || user?.role?.code === 'ASSEMBLER' || user?.role?.code === 'MANAGER';
 
   // Fetch all defects with photos using dedicated endpoint
   const { data: defects, isLoading } = useQuery({
@@ -142,6 +142,7 @@ export const DefectsPage = () => {
                       <div className="text-xs text-muted-foreground">Текущая стадия</div>
                       <div className="font-medium">
                         {defect.product?.stage === 'PAINTING' && 'Покраска'}
+                        {defect.product?.stage === 'SEWING' && 'Пошив'}
                         {defect.product?.stage === 'DESIGN' && 'Проектирование'}
                         {defect.product?.stage === 'PREPARATION' && 'Заготовка'}
                         {defect.product?.stage === 'PENDING' && 'Менеджер'}

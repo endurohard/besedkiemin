@@ -56,6 +56,7 @@ export const AnalyticsPage = () => {
       [ProductionStage.DESIGN]: 'Проектирование',
       [ProductionStage.PREPARATION]: 'Заготовка',
       [ProductionStage.PAINTING]: 'Покраска',
+      [ProductionStage.SEWING]: 'Пошив',
       [ProductionStage.ASSEMBLY]: 'Сборка',
       [ProductionStage.QUALITY_CHECK]: 'Проверка качества',
       [ProductionStage.COMPLETED]: 'Завершено',

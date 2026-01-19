@@ -34,10 +34,22 @@ export class TasksController {
     return this.tasksService.acceptDefectRework(productId, req.user.userId);
   }
 
+  @Get('department-workers')
+  @ApiOperation({ summary: 'Получить сотрудников своего отдела' })
+  async getDepartmentWorkers(@Req() req) {
+    return this.tasksService.getDepartmentWorkers(req.user.userId);
+  }
+
   @Post(':id/accept')
   @ApiOperation({ summary: 'Принять задачу в работу' })
-  async acceptTask(@Param('id') id: string, @Req() req) {
-    return this.tasksService.acceptTask(id, req.user.userId);
+  async acceptTask(
+    @Param('id') id: string,
+    @Body('selectedUserId') selectedUserId: string,
+    @Req() req,
+  ) {
+    // Если selectedUserId передан - используем его, иначе текущего пользователя
+    const workerId = selectedUserId || req.user.userId;
+    return this.tasksService.acceptTask(id, workerId, req.user.userId);
   }
 
   @Post(':id/complete')

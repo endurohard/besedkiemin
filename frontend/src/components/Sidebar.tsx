@@ -228,7 +228,7 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
         )}
 
         {hasPermission('orders:view') && featureFlags?.catalog_orders !== false && (
-          <NavLink to="/app/catalog-orders" icon={ShoppingBag} label="Заказы" />
+          <NavLink to="/app/catalog-orders" icon={ShoppingBag} label="С сайта" />
         )}
 
         {hasPermission('chat:view') && featureFlags?.chat !== false && (

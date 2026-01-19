@@ -1,8 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsEnum, IsNumber, IsUUID } from 'class-validator';
 import { OrderPriority } from '@prisma/client';
 
 export class CreateOrderDto {
+  @ApiProperty({ example: 'ORD-001', required: false, description: 'Номер заказа (если не указан - генерируется автоматически)' })
+  @IsString()
+  @IsOptional()
+  orderNumber?: string;
+
   @ApiProperty({ example: 'Иван Иванов' })
   @IsString()
   @IsNotEmpty()
@@ -37,4 +42,14 @@ export class CreateOrderDto {
   @IsEnum(OrderPriority)
   @IsOptional()
   priority?: OrderPriority;
+
+  @ApiProperty({ example: 'uuid-источника', required: false, description: 'ID источника заказа' })
+  @IsUUID()
+  @IsOptional()
+  sourceId?: string;
+
+  @ApiProperty({ example: 50000, required: false, description: 'Общая сумма заказа' })
+  @IsNumber()
+  @IsOptional()
+  totalAmount?: number;
 }

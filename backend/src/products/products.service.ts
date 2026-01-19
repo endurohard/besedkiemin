@@ -131,8 +131,7 @@ export class ProductsService {
               `*Тип:* ${product.productType?.name || 'Н/Д'}\n` +
               `*Количество:* ${product.quantity} шт.\n` +
               `*Стадия:* ${secondWorkflowStage.name}\n` +
-              `*Заказ:* ${order.orderNumber}\n` +
-              `*Клиент:* ${order.customerName || 'Н/Д'}\n\n` +
+              `*Заказ:* ${order.orderNumber}\n\n` +
               `✅ Откройте раздел "Мои задачи" для выполнения`;
 
             try {
@@ -391,8 +390,9 @@ export class ProductsService {
       [ProductionStage.PENDING]: [ProductionStage.DESIGN],
       [ProductionStage.DESIGN]: [ProductionStage.PREPARATION, ProductionStage.PENDING],
       [ProductionStage.PREPARATION]: [ProductionStage.PAINTING, ProductionStage.DESIGN],
-      [ProductionStage.PAINTING]: [ProductionStage.ASSEMBLY, ProductionStage.PREPARATION],
-      [ProductionStage.ASSEMBLY]: [ProductionStage.QUALITY_CHECK, ProductionStage.PAINTING],
+      [ProductionStage.PAINTING]: [ProductionStage.SEWING, ProductionStage.ASSEMBLY, ProductionStage.PREPARATION],
+      [ProductionStage.SEWING]: [ProductionStage.ASSEMBLY, ProductionStage.PAINTING],
+      [ProductionStage.ASSEMBLY]: [ProductionStage.QUALITY_CHECK, ProductionStage.SEWING, ProductionStage.PAINTING],
       [ProductionStage.QUALITY_CHECK]: [
         ProductionStage.COMPLETED,
         ProductionStage.REJECTED,

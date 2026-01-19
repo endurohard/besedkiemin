@@ -38,11 +38,22 @@ export class ChatController {
   }
 
   /**
+   * Создать или получить гостевую комнату (без заказа, публичный эндпоинт)
+   */
+  @Post('rooms/guest')
+  @ApiOperation({ summary: 'Создать или получить гостевую комнату чата' })
+  async getOrCreateGuestRoom(
+    @Body() body: { guestSessionId: string; customerName: string; customerPhone?: string },
+  ) {
+    return this.chatService.getOrCreateGuestRoom(body);
+  }
+
+  /**
    * Получить все активные комнаты (для менеджера)
    */
   @Get('rooms')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить все активные комнаты чата (OWNER/MANAGER)' })
   async getAllRooms() {
@@ -63,7 +74,7 @@ export class ChatController {
    */
   @Get('rooms/:roomId/unread')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить непрочитанные сообщения для комнаты (OWNER/MANAGER)' })
   async getUnreadMessages(@Param('roomId') roomId: string) {
@@ -75,7 +86,7 @@ export class ChatController {
    */
   @Get('unread/total')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить общее количество непрочитанных сообщений (OWNER/MANAGER)' })
   async getTotalUnreadCount() {
@@ -88,7 +99,7 @@ export class ChatController {
    */
   @Post('rooms/:roomId/mark-read')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить сообщения как прочитанные (OWNER/MANAGER)' })
   async markAsRead(
@@ -103,7 +114,7 @@ export class ChatController {
    */
   @Post('rooms/:roomId/close')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Закрыть комнату чата (OWNER/MANAGER)' })
   async closeRoom(@Param('roomId') roomId: string) {

@@ -97,10 +97,45 @@ export class ChatService {
   }
 
   /**
+   * Создать или получить гостевую комнату чата (без заказа)
+   */
+  async getOrCreateGuestRoom(data: {
+    guestSessionId: string;
+    customerName: string;
+    customerPhone?: string;
+  }) {
+    // Найти существующую комнату по сессии
+    let room = await this.prisma.chatRoom.findUnique({
+      where: { guestSessionId: data.guestSessionId },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          take: 50,
+        },
+      },
+    });
+
+    if (!room) {
+      room = await this.prisma.chatRoom.create({
+        data: {
+          guestSessionId: data.guestSessionId,
+          customerName: data.customerName,
+          customerPhone: data.customerPhone,
+        },
+        include: {
+          messages: true,
+        },
+      });
+    }
+
+    return room;
+  }
+
+  /**
    * Получить список всех активных комнат (для менеджера)
    */
   async getAllRooms() {
-    return this.prisma.chatRoom.findMany({
+    const rooms = await this.prisma.chatRoom.findMany({
       where: { isActive: true },
       orderBy: [
         { unreadCount: 'desc' }, // Сначала с непрочитанными
@@ -123,6 +158,18 @@ export class ChatService {
         },
       },
     });
+
+    // Для гостевых комнат (без заказа) создаём виртуальный объект catalogOrder
+    return rooms.map(room => ({
+      ...room,
+      catalogOrder: room.catalogOrder || {
+        id: room.guestSessionId || room.id,
+        orderNumber: room.guestSessionId ? `Гость #${room.guestSessionId.slice(-6)}` : 'Гостевой чат',
+        customerPhone: room.customerPhone || '',
+        customerEmail: room.customerEmail || '',
+        status: 'GUEST',
+      },
+    }));
   }
 
   /**

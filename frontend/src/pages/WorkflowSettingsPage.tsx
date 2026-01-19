@@ -50,6 +50,7 @@ function SortableStageItem({ stage, onEdit, onToggle, onDelete }: SortableStageI
     DESIGNER: 'Проектировщик',
     PREPARER: 'Заготовка',
     PAINTER: 'Маляр',
+    SEWER: 'Швея',
     ASSEMBLER: 'Сборщик',
     WAREHOUSE: 'Склад',
   };
@@ -171,6 +172,8 @@ function StageModal({ isOpen, onClose, onSave, stage, nextOrder }: StageModalPro
     { value: UserRole.DESIGNER, label: 'Проектировщик' },
     { value: UserRole.PREPARER, label: 'Заготовка' },
     { value: UserRole.PAINTER, label: 'Маляр' },
+    { value: UserRole.SEWER, label: 'Швея' },
+    { value: UserRole.ASSEMBLER, label: 'Сборщик' },
     { value: UserRole.WAREHOUSE, label: 'Склад' },
   ];
 

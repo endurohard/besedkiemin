@@ -6,14 +6,25 @@ import api from '@/lib/api';
 
 interface CustomerChatWidgetProps {
   catalogOrderId?: string;
-  customerName: string;
+  customerName?: string;
   customerPhone?: string;
 }
 
+// Получить или создать гостевой session ID
+const getGuestSessionId = (): string => {
+  const storageKey = 'chat_guest_session_id';
+  let sessionId = localStorage.getItem(storageKey);
+  if (!sessionId) {
+    sessionId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem(storageKey, sessionId);
+  }
+  return sessionId;
+};
+
 export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
   catalogOrderId,
-  customerName,
-  customerPhone,
+  customerName: initialCustomerName,
+  customerPhone: initialCustomerPhone,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -21,9 +32,12 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
   const [isLoadingRoom, setIsLoadingRoom] = useState(false);
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>({ online: false });
   const [showOfflineForm, setShowOfflineForm] = useState(false);
+  const [showNameForm, setShowNameForm] = useState(false);
+  const [guestName, setGuestName] = useState(initialCustomerName || '');
+  const [guestPhone, setGuestPhone] = useState(initialCustomerPhone || '');
   const [callbackForm, setCallbackForm] = useState({
-    name: customerName,
-    phone: customerPhone || '',
+    name: initialCustomerName || '',
+    phone: initialCustomerPhone || '',
     message: '',
     preferredTime: '',
   });
@@ -63,21 +77,40 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
   };
 
   const handleOpenChat = async () => {
-    if (!catalogOrderId) {
-      alert('Сначала оформите заказ, чтобы начать чат');
+    setIsOpen(true);
+
+    // Если нет заказа и нет имени - показать форму ввода имени
+    if (!catalogOrderId && !guestName) {
+      setShowNameForm(true);
       return;
     }
 
-    setIsOpen(true);
+    await startChat();
+  };
+
+  const startChat = async () => {
     setIsLoadingRoom(true);
+    setShowNameForm(false);
 
     try {
       // Проверить статус перед открытием
       await checkOnlineStatus();
 
-      // Создать или получить комнату
-      const response = await api.post(`/chat/rooms/order/${catalogOrderId}`);
-      const room = response.data;
+      let room;
+
+      if (catalogOrderId) {
+        // Создать или получить комнату для заказа
+        const response = await api.post(`/chat/rooms/order/${catalogOrderId}`);
+        room = response.data;
+      } else {
+        // Создать или получить гостевую комнату
+        const response = await api.post('/chat/rooms/guest', {
+          guestSessionId: getGuestSessionId(),
+          customerName: guestName || 'Гость',
+          customerPhone: guestPhone || undefined,
+        });
+        room = response.data;
+      }
 
       setRoomId(room.id);
       joinRoom(room.id, 'customer');
@@ -96,12 +129,15 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
     setIsOpen(false);
     setRoomId(null);
     setShowOfflineForm(false);
+    setShowNameForm(false);
   };
+
+  const currentCustomerName = guestName || initialCustomerName || 'Гость';
 
   const handleSendMessage = () => {
     if (!messageText.trim() || !roomId) return;
 
-    sendMessage(roomId, messageText, 'CUSTOMER', customerName);
+    sendMessage(roomId, messageText, 'CUSTOMER', currentCustomerName);
     setMessageText('');
 
     if (typingTimeoutRef.current) {
@@ -117,7 +153,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
     if (!roomId) return;
 
     // Отправить индикатор набора
-    startTyping(roomId, 'customer', customerName);
+    startTyping(roomId, 'customer', currentCustomerName);
 
     // Сбросить таймер
     if (typingTimeoutRef.current) {
@@ -257,8 +293,47 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
         </div>
       )}
 
-      {/* Форма заявки на звонок (оффлайн режим) */}
-      {showOfflineForm ? (
+      {/* Форма ввода имени гостя */}
+      {showNameForm ? (
+        <div className="flex-1 overflow-y-auto p-4">
+          <h4 className="font-semibold mb-3">Представьтесь, пожалуйста</h4>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (guestName.trim()) {
+                startChat();
+              }
+            }}
+            className="space-y-3"
+          >
+            <div>
+              <label className="block text-sm font-medium mb-1">Ваше имя *</label>
+              <Input
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                placeholder="Как вас зовут?"
+                required
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Телефон (необязательно)</label>
+              <Input
+                value={guestPhone}
+                onChange={(e) => setGuestPhone(e.target.value)}
+                placeholder="+7 (900) 123-45-67"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={!guestName.trim()}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              Начать чат
+            </Button>
+          </form>
+        </div>
+      ) : showOfflineForm ? (
         <div className="flex-1 overflow-y-auto p-4">
           <h4 className="font-semibold mb-3">Заявка на обратный звонок</h4>
           <form onSubmit={handleSubmitCallback} className="space-y-3">

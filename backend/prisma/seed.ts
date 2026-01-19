@@ -135,6 +135,25 @@ async function main() {
     },
   });
 
+  const sewerRole = await prisma.role.upsert({
+    where: { code: 'SEWER' },
+    update: {},
+    create: {
+      id: 'role-sewer',
+      name: 'Швея',
+      code: 'SEWER',
+      description: 'Швея - пошив и обивка изделий',
+      color: '#FB923C',
+      isSystem: true,
+      order: 6,
+      permissions: [
+        'tasks:view_own',
+        'kanban:view',
+        'defects:view', 'defects:manage',
+      ],
+    },
+  });
+
   const assemblerRole = await prisma.role.upsert({
     where: { code: 'ASSEMBLER' },
     update: {},
@@ -145,7 +164,7 @@ async function main() {
       description: 'Сборщик изделий',
       color: '#14B8A6',
       isSystem: true,
-      order: 6,
+      order: 7,
       permissions: [
         'tasks:view_own',
         'kanban:view',
@@ -164,7 +183,7 @@ async function main() {
       description: 'Работник склада, контроль качества и отгрузки',
       color: '#6366F1',
       isSystem: true,
-      order: 7,
+      order: 8,
       permissions: [
         'tasks:view_own',
         'kanban:view',
@@ -201,10 +220,11 @@ async function main() {
 
   const armchairType = await prisma.productType.upsert({
     where: { name: 'Кресло' },
-    update: {},
+    update: { requiresSewing: true },
     create: {
       name: 'Кресло',
       description: 'Кресла для отдыха и работы',
+      requiresSewing: true,
     },
   });
 
@@ -254,10 +274,10 @@ async function main() {
     where: { order: 4 },
     update: {},
     create: {
-      name: 'Сборка',
-      description: 'Сборка изделий',
+      name: 'Пошив',
+      description: 'Пошив и обивка изделий',
       order: 4,
-      legacyStage: ProductionStage.ASSEMBLY,
+      legacyStage: ProductionStage.SEWING,
       isActive: true,
     },
   });
@@ -266,9 +286,21 @@ async function main() {
     where: { order: 5 },
     update: {},
     create: {
+      name: 'Сборка',
+      description: 'Сборка изделий',
+      order: 5,
+      legacyStage: ProductionStage.ASSEMBLY,
+      isActive: true,
+    },
+  });
+
+  const stage6 = await prisma.workflowStage.upsert({
+    where: { order: 6 },
+    update: {},
+    create: {
       name: 'Склад',
       description: 'Проверка качества, упаковка и отгрузка',
-      order: 5,
+      order: 6,
       legacyStage: ProductionStage.QUALITY_CHECK,
       isActive: true,
     },
@@ -325,18 +357,33 @@ async function main() {
     },
   });
 
-  // Сборщик -> Сборка
+  // Швея -> Пошив
   await prisma.roleWorkflowStage.upsert({
     where: {
       roleId_workflowStageId: {
-        roleId: assemblerRole.id,
+        roleId: sewerRole.id,
         workflowStageId: stage4.id,
       },
     },
     update: {},
     create: {
-      roleId: assemblerRole.id,
+      roleId: sewerRole.id,
       workflowStageId: stage4.id,
+    },
+  });
+
+  // Сборщик -> Сборка
+  await prisma.roleWorkflowStage.upsert({
+    where: {
+      roleId_workflowStageId: {
+        roleId: assemblerRole.id,
+        workflowStageId: stage5.id,
+      },
+    },
+    update: {},
+    create: {
+      roleId: assemblerRole.id,
+      workflowStageId: stage5.id,
     },
   });
 
@@ -345,13 +392,13 @@ async function main() {
     where: {
       roleId_workflowStageId: {
         roleId: warehouseRole.id,
-        workflowStageId: stage5.id,
+        workflowStageId: stage6.id,
       },
     },
     update: {},
     create: {
       roleId: warehouseRole.id,
-      workflowStageId: stage5.id,
+      workflowStageId: stage6.id,
     },
   });
 
@@ -420,6 +467,18 @@ async function main() {
       firstName: 'Мария',
       lastName: 'Маляр',
       roleId: painterRole.id,
+    },
+  });
+
+  const sewer = await prisma.user.upsert({
+    where: { email: 'sewer@example.com' },
+    update: {},
+    create: {
+      email: 'sewer@example.com',
+      password: hashedPassword,
+      firstName: 'Елена',
+      lastName: 'Швея',
+      roleId: sewerRole.id,
     },
   });
 
@@ -874,6 +933,7 @@ async function main() {
   console.log('   Проектировщик: designer@example.com / password123');
   console.log('   Заготовщик: preparer@example.com / password123');
   console.log('   Маляр: painter@example.com / password123');
+  console.log('   Швея: sewer@example.com / password123');
   console.log('   Сборщик: assembler@example.com / password123');
   console.log('   Складист: warehouse@example.com / password123');
 }
