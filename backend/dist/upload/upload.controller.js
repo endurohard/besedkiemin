@@ -19,7 +19,6 @@ const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 const upload_service_1 = require("./upload.service");
 let UploadController = class UploadController {
     constructor(uploadService) {
@@ -40,7 +39,7 @@ let UploadController = class UploadController {
 exports.UploadController = UploadController;
 __decorate([
     (0, common_1.Post)('schema-image'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Загрузить фото схемы или фото брака' }),
     (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {})),

@@ -12,6 +12,7 @@ export declare class NomenclatureService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
     } & {
@@ -19,16 +20,18 @@ export declare class NomenclatureService {
         name: string;
         isActive: boolean;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         productTypeId: string;
         dimensions: string | null;
+        upholsteryMaterial: string | null;
         productionTimeHours: number | null;
-        color: string | null;
         sku: string | null;
         materials: string | null;
         weight: number | null;
         basePrice: number | null;
+        discontinuedAt: Date | null;
     }>;
     findAll(includeInactive?: boolean): Promise<({
         productType: {
@@ -38,6 +41,7 @@ export declare class NomenclatureService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
     } & {
@@ -45,16 +49,18 @@ export declare class NomenclatureService {
         name: string;
         isActive: boolean;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         productTypeId: string;
         dimensions: string | null;
+        upholsteryMaterial: string | null;
         productionTimeHours: number | null;
-        color: string | null;
         sku: string | null;
         materials: string | null;
         weight: number | null;
         basePrice: number | null;
+        discontinuedAt: Date | null;
     })[]>;
     findByProductType(productTypeId: string, includeInactive?: boolean): Promise<({
         productType: {
@@ -64,6 +70,7 @@ export declare class NomenclatureService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
     } & {
@@ -71,16 +78,18 @@ export declare class NomenclatureService {
         name: string;
         isActive: boolean;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         productTypeId: string;
         dimensions: string | null;
+        upholsteryMaterial: string | null;
         productionTimeHours: number | null;
-        color: string | null;
         sku: string | null;
         materials: string | null;
         weight: number | null;
         basePrice: number | null;
+        discontinuedAt: Date | null;
     })[]>;
     findOne(id: string): Promise<{
         productType: {
@@ -90,6 +99,7 @@ export declare class NomenclatureService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
     } & {
@@ -97,16 +107,18 @@ export declare class NomenclatureService {
         name: string;
         isActive: boolean;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         productTypeId: string;
         dimensions: string | null;
+        upholsteryMaterial: string | null;
         productionTimeHours: number | null;
-        color: string | null;
         sku: string | null;
         materials: string | null;
         weight: number | null;
         basePrice: number | null;
+        discontinuedAt: Date | null;
     }>;
     update(id: string, updateDto: UpdateNomenclatureDto): Promise<{
         productType: {
@@ -116,6 +128,7 @@ export declare class NomenclatureService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
     } & {
@@ -123,32 +136,36 @@ export declare class NomenclatureService {
         name: string;
         isActive: boolean;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         productTypeId: string;
         dimensions: string | null;
+        upholsteryMaterial: string | null;
         productionTimeHours: number | null;
-        color: string | null;
         sku: string | null;
         materials: string | null;
         weight: number | null;
         basePrice: number | null;
+        discontinuedAt: Date | null;
     }>;
     remove(id: string): Promise<{
         description: string | null;
         name: string;
         isActive: boolean;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         productTypeId: string;
         dimensions: string | null;
+        upholsteryMaterial: string | null;
         productionTimeHours: number | null;
-        color: string | null;
         sku: string | null;
         materials: string | null;
         weight: number | null;
         basePrice: number | null;
+        discontinuedAt: Date | null;
     }>;
     toggleActive(id: string): Promise<{
         productType: {
@@ -158,6 +175,7 @@ export declare class NomenclatureService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
     } & {
@@ -165,15 +183,17 @@ export declare class NomenclatureService {
         name: string;
         isActive: boolean;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         productTypeId: string;
         dimensions: string | null;
+        upholsteryMaterial: string | null;
         productionTimeHours: number | null;
-        color: string | null;
         sku: string | null;
         materials: string | null;
         weight: number | null;
         basePrice: number | null;
+        discontinuedAt: Date | null;
     }>;
 }

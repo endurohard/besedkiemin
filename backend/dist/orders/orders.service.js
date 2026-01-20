@@ -47,20 +47,25 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
 const ExcelJS = __importStar(require("exceljs"));
+const constants_1 = require("../common/constants");
 let OrdersService = class OrdersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
     async create(createOrderDto, userId) {
-        const lastOrder = await this.prisma.order.findFirst({
-            orderBy: { createdAt: 'desc' },
-        });
-        const orderNumber = lastOrder
-            ? `ORD-${String(parseInt(lastOrder.orderNumber.split('-')[1]) + 1).padStart(3, '0')}`
-            : 'ORD-001';
+        let orderNumber = createOrderDto.orderNumber?.trim();
+        if (!orderNumber) {
+            const lastOrder = await this.prisma.order.findFirst({
+                orderBy: { createdAt: 'desc' },
+            });
+            orderNumber = lastOrder
+                ? `ORD-${String(parseInt(lastOrder.orderNumber.split('-')[1]) + 1).padStart(3, '0')}`
+                : 'ORD-001';
+        }
+        const { orderNumber: _, ...restDto } = createOrderDto;
         return this.prisma.order.create({
             data: {
-                ...createOrderDto,
+                ...restDto,
                 orderNumber,
                 status: client_1.OrderStatus.NEW,
                 createdById: userId,
@@ -91,11 +96,14 @@ let OrdersService = class OrdersService {
                         role: true,
                     },
                 },
+                source: true,
             },
         });
     }
     async findAll(filters) {
         const where = {};
+        const page = Math.max(1, filters?.page || constants_1.PAGINATION.DEFAULT_PAGE);
+        const limit = Math.min(constants_1.PAGINATION.MAX_PAGE_SIZE, Math.max(1, filters?.limit || constants_1.PAGINATION.DEFAULT_PAGE_SIZE));
         if (filters?.status) {
             where.status = filters.status;
         }
@@ -108,49 +116,73 @@ let OrdersService = class OrdersService {
                 where.createdAt.lte = new Date(filters.endDate);
             }
         }
-        const orders = await this.prisma.order.findMany({
-            where,
-            select: {
-                id: true,
-                orderNumber: true,
-                customerName: true,
-                customerPhone: true,
-                customerAddress: true,
-                status: true,
-                priority: true,
-                description: true,
-                createdAt: true,
-                updatedAt: true,
-                products: {
-                    select: {
-                        id: true,
-                        name: true,
-                        stage: true,
-                        quantity: true,
-                        productType: {
-                            select: {
-                                id: true,
-                                name: true,
+        const [orders, total] = await Promise.all([
+            this.prisma.order.findMany({
+                where,
+                skip: (page - 1) * limit,
+                take: limit,
+                select: {
+                    id: true,
+                    orderNumber: true,
+                    customerName: true,
+                    customerPhone: true,
+                    customerAddress: true,
+                    status: true,
+                    priority: true,
+                    description: true,
+                    totalAmount: true,
+                    sourceId: true,
+                    source: {
+                        select: {
+                            id: true,
+                            name: true,
+                            code: true,
+                            color: true,
+                            icon: true,
+                        },
+                    },
+                    createdAt: true,
+                    updatedAt: true,
+                    products: {
+                        select: {
+                            id: true,
+                            name: true,
+                            stage: true,
+                            quantity: true,
+                            productType: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
                             },
                         },
                     },
-                },
-                createdBy: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
+                    createdBy: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                        },
+                    },
+                    _count: {
+                        select: {
+                            products: true,
+                        },
                     },
                 },
-                _count: {
-                    select: {
-                        products: true,
-                    },
-                },
+                orderBy: { createdAt: 'desc' },
+            }),
+            this.prisma.order.count({ where }),
+        ]);
+        return {
+            data: orders,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
             },
-            orderBy: { createdAt: 'desc' },
-        });
-        return orders;
+        };
     }
     async findOne(id) {
         const order = await this.prisma.order.findUnique({
@@ -198,6 +230,7 @@ let OrdersService = class OrdersService {
                         role: true,
                     },
                 },
+                source: true,
             },
         });
         if (!order) {
@@ -221,6 +254,7 @@ let OrdersService = class OrdersService {
                         role: true,
                     },
                 },
+                source: true,
             },
         });
     }
@@ -257,7 +291,7 @@ let OrdersService = class OrdersService {
         };
     }
     async exportToExcel(res, filters) {
-        const orders = await this.findAll(filters);
+        const result = await this.findAll({ ...filters, limit: constants_1.PAGINATION.EXPORT_MAX_SIZE });
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Заказы');
         worksheet.columns = [
@@ -266,6 +300,8 @@ let OrdersService = class OrdersService {
             { header: 'Телефон', key: 'customerPhone', width: 20 },
             { header: 'Адрес', key: 'customerAddress', width: 35 },
             { header: 'Статус', key: 'status', width: 20 },
+            { header: 'Источник', key: 'source', width: 15 },
+            { header: 'Сумма', key: 'totalAmount', width: 15 },
             { header: 'Описание', key: 'description', width: 35 },
             { header: 'Кол-во продуктов', key: 'productCount', width: 20 },
             { header: 'Дата создания', key: 'createdAt', width: 20 },
@@ -276,13 +312,15 @@ let OrdersService = class OrdersService {
             pattern: 'solid',
             fgColor: { argb: 'FFE0E0E0' },
         };
-        orders.forEach((order) => {
+        result.data.forEach((order) => {
             worksheet.addRow({
                 orderNumber: order.orderNumber,
                 customerName: order.customerName,
                 customerPhone: order.customerPhone,
                 customerAddress: order.customerAddress || '-',
                 status: this.translateStatus(order.status),
+                source: order.source?.name || '-',
+                totalAmount: order.totalAmount ? `${order.totalAmount.toLocaleString('ru-RU')} ₽` : '-',
                 description: order.description || '-',
                 productCount: order.products?.length || 0,
                 createdAt: order.createdAt.toLocaleDateString('ru-RU'),

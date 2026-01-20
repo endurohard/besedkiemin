@@ -12,12 +12,13 @@ const tasks_controller_1 = require("./tasks.controller");
 const tasks_service_1 = require("./tasks.service");
 const prisma_module_1 = require("../prisma/prisma.module");
 const telegram_module_1 = require("../telegram/telegram.module");
+const payroll_module_1 = require("../payroll/payroll.module");
 let TasksModule = class TasksModule {
 };
 exports.TasksModule = TasksModule;
 exports.TasksModule = TasksModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, telegram_module_1.TelegramModule],
+        imports: [prisma_module_1.PrismaModule, telegram_module_1.TelegramModule, (0, common_1.forwardRef)(() => payroll_module_1.PayrollModule)],
         controllers: [tasks_controller_1.TasksController],
         providers: [tasks_service_1.TasksService],
         exports: [tasks_service_1.TasksService],

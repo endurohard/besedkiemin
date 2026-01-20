@@ -38,6 +38,7 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var UploadService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadService = void 0;
 const common_1 = require("@nestjs/common");
@@ -45,12 +46,16 @@ const multer_1 = require("multer");
 const path_1 = require("path");
 const fs = __importStar(require("fs"));
 const util_1 = require("util");
+const constants_1 = require("../common/constants");
 const unlinkAsync = (0, util_1.promisify)(fs.unlink);
-let UploadService = class UploadService {
+let UploadService = UploadService_1 = class UploadService {
+    constructor() {
+        this.logger = new common_1.Logger(UploadService_1.name);
+    }
     getMulterOptions() {
         return {
             storage: (0, multer_1.diskStorage)({
-                destination: './uploads',
+                destination: constants_1.FILE_UPLOAD.UPLOAD_DIR,
                 filename: (req, file, callback) => {
                     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
                     const ext = (0, path_1.extname)(file.originalname);
@@ -58,13 +63,13 @@ let UploadService = class UploadService {
                 },
             }),
             fileFilter: (req, file, callback) => {
-                if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+                if (!file.originalname.match(constants_1.FILE_UPLOAD.ALLOWED_EXTENSIONS)) {
                     return callback(new Error('Разрешены только изображения!'), false);
                 }
                 callback(null, true);
             },
             limits: {
-                fileSize: 5 * 1024 * 1024,
+                fileSize: constants_1.FILE_UPLOAD.MAX_FILE_SIZE,
             },
         };
     }
@@ -73,7 +78,7 @@ let UploadService = class UploadService {
             await unlinkAsync(filePath);
         }
         catch (error) {
-            console.error(`Ошибка при удалении файла ${filePath}:`, error);
+            this.logger.error(`Ошибка при удалении файла ${filePath}:`, error);
         }
     }
     getFilePath(filename) {
@@ -84,7 +89,7 @@ let UploadService = class UploadService {
     }
 };
 exports.UploadService = UploadService;
-exports.UploadService = UploadService = __decorate([
+exports.UploadService = UploadService = UploadService_1 = __decorate([
     (0, common_1.Injectable)()
 ], UploadService);
 //# sourceMappingURL=upload.service.js.map

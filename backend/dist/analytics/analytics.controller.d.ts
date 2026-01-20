@@ -23,7 +23,10 @@ export declare class AnalyticsController {
         user: {
             id: string;
             name: string;
-            role: import(".prisma/client").$Enums.UserRole;
+            role: {
+                name: string;
+                code: string;
+            };
         };
         stats: {
             completedTasks: number;

@@ -19,7 +19,6 @@ const update_company_settings_dto_1 = require("./dto/update-company-settings.dto
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 let CompanySettingsController = class CompanySettingsController {
     constructor(companySettingsService) {
         this.companySettingsService = companySettingsService;
@@ -51,7 +50,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
+    (0, roles_decorator_1.Roles)('OWNER'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [update_company_settings_dto_1.UpdateCompanySettingsDto]),

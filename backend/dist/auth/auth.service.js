@@ -53,9 +53,9 @@ let AuthService = class AuthService {
         this.jwtService = jwtService;
     }
     async validateUser(email, password) {
-        const user = await this.usersService.findByEmail(email);
+        const user = await this.usersService.findByEmailWithRole(email);
         if (user && await bcrypt.compare(password, user.password)) {
-            const { password, ...result } = user;
+            const { password: _, ...result } = user;
             return result;
         }
         return null;
@@ -64,7 +64,7 @@ let AuthService = class AuthService {
         const payload = {
             email: user.email,
             sub: user.id,
-            role: user.role
+            role: user.role?.code,
         };
         return {
             access_token: this.jwtService.sign(payload),

@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 interface YeastarConfig {
     host: string;
     username: string;
@@ -9,8 +10,12 @@ interface YeastarCallResponse {
     status: string;
 }
 export declare class YeastarService {
+    private configService;
+    private readonly logger;
     private accessToken;
     private tokenExpiry;
+    private httpsAgent;
+    constructor(configService: ConfigService);
     getAccessToken(config: YeastarConfig): Promise<string>;
     makeCall(config: YeastarConfig, phoneNumber: string): Promise<YeastarCallResponse>;
     hangupCall(config: YeastarConfig, callid: string): Promise<void>;

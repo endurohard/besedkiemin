@@ -12,12 +12,13 @@ const telegram_service_1 = require("./telegram.service");
 const telegram_controller_1 = require("./telegram.controller");
 const config_1 = require("@nestjs/config");
 const prisma_module_1 = require("../prisma/prisma.module");
+const claude_code_module_1 = require("../claude-code/claude-code.module");
 let TelegramModule = class TelegramModule {
 };
 exports.TelegramModule = TelegramModule;
 exports.TelegramModule = TelegramModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule, prisma_module_1.PrismaModule],
+        imports: [config_1.ConfigModule, prisma_module_1.PrismaModule, claude_code_module_1.ClaudeCodeModule],
         controllers: [telegram_controller_1.TelegramController],
         providers: [telegram_service_1.TelegramService],
         exports: [telegram_service_1.TelegramService],

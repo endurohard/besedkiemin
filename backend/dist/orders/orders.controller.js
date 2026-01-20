@@ -30,8 +30,14 @@ let OrdersController = class OrdersController {
     create(createOrderDto, user) {
         return this.ordersService.create(createOrderDto, user.userId);
     }
-    findAll(status, startDate, endDate) {
-        return this.ordersService.findAll({ status, startDate, endDate });
+    findAll(status, startDate, endDate, page, limit) {
+        return this.ordersService.findAll({
+            status,
+            startDate,
+            endDate,
+            page: page ? parseInt(page, 10) : undefined,
+            limit: limit ? parseInt(limit, 10) : undefined,
+        });
     }
     getStatistics(startDate, endDate) {
         return this.ordersService.getStatistics({ startDate, endDate });
@@ -65,16 +71,20 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: client_1.OrderStatus }),
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'endDate', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'page', required: false, type: Number, description: 'Номер страницы (начиная с 1)' }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, type: Number, description: 'Количество записей на странице (макс. 100)' }),
     __param(0, (0, common_1.Query)('status')),
     __param(1, (0, common_1.Query)('startDate')),
     __param(2, (0, common_1.Query)('endDate')),
+    __param(3, (0, common_1.Query)('page')),
+    __param(4, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('statistics'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить статистику (только для менеджера)' }),
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'endDate', required: false }),
@@ -86,7 +96,7 @@ __decorate([
 ], OrdersController.prototype, "getStatistics", null);
 __decorate([
     (0, common_1.Get)('export'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Экспорт заказов в Excel (только для менеджера)' }),
     (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: client_1.OrderStatus }),
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: false }),
@@ -102,7 +112,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить заказ по ID' }),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
@@ -110,7 +120,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Обновить заказ' }),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_order_dto_1.UpdateOrderDto]),
@@ -119,7 +129,7 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Удалить заказ' }),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)

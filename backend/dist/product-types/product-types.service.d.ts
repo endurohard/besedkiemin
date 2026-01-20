@@ -11,6 +11,7 @@ export declare class ProductTypesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        requiresSewing: boolean;
         productionTimeHours: number | null;
     }>;
     findAll(includeInactive?: boolean): Promise<{
@@ -20,6 +21,7 @@ export declare class ProductTypesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        requiresSewing: boolean;
         productionTimeHours: number | null;
     }[]>;
     findOne(id: string): Promise<{
@@ -33,6 +35,7 @@ export declare class ProductTypesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        requiresSewing: boolean;
         productionTimeHours: number | null;
     }>;
     update(id: string, updateProductTypeDto: UpdateProductTypeDto): Promise<{
@@ -42,6 +45,7 @@ export declare class ProductTypesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        requiresSewing: boolean;
         productionTimeHours: number | null;
     }>;
     remove(id: string): Promise<{
@@ -51,6 +55,7 @@ export declare class ProductTypesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        requiresSewing: boolean;
         productionTimeHours: number | null;
     }>;
     toggleActive(id: string): Promise<{
@@ -60,6 +65,7 @@ export declare class ProductTypesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        requiresSewing: boolean;
         productionTimeHours: number | null;
     }>;
 }

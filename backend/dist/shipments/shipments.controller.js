@@ -59,7 +59,7 @@ let ShipmentsController = class ShipmentsController {
 exports.ShipmentsController = ShipmentsController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Создать отгрузку (списать товары со склада)' }),
     __param(0, (0, common_1.Body)('items')),
     __param(1, (0, common_1.Body)('customerName')),
@@ -75,7 +75,7 @@ __decorate([
 ], ShipmentsController.prototype, "createShipment", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить все отгрузки с пагинацией' }),
     (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: client_1.ShipmentStatus, description: 'Фильтр по статусу' }),
     __param(0, (0, common_1.Req)()),
@@ -86,7 +86,7 @@ __decorate([
 ], ShipmentsController.prototype, "getAllShipments", null);
 __decorate([
     (0, common_1.Get)('status/:status'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить отгрузки по статусу' }),
     __param(0, (0, common_1.Param)('status')),
     __param(1, (0, common_1.Req)()),
@@ -96,7 +96,7 @@ __decorate([
 ], ShipmentsController.prototype, "getShipmentsByStatus", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить детали отгрузки' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -105,7 +105,7 @@ __decorate([
 ], ShipmentsController.prototype, "getShipment", null);
 __decorate([
     (0, common_1.Patch)(':id/status'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Обновить статус отгрузки' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('status')),
@@ -116,7 +116,7 @@ __decorate([
 ], ShipmentsController.prototype, "updateShipmentStatus", null);
 __decorate([
     (0, common_1.Post)(':id/cancel'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Отменить отгрузку (вернуть товар на склад)' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
@@ -126,7 +126,7 @@ __decorate([
 ], ShipmentsController.prototype, "cancelShipment", null);
 __decorate([
     (0, common_1.Get)(':id/waybill'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить данные для путевого листа' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

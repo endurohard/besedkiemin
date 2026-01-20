@@ -6,6 +6,7 @@ export declare class CreateNomenclatureDto {
     dimensions?: string;
     materials?: string;
     color?: string;
+    upholsteryMaterial?: string;
     weight?: number;
     basePrice?: number;
     productionTimeHours?: number;

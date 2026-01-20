@@ -1,4 +1,5 @@
 export declare class UploadService {
+    private readonly logger;
     getMulterOptions(): {
         storage: import("multer").StorageEngine;
         fileFilter: (req: any, file: any, callback: any) => any;

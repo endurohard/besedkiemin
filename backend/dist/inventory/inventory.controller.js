@@ -18,7 +18,6 @@ const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 const inventory_service_1 = require("./inventory.service");
 let InventoryController = class InventoryController {
     constructor(inventoryService) {
@@ -53,7 +52,7 @@ let InventoryController = class InventoryController {
 exports.InventoryController = InventoryController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Добавить товар на склад вручную' }),
     __param(0, (0, common_1.Body)('name')),
     __param(1, (0, common_1.Body)('productTypeId')),
@@ -65,7 +64,7 @@ __decorate([
 ], InventoryController.prototype, "createInventoryItem", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить все складские остатки' }),
     (0, swagger_1.ApiQuery)({ name: 'productTypeId', required: false, type: String, description: 'Фильтр по типу продукта' }),
     __param(0, (0, common_1.Query)('productTypeId')),
@@ -75,7 +74,7 @@ __decorate([
 ], InventoryController.prototype, "getAllInventory", null);
 __decorate([
     (0, common_1.Get)('summary'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить сводку по остаткам (группировка по типам)' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -83,7 +82,7 @@ __decorate([
 ], InventoryController.prototype, "getInventorySummary", null);
 __decorate([
     (0, common_1.Get)('type/:productTypeId'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить остатки по типу продукта' }),
     __param(0, (0, common_1.Param)('productTypeId')),
     __metadata("design:type", Function),
@@ -92,7 +91,7 @@ __decorate([
 ], InventoryController.prototype, "getInventoryByType", null);
 __decorate([
     (0, common_1.Get)('order/:orderId'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить остатки по заказу' }),
     __param(0, (0, common_1.Param)('orderId')),
     __metadata("design:type", Function),
@@ -101,7 +100,7 @@ __decorate([
 ], InventoryController.prototype, "getInventoryByOrder", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить детали складского остатка' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

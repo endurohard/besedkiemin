@@ -18,6 +18,8 @@ export declare class ProductsController {
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            sourceId: string | null;
+            totalAmount: number | null;
             createdById: string;
         };
         productType: {
@@ -27,12 +29,14 @@ export declare class ProductsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
     } & {
         description: string | null;
         name: string;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         stage: import(".prisma/client").$Enums.ProductionStage;
@@ -42,6 +46,8 @@ export declare class ProductsController {
         dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
+        requiresSewing: boolean | null;
+        upholsteryMaterial: string | null;
     }>;
     findAll(orderId?: string, stage?: ProductionStage): Promise<({
         order: {
@@ -69,9 +75,21 @@ export declare class ProductsController {
         })[];
         history: ({
             user: {
+                role: {
+                    description: string | null;
+                    order: number;
+                    name: string;
+                    isActive: boolean;
+                    id: string;
+                    code: string;
+                    color: string | null;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
+                    createdAt: Date;
+                    updatedAt: Date;
+                };
                 firstName: string;
                 lastName: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 id: string;
             };
         } & {
@@ -85,13 +103,14 @@ export declare class ProductsController {
             notes: string | null;
             productId: string;
             workflowStageId: string | null;
-            startedAt: Date;
             userId: string;
+            startedAt: Date;
         })[];
     } & {
         description: string | null;
         name: string;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         stage: import(".prisma/client").$Enums.ProductionStage;
@@ -101,6 +120,8 @@ export declare class ProductsController {
         dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
+        requiresSewing: boolean | null;
+        upholsteryMaterial: string | null;
     })[]>;
     getByStage(stage: ProductionStage): Promise<({
         order: {
@@ -128,9 +149,21 @@ export declare class ProductsController {
         })[];
         history: ({
             user: {
+                role: {
+                    description: string | null;
+                    order: number;
+                    name: string;
+                    isActive: boolean;
+                    id: string;
+                    code: string;
+                    color: string | null;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
+                    createdAt: Date;
+                    updatedAt: Date;
+                };
                 firstName: string;
                 lastName: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 id: string;
             };
         } & {
@@ -144,13 +177,14 @@ export declare class ProductsController {
             notes: string | null;
             productId: string;
             workflowStageId: string | null;
-            startedAt: Date;
             userId: string;
+            startedAt: Date;
         })[];
     } & {
         description: string | null;
         name: string;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         stage: import(".prisma/client").$Enums.ProductionStage;
@@ -160,6 +194,8 @@ export declare class ProductsController {
         dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
+        requiresSewing: boolean | null;
+        upholsteryMaterial: string | null;
     })[]>;
     findOne(id: string): Promise<{
         order: {
@@ -174,6 +210,8 @@ export declare class ProductsController {
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            sourceId: string | null;
+            totalAmount: number | null;
             createdById: string;
         };
         qualityChecks: ({
@@ -195,9 +233,21 @@ export declare class ProductsController {
         })[];
         history: ({
             user: {
+                role: {
+                    description: string | null;
+                    order: number;
+                    name: string;
+                    isActive: boolean;
+                    id: string;
+                    code: string;
+                    color: string | null;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
+                    createdAt: Date;
+                    updatedAt: Date;
+                };
                 firstName: string;
                 lastName: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 id: string;
             };
         } & {
@@ -211,13 +261,14 @@ export declare class ProductsController {
             notes: string | null;
             productId: string;
             workflowStageId: string | null;
-            startedAt: Date;
             userId: string;
+            startedAt: Date;
         })[];
     } & {
         description: string | null;
         name: string;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         stage: import(".prisma/client").$Enums.ProductionStage;
@@ -227,12 +278,26 @@ export declare class ProductsController {
         dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
+        requiresSewing: boolean | null;
+        upholsteryMaterial: string | null;
     }>;
     getHistory(id: string): Promise<({
         user: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
     } & {
@@ -246,8 +311,8 @@ export declare class ProductsController {
         notes: string | null;
         productId: string;
         workflowStageId: string | null;
-        startedAt: Date;
         userId: string;
+        startedAt: Date;
     })[]>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<{
         order: {
@@ -262,13 +327,27 @@ export declare class ProductsController {
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            sourceId: string | null;
+            totalAmount: number | null;
             createdById: string;
         };
         history: ({
             user: {
+                role: {
+                    description: string | null;
+                    order: number;
+                    name: string;
+                    isActive: boolean;
+                    id: string;
+                    code: string;
+                    color: string | null;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
+                    createdAt: Date;
+                    updatedAt: Date;
+                };
                 firstName: string;
                 lastName: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 id: string;
             };
         } & {
@@ -282,13 +361,14 @@ export declare class ProductsController {
             notes: string | null;
             productId: string;
             workflowStageId: string | null;
-            startedAt: Date;
             userId: string;
+            startedAt: Date;
         })[];
     } & {
         description: string | null;
         name: string;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         stage: import(".prisma/client").$Enums.ProductionStage;
@@ -298,6 +378,8 @@ export declare class ProductsController {
         dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
+        requiresSewing: boolean | null;
+        upholsteryMaterial: string | null;
     }>;
     moveToStage(id: string, body: {
         stage: ProductionStage;
@@ -315,13 +397,27 @@ export declare class ProductsController {
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            sourceId: string | null;
+            totalAmount: number | null;
             createdById: string;
         };
         history: ({
             user: {
+                role: {
+                    description: string | null;
+                    order: number;
+                    name: string;
+                    isActive: boolean;
+                    id: string;
+                    code: string;
+                    color: string | null;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
+                    createdAt: Date;
+                    updatedAt: Date;
+                };
                 firstName: string;
                 lastName: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 id: string;
             };
         } & {
@@ -335,13 +431,14 @@ export declare class ProductsController {
             notes: string | null;
             productId: string;
             workflowStageId: string | null;
-            startedAt: Date;
             userId: string;
+            startedAt: Date;
         })[];
     } & {
         description: string | null;
         name: string;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         stage: import(".prisma/client").$Enums.ProductionStage;
@@ -351,11 +448,14 @@ export declare class ProductsController {
         dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
+        requiresSewing: boolean | null;
+        upholsteryMaterial: string | null;
     }>;
     remove(id: string): Promise<{
         description: string | null;
         name: string;
         id: string;
+        color: string | null;
         createdAt: Date;
         updatedAt: Date;
         stage: import(".prisma/client").$Enums.ProductionStage;
@@ -365,5 +465,7 @@ export declare class ProductsController {
         dimensions: string | null;
         schemaImageUrl: string | null;
         deadline: Date | null;
+        requiresSewing: boolean | null;
+        upholsteryMaterial: string | null;
     }>;
 }

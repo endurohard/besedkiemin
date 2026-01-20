@@ -1,9 +1,12 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
+import { PayrollService } from '../payroll/payroll.service';
 export declare class TasksService {
     private prisma;
     private telegramService;
-    constructor(prisma: PrismaService, telegramService: TelegramService);
+    private payrollService;
+    private readonly logger;
+    constructor(prisma: PrismaService, telegramService: TelegramService, payrollService: PayrollService);
     getMyTasks(userId: string): Promise<({
         product: {
             order: {
@@ -19,12 +22,14 @@ export declare class TasksService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -34,11 +39,16 @@ export declare class TasksService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
         assignedTo: {
+            role: {
+                name: string;
+                code: string;
+            };
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
     } & {
@@ -62,7 +72,17 @@ export declare class TasksService {
         assignedToId: string;
         workflowStageId: string | null;
     })[]>;
-    acceptTask(taskId: string, userId: string): Promise<{
+    getDepartmentWorkers(userId: string): Promise<{
+        role: {
+            name: string;
+            id: string;
+            code: string;
+        };
+        firstName: string;
+        lastName: string;
+        id: string;
+    }[]>;
+    acceptTask(taskId: string, workerId: string, requesterId?: string): Promise<{
         product: {
             order: {
                 status: import(".prisma/client").$Enums.OrderStatus;
@@ -76,6 +96,8 @@ export declare class TasksService {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
             productType: {
@@ -85,12 +107,14 @@ export declare class TasksService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -100,6 +124,8 @@ export declare class TasksService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.TaskStatus;
@@ -136,6 +162,8 @@ export declare class TasksService {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
             productType: {
@@ -145,12 +173,14 @@ export declare class TasksService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -160,6 +190,8 @@ export declare class TasksService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.TaskStatus;
@@ -261,6 +293,8 @@ export declare class TasksService {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
             productType: {
@@ -270,11 +304,13 @@ export declare class TasksService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -284,6 +320,8 @@ export declare class TasksService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
         defectPhotos: string[];
         checkedBy: {
@@ -291,7 +329,7 @@ export declare class TasksService {
             password: string;
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
+            roleId: string;
             sipServer: string | null;
             sipUser: string | null;
             sipPassword: string | null;
@@ -327,6 +365,8 @@ export declare class TasksService {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
             productType: {
@@ -336,12 +376,14 @@ export declare class TasksService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -351,6 +393,8 @@ export declare class TasksService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.TaskStatus;

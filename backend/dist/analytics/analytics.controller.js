@@ -19,7 +19,6 @@ const analytics_service_1 = require("./analytics.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 let AnalyticsController = class AnalyticsController {
     constructor(analyticsService) {
         this.analyticsService = analyticsService;
@@ -102,7 +101,7 @@ exports.AnalyticsController = AnalyticsController = __decorate([
     (0, swagger_1.ApiTags)('Analytics'),
     (0, common_1.Controller)('analytics'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
+    (0, roles_decorator_1.Roles)('OWNER'),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [analytics_service_1.AnalyticsService])
 ], AnalyticsController);

@@ -20,7 +20,6 @@ const update_product_type_dto_1 = require("./dto/update-product-type.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 const swagger_1 = require("@nestjs/swagger");
 let ProductTypesController = class ProductTypesController {
     constructor(productTypesService) {
@@ -48,7 +47,7 @@ let ProductTypesController = class ProductTypesController {
 exports.ProductTypesController = ProductTypesController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Создать новый тип продукта (только менеджер)' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -74,7 +73,7 @@ __decorate([
 ], ProductTypesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Обновить тип продукта (только менеджер)' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -84,7 +83,7 @@ __decorate([
 ], ProductTypesController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)(':id/toggle-active'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Переключить активность типа продукта (только менеджер)' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -93,7 +92,7 @@ __decorate([
 ], ProductTypesController.prototype, "toggleActive", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Удалить тип продукта (только менеджер)' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

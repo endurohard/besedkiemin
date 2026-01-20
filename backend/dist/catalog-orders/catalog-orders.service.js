@@ -8,15 +8,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var CatalogOrdersService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CatalogOrdersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const telegram_service_1 = require("../telegram/telegram.service");
-let CatalogOrdersService = class CatalogOrdersService {
+const constants_1 = require("../common/constants");
+let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
     constructor(prisma, telegramService) {
         this.prisma = prisma;
         this.telegramService = telegramService;
+        this.logger = new common_1.Logger(CatalogOrdersService_1.name);
     }
     async create(createDto) {
         const productIds = createDto.items.map((item) => item.productId);
@@ -92,23 +95,39 @@ let CatalogOrdersService = class CatalogOrdersService {
             await this.telegramService.notifyAdmins(message);
         }
         catch (error) {
-            console.error('Ошибка отправки уведомления в Telegram:', error);
+            this.logger.error('Ошибка отправки уведомления в Telegram:', error);
         }
         return order;
     }
-    async findAll(status) {
-        const where = status ? { status: status } : {};
-        return this.prisma.catalogOrder.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            include: {
-                items: {
-                    include: {
-                        product: true,
+    async findAll(filters) {
+        const where = filters?.status ? { status: filters.status } : {};
+        const page = Math.max(1, filters?.page || constants_1.PAGINATION.DEFAULT_PAGE);
+        const limit = Math.min(constants_1.PAGINATION.MAX_PAGE_SIZE, Math.max(1, filters?.limit || constants_1.PAGINATION.DEFAULT_PAGE_SIZE));
+        const [orders, total] = await Promise.all([
+            this.prisma.catalogOrder.findMany({
+                where,
+                skip: (page - 1) * limit,
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    items: {
+                        include: {
+                            product: true,
+                        },
                     },
                 },
+            }),
+            this.prisma.catalogOrder.count({ where }),
+        ]);
+        return {
+            data: orders,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
             },
-        });
+        };
     }
     async findOne(id) {
         const order = await this.prisma.catalogOrder.findUnique({
@@ -195,6 +214,7 @@ let CatalogOrdersService = class CatalogOrdersService {
             this.prisma.workflowStage.findFirst({
                 where: { isActive: true },
                 orderBy: { order: 'asc' },
+                include: { roles: { include: { role: true } } },
             }),
         ]);
         if (!defaultProductType) {
@@ -203,15 +223,16 @@ let CatalogOrdersService = class CatalogOrdersService {
         if (!firstStage) {
             throw new common_1.BadRequestException('Не найдено активных стадий производства');
         }
+        const firstStageRoleIds = firstStage.roles.map(r => r.roleId);
         const workers = await this.prisma.user.findMany({
             where: {
-                role: firstStage.role,
+                roleId: { in: firstStageRoleIds },
                 isActive: true,
             },
             select: {
                 id: true,
                 email: true,
-                role: true,
+                role: { select: { code: true, name: true } },
                 telegramId: true,
             },
         });
@@ -278,15 +299,14 @@ let CatalogOrdersService = class CatalogOrdersService {
                 `*Количество:* ${product.quantity} шт.\n` +
                 `*Стадия:* ${firstStage.name}\n` +
                 `*Заказ:* ${result.productionOrder.orderNumber}\n` +
-                `*Клиент:* ${result.productionOrder.customerName || 'Н/Д'}\n` +
                 `*Источник:* Заказ с сайта\n\n` +
                 `✅ Откройте раздел "Мои задачи" для выполнения`;
             try {
                 await this.telegramService.sendMessage(worker.telegramId, message);
-                console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role})`);
+                this.logger.log(`Уведомление отправлено работнику ${worker.email}`);
             }
             catch (error) {
-                console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
+                this.logger.error(`Ошибка отправки уведомления работнику ${worker.email}:`, error);
             }
         })));
         return result.updatedOrder;
@@ -312,7 +332,7 @@ let CatalogOrdersService = class CatalogOrdersService {
     }
 };
 exports.CatalogOrdersService = CatalogOrdersService;
-exports.CatalogOrdersService = CatalogOrdersService = __decorate([
+exports.CatalogOrdersService = CatalogOrdersService = CatalogOrdersService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         telegram_service_1.TelegramService])

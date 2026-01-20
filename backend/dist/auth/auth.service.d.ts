@@ -1,25 +1,56 @@
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { User, Role } from '@prisma/client';
+type UserWithRole = User & {
+    role: Role | null;
+};
+type UserWithoutPassword = Omit<UserWithRole, 'password'>;
+interface LoginUser {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role?: Role | null;
+    telegramId?: string | null;
+    sipServer?: string | null;
+    sipUser?: string | null;
+    sipPassword?: string | null;
+    sipPort?: number | null;
+    sipWsPort?: number | null;
+}
 export declare class AuthService {
     private usersService;
     private jwtService;
     constructor(usersService: UsersService, jwtService: JwtService);
-    validateUser(email: string, password: string): Promise<any>;
-    login(user: any): Promise<{
+    validateUser(email: string, password: string): Promise<UserWithoutPassword | null>;
+    login(user: LoginUser): Promise<{
         access_token: string;
         user: {
-            id: any;
-            email: any;
-            firstName: any;
-            lastName: any;
-            role: any;
-            telegramId: any;
-            sipServer: any;
-            sipUser: any;
-            sipPassword: any;
-            sipPort: any;
-            sipWsPort: any;
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
+            telegramId: string;
+            sipServer: string;
+            sipUser: string;
+            sipPassword: string;
+            sipPort: number;
+            sipWsPort: number;
         };
     }>;
-    findUserById(userId: string): Promise<any>;
+    findUserById(userId: string): Promise<import("../users/entities/user.entity").UserEntity>;
 }
+export {};

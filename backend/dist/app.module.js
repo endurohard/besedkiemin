@@ -35,6 +35,9 @@ const public_module_1 = require("./public/public.module");
 const chat_module_1 = require("./chat/chat.module");
 const feature_flags_module_1 = require("./feature-flags/feature-flags.module");
 const nomenclature_module_1 = require("./nomenclature/nomenclature.module");
+const roles_module_1 = require("./roles/roles.module");
+const order_sources_module_1 = require("./order-sources/order-sources.module");
+const payroll_module_1 = require("./payroll/payroll.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -68,6 +71,9 @@ exports.AppModule = AppModule = __decorate([
             chat_module_1.ChatModule,
             feature_flags_module_1.FeatureFlagsModule,
             nomenclature_module_1.NomenclatureModule,
+            roles_module_1.RolesModule,
+            order_sources_module_1.OrderSourcesModule,
+            payroll_module_1.PayrollModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

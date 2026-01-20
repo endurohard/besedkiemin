@@ -23,12 +23,15 @@ export declare class QualityChecksService {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -38,11 +41,25 @@ export declare class QualityChecksService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
         checkedBy: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
     } & {
@@ -68,6 +85,7 @@ export declare class QualityChecksService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
             name: string;
@@ -75,9 +93,21 @@ export declare class QualityChecksService {
             orderId: string;
         };
         checkedBy: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
     } & {
@@ -105,12 +135,15 @@ export declare class QualityChecksService {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -120,11 +153,25 @@ export declare class QualityChecksService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
         checkedBy: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
     } & {
@@ -143,6 +190,7 @@ export declare class QualityChecksService {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -152,11 +200,25 @@ export declare class QualityChecksService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
         checkedBy: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
     } & {
@@ -190,6 +252,7 @@ export declare class QualityChecksService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
             name: string;
@@ -197,9 +260,21 @@ export declare class QualityChecksService {
             orderId: string;
         };
         checkedBy: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
     } & {
@@ -222,6 +297,7 @@ export declare class QualityChecksService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
             name: string;
@@ -229,9 +305,21 @@ export declare class QualityChecksService {
             orderId: string;
         };
         checkedBy: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
     } & {

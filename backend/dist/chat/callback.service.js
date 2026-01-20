@@ -8,15 +8,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var CallbackService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CallbackService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const telegram_service_1 = require("../telegram/telegram.service");
-let CallbackService = class CallbackService {
+let CallbackService = CallbackService_1 = class CallbackService {
     constructor(prisma, telegramService) {
         this.prisma = prisma;
         this.telegramService = telegramService;
+        this.logger = new common_1.Logger(CallbackService_1.name);
     }
     async create(data) {
         const request = await this.prisma.callbackRequest.create({
@@ -52,7 +54,7 @@ let CallbackService = class CallbackService {
             await this.telegramService.notifyAdmins(telegramMessage);
         }
         catch (error) {
-            console.error('Ошибка отправки уведомления в Telegram:', error);
+            this.logger.error('Ошибка отправки уведомления в Telegram:', error);
         }
         return request;
     }
@@ -101,7 +103,7 @@ let CallbackService = class CallbackService {
     }
 };
 exports.CallbackService = CallbackService;
-exports.CallbackService = CallbackService = __decorate([
+exports.CallbackService = CallbackService = CallbackService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         telegram_service_1.TelegramService])

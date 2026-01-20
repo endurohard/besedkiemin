@@ -47,12 +47,13 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const bcrypt = __importStar(require("bcrypt"));
 const user_entity_1 = require("./entities/user.entity");
+const constants_1 = require("../common/constants");
 let UsersService = class UsersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
     async create(createUserDto) {
-        const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+        const hashedPassword = await bcrypt.hash(createUserDto.password, constants_1.AUTH.BCRYPT_SALT_ROUNDS);
         const user = await this.prisma.user.create({
             data: {
                 ...createUserDto,
@@ -62,7 +63,14 @@ let UsersService = class UsersService {
         return new user_entity_1.UserEntity(user);
     }
     async findAll() {
-        const users = await this.prisma.user.findMany();
+        const users = await this.prisma.user.findMany({
+            where: {
+                role: {
+                    code: { not: constants_1.SYSTEM_ROLES.SUPER_ADMIN },
+                },
+            },
+            include: { role: true },
+        });
         return users.map((user) => new user_entity_1.UserEntity(user));
     }
     async findOne(id) {
@@ -79,6 +87,12 @@ let UsersService = class UsersService {
             where: { email },
         });
     }
+    async findByEmailWithRole(email) {
+        return this.prisma.user.findUnique({
+            where: { email },
+            include: { role: true },
+        });
+    }
     async update(id, updateUserDto) {
         await this.findOne(id);
         if (updateUserDto.email) {
@@ -91,7 +105,7 @@ let UsersService = class UsersService {
         }
         const updateData = { ...updateUserDto };
         if (updateUserDto.password) {
-            updateData.password = await bcrypt.hash(updateUserDto.password, 10);
+            updateData.password = await bcrypt.hash(updateUserDto.password, constants_1.AUTH.BCRYPT_SALT_ROUNDS);
         }
         const user = await this.prisma.user.update({
             where: { id },

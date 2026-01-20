@@ -21,7 +21,6 @@ const reorder_workflow_stages_dto_1 = require("./dto/reorder-workflow-stages.dto
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 let WorkflowController = class WorkflowController {
     constructor(workflowService) {
         this.workflowService = workflowService;
@@ -79,7 +78,7 @@ __decorate([
 ], WorkflowController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
+    (0, roles_decorator_1.Roles)('OWNER'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_workflow_stage_dto_1.CreateWorkflowStageDto]),
@@ -87,7 +86,7 @@ __decorate([
 ], WorkflowController.prototype, "create", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
+    (0, roles_decorator_1.Roles)('OWNER'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -96,7 +95,7 @@ __decorate([
 ], WorkflowController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
+    (0, roles_decorator_1.Roles)('OWNER'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -104,7 +103,7 @@ __decorate([
 ], WorkflowController.prototype, "remove", null);
 __decorate([
     (0, common_1.Post)('reorder'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
+    (0, roles_decorator_1.Roles)('OWNER'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [reorder_workflow_stages_dto_1.ReorderWorkflowStagesDto]),
@@ -112,7 +111,7 @@ __decorate([
 ], WorkflowController.prototype, "reorder", null);
 __decorate([
     (0, common_1.Post)('initialize'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
+    (0, roles_decorator_1.Roles)('OWNER'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)

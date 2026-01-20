@@ -36,14 +36,11 @@ export declare class ChatService {
         lastMessageText: string | null;
         unreadCount: number;
     }>;
-    getAllRooms(): Promise<({
-        catalogOrder: {
-            status: import(".prisma/client").$Enums.CatalogOrderStatus;
-            id: string;
-            orderNumber: string;
-            customerPhone: string;
-            customerEmail: string;
-        };
+    getOrCreateGuestRoom(data: {
+        guestSessionId: string;
+        customerName: string;
+        customerPhone?: string;
+    }): Promise<{
         messages: {
             id: string;
             createdAt: Date;
@@ -68,7 +65,45 @@ export declare class ChatService {
         lastMessageAt: Date | null;
         lastMessageText: string | null;
         unreadCount: number;
-    })[]>;
+    }>;
+    getAllRooms(): Promise<{
+        catalogOrder: {
+            status: import(".prisma/client").$Enums.CatalogOrderStatus;
+            id: string;
+            orderNumber: string;
+            customerPhone: string;
+            customerEmail: string;
+        } | {
+            id: string;
+            orderNumber: string;
+            customerPhone: string;
+            customerEmail: string;
+            status: "GUEST";
+        };
+        messages: {
+            id: string;
+            createdAt: Date;
+            content: string;
+            roomId: string;
+            senderType: string;
+            senderId: string | null;
+            senderName: string;
+            isRead: boolean;
+            readAt: Date | null;
+        }[];
+        isActive: boolean;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        customerName: string;
+        customerPhone: string | null;
+        customerEmail: string | null;
+        catalogOrderId: string | null;
+        guestSessionId: string | null;
+        lastMessageAt: Date | null;
+        lastMessageText: string | null;
+        unreadCount: number;
+    }[]>;
     getRoom(roomId: string): Promise<{
         catalogOrder: {
             status: import(".prisma/client").$Enums.CatalogOrderStatus;
@@ -78,11 +113,11 @@ export declare class ChatService {
             orderNumber: string;
             customerName: string;
             customerPhone: string;
+            totalAmount: number | null;
             deliveryAddress: string | null;
             comment: string | null;
             customerEmail: string | null;
             cancellationReason: string | null;
-            totalAmount: number | null;
             contactedAt: Date | null;
             contactedBy: string | null;
             processedAt: Date | null;

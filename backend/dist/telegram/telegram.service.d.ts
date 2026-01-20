@@ -1,13 +1,18 @@
 import { OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { ClaudeCodeService } from '../claude-code/claude-code.service';
 export declare class TelegramService implements OnModuleInit {
     private prisma;
+    private configService;
+    private claudeCodeService;
     private readonly logger;
     private bot;
     private readonly botToken;
+    private readonly adminId;
     private userStates;
     private loginCodes;
-    constructor(prisma: PrismaService);
+    constructor(prisma: PrismaService, configService: ConfigService, claudeCodeService: ClaudeCodeService);
     onModuleInit(): Promise<void>;
     private registerCommands;
     notifyNewTask(userId: string, taskTitle: string, orderNumber: string, quantity: number): Promise<void>;
@@ -29,5 +34,7 @@ export declare class TelegramService implements OnModuleInit {
         userId?: string;
     };
     removeLoginCode(code: string): void;
+    private checkClaudeAccess;
+    private splitMessage;
     notifyAdmins(message: string): Promise<void>;
 }

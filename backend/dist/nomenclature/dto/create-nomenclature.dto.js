@@ -49,6 +49,11 @@ __decorate([
 ], CreateNomenclatureDto.prototype, "color", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateNomenclatureDto.prototype, "upholsteryMaterial", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateNomenclatureDto.prototype, "weight", void 0);

@@ -2,24 +2,61 @@ import { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import { OrderStatus } from '@prisma/client';
 export declare class OrdersController {
     private readonly ordersService;
     constructor(ordersService: OrdersService);
-    create(createOrderDto: CreateOrderDto, user: any): Promise<{
+    create(createOrderDto: CreateOrderDto, user: AuthenticatedUser): Promise<{
+        source: {
+            description: string | null;
+            order: number;
+            name: string;
+            isActive: boolean;
+            id: string;
+            code: string;
+            color: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            icon: string | null;
+        };
         createdBy: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             email: string;
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
         products: ({
             history: ({
                 user: {
+                    role: {
+                        description: string | null;
+                        order: number;
+                        name: string;
+                        isActive: boolean;
+                        id: string;
+                        code: string;
+                        color: string | null;
+                        isSystem: boolean;
+                        permissions: import("@prisma/client/runtime/library").JsonValue;
+                        createdAt: Date;
+                        updatedAt: Date;
+                    };
                     firstName: string;
                     lastName: string;
-                    role: import(".prisma/client").$Enums.UserRole;
                     id: string;
                 };
             } & {
@@ -33,13 +70,14 @@ export declare class OrdersController {
                 notes: string | null;
                 productId: string;
                 workflowStageId: string | null;
-                startedAt: Date;
                 userId: string;
+                startedAt: Date;
             })[];
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -49,6 +87,8 @@ export declare class OrdersController {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         })[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -62,38 +102,57 @@ export declare class OrdersController {
         customerName: string;
         customerPhone: string | null;
         customerAddress: string | null;
+        sourceId: string | null;
+        totalAmount: number | null;
         createdById: string;
     }>;
-    findAll(status?: OrderStatus, startDate?: string, endDate?: string): Promise<{
-        status: import(".prisma/client").$Enums.OrderStatus;
-        description: string;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        _count: {
-            products: number;
-        };
-        priority: import(".prisma/client").$Enums.OrderPriority;
-        orderNumber: string;
-        customerName: string;
-        customerPhone: string;
-        customerAddress: string;
-        createdBy: {
-            firstName: string;
-            lastName: string;
+    findAll(status?: OrderStatus, startDate?: string, endDate?: string, page?: string, limit?: string): Promise<{
+        data: {
+            status: import(".prisma/client").$Enums.OrderStatus;
+            description: string;
             id: string;
-        };
-        products: {
-            productType: {
+            createdAt: Date;
+            updatedAt: Date;
+            _count: {
+                products: number;
+            };
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            orderNumber: string;
+            customerName: string;
+            customerPhone: string;
+            customerAddress: string;
+            sourceId: string;
+            totalAmount: number;
+            source: {
                 name: string;
                 id: string;
+                code: string;
+                color: string;
+                icon: string;
             };
-            name: string;
-            id: string;
-            stage: import(".prisma/client").$Enums.ProductionStage;
-            quantity: number;
+            createdBy: {
+                firstName: string;
+                lastName: string;
+                id: string;
+            };
+            products: {
+                productType: {
+                    name: string;
+                    id: string;
+                };
+                name: string;
+                id: string;
+                stage: import(".prisma/client").$Enums.ProductionStage;
+                quantity: number;
+            }[];
         }[];
-    }[]>;
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
     getStatistics(startDate?: string, endDate?: string): Promise<{
         total: number;
         new: number;
@@ -103,11 +162,35 @@ export declare class OrdersController {
     }>;
     exportToExcel(res: Response, status?: OrderStatus, startDate?: string, endDate?: string): Promise<void>;
     findOne(id: string): Promise<{
+        source: {
+            description: string | null;
+            order: number;
+            name: string;
+            isActive: boolean;
+            id: string;
+            code: string;
+            color: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            icon: string | null;
+        };
         createdBy: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             email: string;
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
         products: ({
@@ -130,9 +213,21 @@ export declare class OrdersController {
             })[];
             history: ({
                 user: {
+                    role: {
+                        description: string | null;
+                        order: number;
+                        name: string;
+                        isActive: boolean;
+                        id: string;
+                        code: string;
+                        color: string | null;
+                        isSystem: boolean;
+                        permissions: import("@prisma/client/runtime/library").JsonValue;
+                        createdAt: Date;
+                        updatedAt: Date;
+                    };
                     firstName: string;
                     lastName: string;
-                    role: import(".prisma/client").$Enums.UserRole;
                     id: string;
                 };
             } & {
@@ -146,13 +241,14 @@ export declare class OrdersController {
                 notes: string | null;
                 productId: string;
                 workflowStageId: string | null;
-                startedAt: Date;
                 userId: string;
+                startedAt: Date;
             })[];
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -162,6 +258,8 @@ export declare class OrdersController {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         })[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -175,20 +273,47 @@ export declare class OrdersController {
         customerName: string;
         customerPhone: string | null;
         customerAddress: string | null;
+        sourceId: string | null;
+        totalAmount: number | null;
         createdById: string;
     }>;
     update(id: string, updateOrderDto: UpdateOrderDto): Promise<{
+        source: {
+            description: string | null;
+            order: number;
+            name: string;
+            isActive: boolean;
+            id: string;
+            code: string;
+            color: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            icon: string | null;
+        };
         createdBy: {
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
             email: string;
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
         products: {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -198,6 +323,8 @@ export declare class OrdersController {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         }[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -211,6 +338,8 @@ export declare class OrdersController {
         customerName: string;
         customerPhone: string | null;
         customerAddress: string | null;
+        sourceId: string | null;
+        totalAmount: number | null;
         createdById: string;
     }>;
     remove(id: string): Promise<{
@@ -225,6 +354,8 @@ export declare class OrdersController {
         customerName: string;
         customerPhone: string | null;
         customerAddress: string | null;
+        sourceId: string | null;
+        totalAmount: number | null;
         createdById: string;
     }>;
 }

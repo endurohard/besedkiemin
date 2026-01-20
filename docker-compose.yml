@@ -79,7 +79,7 @@ services:
     container_name: besedki_frontend
     restart: unless-stopped
     working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host"
+    command: sh -c "npm install && npm run build && node server.cjs"
     ports:
       - '5173:5173'
     environment:

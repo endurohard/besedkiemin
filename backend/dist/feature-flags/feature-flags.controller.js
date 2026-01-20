@@ -19,7 +19,6 @@ const update_feature_flag_dto_1 = require("./dto/update-feature-flag.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 let FeatureFlagsController = class FeatureFlagsController {
     constructor(featureFlagsService) {
         this.featureFlagsService = featureFlagsService;
@@ -53,7 +52,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -61,7 +60,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':key'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
     __param(0, (0, common_1.Param)('key')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -70,7 +69,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':key'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
     __param(0, (0, common_1.Param)('key')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -80,7 +79,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':key/toggle'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
     __param(0, (0, common_1.Param)('key')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -89,7 +88,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('bulk-update'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Array]),

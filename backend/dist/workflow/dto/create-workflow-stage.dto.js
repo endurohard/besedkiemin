@@ -30,12 +30,13 @@ __decorate([
     __metadata("design:type", Number)
 ], CreateWorkflowStageDto.prototype, "order", void 0);
 __decorate([
-    (0, class_validator_1.IsEnum)(client_1.UserRole),
-    __metadata("design:type", String)
-], CreateWorkflowStageDto.prototype, "role", void 0);
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], CreateWorkflowStageDto.prototype, "roleIds", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(client_1.ProductionStage),
     __metadata("design:type", String)
 ], CreateWorkflowStageDto.prototype, "legacyStage", void 0);
 __decorate([

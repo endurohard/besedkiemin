@@ -33,8 +33,12 @@ let TasksController = class TasksController {
     async acceptDefectRework(productId, req) {
         return this.tasksService.acceptDefectRework(productId, req.user.userId);
     }
-    async acceptTask(id, req) {
-        return this.tasksService.acceptTask(id, req.user.userId);
+    async getDepartmentWorkers(req) {
+        return this.tasksService.getDepartmentWorkers(req.user.userId);
+    }
+    async acceptTask(id, selectedUserId, req) {
+        const workerId = selectedUserId || req.user.userId;
+        return this.tasksService.acceptTask(id, workerId, req.user.userId);
     }
     async completeTask(id, notes, quantity, req) {
         return this.tasksService.completeTask(id, req.user.userId, notes, quantity);
@@ -84,12 +88,21 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TasksController.prototype, "acceptDefectRework", null);
 __decorate([
+    (0, common_1.Get)('department-workers'),
+    (0, swagger_1.ApiOperation)({ summary: 'Получить сотрудников своего отдела' }),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TasksController.prototype, "getDepartmentWorkers", null);
+__decorate([
     (0, common_1.Post)(':id/accept'),
     (0, swagger_1.ApiOperation)({ summary: 'Принять задачу в работу' }),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)('selectedUserId')),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], TasksController.prototype, "acceptTask", null);
 __decorate([

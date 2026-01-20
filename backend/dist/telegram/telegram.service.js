@@ -15,18 +15,27 @@ var TelegramService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TelegramService = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const node_telegram_bot_api_1 = __importDefault(require("node-telegram-bot-api"));
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
+const claude_code_service_1 = require("../claude-code/claude-code.service");
 let TelegramService = TelegramService_1 = class TelegramService {
-    constructor(prisma) {
+    constructor(prisma, configService, claudeCodeService) {
         this.prisma = prisma;
+        this.configService = configService;
+        this.claudeCodeService = claudeCodeService;
         this.logger = new common_1.Logger(TelegramService_1.name);
-        this.botToken = '8406603601:AAEdJDXar7oTYkxyFPW6Gn-m5bXwFZrQX9U';
         this.userStates = new Map();
         this.loginCodes = new Map();
+        this.botToken = this.configService.get('TELEGRAM_BOT_TOKEN') || '';
+        this.adminId = this.configService.get('TELEGRAM_ADMIN_ID') || '';
     }
     async onModuleInit() {
+        if (!this.botToken) {
+            this.logger.warn('TELEGRAM_BOT_TOKEN not configured. Telegram bot disabled.');
+            return;
+        }
         this.logger.log('Initializing Telegram Bot...');
         this.bot = new node_telegram_bot_api_1.default(this.botToken, { polling: true });
         this.logger.log('Telegram Bot is running!');
@@ -42,7 +51,7 @@ let TelegramService = TelegramService_1 = class TelegramService {
                 return;
             }
             if (userId) {
-                const user = await this.prisma.user.findUnique({ where: { id: userId } });
+                const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
                 if (!user) {
                     await this.bot.sendMessage(chatId, '❌ Пользователь не найден');
                     return;
@@ -51,7 +60,7 @@ let TelegramService = TelegramService_1 = class TelegramService {
                     where: { id: userId },
                     data: { telegramId },
                 });
-                await this.bot.sendMessage(chatId, `✅ Telegram успешно привязан!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role}\n\nТеперь вы будете получать уведомления.`);
+                await this.bot.sendMessage(chatId, `✅ Telegram успешно привязан!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role?.name || user.role?.code || 'Не указана'}\n\nТеперь вы будете получать уведомления.`);
             }
         });
         this.bot.onText(/\/start$/, async (msg) => {
@@ -59,9 +68,9 @@ let TelegramService = TelegramService_1 = class TelegramService {
             const telegramId = msg.from?.id.toString();
             if (!telegramId)
                 return;
-            const user = await this.prisma.user.findFirst({ where: { telegramId } });
+            const user = await this.prisma.user.findFirst({ where: { telegramId }, include: { role: true } });
             if (user) {
-                await this.bot.sendMessage(chatId, `✅ Аккаунт привязан:\n👤 ${user.firstName} ${user.lastName}\n🏢 ${user.role}\n\nИспользуйте /tasks`);
+                await this.bot.sendMessage(chatId, `✅ Аккаунт привязан:\n👤 ${user.firstName} ${user.lastName}\n🏢 ${user.role?.name || user.role?.code || 'Не указана'}\n\nИспользуйте /tasks`);
             }
             else {
                 await this.bot.sendMessage(chatId, `👋 Для привязки отсканируйте QR код в профиле.\n\n📝 Telegram ID: \`${telegramId}\``, { parse_mode: 'Markdown' });
@@ -72,7 +81,7 @@ let TelegramService = TelegramService_1 = class TelegramService {
             const telegramId = msg.from?.id.toString();
             if (!telegramId)
                 return;
-            const user = await this.prisma.user.findFirst({ where: { telegramId } });
+            const user = await this.prisma.user.findFirst({ where: { telegramId }, include: { role: true } });
             if (!user) {
                 await this.bot.sendMessage(chatId, '❌ Аккаунт не привязан');
                 return;
@@ -116,7 +125,7 @@ let TelegramService = TelegramService_1 = class TelegramService {
                 await this.bot.sendMessage(chatId, '❌ Срок действия кода истёк. Получите новый код на сайте.');
                 return;
             }
-            const user = await this.prisma.user.findUnique({ where: { id: loginData.userId } });
+            const user = await this.prisma.user.findUnique({ where: { id: loginData.userId }, include: { role: true } });
             if (!user) {
                 await this.bot.sendMessage(chatId, '❌ Пользователь не найден');
                 this.loginCodes.delete(code);
@@ -127,7 +136,7 @@ let TelegramService = TelegramService_1 = class TelegramService {
                 data: { telegramId },
             });
             this.loginCodes.delete(code);
-            await this.bot.sendMessage(chatId, `✅ Авторизация успешна!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role}\n\n🔔 Вы будете получать уведомления о задачах`);
+            await this.bot.sendMessage(chatId, `✅ Авторизация успешна!\n\n👤 ${user.firstName} ${user.lastName}\n🏢 Роль: ${user.role?.name || user.role?.code || 'Не указана'}\n\n🔔 Вы будете получать уведомления о задачах`);
         });
         this.bot.on('photo', async (msg) => {
             const chatId = msg.chat.id;
@@ -165,6 +174,187 @@ let TelegramService = TelegramService_1 = class TelegramService {
                 }
                 this.userStates.delete(msg.from.id);
             }
+        });
+        this.bot.onText(/\/claude (.+)/, async (msg, match) => {
+            const chatId = msg.chat.id;
+            const telegramId = msg.from?.id.toString();
+            const prompt = match?.[1];
+            if (!telegramId || !prompt)
+                return;
+            const hasAccess = await this.checkClaudeAccess(telegramId);
+            if (!hasAccess) {
+                await this.bot.sendMessage(chatId, '❌ Доступ запрещён. Только владелец может использовать Claude Code.');
+                return;
+            }
+            await this.bot.sendMessage(chatId, '🤖 Обрабатываю запрос к Claude Code...');
+            const result = await this.claudeCodeService.askClaude(prompt);
+            if (result.success) {
+                const chunks = this.splitMessage(result.output, 4000);
+                for (const chunk of chunks) {
+                    await this.bot.sendMessage(chatId, chunk);
+                }
+            }
+            else {
+                await this.bot.sendMessage(chatId, `❌ Ошибка: ${result.error}`);
+            }
+        });
+        this.bot.onText(/\/change (.+)/, async (msg, match) => {
+            const chatId = msg.chat.id;
+            const telegramId = msg.from?.id.toString();
+            const prompt = match?.[1];
+            if (!telegramId || !prompt)
+                return;
+            const hasAccess = await this.checkClaudeAccess(telegramId);
+            if (!hasAccess) {
+                await this.bot.sendMessage(chatId, '❌ Доступ запрещён. Только владелец может использовать Claude Code.');
+                return;
+            }
+            await this.bot.sendMessage(chatId, '🔄 Анализирую изменения через Claude Code...\n\nЭто может занять несколько минут.');
+            const result = await this.claudeCodeService.previewChange(prompt, true);
+            if (result.success) {
+                if (!result.previewId || !result.filesChanged?.length) {
+                    await this.bot.sendMessage(chatId, '✅ Claude проанализировал запрос, но изменений в коде не требуется.');
+                    return;
+                }
+                let message = '📋 *Preview изменений*\n\n';
+                message += `📝 *Запрос:* ${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}\n\n`;
+                message += `📁 *Изменённые файлы (${result.filesChanged.length}):*\n`;
+                message += result.filesChanged.slice(0, 8).map(f => `• \`${f}\``).join('\n');
+                if (result.filesChanged.length > 8) {
+                    message += `\n...и ещё ${result.filesChanged.length - 8} файлов`;
+                }
+                if (result.diff) {
+                    message += '\n\n📄 *Diff:*\n```\n';
+                    message += result.diff.substring(0, 1500);
+                    if (result.diff.length > 1500) {
+                        message += '\n... (обрезано)';
+                    }
+                    message += '\n```';
+                }
+                message += '\n\n⏳ *Preview истечёт через 30 минут*';
+                await this.bot.sendMessage(chatId, message, {
+                    parse_mode: 'Markdown',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                { text: '✅ Применить и создать PR', callback_data: `claude_apply:${result.previewId}` },
+                            ],
+                            [
+                                { text: '❌ Отменить', callback_data: `claude_cancel:${result.previewId}` },
+                            ],
+                        ],
+                    },
+                });
+            }
+            else {
+                await this.bot.sendMessage(chatId, `❌ Ошибка: ${result.error}`);
+            }
+        });
+        this.bot.on('callback_query', async (query) => {
+            if (!query.data?.startsWith('claude_'))
+                return;
+            const chatId = query.message?.chat.id;
+            const messageId = query.message?.message_id;
+            const telegramId = query.from?.id.toString();
+            if (!chatId || !messageId || !telegramId)
+                return;
+            const hasAccess = await this.checkClaudeAccess(telegramId);
+            if (!hasAccess) {
+                await this.bot.answerCallbackQuery(query.id, { text: '❌ Нет доступа' });
+                return;
+            }
+            const [action, previewId] = query.data.split(':');
+            if (action === 'claude_apply') {
+                await this.bot.answerCallbackQuery(query.id, { text: '⏳ Применяю изменения...' });
+                await this.bot.editMessageText('⏳ *Применяю изменения и создаю PR...*', {
+                    chat_id: chatId,
+                    message_id: messageId,
+                    parse_mode: 'Markdown',
+                });
+                const result = await this.claudeCodeService.applyPreview(previewId);
+                if (result.success) {
+                    let message = '✅ *Изменения применены!*\n\n';
+                    if (result.filesChanged && result.filesChanged.length > 0) {
+                        message += `📁 *Изменённые файлы:*\n`;
+                        message += result.filesChanged.slice(0, 10).map(f => `• \`${f}\``).join('\n');
+                        message += '\n\n';
+                    }
+                    if (result.branch) {
+                        message += `🌿 Ветка: \`${result.branch}\`\n`;
+                    }
+                    if (result.prUrl) {
+                        message += `\n🔗 [Открыть Pull Request](${result.prUrl})`;
+                    }
+                    await this.bot.editMessageText(message, {
+                        chat_id: chatId,
+                        message_id: messageId,
+                        parse_mode: 'Markdown',
+                    });
+                }
+                else {
+                    await this.bot.editMessageText(`❌ *Ошибка:* ${result.error}`, {
+                        chat_id: chatId,
+                        message_id: messageId,
+                        parse_mode: 'Markdown',
+                    });
+                }
+            }
+            else if (action === 'claude_cancel') {
+                await this.bot.answerCallbackQuery(query.id, { text: '🗑 Отменяю...' });
+                await this.claudeCodeService.cancelPreview(previewId);
+                await this.bot.editMessageText('🗑 *Preview отменён*\n\nИзменения не были применены.', {
+                    chat_id: chatId,
+                    message_id: messageId,
+                    parse_mode: 'Markdown',
+                });
+            }
+        });
+        this.bot.onText(/\/apply (.+)/, async (msg, match) => {
+            const chatId = msg.chat.id;
+            const telegramId = msg.from?.id.toString();
+            const prompt = match?.[1];
+            if (!telegramId || !prompt)
+                return;
+            const hasAccess = await this.checkClaudeAccess(telegramId);
+            if (!hasAccess) {
+                await this.bot.sendMessage(chatId, '❌ Доступ запрещён. Только владелец может использовать Claude Code.');
+                return;
+            }
+            await this.bot.sendMessage(chatId, '⚡ Применяю изменения напрямую...\n\n⚠️ Изменения будут в текущей ветке без PR!');
+            const result = await this.claudeCodeService.executeDirectChange(prompt);
+            if (result.success) {
+                let message = '✅ *Изменения применены!*\n\n';
+                if (result.filesChanged && result.filesChanged.length > 0) {
+                    message += `📁 *Изменённые файлы:*\n`;
+                    message += result.filesChanged.slice(0, 10).map(f => `• \`${f}\``).join('\n');
+                    if (result.filesChanged.length > 10) {
+                        message += `\n...и ещё ${result.filesChanged.length - 10} файлов`;
+                    }
+                }
+                else {
+                    message += 'Нет изменений в файлах.';
+                }
+                await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+            }
+            else {
+                await this.bot.sendMessage(chatId, `❌ Ошибка: ${result.error}`);
+            }
+        });
+        this.bot.onText(/\/gitstatus/, async (msg) => {
+            const chatId = msg.chat.id;
+            const telegramId = msg.from?.id.toString();
+            if (!telegramId)
+                return;
+            const hasAccess = await this.checkClaudeAccess(telegramId);
+            if (!hasAccess) {
+                await this.bot.sendMessage(chatId, '❌ Доступ запрещён.');
+                return;
+            }
+            const [branch, status] = await Promise.all([
+                this.claudeCodeService.getCurrentBranch(),
+                this.claudeCodeService.getGitStatus(),
+            ]);
+            await this.bot.sendMessage(chatId, `📊 *Git Status*\n\n🌿 Ветка: \`${branch}\`\n\n\`\`\`\n${status || 'Чисто'}\n\`\`\``, { parse_mode: 'Markdown' });
         });
         this.bot.on('text', async (msg) => {
             if (msg.text?.startsWith('/'))
@@ -235,20 +425,25 @@ let TelegramService = TelegramService_1 = class TelegramService {
                 }
                 const totalProducts = order.products.length;
                 const completedProducts = order.products.filter(p => p.stage === 'COMPLETED' || p.stage === 'QUALITY_CHECK').length;
+                const telegramId = msg.from?.id.toString();
+                const currentUser = telegramId ? await this.prisma.user.findFirst({ where: { telegramId }, include: { role: true } }) : null;
+                const canSeeCustomerInfo = currentUser?.role?.code === 'MANAGER' || currentUser?.role?.code === 'LOGIST';
                 let message = `${statusEmoji} *Заказ №${order.orderNumber}*\n\n`;
                 message += `📊 Статус: *${statusText}*\n`;
-                message += `👤 Клиент: ${order.customerName}\n`;
+                if (canSeeCustomerInfo) {
+                    message += `👤 Клиент: ${order.customerName}\n`;
+                }
                 if (order.status === 'IN_PRODUCTION') {
                     message += `🔧 Прогресс: ${completedProducts}/${totalProducts} изделий готово\n`;
                 }
-                if (order.customerAddress) {
+                if (canSeeCustomerInfo && order.customerAddress) {
                     message += `📍 Адрес доставки: ${order.customerAddress}\n`;
                 }
                 await this.bot.sendMessage(msg.chat.id, message, { parse_mode: 'Markdown' });
             }
             else {
                 const telegramId = msg.from?.id.toString();
-                const user = await this.prisma.user.findFirst({ where: { telegramId } });
+                const user = await this.prisma.user.findFirst({ where: { telegramId }, include: { role: true } });
                 if (user) {
                     await this.bot.sendMessage(msg.chat.id, 'ℹ️ Используйте команды:\n/tasks - мои задачи\n\nИли отправьте номер заказа для проверки статуса');
                 }
@@ -259,7 +454,7 @@ let TelegramService = TelegramService_1 = class TelegramService {
         });
     }
     async notifyNewTask(userId, taskTitle, orderNumber, quantity) {
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
         if (!user || !user.telegramId)
             return;
         try {
@@ -270,7 +465,7 @@ let TelegramService = TelegramService_1 = class TelegramService {
         }
     }
     async requestDefectPhoto(userId, taskId, reason, quantity) {
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
         if (!user || !user.telegramId)
             return false;
         const chatId = parseInt(user.telegramId);
@@ -352,21 +547,65 @@ let TelegramService = TelegramService_1 = class TelegramService {
     removeLoginCode(code) {
         this.loginCodes.delete(code);
     }
+    async checkClaudeAccess(telegramId) {
+        if (telegramId === this.adminId) {
+            return true;
+        }
+        const user = await this.prisma.user.findFirst({
+            where: { telegramId },
+            include: { role: true },
+        });
+        return user?.role?.code === 'OWNER';
+    }
+    splitMessage(text, maxLength) {
+        if (text.length <= maxLength) {
+            return [text];
+        }
+        const chunks = [];
+        let currentChunk = '';
+        const lines = text.split('\n');
+        for (const line of lines) {
+            if (currentChunk.length + line.length + 1 > maxLength) {
+                if (currentChunk) {
+                    chunks.push(currentChunk);
+                }
+                if (line.length > maxLength) {
+                    for (let i = 0; i < line.length; i += maxLength) {
+                        chunks.push(line.substring(i, i + maxLength));
+                    }
+                    currentChunk = '';
+                }
+                else {
+                    currentChunk = line;
+                }
+            }
+            else {
+                currentChunk += (currentChunk ? '\n' : '') + line;
+            }
+        }
+        if (currentChunk) {
+            chunks.push(currentChunk);
+        }
+        return chunks;
+    }
     async notifyAdmins(message) {
+        if (!this.bot) {
+            this.logger.warn('Telegram bot not configured. Skipping admin notification.');
+            return;
+        }
         try {
-            const adminId = process.env.TELEGRAM_ADMIN_ID;
-            if (adminId) {
-                await this.bot.sendMessage(adminId, message, { parse_mode: 'HTML' });
-                this.logger.log(`Уведомление отправлено администратору: ${adminId}`);
+            if (this.adminId) {
+                await this.bot.sendMessage(this.adminId, message, { parse_mode: 'HTML' });
+                this.logger.log(`Уведомление отправлено администратору: ${this.adminId}`);
             }
             const admins = await this.prisma.user.findMany({
                 where: {
-                    role: { in: ['OWNER', 'MANAGER'] },
+                    role: { code: { in: ['OWNER', 'MANAGER'] } },
                     telegramId: { not: null },
                 },
             });
             for (const admin of admins) {
-                if (admin.telegramId && admin.telegramId !== adminId) {
+                if (admin.telegramId && admin.telegramId !== this.adminId) {
                     try {
                         await this.bot.sendMessage(admin.telegramId, message, { parse_mode: 'HTML' });
                         this.logger.log(`Уведомление отправлено: ${admin.firstName} ${admin.lastName}`);
@@ -386,6 +625,8 @@ let TelegramService = TelegramService_1 = class TelegramService {
 exports.TelegramService = TelegramService;
 exports.TelegramService = TelegramService = TelegramService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        config_1.ConfigService,
+        claude_code_service_1.ClaudeCodeService])
 ], TelegramService);
 //# sourceMappingURL=telegram.service.js.map

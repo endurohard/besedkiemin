@@ -15,8 +15,11 @@ const auth_service_1 = require("./auth.service");
 const auth_controller_1 = require("./auth.controller");
 const users_module_1 = require("../users/users.module");
 const telegram_module_1 = require("../telegram/telegram.module");
+const prisma_module_1 = require("../prisma/prisma.module");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const local_strategy_1 = require("./strategies/local.strategy");
+const roles_guard_1 = require("./guards/roles.guard");
+const permissions_guard_1 = require("./guards/permissions.guard");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -25,6 +28,7 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             users_module_1.UsersModule,
             telegram_module_1.TelegramModule,
+            prisma_module_1.PrismaModule,
             passport_1.PassportModule,
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
@@ -38,8 +42,8 @@ exports.AuthModule = AuthModule = __decorate([
             }),
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService, local_strategy_1.LocalStrategy, jwt_strategy_1.JwtStrategy],
-        exports: [auth_service_1.AuthService],
+        providers: [auth_service_1.AuthService, local_strategy_1.LocalStrategy, jwt_strategy_1.JwtStrategy, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard],
+        exports: [auth_service_1.AuthService, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

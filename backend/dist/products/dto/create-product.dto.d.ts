@@ -7,4 +7,7 @@ export declare class CreateProductDto {
     schemaImageUrl?: string;
     orderId: string;
     deadline?: Date;
+    requiresSewing?: boolean | null;
+    color?: string;
+    upholsteryMaterial?: string;
 }

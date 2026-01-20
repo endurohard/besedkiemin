@@ -56,7 +56,7 @@ let QualityChecksController = class QualityChecksController {
 exports.QualityChecksController = QualityChecksController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('WAREHOUSE'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('photo', {
         storage: (0, multer_1.diskStorage)({
             destination: './uploads',
@@ -133,7 +133,7 @@ __decorate([
 ], QualityChecksController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.WAREHOUSE),
+    (0, roles_decorator_1.Roles)('WAREHOUSE'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('photo', {
         storage: (0, multer_1.diskStorage)({
             destination: './uploads',
@@ -171,7 +171,7 @@ __decorate([
 ], QualityChecksController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.WAREHOUSE, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('WAREHOUSE', 'MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Удалить проверку качества (складист или менеджер)' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

@@ -13,7 +13,38 @@ export declare class UsersService {
         password: string;
         firstName: string;
         lastName: string;
-        role: import(".prisma/client").$Enums.UserRole;
+        roleId: string;
+        sipServer: string | null;
+        sipUser: string | null;
+        sipPassword: string | null;
+        sipPort: number | null;
+        isActive: boolean;
+        telegramId: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        sipWsPort: number | null;
+    }>;
+    findByEmailWithRole(email: string): Promise<{
+        role: {
+            description: string | null;
+            order: number;
+            name: string;
+            isActive: boolean;
+            id: string;
+            code: string;
+            color: string | null;
+            isSystem: boolean;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        roleId: string;
         sipServer: string | null;
         sipUser: string | null;
         sipPassword: string | null;

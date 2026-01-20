@@ -1,6 +1,7 @@
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { TelegramService } from '../telegram/telegram.service';
+import { AuthenticatedUser } from './strategies/jwt.strategy';
 export declare class AuthController {
     private readonly authService;
     private readonly telegramService;
@@ -8,20 +9,32 @@ export declare class AuthController {
     login(loginDto: LoginDto, req: any): Promise<{
         access_token: string;
         user: {
-            id: any;
-            email: any;
-            firstName: any;
-            lastName: any;
-            role: any;
-            telegramId: any;
-            sipServer: any;
-            sipUser: any;
-            sipPassword: any;
-            sipPort: any;
-            sipWsPort: any;
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
+            telegramId: string;
+            sipServer: string;
+            sipUser: string;
+            sipPassword: string;
+            sipPort: number;
+            sipWsPort: number;
         };
     }>;
-    getProfile(user: any): any;
+    getProfile(user: AuthenticatedUser): AuthenticatedUser;
     requestTelegramCode(body: {
         email: string;
         password: string;
@@ -35,17 +48,29 @@ export declare class AuthController {
     }): Promise<{
         access_token: string;
         user: {
-            id: any;
-            email: any;
-            firstName: any;
-            lastName: any;
-            role: any;
-            telegramId: any;
-            sipServer: any;
-            sipUser: any;
-            sipPassword: any;
-            sipPort: any;
-            sipWsPort: any;
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
+                id: string;
+                code: string;
+                color: string | null;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
+            };
+            telegramId: string;
+            sipServer: string;
+            sipUser: string;
+            sipPassword: string;
+            sipPort: number;
+            sipWsPort: number;
         };
     } | {
         status: string;

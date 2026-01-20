@@ -28,6 +28,9 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
     async validate(payload) {
         const user = await this.prisma.user.findUnique({
             where: { id: payload.sub },
+            include: {
+                role: true,
+            },
         });
         if (!user || !user.isActive) {
             throw new common_1.UnauthorizedException('Пользователь не найден или неактивен');
@@ -36,6 +39,8 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
             userId: user.id,
             email: user.email,
             role: user.role,
+            roleCode: user.role?.code,
+            permissions: user.role?.permissions || [],
             firstName: user.firstName,
             lastName: user.lastName,
             telegramId: user.telegramId,

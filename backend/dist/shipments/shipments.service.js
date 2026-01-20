@@ -20,8 +20,9 @@ let ShipmentsService = class ShipmentsService {
     async createShipment(userId, data) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
+            include: { role: true },
         });
-        if (!user || (user.role !== client_1.UserRole.WAREHOUSE && user.role !== client_1.UserRole.OWNER && user.role !== client_1.UserRole.MANAGER)) {
+        if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
             throw new common_1.ForbiddenException('Только складист, менеджер и владелец могут создавать отгрузки');
         }
         if (!data.items || data.items.length === 0) {
@@ -104,7 +105,7 @@ let ShipmentsService = class ShipmentsService {
     async getAllShipments(userId, options) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            select: { role: true },
+            include: { role: true },
         });
         if (!user) {
             throw new common_1.ForbiddenException('Пользователь не найден');
@@ -219,8 +220,9 @@ let ShipmentsService = class ShipmentsService {
     async updateShipmentStatus(id, userId, status) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
+            include: { role: true },
         });
-        if (!user || (user.role !== client_1.UserRole.WAREHOUSE && user.role !== client_1.UserRole.OWNER && user.role !== client_1.UserRole.MANAGER)) {
+        if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
             throw new common_1.ForbiddenException('Только складист, менеджер и владелец могут обновлять статус отгрузки');
         }
         const shipment = await this.prisma.shipment.findUnique({
@@ -257,8 +259,9 @@ let ShipmentsService = class ShipmentsService {
     async cancelShipment(id, userId) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
+            include: { role: true },
         });
-        if (!user || (user.role !== client_1.UserRole.WAREHOUSE && user.role !== client_1.UserRole.OWNER && user.role !== client_1.UserRole.MANAGER)) {
+        if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
             throw new common_1.ForbiddenException('Только складист, менеджер и владелец могут отменять отгрузки');
         }
         const shipment = await this.prisma.shipment.findUnique({

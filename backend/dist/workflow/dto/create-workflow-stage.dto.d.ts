@@ -1,9 +1,9 @@
-import { UserRole, ProductionStage } from '@prisma/client';
+import { ProductionStage } from '@prisma/client';
 export declare class CreateWorkflowStageDto {
     name: string;
     description?: string;
     order: number;
-    role: UserRole;
+    roleIds?: string[];
     legacyStage?: ProductionStage;
     isActive?: boolean;
 }

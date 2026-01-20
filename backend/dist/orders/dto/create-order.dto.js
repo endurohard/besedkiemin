@@ -17,6 +17,12 @@ class CreateOrderDto {
 }
 exports.CreateOrderDto = CreateOrderDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'ORD-001', required: false, description: 'Номер заказа (если не указан - генерируется автоматически)' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateOrderDto.prototype, "orderNumber", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ example: 'Иван Иванов' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
@@ -57,4 +63,16 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateOrderDto.prototype, "priority", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'uuid-источника', required: false, description: 'ID источника заказа' }),
+    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateOrderDto.prototype, "sourceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 50000, required: false, description: 'Общая сумма заказа' }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateOrderDto.prototype, "totalAmount", void 0);
 //# sourceMappingURL=create-order.dto.js.map

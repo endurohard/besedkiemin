@@ -15,6 +15,7 @@ export declare class InventoryService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
     } & {
@@ -66,6 +67,8 @@ export declare class InventoryService {
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            sourceId: string | null;
+            totalAmount: number | null;
             createdById: string;
         };
         productType: {
@@ -75,12 +78,14 @@ export declare class InventoryService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
         product: {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -90,6 +95,8 @@ export declare class InventoryService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
     } & {
         name: string;
@@ -116,6 +123,8 @@ export declare class InventoryService {
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            sourceId: string | null;
+            totalAmount: number | null;
             createdById: string;
         };
         productType: {
@@ -125,12 +134,14 @@ export declare class InventoryService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
         product: {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -140,6 +151,8 @@ export declare class InventoryService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
     } & {
         name: string;
@@ -166,6 +179,8 @@ export declare class InventoryService {
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            sourceId: string | null;
+            totalAmount: number | null;
             createdById: string;
         };
         productType: {
@@ -175,12 +190,14 @@ export declare class InventoryService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            requiresSewing: boolean;
             productionTimeHours: number | null;
         };
         product: {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -190,6 +207,8 @@ export declare class InventoryService {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
         shipmentItems: ({
             shipment: {

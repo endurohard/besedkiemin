@@ -20,7 +20,6 @@ const update_nomenclature_dto_1 = require("./dto/update-nomenclature.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 let NomenclatureController = class NomenclatureController {
     constructor(nomenclatureService) {
         this.nomenclatureService = nomenclatureService;
@@ -50,7 +49,7 @@ let NomenclatureController = class NomenclatureController {
 exports.NomenclatureController = NomenclatureController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_nomenclature_dto_1.CreateNomenclatureDto]),
@@ -58,7 +57,7 @@ __decorate([
 ], NomenclatureController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
     __param(0, (0, common_1.Query)('includeInactive')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -66,7 +65,7 @@ __decorate([
 ], NomenclatureController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('by-type/:productTypeId'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
     __param(0, (0, common_1.Param)('productTypeId')),
     __param(1, (0, common_1.Query)('includeInactive')),
     __metadata("design:type", Function),
@@ -75,7 +74,7 @@ __decorate([
 ], NomenclatureController.prototype, "findByProductType", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -83,7 +82,7 @@ __decorate([
 ], NomenclatureController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -92,7 +91,7 @@ __decorate([
 ], NomenclatureController.prototype, "update", null);
 __decorate([
     (0, common_1.Patch)(':id/toggle-active'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -100,7 +99,7 @@ __decorate([
 ], NomenclatureController.prototype, "toggleActive", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER, client_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

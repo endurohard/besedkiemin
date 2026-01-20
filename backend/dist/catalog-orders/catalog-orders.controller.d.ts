@@ -45,67 +45,75 @@ export declare class CatalogOrdersController {
         orderNumber: string;
         customerName: string;
         customerPhone: string;
+        totalAmount: number | null;
         deliveryAddress: string | null;
         comment: string | null;
         customerEmail: string | null;
         cancellationReason: string | null;
-        totalAmount: number | null;
         contactedAt: Date | null;
         contactedBy: string | null;
         processedAt: Date | null;
         processedBy: string | null;
     }>;
-    findAll(status?: string): Promise<({
-        items: ({
-            product: {
-                description: string | null;
-                order: number;
-                name: string;
-                isActive: boolean;
+    findAll(status?: string, page?: string, limit?: string): Promise<{
+        data: ({
+            items: ({
+                product: {
+                    description: string | null;
+                    order: number;
+                    name: string;
+                    isActive: boolean;
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    dimensions: string | null;
+                    slug: string;
+                    shortDesc: string | null;
+                    images: string[];
+                    material: string | null;
+                    price: number | null;
+                    priceNote: string | null;
+                    features: import("@prisma/client/runtime/library").JsonValue | null;
+                    metaTitle: string | null;
+                    metaDescription: string | null;
+                    metaKeywords: string | null;
+                    isFeatured: boolean;
+                    categoryId: string;
+                };
+            } & {
                 id: string;
                 createdAt: Date;
-                updatedAt: Date;
-                dimensions: string | null;
-                slug: string;
-                shortDesc: string | null;
-                images: string[];
-                material: string | null;
+                quantity: number;
+                productId: string;
+                orderId: string;
                 price: number | null;
-                priceNote: string | null;
-                features: import("@prisma/client/runtime/library").JsonValue | null;
-                metaTitle: string | null;
-                metaDescription: string | null;
-                metaKeywords: string | null;
-                isFeatured: boolean;
-                categoryId: string;
-            };
+                comment: string | null;
+            })[];
         } & {
+            status: import(".prisma/client").$Enums.CatalogOrderStatus;
             id: string;
             createdAt: Date;
-            quantity: number;
-            productId: string;
-            orderId: string;
-            price: number | null;
+            updatedAt: Date;
+            orderNumber: string;
+            customerName: string;
+            customerPhone: string;
+            totalAmount: number | null;
+            deliveryAddress: string | null;
             comment: string | null;
+            customerEmail: string | null;
+            cancellationReason: string | null;
+            contactedAt: Date | null;
+            contactedBy: string | null;
+            processedAt: Date | null;
+            processedBy: string | null;
         })[];
-    } & {
-        status: import(".prisma/client").$Enums.CatalogOrderStatus;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        orderNumber: string;
-        customerName: string;
-        customerPhone: string;
-        deliveryAddress: string | null;
-        comment: string | null;
-        customerEmail: string | null;
-        cancellationReason: string | null;
-        totalAmount: number | null;
-        contactedAt: Date | null;
-        contactedBy: string | null;
-        processedAt: Date | null;
-        processedBy: string | null;
-    })[]>;
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
     findOne(id: string): Promise<{
         items: ({
             product: {
@@ -147,11 +155,11 @@ export declare class CatalogOrdersController {
         orderNumber: string;
         customerName: string;
         customerPhone: string;
+        totalAmount: number | null;
         deliveryAddress: string | null;
         comment: string | null;
         customerEmail: string | null;
         cancellationReason: string | null;
-        totalAmount: number | null;
         contactedAt: Date | null;
         contactedBy: string | null;
         processedAt: Date | null;
@@ -198,11 +206,11 @@ export declare class CatalogOrdersController {
         orderNumber: string;
         customerName: string;
         customerPhone: string;
+        totalAmount: number | null;
         deliveryAddress: string | null;
         comment: string | null;
         customerEmail: string | null;
         cancellationReason: string | null;
-        totalAmount: number | null;
         contactedAt: Date | null;
         contactedBy: string | null;
         processedAt: Date | null;
@@ -216,11 +224,11 @@ export declare class CatalogOrdersController {
         orderNumber: string;
         customerName: string;
         customerPhone: string;
+        totalAmount: number | null;
         deliveryAddress: string | null;
         comment: string | null;
         customerEmail: string | null;
         cancellationReason: string | null;
-        totalAmount: number | null;
         contactedAt: Date | null;
         contactedBy: string | null;
         processedAt: Date | null;
@@ -267,11 +275,11 @@ export declare class CatalogOrdersController {
         orderNumber: string;
         customerName: string;
         customerPhone: string;
+        totalAmount: number | null;
         deliveryAddress: string | null;
         comment: string | null;
         customerEmail: string | null;
         cancellationReason: string | null;
-        totalAmount: number | null;
         contactedAt: Date | null;
         contactedBy: string | null;
         processedAt: Date | null;
@@ -318,11 +326,11 @@ export declare class CatalogOrdersController {
         orderNumber: string;
         customerName: string;
         customerPhone: string;
+        totalAmount: number | null;
         deliveryAddress: string | null;
         comment: string | null;
         customerEmail: string | null;
         cancellationReason: string | null;
-        totalAmount: number | null;
         contactedAt: Date | null;
         contactedBy: string | null;
         processedAt: Date | null;
@@ -369,11 +377,11 @@ export declare class CatalogOrdersController {
         orderNumber: string;
         customerName: string;
         customerPhone: string;
+        totalAmount: number | null;
         deliveryAddress: string | null;
         comment: string | null;
         customerEmail: string | null;
         cancellationReason: string | null;
-        totalAmount: number | null;
         contactedAt: Date | null;
         contactedBy: string | null;
         processedAt: Date | null;

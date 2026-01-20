@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateUserDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
-const client_1 = require("@prisma/client");
 class CreateUserDto {
 }
 exports.CreateUserDto = CreateUserDto;
@@ -42,10 +41,11 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "lastName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ enum: client_1.UserRole, example: client_1.UserRole.MANAGER }),
-    (0, class_validator_1.IsEnum)(client_1.UserRole),
+    (0, swagger_1.ApiProperty)({ example: 'role-manager', description: 'ID роли' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], CreateUserDto.prototype, "role", void 0);
+], CreateUserDto.prototype, "roleId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'sip.example.com', required: false, description: 'SIP сервер (для менеджеров)' }),
     (0, class_validator_1.IsString)(),

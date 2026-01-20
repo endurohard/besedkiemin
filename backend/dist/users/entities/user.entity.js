@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserEntity = void 0;
 const swagger_1 = require("@nestjs/swagger");
-const client_1 = require("@prisma/client");
 class UserEntity {
     constructor(partial) {
         Object.assign(this, partial);
@@ -36,8 +35,12 @@ __decorate([
     __metadata("design:type", String)
 ], UserEntity.prototype, "lastName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ enum: client_1.UserRole }),
+    (0, swagger_1.ApiProperty)(),
     __metadata("design:type", String)
+], UserEntity.prototype, "roleId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", Object)
 ], UserEntity.prototype, "role", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)(),
@@ -51,6 +54,10 @@ __decorate([
     (0, swagger_1.ApiProperty)(),
     __metadata("design:type", Date)
 ], UserEntity.prototype, "updatedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    __metadata("design:type", String)
+], UserEntity.prototype, "telegramId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false }),
     __metadata("design:type", String)

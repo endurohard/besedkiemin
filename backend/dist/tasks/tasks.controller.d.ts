@@ -17,12 +17,14 @@ export declare class TasksController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -32,11 +34,16 @@ export declare class TasksController {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
         assignedTo: {
+            role: {
+                name: string;
+                code: string;
+            };
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
             id: string;
         };
     } & {
@@ -75,6 +82,8 @@ export declare class TasksController {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
             productType: {
@@ -84,11 +93,13 @@ export declare class TasksController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -98,6 +109,8 @@ export declare class TasksController {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
         defectPhotos: string[];
         checkedBy: {
@@ -105,7 +118,7 @@ export declare class TasksController {
             password: string;
             firstName: string;
             lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
+            roleId: string;
             sipServer: string | null;
             sipUser: string | null;
             sipPassword: string | null;
@@ -144,6 +157,8 @@ export declare class TasksController {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
             productType: {
@@ -153,12 +168,14 @@ export declare class TasksController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -168,6 +185,8 @@ export declare class TasksController {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.TaskStatus;
@@ -190,7 +209,17 @@ export declare class TasksController {
         assignedToId: string;
         workflowStageId: string | null;
     }>;
-    acceptTask(id: string, req: any): Promise<{
+    getDepartmentWorkers(req: any): Promise<{
+        role: {
+            name: string;
+            id: string;
+            code: string;
+        };
+        firstName: string;
+        lastName: string;
+        id: string;
+    }[]>;
+    acceptTask(id: string, selectedUserId: string, req: any): Promise<{
         product: {
             order: {
                 status: import(".prisma/client").$Enums.OrderStatus;
@@ -204,6 +233,8 @@ export declare class TasksController {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
             productType: {
@@ -213,12 +244,14 @@ export declare class TasksController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -228,6 +261,8 @@ export declare class TasksController {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.TaskStatus;
@@ -264,6 +299,8 @@ export declare class TasksController {
                 customerName: string;
                 customerPhone: string | null;
                 customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
                 createdById: string;
             };
             productType: {
@@ -273,12 +310,14 @@ export declare class TasksController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                requiresSewing: boolean;
                 productionTimeHours: number | null;
             };
         } & {
             description: string | null;
             name: string;
             id: string;
+            color: string | null;
             createdAt: Date;
             updatedAt: Date;
             stage: import(".prisma/client").$Enums.ProductionStage;
@@ -288,6 +327,8 @@ export declare class TasksController {
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.TaskStatus;

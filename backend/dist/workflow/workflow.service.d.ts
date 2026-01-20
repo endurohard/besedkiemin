@@ -9,7 +9,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -20,7 +19,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -31,7 +29,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -42,7 +39,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -53,7 +49,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -64,7 +59,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -75,7 +69,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -86,7 +79,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -97,7 +89,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -108,7 +99,6 @@ export declare class WorkflowService {
         description: string | null;
         order: number;
         name: string;
-        role: import(".prisma/client").$Enums.UserRole;
         isActive: boolean;
         id: string;
         createdAt: Date;

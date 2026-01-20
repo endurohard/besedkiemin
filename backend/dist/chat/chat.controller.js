@@ -19,7 +19,6 @@ const chat_service_1 = require("./chat.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 let ChatController = class ChatController {
     constructor(chatService) {
         this.chatService = chatService;
@@ -29,6 +28,9 @@ let ChatController = class ChatController {
     }
     async getOrCreateRoom(catalogOrderId) {
         return this.chatService.getOrCreateRoom(catalogOrderId);
+    }
+    async getOrCreateGuestRoom(body) {
+        return this.chatService.getOrCreateGuestRoom(body);
     }
     async getAllRooms() {
         return this.chatService.getAllRooms();
@@ -67,9 +69,17 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getOrCreateRoom", null);
 __decorate([
+    (0, common_1.Post)('rooms/guest'),
+    (0, swagger_1.ApiOperation)({ summary: 'Создать или получить гостевую комнату чата' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ChatController.prototype, "getOrCreateGuestRoom", null);
+__decorate([
     (0, common_1.Get)('rooms'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Получить все активные комнаты чата (OWNER/MANAGER)' }),
     __metadata("design:type", Function),
@@ -87,7 +97,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('rooms/:roomId/unread'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Получить непрочитанные сообщения для комнаты (OWNER/MANAGER)' }),
     __param(0, (0, common_1.Param)('roomId')),
@@ -98,7 +108,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('unread/total'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Получить общее количество непрочитанных сообщений (OWNER/MANAGER)' }),
     __metadata("design:type", Function),
@@ -108,7 +118,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('rooms/:roomId/mark-read'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Отметить сообщения как прочитанные (OWNER/MANAGER)' }),
     __param(0, (0, common_1.Param)('roomId')),
@@ -120,7 +130,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('rooms/:roomId/close'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Закрыть комнату чата (OWNER/MANAGER)' }),
     __param(0, (0, common_1.Param)('roomId')),

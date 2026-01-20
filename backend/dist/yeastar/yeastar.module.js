@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.YeastarModule = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const yeastar_service_1 = require("./yeastar.service");
 const yeastar_controller_1 = require("./yeastar.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
@@ -16,7 +17,7 @@ let YeastarModule = class YeastarModule {
 exports.YeastarModule = YeastarModule;
 exports.YeastarModule = YeastarModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [prisma_module_1.PrismaModule, config_1.ConfigModule],
         controllers: [yeastar_controller_1.YeastarController],
         providers: [yeastar_service_1.YeastarService],
         exports: [yeastar_service_1.YeastarService],

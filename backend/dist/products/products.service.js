@@ -8,16 +8,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var ProductsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const telegram_service_1 = require("../telegram/telegram.service");
 const client_1 = require("@prisma/client");
-let ProductsService = class ProductsService {
+let ProductsService = ProductsService_1 = class ProductsService {
     constructor(prisma, telegramService) {
         this.prisma = prisma;
         this.telegramService = telegramService;
+        this.logger = new common_1.Logger(ProductsService_1.name);
     }
     async create(createProductDto) {
         const order = await this.prisma.order.findUnique({
@@ -39,13 +41,18 @@ let ProductsService = class ProductsService {
                 order: { gt: firstWorkflowStage.order }
             },
             orderBy: { order: 'asc' },
+            include: {
+                roles: { include: { role: true } },
+            },
         });
-        const nextWorkers = secondWorkflowStage
+        const roleIds = secondWorkflowStage?.roles.map(r => r.roleId) || [];
+        const nextWorkers = roleIds.length > 0
             ? await this.prisma.user.findMany({
                 where: {
-                    role: secondWorkflowStage.role,
+                    roleId: { in: roleIds },
                     isActive: true,
                 },
+                include: { role: true },
             })
             : [];
         const product = await this.prisma.$transaction(async (tx) => {
@@ -104,15 +111,14 @@ let ProductsService = class ProductsService {
                     `*Тип:* ${product.productType?.name || 'Н/Д'}\n` +
                     `*Количество:* ${product.quantity} шт.\n` +
                     `*Стадия:* ${secondWorkflowStage.name}\n` +
-                    `*Заказ:* ${order.orderNumber}\n` +
-                    `*Клиент:* ${order.customerName || 'Н/Д'}\n\n` +
+                    `*Заказ:* ${order.orderNumber}\n\n` +
                     `✅ Откройте раздел "Мои задачи" для выполнения`;
                 try {
                     await this.telegramService.sendMessage(worker.telegramId, message);
-                    console.log(`📲 Уведомление отправлено работнику ${worker.email} (${worker.role})`);
+                    this.logger.log(`Уведомление отправлено работнику ${worker.email}`);
                 }
                 catch (error) {
-                    console.error(`❌ Ошибка отправки уведомления работнику ${worker.email}:`, error);
+                    this.logger.error(`Ошибка отправки уведомления работнику ${worker.email}:`, error);
                 }
             }));
         }
@@ -319,14 +325,16 @@ let ProductsService = class ProductsService {
             [client_1.ProductionStage.PENDING]: [client_1.ProductionStage.DESIGN],
             [client_1.ProductionStage.DESIGN]: [client_1.ProductionStage.PREPARATION, client_1.ProductionStage.PENDING],
             [client_1.ProductionStage.PREPARATION]: [client_1.ProductionStage.PAINTING, client_1.ProductionStage.DESIGN],
-            [client_1.ProductionStage.PAINTING]: [client_1.ProductionStage.QUALITY_CHECK, client_1.ProductionStage.PREPARATION],
+            [client_1.ProductionStage.PAINTING]: [client_1.ProductionStage.SEWING, client_1.ProductionStage.ASSEMBLY, client_1.ProductionStage.PREPARATION],
+            [client_1.ProductionStage.SEWING]: [client_1.ProductionStage.ASSEMBLY, client_1.ProductionStage.PAINTING],
+            [client_1.ProductionStage.ASSEMBLY]: [client_1.ProductionStage.QUALITY_CHECK, client_1.ProductionStage.SEWING, client_1.ProductionStage.PAINTING],
             [client_1.ProductionStage.QUALITY_CHECK]: [
                 client_1.ProductionStage.COMPLETED,
                 client_1.ProductionStage.REJECTED,
-                client_1.ProductionStage.PAINTING,
+                client_1.ProductionStage.ASSEMBLY,
             ],
             [client_1.ProductionStage.COMPLETED]: [],
-            [client_1.ProductionStage.REJECTED]: [client_1.ProductionStage.PAINTING],
+            [client_1.ProductionStage.REJECTED]: [client_1.ProductionStage.ASSEMBLY],
         };
         const allowedTransitions = validTransitions[currentStage] || [];
         if (!allowedTransitions.includes(newStage)) {
@@ -355,7 +363,7 @@ let ProductsService = class ProductsService {
     }
 };
 exports.ProductsService = ProductsService;
-exports.ProductsService = ProductsService = __decorate([
+exports.ProductsService = ProductsService = ProductsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         telegram_service_1.TelegramService])

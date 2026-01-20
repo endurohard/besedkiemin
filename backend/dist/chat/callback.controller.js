@@ -19,7 +19,6 @@ const callback_service_1 = require("./callback.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 let CallbackController = class CallbackController {
     constructor(callbackService) {
         this.callbackService = callbackService;
@@ -58,7 +57,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Получить все заявки на звонок (OWNER/MANAGER)' }),
     __param(0, (0, common_1.Query)('status')),
@@ -69,7 +68,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Получить заявку по ID (OWNER/MANAGER)' }),
     __param(0, (0, common_1.Param)('id')),
@@ -80,7 +79,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':id/contacted'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Отметить "Связались с клиентом" (OWNER/MANAGER)' }),
     __param(0, (0, common_1.Param)('id')),
@@ -93,7 +92,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':id/completed'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Отметить "Завершено" (OWNER/MANAGER)' }),
     __param(0, (0, common_1.Param)('id')),
@@ -106,7 +105,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':id/cancel'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Отменить заявку (OWNER/MANAGER)' }),
     __param(0, (0, common_1.Param)('id')),
@@ -119,7 +118,7 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
+    (0, roles_decorator_1.Roles)('OWNER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Удалить заявку (OWNER)' }),
     __param(0, (0, common_1.Param)('id')),

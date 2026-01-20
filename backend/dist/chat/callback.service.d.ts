@@ -3,6 +3,7 @@ import { TelegramService } from '../telegram/telegram.service';
 export declare class CallbackService {
     private prisma;
     private telegramService;
+    private readonly logger;
     constructor(prisma: PrismaService, telegramService: TelegramService);
     create(data: {
         name: string;

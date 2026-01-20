@@ -62,4 +62,22 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Date)
 ], CreateProductDto.prototype, "deadline", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: true, required: false, description: 'Требуется ли пошив (null = из типа продукта)' }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], CreateProductDto.prototype, "requiresSewing", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'Орех, код 906', required: false, description: 'Цвет/покрытие (для маляра)' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDto.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'Экокожа черная', required: false, description: 'Материал обшивки (ткань/кожа) - если указан, автоматически включается пошив' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDto.prototype, "upholsteryMaterial", void 0);
 //# sourceMappingURL=create-product.dto.js.map

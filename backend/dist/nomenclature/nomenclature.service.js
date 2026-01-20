@@ -61,10 +61,17 @@ let NomenclatureService = class NomenclatureService {
         return nomenclature;
     }
     async update(id, updateDto) {
-        await this.findOne(id);
+        const current = await this.findOne(id);
+        const data = { ...updateDto };
+        if (updateDto.isActive === false && current.isActive === true) {
+            data.discontinuedAt = new Date();
+        }
+        else if (updateDto.isActive === true && current.isActive === false) {
+            data.discontinuedAt = null;
+        }
         return this.prisma.nomenclature.update({
             where: { id },
-            data: updateDto,
+            data,
             include: {
                 productType: true,
             },
@@ -78,9 +85,13 @@ let NomenclatureService = class NomenclatureService {
     }
     async toggleActive(id) {
         const nomenclature = await this.findOne(id);
+        const newIsActive = !nomenclature.isActive;
         return this.prisma.nomenclature.update({
             where: { id },
-            data: { isActive: !nomenclature.isActive },
+            data: {
+                isActive: newIsActive,
+                discontinuedAt: newIsActive ? null : new Date(),
+            },
             include: {
                 productType: true,
             },

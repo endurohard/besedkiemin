@@ -21,7 +21,6 @@ const update_catalog_category_dto_1 = require("./dto/update-catalog-category.dto
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const client_1 = require("@prisma/client");
 let CatalogCategoriesController = class CatalogCategoriesController {
     constructor(categoriesService) {
         this.categoriesService = categoriesService;
@@ -49,7 +48,7 @@ exports.CatalogCategoriesController = CatalogCategoriesController;
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Создать категорию (только OWNER/MANAGER)' }),
     __param(0, (0, common_1.Body)()),
@@ -84,7 +83,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER, client_1.UserRole.MANAGER),
+    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Обновить категорию (только OWNER/MANAGER)' }),
     __param(0, (0, common_1.Param)('id')),
@@ -96,7 +95,7 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.OWNER),
+    (0, roles_decorator_1.Roles)('OWNER'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Удалить категорию (только OWNER)' }),
     __param(0, (0, common_1.Param)('id')),
