@@ -12,12 +12,13 @@ const catalog_orders_service_1 = require("./catalog-orders.service");
 const catalog_orders_controller_1 = require("./catalog-orders.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
 const telegram_module_1 = require("../telegram/telegram.module");
+const feature_flags_module_1 = require("../feature-flags/feature-flags.module");
 let CatalogOrdersModule = class CatalogOrdersModule {
 };
 exports.CatalogOrdersModule = CatalogOrdersModule;
 exports.CatalogOrdersModule = CatalogOrdersModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, telegram_module_1.TelegramModule],
+        imports: [prisma_module_1.PrismaModule, telegram_module_1.TelegramModule, feature_flags_module_1.FeatureFlagsModule],
         providers: [catalog_orders_service_1.CatalogOrdersService],
         controllers: [catalog_orders_controller_1.CatalogOrdersController],
         exports: [catalog_orders_service_1.CatalogOrdersService],

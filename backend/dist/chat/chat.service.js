@@ -26,7 +26,13 @@ let ChatService = class ChatService {
         }
         const now = new Date();
         const currentDay = now.getDay() || 7;
-        const workingDays = settings.workingDays.split(',').map((d) => parseInt(d.trim()));
+        const workingDays = settings.workingDays
+            .split(',')
+            .map((d) => {
+            const day = parseInt(d.trim(), 10);
+            return (isNaN(day) || day < 1 || day > 7) ? null : day;
+        })
+            .filter((d) => d !== null);
         if (!workingDays.includes(currentDay)) {
             return {
                 online: false,

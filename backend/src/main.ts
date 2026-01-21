@@ -4,9 +4,33 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { GlobalExceptionFilter } from './common/filters';
+import { LoggingInterceptor } from './common/interceptors';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+
+  // Validate required environment variables
+  const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET'];
+  const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+  if (missingEnvVars.length > 0) {
+    logger.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+    process.exit(1);
+  }
+
+  // Warn about default JWT secret in production
+  if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET === 'super-secret-jwt-key-change-in-production') {
+    logger.warn('WARNING: Using default JWT_SECRET in production. Please change it!');
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Global exception filter for consistent error responses
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
+  // Global logging interceptor for request/response logging
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Глобальный префикс для всех API routes (кроме Swagger)
   // app.setGlobalPrefix('api');
@@ -56,7 +80,6 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  const logger = new Logger('Bootstrap');
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Swagger documentation: http://localhost:${port}/docs`);
 }

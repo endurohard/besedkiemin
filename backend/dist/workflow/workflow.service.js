@@ -43,7 +43,7 @@ let WorkflowService = class WorkflowService {
         return stage;
     }
     async create(createWorkflowStageDto) {
-        const existingStage = await this.prisma.workflowStage.findUnique({
+        const existingStage = await this.prisma.workflowStage.findFirst({
             where: { order: createWorkflowStageDto.order },
         });
         if (existingStage) {

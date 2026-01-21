@@ -5,8 +5,22 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const app_module_1 = require("./app.module");
 const path_1 = require("path");
+const filters_1 = require("./common/filters");
+const interceptors_1 = require("./common/interceptors");
 async function bootstrap() {
+    const logger = new common_1.Logger('Bootstrap');
+    const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET'];
+    const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+    if (missingEnvVars.length > 0) {
+        logger.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+        process.exit(1);
+    }
+    if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET === 'super-secret-jwt-key-change-in-production') {
+        logger.warn('WARNING: Using default JWT_SECRET in production. Please change it!');
+    }
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.useGlobalFilters(new filters_1.GlobalExceptionFilter());
+    app.useGlobalInterceptors(new interceptors_1.LoggingInterceptor());
     app.useStaticAssets((0, path_1.join)(__dirname, '..', 'uploads'), {
         prefix: '/uploads/',
     });
@@ -42,7 +56,6 @@ async function bootstrap() {
     });
     const port = process.env.PORT || 3000;
     await app.listen(port);
-    const logger = new common_1.Logger('Bootstrap');
     logger.log(`Application is running on: http://localhost:${port}`);
     logger.log(`Swagger documentation: http://localhost:${port}/docs`);
 }

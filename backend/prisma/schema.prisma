@@ -15,21 +15,21 @@ datasource db {
 
 // Роли пользователей (настраиваемые)
 model Role {
-  id          String   @id @default(uuid())
-  name        String   @unique // Название роли ("Менеджер", "Маляр" и т.д.)
-  code        String   @unique // Код роли для программной идентификации (MANAGER, PAINTER)
-  description String?  // Описание роли
-  color       String?  // Цвет для UI (#3B82F6)
-  isSystem    Boolean  @default(false) @map("is_system") // Системные роли нельзя удалить
-  isActive    Boolean  @default(true) @map("is_active")
-  order       Int      @default(0) // Для сортировки
+  id          String  @id @default(uuid())
+  name        String  @unique // Название роли ("Менеджер", "Маляр" и т.д.)
+  code        String  @unique // Код роли для программной идентификации (MANAGER, PAINTER)
+  description String? // Описание роли
+  color       String? // Цвет для UI (#3B82F6)
+  isSystem    Boolean @default(false) @map("is_system") // Системные роли нельзя удалить
+  isActive    Boolean @default(true) @map("is_active")
+  order       Int     @default(0) // Для сортировки
 
   // Дополнительные права доступа (JSON массив строк)
   // Например: ["users:view", "analytics:view", "orders:create"]
-  permissions Json     @default("[]")
+  permissions Json @default("[]")
 
   // Связь с пользователями
-  users       User[]
+  users User[]
 
   // Связь с этапами workflow (многие-ко-многим)
   workflowStages RoleWorkflowStage[]
@@ -45,12 +45,12 @@ model Role {
 
 // Связь роли с этапами workflow (многие-ко-многим)
 model RoleWorkflowStage {
-  id              String        @id @default(uuid())
-  roleId          String        @map("role_id")
-  workflowStageId String        @map("workflow_stage_id")
+  id              String @id @default(uuid())
+  roleId          String @map("role_id")
+  workflowStageId String @map("workflow_stage_id")
 
-  role            Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  workflowStage   WorkflowStage @relation(fields: [workflowStageId], references: [id], onDelete: Cascade)
+  role          Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  workflowStage WorkflowStage @relation(fields: [workflowStageId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, workflowStageId])
   @@map("role_workflow_stages")
@@ -58,106 +58,106 @@ model RoleWorkflowStage {
 
 // Статусы заказа
 enum OrderStatus {
-  NEW           // Новый заказ
+  NEW // Новый заказ
   IN_PRODUCTION // В производстве
-  COMPLETED     // Завершен
-  CANCELLED     // Отменен
+  COMPLETED // Завершен
+  CANCELLED // Отменен
 }
 
 // Приоритет заказа
 enum OrderPriority {
-  LOW           // Низкий приоритет
-  NORMAL        // Обычный приоритет
-  HIGH          // Высокий приоритет
-  URGENT        // Срочный
+  LOW // Низкий приоритет
+  NORMAL // Обычный приоритет
+  HIGH // Высокий приоритет
+  URGENT // Срочный
 }
 
 // Этапы производства продукта
 enum ProductionStage {
-  PENDING       // Ожидает начала
-  DESIGN        // Проектирование
-  PREPARATION   // Заготовка
-  PAINTING      // Покраска
-  SEWING        // Пошив (для продуктов с обивкой)
-  ASSEMBLY      // Сборка
+  PENDING // Ожидает начала
+  DESIGN // Проектирование
+  PREPARATION // Заготовка
+  PAINTING // Покраска
+  SEWING // Пошив (для продуктов с обивкой)
+  ASSEMBLY // Сборка
   QUALITY_CHECK // Проверка качества на складе
-  COMPLETED     // Завершено
-  REJECTED      // Брак
+  COMPLETED // Завершено
+  REJECTED // Брак
 }
 
 // Статус проверки качества
 enum QualityStatus {
-  PENDING       // Ожидает проверки
-  APPROVED      // Принято
-  REJECTED      // Забраковано
+  PENDING // Ожидает проверки
+  APPROVED // Принято
+  REJECTED // Забраковано
 }
 
 // Статус задачи
 enum TaskStatus {
-  NEW           // Новая задача
-  ACCEPTED      // Принята в работу
-  COMPLETED     // Завершена
-  PASSED        // Передана дальше
-  REJECTED      // Брак (только для складиста)
+  NEW // Новая задача
+  ACCEPTED // Принята в работу
+  COMPLETED // Завершена
+  PASSED // Передана дальше
+  REJECTED // Брак (только для складиста)
 }
 
 // Приоритет задачи
 enum TaskPriority {
-  LOW           // Низкий приоритет
-  NORMAL        // Обычный приоритет
-  HIGH          // Высокий приоритет
-  URGENT        // Срочный
+  LOW // Низкий приоритет
+  NORMAL // Обычный приоритет
+  HIGH // Высокий приоритет
+  URGENT // Срочный
 }
 
 // Статус отгрузки со склада
 enum ShipmentStatus {
-  PENDING       // Ожидает отгрузки
-  IN_TRANSIT    // В пути
-  DELIVERED     // Доставлено
-  CANCELLED     // Отменено
+  PENDING // Ожидает отгрузки
+  IN_TRANSIT // В пути
+  DELIVERED // Доставлено
+  CANCELLED // Отменено
 }
 
 // Пользователи системы
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String  @id @default(uuid())
+  email     String  @unique
   password  String
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  isActive  Boolean  @default(true) @map("is_active")
+  firstName String  @map("first_name")
+  lastName  String  @map("last_name")
+  isActive  Boolean @default(true) @map("is_active")
 
   // Связь с ролью (динамические роли)
-  roleId    String   @map("role_id")
-  role      Role     @relation(fields: [roleId], references: [id])
+  roleId String @map("role_id")
+  role   Role   @relation(fields: [roleId], references: [id])
 
   // Telegram для уведомлений
   telegramId String? @map("telegram_id")
 
   // SIP телефония (для менеджеров)
-  sipServer   String? @map("sip_server")   // SIP сервер (например, sip.example.com)
-  sipUser     String? @map("sip_user")     // Логин для SIP
+  sipServer   String? @map("sip_server") // SIP сервер (например, sip.example.com)
+  sipUser     String? @map("sip_user") // Логин для SIP
   sipPassword String? @map("sip_password") // Пароль для SIP
-  sipPort     Int?    @map("sip_port") @default(5060) // Порт SIP (по умолчанию 5060)
-  sipWsPort   Int?    @map("sip_ws_port") @default(8089) // Порт WebSocket для SIP (Yeastar S100 использует 8089)
+  sipPort     Int?    @default(5060) @map("sip_port") // Порт SIP (по умолчанию 5060)
+  sipWsPort   Int?    @default(8089) @map("sip_ws_port") // Порт WebSocket для SIP (Yeastar S100 использует 8089)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Заказы созданные менеджером
-  ordersCreated     Order[]
+  ordersCreated  Order[]
   // История работы с продуктами
-  productHistory    ProductHistory[]
+  productHistory ProductHistory[]
   // Проверки качества
-  qualityChecks     QualityCheck[]
+  qualityChecks  QualityCheck[]
   // Ежедневные задачи
-  tasks             Task[]
+  tasks          Task[]
   // Отгрузки оформленные складистом
-  shipments         Shipment[]
+  shipments      Shipment[]
 
   // Расчет зарплаты
   workLogs          WorkLog[]
   penalties         Penalty[]
-  penaltiesCreated  Penalty[] @relation("PenaltyCreatedBy")
+  penaltiesCreated  Penalty[]          @relation("PenaltyCreatedBy")
   payrollPeriods    PayrollPeriod[]
   managerCommission ManagerCommission?
 
@@ -168,14 +168,14 @@ model User {
 
 // Источники заказов (справочник)
 model OrderSource {
-  id          String   @id @default(uuid())
-  name        String   @unique // Название источника (Авито, Инстаграм, и т.д.)
-  code        String   @unique // Код для программной идентификации (AVITO, INSTAGRAM)
-  description String?  // Описание
-  color       String?  // Цвет для UI (#3B82F6)
-  icon        String?  // Иконка (имя иконки или emoji)
-  isActive    Boolean  @default(true) @map("is_active")
-  order       Int      @default(0) // Для сортировки
+  id          String  @id @default(uuid())
+  name        String  @unique // Название источника (Авито, Инстаграм, и т.д.)
+  code        String  @unique // Код для программной идентификации (AVITO, INSTAGRAM)
+  description String? // Описание
+  color       String? // Цвет для UI (#3B82F6)
+  icon        String? // Иконка (имя иконки или emoji)
+  isActive    Boolean @default(true) @map("is_active")
+  order       Int     @default(0) // Для сортировки
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -225,10 +225,10 @@ model Order {
 
 // Типы продуктов (настраиваемые менеджером)
 model ProductType {
-  id          String   @id @default(uuid())
-  name        String   @unique // Название типа (Стол, Стул, и т.д.)
-  description String?  // Описание типа
-  isActive    Boolean  @default(true) @map("is_active") // Активен ли тип
+  id          String  @id @default(uuid())
+  name        String  @unique // Название типа (Стол, Стул, и т.д.)
+  description String? // Описание типа
+  isActive    Boolean @default(true) @map("is_active") // Активен ли тип
 
   // Нормативное время производства (в часах)
   productionTimeHours Float? @map("production_time_hours")
@@ -255,24 +255,24 @@ model ProductType {
 
 // Номенклатура товаров (конкретные модели внутри типа)
 model Nomenclature {
-  id          String   @id @default(uuid())
-  name        String   // Название номенклатуры (например, "Беседка 3x3", "Стол круглый")
-  sku         String?  @unique // Артикул
-  description String?  // Описание
+  id          String  @id @default(uuid())
+  name        String // Название номенклатуры (например, "Беседка 3x3", "Стол круглый")
+  sku         String? @unique // Артикул
+  description String? // Описание
 
   // Связь с типом товара
   productTypeId String      @map("product_type_id")
   productType   ProductType @relation(fields: [productTypeId], references: [id])
 
   // Характеристики
-  dimensions         String?  // Размеры (например, "3x3 м", "120x80 см")
-  materials          String?  // Материалы
-  color              String?  // Цвет/покрытие
-  upholsteryMaterial String?  @map("upholstery_material") // Материал обшивки (ткань/кожа)
-  weight             Float?   // Вес в кг
+  dimensions         String? // Размеры (например, "3x3 м", "120x80 см")
+  materials          String? // Материалы
+  color              String? // Цвет/покрытие
+  upholsteryMaterial String? @map("upholstery_material") // Материал обшивки (ткань/кожа)
+  weight             Float? // Вес в кг
 
   // Цены
-  basePrice     Float?   @map("base_price") // Базовая цена
+  basePrice Float? @map("base_price") // Базовая цена
 
   // Нормативное время производства (в часах), переопределяет время из типа
   productionTimeHours Float? @map("production_time_hours")
@@ -288,11 +288,11 @@ model Nomenclature {
 
 // Настраиваемые этапы производства (для владельца)
 model WorkflowStage {
-  id          String   @id @default(uuid())
-  name        String   // Название этапа (например, "Менеджер", "Заготовка", "Маляр")
-  description String?  // Описание этапа
-  order       Int      // Порядковый номер этапа (1, 2, 3...)
-  isActive    Boolean  @default(true) @map("is_active")
+  id          String  @id @default(uuid())
+  name        String // Название этапа (например, "Менеджер", "Заготовка", "Маляр")
+  description String? // Описание этапа
+  order       Int // Порядковый номер этапа (1, 2, 3...)
+  isActive    Boolean @default(true) @map("is_active")
 
   // Старое значение ProductionStage для совместимости
   legacyStage ProductionStage? @map("legacy_stage")
@@ -301,7 +301,7 @@ model WorkflowStage {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Роли, которые могут работать на этом этапе (многие-ко-многим)
-  roles          RoleWorkflowStage[]
+  roles RoleWorkflowStage[]
 
   // История прохождения продуктов через этот этап
   productHistory ProductHistory[]
@@ -318,13 +318,13 @@ model WorkflowStage {
 
 // Продукты (каждый проходит свой цикл)
 model Product {
-  id          String          @id @default(uuid())
-  name        String          // Название продукта
-  description String?
-  quantity    Int             @default(1) // Количество
-  dimensions  String?         // Размеры продукта (например, "100x50x75 см")
-  schemaImageUrl String?      @map("schema_image_url") // URL к фото схемы для производственников
-  stage       ProductionStage @default(PENDING)
+  id             String          @id @default(uuid())
+  name           String // Название продукта
+  description    String?
+  quantity       Int             @default(1) // Количество
+  dimensions     String? // Размеры продукта (например, "100x50x75 см")
+  schemaImageUrl String?         @map("schema_image_url") // URL к фото схемы для производственников
+  stage          ProductionStage @default(PENDING)
 
   // Дедлайн
   deadline DateTime?
@@ -375,7 +375,7 @@ model ProductHistory {
   startedAt   DateTime        @default(now()) @map("started_at")
   completedAt DateTime?       @map("completed_at")
   passedAt    DateTime?       @map("passed_at") // Когда передано дальше
-  notes       String?         // Заметки
+  notes       String? // Заметки
 
   productId String  @map("product_id")
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -398,11 +398,11 @@ model ProductHistory {
 
 // Проверка качества (складист проверяет)
 model QualityCheck {
-  id          String        @id @default(uuid())
-  status      QualityStatus @default(PENDING)
-  notes       String?       // Причина браковки
-  photoUrl    String?       @map("photo_url") // URL фото брака
-  checkedAt   DateTime?     @map("checked_at")
+  id        String        @id @default(uuid())
+  status    QualityStatus @default(PENDING)
+  notes     String? // Причина браковки
+  photoUrl  String?       @map("photo_url") // URL фото брака
+  checkedAt DateTime?     @map("checked_at")
 
   productId String  @map("product_id")
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -421,23 +421,23 @@ model QualityCheck {
 // Ежедневные задачи для каждой роли
 model Task {
   id          String          @id @default(uuid())
-  title       String          // Название задачи
-  description String?         // Описание
+  title       String // Название задачи
+  description String? // Описание
   status      TaskStatus      @default(NEW) // Статус задачи
   stage       ProductionStage // Этап производства (старый для совместимости)
   quantity    Int             @default(0) // Количество (для складиста при приемке)
 
   // Приоритет задачи
-  priority    TaskPriority    @default(NORMAL) // Приоритет задачи
+  priority TaskPriority @default(NORMAL) // Приоритет задачи
 
   // Даты
-  acceptedAt  DateTime?       @map("accepted_at")   // Когда принята в работу
-  completedAt DateTime?       @map("completed_at")  // Когда завершена
-  passedAt    DateTime?       @map("passed_at")     // Когда передана дальше
-  rejectedAt  DateTime?       @map("rejected_at")   // Когда забракована
+  acceptedAt  DateTime? @map("accepted_at") // Когда принята в работу
+  completedAt DateTime? @map("completed_at") // Когда завершена
+  passedAt    DateTime? @map("passed_at") // Когда передана дальше
+  rejectedAt  DateTime? @map("rejected_at") // Когда забракована
 
   // Примечания (например, причина брака)
-  notes       String?
+  notes String?
 
   // Фото брака (для складиста при браковке) - массив URL для нескольких фото
   defectPhotos String[] @default([]) @map("defect_photos")
@@ -458,7 +458,7 @@ model Task {
   workflowStage   WorkflowStage? @relation(fields: [workflowStageId], references: [id])
 
   // Журнал работ (записи о выполнении)
-  workLogs        WorkLog[]
+  workLogs WorkLog[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -539,7 +539,7 @@ model Shipment {
 // Позиции отгрузки (товары в отгрузке)
 model ShipmentItem {
   id       String @id @default(uuid())
-  quantity Int    // Количество списываемого товара
+  quantity Int // Количество списываемого товара
 
   // Связь с отгрузкой
   shipmentId String   @map("shipment_id")
@@ -560,16 +560,16 @@ model CompanySettings {
   id String @id @default(uuid())
 
   // Основная информация
-  companyName String @map("company_name")
-  phone       String @default("")
-  email       String @default("")
-  address     String @default("")
-  website     String @default("")
+  companyName     String @map("company_name")
+  phone           String @default("")
+  email           String @default("")
+  address         String @default("")
+  website         String @default("")
   supportTelegram String @default("") @map("support_telegram")
 
   // Юридическая информация
-  inn       String @default("")
-  director  String @default("")
+  inn      String @default("")
+  director String @default("")
 
   // Банковские реквизиты
   bank          String @default("")
@@ -582,8 +582,8 @@ model CompanySettings {
   // Рабочие часы для онлайн-чата
   chatEnabled       Boolean @default(true) @map("chat_enabled") // Включен ли чат
   workingHoursStart String  @default("08:00") @map("working_hours_start") // Начало рабочего дня (формат HH:mm)
-  workingHoursEnd   String  @default("18:00") @map("working_hours_end")   // Конец рабочего дня (формат HH:mm)
-  workingDays       String  @default("1,2,3,4,5") @map("working_days")     // Рабочие дни (1=пн, 7=вс), через запятую
+  workingHoursEnd   String  @default("18:00") @map("working_hours_end") // Конец рабочего дня (формат HH:mm)
+  workingDays       String  @default("1,2,3,4,5") @map("working_days") // Рабочие дни (1=пн, 7=вс), через запятую
   timezone          String  @default("Europe/Moscow") // Часовой пояс
   offlineMessage    String  @default("Мы сейчас не в сети. Оставьте заявку на звонок, и мы свяжемся с вами!") @map("offline_message")
 
@@ -599,13 +599,13 @@ model CompanySettings {
 
 // Категории товаров для публичного каталога
 model CatalogCategory {
-  id          String   @id @default(uuid())
-  name        String   // Название категории (например, "Беседки", "Арки и павильоны")
-  slug        String   @unique // URL-slug для SEO
-  description String?  // Описание категории
-  imageUrl    String?  @map("image_url") // Изображение категории
-  order       Int      @default(0) // Порядок отображения
-  isActive    Boolean  @default(true) @map("is_active")
+  id          String  @id @default(uuid())
+  name        String // Название категории (например, "Беседки", "Арки и павильоны")
+  slug        String  @unique // URL-slug для SEO
+  description String? // Описание категории
+  imageUrl    String? @map("image_url") // Изображение категории
+  order       Int     @default(0) // Порядок отображения
+  isActive    Boolean @default(true) @map("is_active")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -619,31 +619,31 @@ model CatalogCategory {
 // Товары для публичного каталога
 model CatalogProduct {
   id          String  @id @default(uuid())
-  name        String  // Название товара
+  name        String // Название товара
   slug        String  @unique // URL-slug для SEO
   description String? // Полное описание товара
   shortDesc   String? @map("short_desc") // Краткое описание
 
   // Изображения (первое - основное)
-  images      String[] // Массив URL изображений
+  images String[] // Массив URL изображений
 
   // Характеристики
-  dimensions  String?  // Размеры
-  material    String?  // Материал
-  price       Float?   // Цена (может не быть, если по запросу)
-  priceNote   String?  @map("price_note") // Примечание к цене (например, "от 50000 руб")
+  dimensions String? // Размеры
+  material   String? // Материал
+  price      Float? // Цена (может не быть, если по запросу)
+  priceNote  String? @map("price_note") // Примечание к цене (например, "от 50000 руб")
 
   // Дополнительные характеристики (JSON)
-  features    Json?    // Любые дополнительные характеристики
+  features Json? // Любые дополнительные характеристики
 
   // SEO
   metaTitle       String? @map("meta_title")
   metaDescription String? @map("meta_description")
   metaKeywords    String? @map("meta_keywords")
 
-  order       Int      @default(0) // Порядок отображения
-  isActive    Boolean  @default(true) @map("is_active")
-  isFeatured  Boolean  @default(false) @map("is_featured") // Рекомендуемый товар
+  order      Int     @default(0) // Порядок отображения
+  isActive   Boolean @default(true) @map("is_active")
+  isFeatured Boolean @default(false) @map("is_featured") // Рекомендуемый товар
 
   // Связь с категорией
   categoryId String          @map("category_id")
@@ -660,9 +660,9 @@ model CatalogProduct {
 
 // Статус заказа с сайта
 enum CatalogOrderStatus {
-  NEW       // Новый заказ
+  NEW // Новый заказ
   CONTACTED // Связались с клиентом
-  IN_WORK   // В работе
+  IN_WORK // В работе
   COMPLETED // Выполнен
   CANCELLED // Отменен
 }
@@ -674,7 +674,7 @@ model CatalogOrder {
   customerName  String             @map("customer_name")
   customerPhone String             @map("customer_phone")
   customerEmail String?            @map("customer_email")
-  comment       String?            // Комментарий к заказу
+  comment       String? // Комментарий к заказу
   status        CatalogOrderStatus @default(NEW)
 
   // Адрес доставки
@@ -684,10 +684,10 @@ model CatalogOrder {
   totalAmount Float? @map("total_amount")
 
   // Отслеживание действий менеджера
-  contactedAt   DateTime? @map("contacted_at") // Когда менеджер связался с клиентом
-  contactedBy   String?   @map("contacted_by") // ID менеджера, который связался
-  processedAt   DateTime? @map("processed_at") // Когда заказ был оформлен/обработан
-  processedBy   String?   @map("processed_by") // ID менеджера, который оформил
+  contactedAt DateTime? @map("contacted_at") // Когда менеджер связался с клиентом
+  contactedBy String?   @map("contacted_by") // ID менеджера, который связался
+  processedAt DateTime? @map("processed_at") // Когда заказ был оформлен/обработан
+  processedBy String?   @map("processed_by") // ID менеджера, который оформил
 
   // Причина отмены заказа
   cancellationReason String? @map("cancellation_reason")
@@ -706,8 +706,8 @@ model CatalogOrder {
 
 // Позиции заказа с сайта
 model CatalogOrderItem {
-  id       String @id @default(uuid())
-  quantity Int    @default(1)
+  id       String  @id @default(uuid())
+  quantity Int     @default(1)
   price    Float? // Цена на момент заказа
   comment  String? // Комментарий к позиции
 
@@ -726,15 +726,15 @@ model CatalogOrderItem {
 
 // Запросы обратной связи с сайта
 model ContactRequest {
-  id            String   @id @default(uuid())
-  name          String   // Имя клиента
-  phone         String   // Телефон
-  email         String?  // Email (опционально)
-  message       String   // Сообщение
-  productId     String?  @map("product_id") // Если запрос о конкретном товаре
-  isProcessed   Boolean  @default(false) @map("is_processed") // Обработан ли запрос
-  processedAt   DateTime? @map("processed_at") // Когда обработан
-  notes         String?  // Примечания менеджера
+  id          String    @id @default(uuid())
+  name        String // Имя клиента
+  phone       String // Телефон
+  email       String? // Email (опционально)
+  message     String // Сообщение
+  productId   String?   @map("product_id") // Если запрос о конкретном товаре
+  isProcessed Boolean   @default(false) @map("is_processed") // Обработан ли запрос
+  processedAt DateTime? @map("processed_at") // Когда обработан
+  notes       String? // Примечания менеджера
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -748,84 +748,84 @@ model ContactRequest {
 
 // Комната чата (может быть гостевая или привязана к заказу)
 model ChatRoom {
-  id             String       @id @default(uuid())
+  id String @id @default(uuid())
 
   // Опциональная связь с заказом (если клиент оформил заказ)
-  catalogOrderId String?      @unique @map("catalog_order_id")
+  catalogOrderId String?       @unique @map("catalog_order_id")
   catalogOrder   CatalogOrder? @relation(fields: [catalogOrderId], references: [id], onDelete: Cascade)
 
   // Информация о клиенте (для гостевых сессий)
-  customerName   String       @map("customer_name") // Имя клиента
-  customerPhone  String?      @map("customer_phone") // Телефон для идентификации
-  customerEmail  String?      @map("customer_email") // Email для идентификации
-  guestSessionId String?      @unique @map("guest_session_id") // Уникальный ID сессии гостя
+  customerName   String  @map("customer_name") // Имя клиента
+  customerPhone  String? @map("customer_phone") // Телефон для идентификации
+  customerEmail  String? @map("customer_email") // Email для идентификации
+  guestSessionId String? @unique @map("guest_session_id") // Уникальный ID сессии гостя
 
-  isActive       Boolean      @default(true) @map("is_active") // Активна ли комната
+  isActive Boolean @default(true) @map("is_active") // Активна ли комната
 
   // Последнее сообщение для превью
-  lastMessageAt  DateTime?    @map("last_message_at")
-  lastMessageText String?     @map("last_message_text")
+  lastMessageAt   DateTime? @map("last_message_at")
+  lastMessageText String?   @map("last_message_text")
 
   // Непрочитанные сообщения для менеджера
-  unreadCount    Int          @default(0) @map("unread_count")
+  unreadCount Int @default(0) @map("unread_count")
 
-  messages       ChatMessage[]
+  messages ChatMessage[]
 
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("chat_rooms")
   @@index([guestSessionId])
   @@index([customerPhone])
   @@index([customerEmail])
+  @@map("chat_rooms")
 }
 
 // Сообщение в чате
 model ChatMessage {
-  id         String   @id @default(uuid())
-  roomId     String   @map("room_id")
-  room       ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  id     String   @id @default(uuid())
+  roomId String   @map("room_id")
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   // Отправитель
-  senderType String   @map("sender_type") // "CUSTOMER" | "MANAGER"
-  senderId   String?  @map("sender_id")   // userId для менеджера, null для клиента
-  senderName String   @map("sender_name") // Имя отправителя для отображения
+  senderType String  @map("sender_type") // "CUSTOMER" | "MANAGER"
+  senderId   String? @map("sender_id") // userId для менеджера, null для клиента
+  senderName String  @map("sender_name") // Имя отправителя для отображения
 
   // Контент
-  content    String   // Текст сообщения
+  content String // Текст сообщения
 
   // Статус
-  isRead     Boolean  @default(false) @map("is_read")
-  readAt     DateTime? @map("read_at")
+  isRead Boolean   @default(false) @map("is_read")
+  readAt DateTime? @map("read_at")
 
-  createdAt  DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  @@map("chat_messages")
   @@index([roomId, createdAt])
   @@index([roomId, isRead, senderType])
+  @@map("chat_messages")
 }
 
 // Заявка на обратный звонок (для нерабочего времени)
 model CallbackRequest {
-  id            String   @id @default(uuid())
-  name          String   // Имя клиента
-  phone         String   // Телефон
-  message       String?  // Дополнительное сообщение
+  id      String  @id @default(uuid())
+  name    String // Имя клиента
+  phone   String // Телефон
+  message String? // Дополнительное сообщение
 
   // Связь с заказом (если есть)
   catalogOrderId String? @map("catalog_order_id")
 
   // Предпочтительное время звонка
-  preferredTime String?  @map("preferred_time") // Например: "09:00-12:00" или "После 15:00"
+  preferredTime String? @map("preferred_time") // Например: "09:00-12:00" или "После 15:00"
 
   // Статус обработки
-  status        String   @default("NEW") // "NEW" | "CONTACTED" | "COMPLETED" | "CANCELLED"
-  processedBy   String?  @map("processed_by") // ID менеджера
-  processedAt   DateTime? @map("processed_at")
-  notes         String?  // Примечания менеджера
+  status      String    @default("NEW") // "NEW" | "CONTACTED" | "COMPLETED" | "CANCELLED"
+  processedBy String?   @map("processed_by") // ID менеджера
+  processedAt DateTime? @map("processed_at")
+  notes       String? // Примечания менеджера
 
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("callback_requests")
 }
@@ -836,15 +836,15 @@ model CallbackRequest {
 
 // Флаги функций для супер-админа (OWNER)
 model FeatureFlag {
-  id          String   @id @default(uuid())
-  key         String   @unique // Уникальный ключ фичи (например: "chat", "catalog", "analytics")
-  name        String   // Название функции для отображения
-  description String?  // Описание функции
-  isEnabled   Boolean  @default(true) @map("is_enabled") // Включена ли функция
-  category    String   @default("general") // Категория (general, production, sales, etc.)
+  id          String  @id @default(uuid())
+  key         String  @unique // Уникальный ключ фичи (например: "chat", "catalog", "analytics")
+  name        String // Название функции для отображения
+  description String? // Описание функции
+  isEnabled   Boolean @default(true) @map("is_enabled") // Включена ли функция
+  category    String  @default("general") // Категория (general, production, sales, etc.)
 
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("feature_flags")
 }
@@ -855,37 +855,37 @@ model FeatureFlag {
 
 // Статус расчетного периода
 enum PayrollStatus {
-  DRAFT      // Черновик (можно редактировать)
-  APPROVED   // Утвержден (ожидает выплаты)
-  PAID       // Выплачен
-  CANCELLED  // Отменен
+  DRAFT // Черновик (можно редактировать)
+  APPROVED // Утвержден (ожидает выплаты)
+  PAID // Выплачен
+  CANCELLED // Отменен
 }
 
 // Расценки за работу (цена за изделие по типу/этапу)
 model WorkRate {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Тип продукта
-  productTypeId   String   @map("product_type_id")
-  productType     ProductType @relation(fields: [productTypeId], references: [id])
+  productTypeId String      @map("product_type_id")
+  productType   ProductType @relation(fields: [productTypeId], references: [id])
 
   // Этап производства (старый enum для совместимости)
-  stage           ProductionStage
+  stage ProductionStage
 
   // Этап workflow (новый, опционально)
-  workflowStageId String?  @map("workflow_stage_id")
+  workflowStageId String?        @map("workflow_stage_id")
   workflowStage   WorkflowStage? @relation(fields: [workflowStageId], references: [id])
 
   // Цена за единицу изделия на этом этапе
-  pricePerUnit    Float    @map("price_per_unit")
+  pricePerUnit Float @map("price_per_unit")
 
   // Описание (например "Покраска беседки 3x3")
-  description     String?
+  description String?
 
-  isActive        Boolean  @default(true) @map("is_active")
+  isActive Boolean @default(true) @map("is_active")
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([productTypeId, stage])
   @@map("work_rates")
@@ -893,51 +893,51 @@ model WorkRate {
 
 // Журнал выполненных работ (автоматически создается при завершении задачи)
 model WorkLog {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Работник
-  userId          String   @map("user_id")
-  user            User     @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
 
   // Продукт
-  productId       String   @map("product_id")
-  product         Product  @relation(fields: [productId], references: [id])
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
 
   // Задача (опционально, для связи)
-  taskId          String?  @map("task_id")
-  task            Task?    @relation(fields: [taskId], references: [id])
+  taskId String? @map("task_id")
+  task   Task?   @relation(fields: [taskId], references: [id])
 
   // Тип продукта (для быстрого доступа)
-  productTypeId   String   @map("product_type_id")
-  productType     ProductType @relation(fields: [productTypeId], references: [id])
+  productTypeId String      @map("product_type_id")
+  productType   ProductType @relation(fields: [productTypeId], references: [id])
 
   // Этап производства
-  stage           ProductionStage
+  stage ProductionStage
 
   // Этап workflow (опционально)
-  workflowStageId String?  @map("workflow_stage_id")
+  workflowStageId String?        @map("workflow_stage_id")
   workflowStage   WorkflowStage? @relation(fields: [workflowStageId], references: [id])
 
   // Количество обработанных единиц
-  quantity        Int      @default(1)
+  quantity Int @default(1)
 
   // Цена за единицу (на момент выполнения работы)
-  pricePerUnit    Float    @map("price_per_unit")
+  pricePerUnit Float @map("price_per_unit")
 
   // Итоговая сумма (quantity * pricePerUnit)
-  totalAmount     Float    @map("total_amount")
+  totalAmount Float @map("total_amount")
 
   // Когда работа выполнена
-  completedAt     DateTime @map("completed_at")
+  completedAt DateTime @map("completed_at")
 
   // Примечания
-  notes           String?
+  notes String?
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Связь с расчетным периодом
-  payrollPeriodId String?  @map("payroll_period_id")
+  payrollPeriodId String?        @map("payroll_period_id")
   payrollPeriod   PayrollPeriod? @relation(fields: [payrollPeriodId], references: [id])
 
   @@index([userId, completedAt])
@@ -947,42 +947,42 @@ model WorkLog {
 
 // Штрафы
 model Penalty {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Работник, которому назначен штраф
-  userId          String   @map("user_id")
-  user            User     @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
 
   // Сумма штрафа
-  amount          Float
+  amount Float
 
   // Причина штрафа
-  reason          String
+  reason String
 
   // За какой продукт (опционально - для брака)
-  productId       String?  @map("product_id")
-  product         Product? @relation(fields: [productId], references: [id])
+  productId String?  @map("product_id")
+  product   Product? @relation(fields: [productId], references: [id])
 
   // Кто назначил штраф
-  createdById     String   @map("created_by_id")
-  createdBy       User     @relation("PenaltyCreatedBy", fields: [createdById], references: [id])
+  createdById String @map("created_by_id")
+  createdBy   User   @relation("PenaltyCreatedBy", fields: [createdById], references: [id])
 
   // Дата штрафа
-  date            DateTime @default(now())
+  date DateTime @default(now())
 
   // Примечания
-  notes           String?
+  notes String?
 
   // Отменен ли штраф
-  isCancelled     Boolean  @default(false) @map("is_cancelled")
-  cancelledAt     DateTime? @map("cancelled_at")
-  cancelledById   String?  @map("cancelled_by_id")
+  isCancelled   Boolean   @default(false) @map("is_cancelled")
+  cancelledAt   DateTime? @map("cancelled_at")
+  cancelledById String?   @map("cancelled_by_id")
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Связь с расчетным периодом
-  payrollPeriodId String?  @map("payroll_period_id")
+  payrollPeriodId String?        @map("payroll_period_id")
   payrollPeriod   PayrollPeriod? @relation(fields: [payrollPeriodId], references: [id])
 
   @@index([userId, date])
@@ -991,52 +991,52 @@ model Penalty {
 
 // Расчетный период (ведомость на зарплату)
 model PayrollPeriod {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Работник
-  userId          String   @map("user_id")
-  user            User     @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
 
   // Период расчета
-  periodStart     DateTime @map("period_start")
-  periodEnd       DateTime @map("period_end")
+  periodStart DateTime @map("period_start")
+  periodEnd   DateTime @map("period_end")
 
   // Базовый оклад (для менеджеров)
-  baseSalary      Float    @default(0) @map("base_salary")
+  baseSalary Float @default(0) @map("base_salary")
 
   // Сумма за работу (для производственников)
-  workAmount      Float    @default(0) @map("work_amount")
+  workAmount Float @default(0) @map("work_amount")
 
   // Комиссия с заказов (для менеджеров)
-  commissionAmount Float   @default(0) @map("commission_amount")
+  commissionAmount Float @default(0) @map("commission_amount")
 
   // Сумма заказов менеджера за период (для расчета комиссии)
-  ordersAmount    Float    @default(0) @map("orders_amount")
+  ordersAmount Float @default(0) @map("orders_amount")
 
   // Сумма штрафов
-  penaltyAmount   Float    @default(0) @map("penalty_amount")
+  penaltyAmount Float @default(0) @map("penalty_amount")
 
   // Итого к выплате
-  totalAmount     Float    @default(0) @map("total_amount")
+  totalAmount Float @default(0) @map("total_amount")
 
   // Статус
-  status          PayrollStatus @default(DRAFT)
+  status PayrollStatus @default(DRAFT)
 
   // Кто утвердил/выплатил
-  approvedById    String?  @map("approved_by_id")
-  approvedAt      DateTime? @map("approved_at")
-  paidById        String?  @map("paid_by_id")
-  paidAt          DateTime? @map("paid_at")
+  approvedById String?   @map("approved_by_id")
+  approvedAt   DateTime? @map("approved_at")
+  paidById     String?   @map("paid_by_id")
+  paidAt       DateTime? @map("paid_at")
 
   // Примечания
-  notes           String?
+  notes String?
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Связанные записи
-  workLogs        WorkLog[]
-  penalties       Penalty[]
+  workLogs  WorkLog[]
+  penalties Penalty[]
 
   @@unique([userId, periodStart, periodEnd])
   @@index([userId, status])
@@ -1046,29 +1046,29 @@ model PayrollPeriod {
 
 // Настройки комиссии менеджера
 model ManagerCommission {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Менеджер (если для конкретного пользователя)
-  userId          String?  @unique @map("user_id")
-  user            User?    @relation(fields: [userId], references: [id])
+  userId String? @unique @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
 
   // Или роль (если для всей роли)
-  roleId          String?  @map("role_id")
-  role            Role?    @relation(fields: [roleId], references: [id])
+  roleId String? @map("role_id")
+  role   Role?   @relation(fields: [roleId], references: [id])
 
   // Базовый оклад
-  baseSalary      Float    @default(0) @map("base_salary")
+  baseSalary Float @default(0) @map("base_salary")
 
   // Процент комиссии от суммы заказов
-  commissionPercent Float  @default(0) @map("commission_percent")
+  commissionPercent Float @default(0) @map("commission_percent")
 
   // Минимальная сумма заказа для комиссии
-  minOrderAmount  Float?   @map("min_order_amount")
+  minOrderAmount Float? @map("min_order_amount")
 
-  isActive        Boolean  @default(true) @map("is_active")
+  isActive Boolean @default(true) @map("is_active")
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("manager_commissions")
 }

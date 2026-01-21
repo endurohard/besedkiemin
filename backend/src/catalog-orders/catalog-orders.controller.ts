@@ -19,10 +19,13 @@ import { UpdateCatalogOrderDto } from './dto/update-catalog-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { FeatureFlagGuard } from '../feature-flags/guards/feature-flag.guard';
+import { RequireFeature } from '../feature-flags/decorators/feature-flag.decorator';
 
 
 @ApiTags('Catalog Orders')
 @Controller('catalog-orders')
+@RequireFeature('catalog_orders')
 export class CatalogOrdersController {
   constructor(private readonly ordersService: CatalogOrdersService) {}
 
@@ -35,7 +38,7 @@ export class CatalogOrdersController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, FeatureFlagGuard)
   @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить все заказы (SUPER_ADMIN/OWNER/MANAGER)' })
@@ -55,7 +58,7 @@ export class CatalogOrdersController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, FeatureFlagGuard)
   @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить заказ по ID (SUPER_ADMIN/OWNER/MANAGER)' })
@@ -64,7 +67,7 @@ export class CatalogOrdersController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, FeatureFlagGuard)
   @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Обновить заказ (SUPER_ADMIN/OWNER/MANAGER)' })
@@ -73,7 +76,7 @@ export class CatalogOrdersController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, FeatureFlagGuard)
   @Roles('SUPER_ADMIN', 'OWNER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Удалить заказ (SUPER_ADMIN/OWNER)' })
@@ -82,7 +85,7 @@ export class CatalogOrdersController {
   }
 
   @Post(':id/mark-contacted')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, FeatureFlagGuard)
   @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Связались с клиентом"' })
@@ -91,7 +94,7 @@ export class CatalogOrdersController {
   }
 
   @Post(':id/mark-processed')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, FeatureFlagGuard)
   @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отметить "Оформили заказ" и создать производственный заказ' })
@@ -100,7 +103,7 @@ export class CatalogOrdersController {
   }
 
   @Post(':id/cancel')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, FeatureFlagGuard)
   @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Отменить заказ с указанием причины' })

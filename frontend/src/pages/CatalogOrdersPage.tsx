@@ -70,7 +70,8 @@ const CatalogOrdersPage: React.FC = () => {
     try {
       setLoading(true);
       const response = await api.get('/catalog-orders');
-      setOrders(response.data);
+      // Backend возвращает пагинированный ответ { data: [...], meta: {...} }
+      setOrders(response.data.data || []);
     } catch (error) {
       console.error('Ошибка загрузки заказов:', error);
       alert('Не удалось загрузить заказы');

@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const feature_flags_service_1 = require("./feature-flags.service");
 const feature_flags_controller_1 = require("./feature-flags.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
+const feature_flag_guard_1 = require("./guards/feature-flag.guard");
 let FeatureFlagsModule = class FeatureFlagsModule {
 };
 exports.FeatureFlagsModule = FeatureFlagsModule;
@@ -18,8 +19,8 @@ exports.FeatureFlagsModule = FeatureFlagsModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         controllers: [feature_flags_controller_1.FeatureFlagsController],
-        providers: [feature_flags_service_1.FeatureFlagsService],
-        exports: [feature_flags_service_1.FeatureFlagsService],
+        providers: [feature_flags_service_1.FeatureFlagsService, feature_flag_guard_1.FeatureFlagGuard],
+        exports: [feature_flags_service_1.FeatureFlagsService, feature_flag_guard_1.FeatureFlagGuard],
     })
 ], FeatureFlagsModule);
 //# sourceMappingURL=feature-flags.module.js.map

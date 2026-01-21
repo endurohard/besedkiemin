@@ -419,6 +419,11 @@ export class TasksService {
 
     // Создаем новые задачи для всех работников следующей стадии
     const nextStageRoleIds = nextWorkflowStage.roles?.map(r => r.roleId) || [];
+
+    if (nextStageRoleIds.length === 0) {
+      this.logger.warn(`No roles assigned to workflow stage ${nextWorkflowStage.name}`);
+    }
+
     const nextWorkers = await this.prisma.user.findMany({
       where: {
         roleId: { in: nextStageRoleIds },
@@ -426,6 +431,10 @@ export class TasksService {
       },
       include: { role: true },
     });
+
+    if (nextWorkers.length === 0) {
+      this.logger.warn(`No active workers found for stage ${nextWorkflowStage.name}. Product ${task.product.name} moved but no tasks created.`);
+    }
 
     // Создаем задачу для каждого работника (общий цех) с переданным количеством
     for (const worker of nextWorkers) {
@@ -543,28 +552,39 @@ export class TasksService {
       },
     });
 
-    // Возвращаем ТОЛЬКО забракованное количество продукта в малярку
+    // Определяем стадию возврата
+    let returnStage: ProductionStage = ProductionStage.PAINTING;
+    if (returnToStage && Object.values(ProductionStage).includes(returnToStage as ProductionStage)) {
+      returnStage = returnToStage as ProductionStage;
+    }
+
+    // Возвращаем ТОЛЬКО забракованное количество продукта на выбранную стадию
     // Если это частичный брак, создаем новый продукт
+    let rejectedProductId = task.productId;
+
     if (rejectQuantity < task.product.quantity) {
       // Частичный брак - создаем новый продукт для брака
-      await this.prisma.product.create({
+      const rejectedProduct = await this.prisma.product.create({
         data: {
           name: `${task.product.name} (БРАК ${rejectQuantity} шт.)`,
           productTypeId: task.product.productTypeId,
           quantity: rejectQuantity,
-          stage: ProductionStage.PAINTING,
+          stage: returnStage,
           orderId: task.product.orderId,
           dimensions: task.product.dimensions,
           schemaImageUrl: task.product.schemaImageUrl,
           deadline: task.product.deadline,
+          requiresSewing: task.product.requiresSewing,
+          upholsteryMaterial: task.product.upholsteryMaterial,
         },
       });
+      rejectedProductId = rejectedProduct.id;
     } else {
       // Полный брак - возвращаем весь продукт
       await this.prisma.product.update({
         where: { id: task.productId },
         data: {
-          stage: ProductionStage.PAINTING,
+          stage: returnStage,
         },
       });
     }
@@ -572,10 +592,10 @@ export class TasksService {
     // Обновляем статус заказа
     await this.updateOrderStatus(task.product.orderId);
 
-    // Создаем запись в проверке качества
+    // Создаем запись в проверке качества для отклоненного продукта
     await this.prisma.qualityCheck.create({
       data: {
-        productId: task.productId,
+        productId: rejectedProductId,
         checkedById: userId,
         status: 'REJECTED',
         notes,

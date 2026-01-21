@@ -325,7 +325,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
             [client_1.ProductionStage.PENDING]: [client_1.ProductionStage.DESIGN],
             [client_1.ProductionStage.DESIGN]: [client_1.ProductionStage.PREPARATION, client_1.ProductionStage.PENDING],
             [client_1.ProductionStage.PREPARATION]: [client_1.ProductionStage.PAINTING, client_1.ProductionStage.DESIGN],
-            [client_1.ProductionStage.PAINTING]: [client_1.ProductionStage.SEWING, client_1.ProductionStage.ASSEMBLY, client_1.ProductionStage.PREPARATION],
+            [client_1.ProductionStage.PAINTING]: [client_1.ProductionStage.SEWING, client_1.ProductionStage.ASSEMBLY],
             [client_1.ProductionStage.SEWING]: [client_1.ProductionStage.ASSEMBLY, client_1.ProductionStage.PAINTING],
             [client_1.ProductionStage.ASSEMBLY]: [client_1.ProductionStage.QUALITY_CHECK, client_1.ProductionStage.SEWING, client_1.ProductionStage.PAINTING],
             [client_1.ProductionStage.QUALITY_CHECK]: [

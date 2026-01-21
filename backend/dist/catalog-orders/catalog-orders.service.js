@@ -185,6 +185,9 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
     }
     async markProcessed(id, userId) {
         const catalogOrder = await this.findOne(id);
+        if (catalogOrder.status === 'IN_WORK') {
+            return catalogOrder;
+        }
         const productionOrderNumber = catalogOrder.orderNumber.replace('WEB-', 'ORD-');
         const existingProductionOrder = await this.prisma.order.findFirst({
             where: { orderNumber: productionOrderNumber },
@@ -244,6 +247,13 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
                     price: 0
                 }];
         const result = await this.prisma.$transaction(async (tx) => {
+            const lockedOrder = await tx.catalogOrder.findUnique({
+                where: { id },
+                select: { status: true },
+            });
+            if (lockedOrder?.status === 'IN_WORK') {
+                throw new common_1.BadRequestException('Заказ уже обрабатывается');
+            }
             const productionOrder = await tx.order.create({
                 data: {
                     orderNumber: productionOrderNumber,

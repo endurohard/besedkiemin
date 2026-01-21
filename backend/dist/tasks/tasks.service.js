@@ -117,7 +117,7 @@ let TasksService = TasksService_1 = class TasksService {
                 { createdAt: 'desc' },
             ],
         });
-        return tasks.filter(task => task.product.stage === task.stage);
+        return tasks.filter(task => task.product?.stage === task.stage);
     }
     async getDepartmentWorkers(userId) {
         const user = await this.prisma.user.findUnique({
@@ -209,51 +209,53 @@ let TasksService = TasksService_1 = class TasksService {
         });
     }
     async completeTask(taskId, userId, notes, quantity) {
-        const task = await this.prisma.task.findUnique({
-            where: { id: taskId },
-            include: { product: true },
-        });
-        if (!task) {
-            throw new common_1.NotFoundException('Задача не найдена');
-        }
-        if (task.assignedToId !== userId) {
-            throw new common_1.ForbiddenException('Вы не можете завершить эту задачу');
-        }
-        if (task.status !== client_1.TaskStatus.ACCEPTED) {
-            throw new common_1.BadRequestException('Задача должна быть сначала принята в работу');
-        }
-        const completedQuantity = quantity || task.quantity;
-        const remainingQuantity = task.quantity - completedQuantity;
-        if (remainingQuantity > 0) {
-            await this.prisma.task.create({
-                data: {
-                    title: task.title,
-                    description: task.description,
-                    stage: task.stage,
-                    productId: task.productId,
-                    assignedToId: task.assignedToId,
-                    quantity: remainingQuantity,
-                    priority: task.priority,
-                    status: client_1.TaskStatus.NEW,
-                },
+        return this.prisma.$transaction(async (tx) => {
+            const task = await tx.task.findUnique({
+                where: { id: taskId },
+                include: { product: true },
             });
-        }
-        return this.prisma.task.update({
-            where: { id: taskId },
-            data: {
-                status: client_1.TaskStatus.COMPLETED,
-                completedAt: new Date(),
-                notes,
-                quantity: completedQuantity,
-            },
-            include: {
-                product: {
-                    include: {
-                        productType: true,
-                        order: true,
+            if (!task) {
+                throw new common_1.NotFoundException('Задача не найдена');
+            }
+            if (task.assignedToId !== userId) {
+                throw new common_1.ForbiddenException('Вы не можете завершить эту задачу');
+            }
+            if (task.status !== client_1.TaskStatus.ACCEPTED) {
+                throw new common_1.BadRequestException('Задача должна быть сначала принята в работу');
+            }
+            const completedQuantity = quantity || task.quantity;
+            const remainingQuantity = task.quantity - completedQuantity;
+            if (remainingQuantity > 0) {
+                await tx.task.create({
+                    data: {
+                        title: task.title,
+                        description: task.description,
+                        stage: task.stage,
+                        productId: task.productId,
+                        assignedToId: task.assignedToId,
+                        quantity: remainingQuantity,
+                        priority: task.priority,
+                        status: client_1.TaskStatus.NEW,
+                    },
+                });
+            }
+            return tx.task.update({
+                where: { id: taskId },
+                data: {
+                    status: client_1.TaskStatus.COMPLETED,
+                    completedAt: new Date(),
+                    notes,
+                    quantity: completedQuantity,
+                },
+                include: {
+                    product: {
+                        include: {
+                            productType: true,
+                            order: true,
+                        },
                     },
                 },
-            },
+            });
         });
     }
     async passTask(taskId, userId) {
@@ -351,7 +353,10 @@ let TasksService = TasksService_1 = class TasksService {
             },
         });
         await this.updateOrderStatus(task.product.orderId);
-        const nextStageRoleIds = nextWorkflowStage.roles.map(r => r.roleId);
+        const nextStageRoleIds = nextWorkflowStage.roles?.map(r => r.roleId) || [];
+        if (nextStageRoleIds.length === 0) {
+            this.logger.warn(`No roles assigned to workflow stage ${nextWorkflowStage.name}`);
+        }
         const nextWorkers = await this.prisma.user.findMany({
             where: {
                 roleId: { in: nextStageRoleIds },
@@ -359,6 +364,9 @@ let TasksService = TasksService_1 = class TasksService {
             },
             include: { role: true },
         });
+        if (nextWorkers.length === 0) {
+            this.logger.warn(`No active workers found for stage ${nextWorkflowStage.name}. Product ${task.product.name} moved but no tasks created.`);
+        }
         for (const worker of nextWorkers) {
             const newTask = await this.prisma.task.create({
                 data: {
@@ -449,32 +457,40 @@ let TasksService = TasksService_1 = class TasksService {
                 quantityProcessed: newQuantityProcessed,
             },
         });
+        let returnStage = client_1.ProductionStage.PAINTING;
+        if (returnToStage && Object.values(client_1.ProductionStage).includes(returnToStage)) {
+            returnStage = returnToStage;
+        }
+        let rejectedProductId = task.productId;
         if (rejectQuantity < task.product.quantity) {
-            await this.prisma.product.create({
+            const rejectedProduct = await this.prisma.product.create({
                 data: {
                     name: `${task.product.name} (БРАК ${rejectQuantity} шт.)`,
                     productTypeId: task.product.productTypeId,
                     quantity: rejectQuantity,
-                    stage: client_1.ProductionStage.PAINTING,
+                    stage: returnStage,
                     orderId: task.product.orderId,
                     dimensions: task.product.dimensions,
                     schemaImageUrl: task.product.schemaImageUrl,
                     deadline: task.product.deadline,
+                    requiresSewing: task.product.requiresSewing,
+                    upholsteryMaterial: task.product.upholsteryMaterial,
                 },
             });
+            rejectedProductId = rejectedProduct.id;
         }
         else {
             await this.prisma.product.update({
                 where: { id: task.productId },
                 data: {
-                    stage: client_1.ProductionStage.PAINTING,
+                    stage: returnStage,
                 },
             });
         }
         await this.updateOrderStatus(task.product.orderId);
         await this.prisma.qualityCheck.create({
             data: {
-                productId: task.productId,
+                productId: rejectedProductId,
                 checkedById: userId,
                 status: 'REJECTED',
                 notes,

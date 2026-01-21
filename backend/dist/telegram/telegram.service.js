@@ -140,9 +140,15 @@ let TelegramService = TelegramService_1 = class TelegramService {
         });
         this.bot.on('photo', async (msg) => {
             const chatId = msg.chat.id;
+            if (!msg.from?.id)
+                return;
             const state = this.userStates.get(msg.from.id);
             if (!state || state.action !== 'reject_task') {
                 await this.bot.sendMessage(chatId, '❌ Нет активной браковки');
+                return;
+            }
+            if (!msg.photo || msg.photo.length === 0) {
+                await this.bot.sendMessage(chatId, '❌ Фото не найдено');
                 return;
             }
             const photo = msg.photo[msg.photo.length - 1];
@@ -457,8 +463,13 @@ let TelegramService = TelegramService_1 = class TelegramService {
         const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
         if (!user || !user.telegramId)
             return;
+        const chatId = parseInt(user.telegramId, 10);
+        if (isNaN(chatId)) {
+            this.logger.error(`Invalid Telegram ID for user ${userId}: ${user.telegramId}`);
+            return;
+        }
         try {
-            await this.bot.sendMessage(parseInt(user.telegramId), `🆕 *Новая задача!*\n📋 ${taskTitle}\n📦 ${orderNumber}\n📊 ${quantity} шт.`, { parse_mode: 'Markdown' });
+            await this.bot.sendMessage(chatId, `🆕 *Новая задача!*\n📋 ${taskTitle}\n📦 ${orderNumber}\n📊 ${quantity} шт.`, { parse_mode: 'Markdown' });
         }
         catch (error) {
             this.logger.error(`Failed to notify user ${userId}`, error);
@@ -468,7 +479,11 @@ let TelegramService = TelegramService_1 = class TelegramService {
         const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
         if (!user || !user.telegramId)
             return false;
-        const chatId = parseInt(user.telegramId);
+        const chatId = parseInt(user.telegramId, 10);
+        if (isNaN(chatId)) {
+            this.logger.error(`Invalid Telegram ID for user ${userId}: ${user.telegramId}`);
+            return false;
+        }
         this.userStates.set(chatId, {
             action: 'reject_task',
             taskId,
