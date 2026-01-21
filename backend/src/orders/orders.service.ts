@@ -20,9 +20,14 @@ export class OrdersService {
         orderBy: { createdAt: 'desc' },
       });
 
-      orderNumber = lastOrder
-        ? `ORD-${String(parseInt(lastOrder.orderNumber.split('-')[1]) + 1).padStart(3, '0')}`
-        : 'ORD-001';
+      if (lastOrder) {
+        const parts = lastOrder.orderNumber.split('-');
+        const numPart = parts.length >= 2 ? parseInt(parts[1], 10) : 0;
+        const nextNum = isNaN(numPart) ? 1 : numPart + 1;
+        orderNumber = `ORD-${String(nextNum).padStart(3, '0')}`;
+      } else {
+        orderNumber = 'ORD-001';
+      }
     }
 
     // Извлекаем orderNumber из DTO чтобы не дублировать

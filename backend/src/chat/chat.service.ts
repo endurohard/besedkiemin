@@ -24,7 +24,13 @@ export class ChatService {
 
     const now = new Date();
     const currentDay = now.getDay() || 7; // 0 (воскресенье) -> 7, 1-6 остаются как есть
-    const workingDays = settings.workingDays.split(',').map((d) => parseInt(d.trim()));
+    const workingDays = settings.workingDays
+      .split(',')
+      .map((d) => {
+        const day = parseInt(d.trim(), 10);
+        return (isNaN(day) || day < 1 || day > 7) ? null : day;
+      })
+      .filter((d): d is number => d !== null);
 
     // Проверяем, рабочий ли день
     if (!workingDays.includes(currentDay)) {

@@ -390,7 +390,8 @@ export class ProductsService {
       [ProductionStage.PENDING]: [ProductionStage.DESIGN],
       [ProductionStage.DESIGN]: [ProductionStage.PREPARATION, ProductionStage.PENDING],
       [ProductionStage.PREPARATION]: [ProductionStage.PAINTING, ProductionStage.DESIGN],
-      [ProductionStage.PAINTING]: [ProductionStage.SEWING, ProductionStage.ASSEMBLY, ProductionStage.PREPARATION],
+      // PAINTING может перейти в SEWING или ASSEMBLY (если пошив не нужен), но не назад в PREPARATION
+      [ProductionStage.PAINTING]: [ProductionStage.SEWING, ProductionStage.ASSEMBLY],
       [ProductionStage.SEWING]: [ProductionStage.ASSEMBLY, ProductionStage.PAINTING],
       [ProductionStage.ASSEMBLY]: [ProductionStage.QUALITY_CHECK, ProductionStage.SEWING, ProductionStage.PAINTING],
       [ProductionStage.QUALITY_CHECK]: [

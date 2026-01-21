@@ -12,6 +12,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { CatalogOrdersService } from './catalog-orders.service';
 import { CreateCatalogOrderDto } from './dto/create-catalog-order.dto';
 import { UpdateCatalogOrderDto } from './dto/update-catalog-order.dto';
@@ -26,7 +27,9 @@ export class CatalogOrdersController {
   constructor(private readonly ordersService: CatalogOrdersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Создать заказ (публичный доступ)' })
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 заказов в минуту с одного IP
+  @ApiOperation({ summary: 'Создать заказ (публичный доступ, rate limited)' })
   create(@Body() createDto: CreateCatalogOrderDto) {
     return this.ordersService.create(createDto);
   }

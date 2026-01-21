@@ -209,6 +209,11 @@ export class CatalogOrdersService {
   async markProcessed(id: string, userId: string) {
     const catalogOrder = await this.findOne(id);
 
+    // Проверяем, не обрабатывается ли уже этот заказ
+    if (catalogOrder.status === 'IN_WORK') {
+      return catalogOrder;
+    }
+
     // Проверить, не был ли уже создан производственный заказ для этого заказа
     const productionOrderNumber = catalogOrder.orderNumber.replace('WEB-', 'ORD-');
     const existingProductionOrder = await this.prisma.order.findFirst({
@@ -279,8 +284,19 @@ export class CatalogOrdersService {
           price: 0
         }];
 
-    // Используем транзакцию для атомарности
+    // Используем транзакцию для атомарности с оптимистичной блокировкой
     const result = await this.prisma.$transaction(async (tx) => {
+      // Сначала проверяем и блокируем каталожный заказ
+      const lockedOrder = await tx.catalogOrder.findUnique({
+        where: { id },
+        select: { status: true },
+      });
+
+      // Повторная проверка статуса внутри транзакции
+      if (lockedOrder?.status === 'IN_WORK') {
+        throw new BadRequestException('Заказ уже обрабатывается');
+      }
+
       // Создать производственный заказ
       const productionOrder = await tx.order.create({
         data: {

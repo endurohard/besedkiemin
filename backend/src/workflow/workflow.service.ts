@@ -45,7 +45,7 @@ export class WorkflowService {
   // Создать этап
   async create(createWorkflowStageDto: CreateWorkflowStageDto) {
     // Проверяем, не занят ли order
-    const existingStage = await this.prisma.workflowStage.findUnique({
+    const existingStage = await this.prisma.workflowStage.findFirst({
       where: { order: createWorkflowStageDto.order },
     });
 

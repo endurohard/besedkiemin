@@ -307,11 +307,17 @@ export class PayrollService {
     }
 
     if (filters?.periodStart) {
-      where.periodStart = { gte: new Date(filters.periodStart) };
+      const startDate = new Date(filters.periodStart);
+      if (!isNaN(startDate.getTime())) {
+        where.periodStart = { gte: startDate };
+      }
     }
 
     if (filters?.periodEnd) {
-      where.periodEnd = { lte: new Date(filters.periodEnd) };
+      const endDate = new Date(filters.periodEnd);
+      if (!isNaN(endDate.getTime())) {
+        where.periodEnd = { lte: endDate };
+      }
     }
 
     return this.prisma.payrollPeriod.findMany({
@@ -791,14 +797,39 @@ export class PayrollService {
       include: { role: true },
     });
 
+    // Получаем настройки комиссий для расчёта
+    const commissions = await this.prisma.managerCommission.findMany({
+      where: { isActive: true },
+    });
+
     // Формируем сводку по каждому пользователю
-    const users = usersData.map((user) => {
+    const usersPromises = usersData.map(async (user) => {
       const workData = workLogsByUser.find((w) => w.userId === user.id);
       const penaltyData = penaltiesByUser.find((p) => p.userId === user.id);
 
       const workAmount = workData?._sum.totalAmount || 0;
       const penaltyAmount = penaltyData?._sum.amount || 0;
-      const commissionAmount = 0; // TODO: реализовать расчет комиссии
+
+      // Расчёт комиссии для менеджеров
+      let commissionAmount = 0;
+      const userCommission = commissions.find(c => c.userId === user.id)
+        || commissions.find(c => c.roleId === user.roleId);
+
+      if (userCommission) {
+        const ordersData = await this.prisma.order.aggregate({
+          where: {
+            createdById: user.id,
+            createdAt: { gte: start, lte: end },
+            totalAmount: userCommission.minOrderAmount
+              ? { gte: userCommission.minOrderAmount }
+              : { not: null },
+          },
+          _sum: { totalAmount: true },
+        });
+        const ordersAmount = ordersData._sum.totalAmount || 0;
+        commissionAmount = ordersAmount * (userCommission.commissionPercent / 100);
+      }
+
       const totalAmount = workAmount + commissionAmount - penaltyAmount;
 
       return {
@@ -812,6 +843,8 @@ export class PayrollService {
         workLogsCount: workData?._count || 0,
       };
     });
+
+    const users = await Promise.all(usersPromises);
 
     // Итоги
     const totals = {

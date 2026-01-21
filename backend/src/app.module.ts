@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -35,6 +36,10 @@ import { PayrollModule } from './payroll/payroll.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 60 секунд
+      limit: 20,  // 20 запросов в минуту для публичных эндпоинтов
+    }]),
     PrismaModule,
     AuthModule,
     UsersModule,

@@ -121,7 +121,7 @@ export class TasksService {
     });
 
     // Фильтруем только актуальные задачи, где этап задачи совпадает с текущим этапом продукта
-    return tasks.filter(task => task.product.stage === task.stage);
+    return tasks.filter(task => task.product?.stage === task.stage);
   }
 
   // Получить сотрудников своего отдела (той же роли)
@@ -235,59 +235,62 @@ export class TasksService {
 
   // Завершить задачу
   async completeTask(taskId: string, userId: string, notes?: string, quantity?: number) {
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
-      include: { product: true },
-    });
-
-    if (!task) {
-      throw new NotFoundException('Задача не найдена');
-    }
-
-    if (task.assignedToId !== userId) {
-      throw new ForbiddenException('Вы не можете завершить эту задачу');
-    }
-
-    if (task.status !== TaskStatus.ACCEPTED) {
-      throw new BadRequestException('Задача должна быть сначала принята в работу');
-    }
-
-    // Если количество не указано, используем количество из задачи
-    const completedQuantity = quantity || task.quantity;
-    const remainingQuantity = task.quantity - completedQuantity;
-
-    // Если завершено меньше чем нужно, создаем новую задачу с остатком
-    if (remainingQuantity > 0) {
-      await this.prisma.task.create({
-        data: {
-          title: task.title,
-          description: task.description,
-          stage: task.stage,
-          productId: task.productId,
-          assignedToId: task.assignedToId,
-          quantity: remainingQuantity,
-          priority: task.priority,
-          status: TaskStatus.NEW, // Новая задача для оставшихся изделий
-        },
+    // Используем транзакцию для атомарности операции
+    return this.prisma.$transaction(async (tx) => {
+      const task = await tx.task.findUnique({
+        where: { id: taskId },
+        include: { product: true },
       });
-    }
 
-    return this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        status: TaskStatus.COMPLETED,
-        completedAt: new Date(),
-        notes,
-        quantity: completedQuantity,
-      },
-      include: {
-        product: {
-          include: {
-            productType: true,
-            order: true,
+      if (!task) {
+        throw new NotFoundException('Задача не найдена');
+      }
+
+      if (task.assignedToId !== userId) {
+        throw new ForbiddenException('Вы не можете завершить эту задачу');
+      }
+
+      if (task.status !== TaskStatus.ACCEPTED) {
+        throw new BadRequestException('Задача должна быть сначала принята в работу');
+      }
+
+      // Если количество не указано, используем количество из задачи
+      const completedQuantity = quantity || task.quantity;
+      const remainingQuantity = task.quantity - completedQuantity;
+
+      // Если завершено меньше чем нужно, создаем новую задачу с остатком
+      if (remainingQuantity > 0) {
+        await tx.task.create({
+          data: {
+            title: task.title,
+            description: task.description,
+            stage: task.stage,
+            productId: task.productId,
+            assignedToId: task.assignedToId,
+            quantity: remainingQuantity,
+            priority: task.priority,
+            status: TaskStatus.NEW, // Новая задача для оставшихся изделий
+          },
+        });
+      }
+
+      return tx.task.update({
+        where: { id: taskId },
+        data: {
+          status: TaskStatus.COMPLETED,
+          completedAt: new Date(),
+          notes,
+          quantity: completedQuantity,
+        },
+        include: {
+          product: {
+            include: {
+              productType: true,
+              order: true,
+            },
           },
         },
-      },
+      });
     });
   }
 
@@ -415,7 +418,7 @@ export class TasksService {
     await this.updateOrderStatus(task.product.orderId);
 
     // Создаем новые задачи для всех работников следующей стадии
-    const nextStageRoleIds = nextWorkflowStage.roles.map(r => r.roleId);
+    const nextStageRoleIds = nextWorkflowStage.roles?.map(r => r.roleId) || [];
     const nextWorkers = await this.prisma.user.findMany({
       where: {
         roleId: { in: nextStageRoleIds },

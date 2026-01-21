@@ -184,14 +184,22 @@ export class TelegramService implements OnModuleInit {
     // Обработка фото для браковки
     this.bot.on('photo', async (msg) => {
       const chatId = msg.chat.id;
-      const state = this.userStates.get(msg.from!.id);
+      if (!msg.from?.id) return;
+
+      const state = this.userStates.get(msg.from.id);
 
       if (!state || state.action !== 'reject_task') {
         await this.bot.sendMessage(chatId, '❌ Нет активной браковки');
         return;
       }
 
-      const photo = msg.photo![msg.photo!.length - 1];
+      // Проверяем наличие фото
+      if (!msg.photo || msg.photo.length === 0) {
+        await this.bot.sendMessage(chatId, '❌ Фото не найдено');
+        return;
+      }
+
+      const photo = msg.photo[msg.photo.length - 1];
       const file = await this.bot.getFile(photo.file_id);
       const fileUrl = `https://api.telegram.org/file/bot${this.botToken}/${file.file_path}`;
 
@@ -588,9 +596,15 @@ export class TelegramService implements OnModuleInit {
     const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
     if (!user || !user.telegramId) return;
 
+    const chatId = parseInt(user.telegramId, 10);
+    if (isNaN(chatId)) {
+      this.logger.error(`Invalid Telegram ID for user ${userId}: ${user.telegramId}`);
+      return;
+    }
+
     try {
       await this.bot.sendMessage(
-        parseInt(user.telegramId),
+        chatId,
         `🆕 *Новая задача!*\n📋 ${taskTitle}\n📦 ${orderNumber}\n📊 ${quantity} шт.`,
         { parse_mode: 'Markdown' }
       );
@@ -603,7 +617,11 @@ export class TelegramService implements OnModuleInit {
     const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
     if (!user || !user.telegramId) return false;
 
-    const chatId = parseInt(user.telegramId);
+    const chatId = parseInt(user.telegramId, 10);
+    if (isNaN(chatId)) {
+      this.logger.error(`Invalid Telegram ID for user ${userId}: ${user.telegramId}`);
+      return false;
+    }
     this.userStates.set(chatId, {
       action: 'reject_task',
       taskId,
