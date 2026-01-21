@@ -5,15 +5,14 @@ import { ProductionStage } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { Plus, Trash2, Edit2, DollarSign, Users, Save } from 'lucide-react';
 
-// Производственные роли
-const PRODUCTION_ROLES = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'SEWER', 'WAREHOUSE'];
+// Производственные роли (без складиста - он не участвует в производстве)
+const PRODUCTION_ROLES = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'SEWER'];
 
 const roleNames: Record<string, string> = {
   PREPARER: 'Заготовка',
   PAINTER: 'Малярка',
   ASSEMBLER: 'Сборка',
   SEWER: 'Пошив',
-  WAREHOUSE: 'Склад',
 };
 
 const roleColors: Record<string, string> = {
@@ -21,15 +20,13 @@ const roleColors: Record<string, string> = {
   PAINTER: 'bg-green-500',
   ASSEMBLER: 'bg-blue-500',
   SEWER: 'bg-purple-500',
-  WAREHOUSE: 'bg-teal-500',
 };
 
 const stageByRole: Record<string, ProductionStage> = {
   PREPARER: ProductionStage.PREPARATION,
   PAINTER: ProductionStage.PAINTING,
   ASSEMBLER: ProductionStage.ASSEMBLY,
-  SEWER: ProductionStage.ASSEMBLY, // или отдельный этап
-  WAREHOUSE: ProductionStage.QUALITY_CHECK,
+  SEWER: ProductionStage.SEWING,
 };
 
 export default function ProductionWorkersPage() {
