@@ -12,7 +12,7 @@ export class CreateNomenclatureDto {
   @IsString()
   description?: string;
 
-  @IsUUID()
+  @IsString()
   productTypeId: string;
 
   @IsOptional()

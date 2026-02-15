@@ -20,6 +20,11 @@ __decorate([
     __metadata("design:type", String)
 ], CreateWorkRateDto.prototype, "productTypeId", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateWorkRateDto.prototype, "nomenclatureId", void 0);
+__decorate([
     (0, class_validator_1.IsEnum)(client_1.ProductionStage),
     __metadata("design:type", String)
 ], CreateWorkRateDto.prototype, "stage", void 0);

@@ -5,6 +5,10 @@ export class CreateWorkRateDto {
   @IsString()
   productTypeId: string;
 
+  @IsOptional()
+  @IsString()
+  nomenclatureId?: string;
+
   @IsEnum(ProductionStage)
   stage: ProductionStage;
 

@@ -55,4 +55,9 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   upholsteryMaterial?: string;
+
+  @ApiProperty({ example: 'uuid-nomenclature-id', required: false, description: 'ID номенклатуры (конкретная модель изделия)' })
+  @IsUUID()
+  @IsOptional()
+  nomenclatureId?: string;
 }

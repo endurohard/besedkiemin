@@ -10,4 +10,5 @@ export declare class CreateProductDto {
     requiresSewing?: boolean | null;
     color?: string;
     upholsteryMaterial?: string;
+    nomenclatureId?: string;
 }

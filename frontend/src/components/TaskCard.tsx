@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Task, TaskStatus } from '@/types';
 import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
@@ -17,8 +17,8 @@ export const TaskCard = ({ task }: TaskCardProps) => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState('');
-  const [quantity, setQuantity] = useState(task.product?.quantity || 0);
-  const [completedQuantity, setCompletedQuantity] = useState(task.product?.quantity || 0);
+  const [quantity, setQuantity] = useState(task.quantity || task.product?.quantity || 0);
+  const [completedQuantity, setCompletedQuantity] = useState(task.quantity || task.product?.quantity || 0);
   const [rejectNotes, setRejectNotes] = useState('');
   const [rejectQuantity, setRejectQuantity] = useState(1); // Количество брака
   const [requestPhotoViaTelegram, setRequestPhotoViaTelegram] = useState(false);
@@ -28,6 +28,7 @@ export const TaskCard = ({ task }: TaskCardProps) => {
   const [showApproveForm, setShowApproveForm] = useState(false);
   const [showWorkerSelectModal, setShowWorkerSelectModal] = useState(false);
   const [selectedWorkerId, setSelectedWorkerId] = useState('');
+  const [acceptQuantity, setAcceptQuantity] = useState(task.quantity || task.product?.quantity || 1);
 
   // Загружаем сотрудников отдела когда открывается модальное окно
   const { data: departmentWorkers, isLoading: isLoadingWorkers } = useQuery({
@@ -35,6 +36,19 @@ export const TaskCard = ({ task }: TaskCardProps) => {
     queryFn: tasksApi.getDepartmentWorkers,
     enabled: showWorkerSelectModal,
   });
+
+  const currentUserId = user?.id;
+
+  // Автоматически выбираем текущего пользователя когда загрузились работники
+  // Это нужно чтобы по умолчанию задача назначалась тому, кто её принимает
+  useEffect(() => {
+    if (departmentWorkers && selectedWorkerId === '' && currentUserId) {
+      const currentWorker = departmentWorkers.find(w => w.id === currentUserId);
+      if (currentWorker) {
+        setSelectedWorkerId(currentUserId);
+      }
+    }
+  }, [departmentWorkers, currentUserId, selectedWorkerId]);
 
   // Доступное количество для обработки
   const availableQuantity = (task.quantity || task.product?.quantity || 0) - (task.quantityProcessed || 0);
@@ -44,18 +58,19 @@ export const TaskCard = ({ task }: TaskCardProps) => {
   const isPainter = user?.role?.code === 'PAINTER';
   const isAssembler = user?.role?.code === 'ASSEMBLER';
   const isSewer = user?.role?.code === 'SEWER'; // Пошив
-  const isLogist = user?.role?.code === 'LOGIST'; // Логист
   const isSimplifiedRole = isPreparer || isPainter || isAssembler || isSewer; // Упрощенный интерфейс
   // Роли которые выбирают сотрудника при принятии задачи
-  const needsWorkerSelection = isPreparer || isPainter || isAssembler || isSewer || isLogist;
+  const needsWorkerSelection = isPreparer || isPainter || isAssembler || isSewer;
 
   // Мутации для действий с задачами
   const acceptMutation = useMutation({
-    mutationFn: (workerId?: string) => tasksApi.acceptTask(task.id, workerId),
+    mutationFn: (params?: { workerId?: string; quantity?: number }) =>
+      tasksApi.acceptTask(task.id, params?.workerId, params?.quantity),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setShowWorkerSelectModal(false);
       setSelectedWorkerId('');
+      setAcceptQuantity(task.quantity || task.product?.quantity || 1);
     },
   });
 
@@ -66,12 +81,16 @@ export const TaskCard = ({ task }: TaskCardProps) => {
       setNotes('');
       setShowNotesInput(false);
 
-      // Если количество = 1, автоматически передаем дальше
-      if (task.product && task.product.quantity === 1) {
-        // Небольшая задержка чтобы дать серверу обновить статус
-        setTimeout(() => {
-          passMutation.mutate();
-        }, 300);
+      // Для упрощённых ролей (заготовщики, маляры, сборщики, швеи) - автоматически передаём дальше
+      // Также для количества = 1 автоматически передаём
+      if (isSimplifiedRole || (task.product && task.product.quantity === 1)) {
+        try {
+          await tasksApi.passTask(task.id);
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        } catch (e) {
+          // Если auto-pass не удался — задача останется в COMPLETED, пользователь сможет нажать "Передать" вручную
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        }
       }
     },
   });
@@ -85,19 +104,15 @@ export const TaskCard = ({ task }: TaskCardProps) => {
 
   const rejectMutation = useMutation({
     mutationFn: async () => {
-      console.log('🚨 Starting reject mutation', { rejectNotes, rejectQuantity, requestPhoto: requestPhotoViaTelegram, returnToStage });
-
       const result = await tasksApi.rejectTask(task.id, {
         notes: rejectNotes,
         quantity: rejectQuantity,
         requestPhoto: requestPhotoViaTelegram,
         returnToStage: returnToStage
       });
-      console.log('✅ Task rejected successfully:', result);
       return result;
     },
     onSuccess: () => {
-      console.log('✅ Reject mutation success, updating UI...');
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setRejectNotes('');
       setRejectQuantity(1);
@@ -105,7 +120,6 @@ export const TaskCard = ({ task }: TaskCardProps) => {
       setShowRejectForm(false);
     },
     onError: (error: any) => {
-      console.error('❌ Reject mutation error:', error);
       alert(`Ошибка при браковке: ${error?.response?.data?.message || error?.message || 'Неизвестная ошибка'}`);
     },
   });
@@ -177,6 +191,16 @@ export const TaskCard = ({ task }: TaskCardProps) => {
           priority={task.product?.order?.priority || task.priority}
         />
 
+        {/* Информация о браке - показываем кто должен исправить */}
+        {task.title?.includes('БРАК') && task.assignedTo && (
+          <div className="mb-2 p-2 bg-red-100 border-2 border-red-400 rounded text-[11px]">
+            <div className="flex items-center gap-1 text-red-800 font-bold">
+              <span>🚨 БРАК - Исполнитель:</span>
+              <span className="text-red-900">{task.assignedTo.firstName} {task.assignedTo.lastName}</span>
+            </div>
+          </div>
+        )}
+
         {/* Информация о продукте и заказе */}
         {task.product && (
           <div className="mb-2 p-1.5 bg-muted/50 rounded text-[11px]">
@@ -215,7 +239,7 @@ export const TaskCard = ({ task }: TaskCardProps) => {
             {task.product.schemaImageUrl && (
               <div className="mt-1 pt-1 border-t">
                 <a
-                  href={`http://localhost:3000${task.product.schemaImageUrl}`}
+                  href={task.product.schemaImageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[10px] text-blue-600 hover:text-blue-800 underline flex items-center gap-0.5"
@@ -274,7 +298,8 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                     type="number"
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
-                    min={0}
+                    min={1}
+                    max={task.product?.quantity || undefined}
                   />
                 </>
               )}
@@ -354,6 +379,7 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                   <option value="PREPARATION">Заготовка</option>
                   <option value="PAINTING">Покраска</option>
                   <option value="SEWING">Пошив</option>
+                  <option value="ASSEMBLY">Сборка</option>
                 </select>
               </div>
 
@@ -419,10 +445,13 @@ export const TaskCard = ({ task }: TaskCardProps) => {
               {task.status === TaskStatus.NEW && (
                 <Button
                   onClick={() => {
-                    if (needsWorkerSelection) {
+                    // Для задач с браком - сразу принимаем без выбора (брак адресован конкретному работнику)
+                    const isDefectTask = task.title?.includes('БРАК');
+                    if (needsWorkerSelection && !isDefectTask) {
                       setShowWorkerSelectModal(true);
                     } else {
-                      acceptMutation.mutate(undefined);
+                      // Для задач брака передаём ID назначенного работника
+                      acceptMutation.mutate(isDefectTask ? { workerId: task.assignedTo?.id } : undefined);
                     }
                   }}
                   disabled={acceptMutation.isPending}
@@ -434,18 +463,18 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                 </Button>
               )}
 
-              {/* Модальное окно выбора сотрудника */}
+              {/* Модальное окно выбора сотрудника и количества */}
               {showWorkerSelectModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                   <div className="bg-white rounded-lg p-4 w-full max-w-sm mx-4 shadow-xl">
                     <div className="flex items-center gap-2 mb-4">
                       <User size={20} className="text-blue-600" />
-                      <h3 className="text-lg font-bold">Выберите сотрудника</h3>
+                      <h3 className="text-lg font-bold">Принять задачу</h3>
                     </div>
 
                     <div className="mb-4">
                       <p className="text-sm text-gray-600 mb-2">
-                        Кто принимает задачу "{task.title}"?
+                        Кто будет выполнять задачу "{task.title}"?
                       </p>
 
                       {isLoadingWorkers ? (
@@ -453,33 +482,56 @@ export const TaskCard = ({ task }: TaskCardProps) => {
                           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                         </div>
                       ) : (
-                        <select
-                          value={selectedWorkerId}
-                          onChange={(e) => setSelectedWorkerId(e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-lg bg-white text-base"
-                        >
-                          <option value="">-- Выберите себя --</option>
-                          {departmentWorkers?.map((worker) => (
-                            <option key={worker.id} value={worker.id}>
-                              {worker.lastName} {worker.firstName}
-                            </option>
-                          ))}
-                        </select>
+                        <>
+                          <select
+                            value={selectedWorkerId}
+                            onChange={(e) => setSelectedWorkerId(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg bg-white text-base mb-3"
+                          >
+                            <option value="">-- Выберите сотрудника --</option>
+                            {departmentWorkers?.map((worker) => (
+                              <option key={worker.id} value={worker.id}>
+                                {worker.lastName} {worker.firstName} {worker.id === currentUserId ? '(Я)' : ''}
+                              </option>
+                            ))}
+                          </select>
+
+                          {/* Выбор количества */}
+                          {(task.quantity || task.product?.quantity || 1) > 1 && (
+                            <div className="mb-3">
+                              <label className="text-sm text-gray-600 block mb-1">
+                                Количество (из {task.quantity || task.product?.quantity}):
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={task.quantity || task.product?.quantity || 1}
+                                value={acceptQuantity}
+                                onChange={(e) => setAcceptQuantity(Math.min(
+                                  Math.max(1, parseInt(e.target.value) || 1),
+                                  task.quantity || task.product?.quantity || 1
+                                ))}
+                                className="w-full p-3 border border-gray-300 rounded-lg bg-white text-base"
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
 
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => acceptMutation.mutate(selectedWorkerId)}
+                        onClick={() => acceptMutation.mutate({ workerId: selectedWorkerId, quantity: acceptQuantity })}
                         disabled={!selectedWorkerId || acceptMutation.isPending}
                         className="flex-1"
                       >
-                        {acceptMutation.isPending ? 'Принятие...' : 'Подтвердить'}
+                        {acceptMutation.isPending ? 'Принятие...' : `Принять ${acceptQuantity} шт.`}
                       </Button>
                       <Button
                         onClick={() => {
                           setShowWorkerSelectModal(false);
                           setSelectedWorkerId('');
+                          setAcceptQuantity(task.quantity || task.product?.quantity || 1);
                         }}
                         variant="outline"
                       >

@@ -31,22 +31,15 @@ let ProductsService = ProductsService_1 = class ProductsService {
         const firstWorkflowStage = await this.prisma.workflowStage.findFirst({
             where: { isActive: true },
             orderBy: { order: 'asc' },
-        });
-        if (!firstWorkflowStage) {
-            throw new common_1.NotFoundException('Не найдены активные стадии workflow');
-        }
-        const secondWorkflowStage = await this.prisma.workflowStage.findFirst({
-            where: {
-                isActive: true,
-                order: { gt: firstWorkflowStage.order }
-            },
-            orderBy: { order: 'asc' },
             include: {
                 roles: { include: { role: true } },
             },
         });
-        const roleIds = secondWorkflowStage?.roles.map(r => r.roleId) || [];
-        const nextWorkers = roleIds.length > 0
+        if (!firstWorkflowStage) {
+            throw new common_1.NotFoundException('Не найдены активные стадии workflow');
+        }
+        const roleIds = firstWorkflowStage.roles.map(r => r.roleId) || [];
+        const workers = roleIds.length > 0
             ? await this.prisma.user.findMany({
                 where: {
                     roleId: { in: roleIds },
@@ -66,33 +59,27 @@ let ProductsService = ProductsService_1 = class ProductsService {
                     schemaImageUrl: createProductDto.schemaImageUrl,
                     orderId: createProductDto.orderId,
                     deadline: createProductDto.deadline,
-                    stage: secondWorkflowStage?.legacyStage || firstWorkflowStage.legacyStage,
+                    stage: firstWorkflowStage.legacyStage,
+                    color: createProductDto.color,
+                    upholsteryMaterial: createProductDto.upholsteryMaterial,
+                    requiresSewing: createProductDto.requiresSewing,
+                    nomenclatureId: createProductDto.nomenclatureId,
                 },
                 include: {
                     order: true,
                     productType: true,
                 },
             });
-            if (secondWorkflowStage) {
-                await tx.productHistory.create({
+            if (workers.length > 0) {
+                await Promise.all(workers.map((worker) => tx.task.create({
                     data: {
-                        productId: newProduct.id,
-                        userId: order.createdById,
-                        stage: firstWorkflowStage.legacyStage,
-                        status: 'PASSED',
-                        startedAt: new Date(),
-                        completedAt: new Date(),
-                        passedAt: new Date(),
-                    },
-                });
-                await Promise.all(nextWorkers.map((worker) => tx.task.create({
-                    data: {
-                        title: `${newProduct.name} - ${secondWorkflowStage.name}`,
+                        title: `${newProduct.name} - ${firstWorkflowStage.name}`,
                         description: `Новый продукт. Заказ: ${order.orderNumber}`,
-                        stage: secondWorkflowStage.legacyStage,
+                        stage: firstWorkflowStage.legacyStage,
                         productId: newProduct.id,
                         assignedToId: worker.id,
                         quantity: newProduct.quantity,
+                        workflowStageId: firstWorkflowStage.id,
                     },
                 })));
                 await tx.order.update({
@@ -102,15 +89,15 @@ let ProductsService = ProductsService_1 = class ProductsService {
             }
             return newProduct;
         });
-        if (secondWorkflowStage) {
-            Promise.allSettled(nextWorkers
+        if (workers.length > 0) {
+            Promise.allSettled(workers
                 .filter((worker) => worker.telegramId)
                 .map(async (worker) => {
                 const message = `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
                     `*Продукт:* ${product.name}\n` +
                     `*Тип:* ${product.productType?.name || 'Н/Д'}\n` +
                     `*Количество:* ${product.quantity} шт.\n` +
-                    `*Стадия:* ${secondWorkflowStage.name}\n` +
+                    `*Стадия:* ${firstWorkflowStage.name}\n` +
                     `*Заказ:* ${order.orderNumber}\n\n` +
                     `✅ Откройте раздел "Мои задачи" для выполнения`;
                 try {
@@ -331,10 +318,22 @@ let ProductsService = ProductsService_1 = class ProductsService {
             [client_1.ProductionStage.QUALITY_CHECK]: [
                 client_1.ProductionStage.COMPLETED,
                 client_1.ProductionStage.REJECTED,
+                client_1.ProductionStage.PENDING,
+                client_1.ProductionStage.DESIGN,
+                client_1.ProductionStage.PREPARATION,
+                client_1.ProductionStage.PAINTING,
+                client_1.ProductionStage.SEWING,
                 client_1.ProductionStage.ASSEMBLY,
             ],
             [client_1.ProductionStage.COMPLETED]: [],
-            [client_1.ProductionStage.REJECTED]: [client_1.ProductionStage.ASSEMBLY],
+            [client_1.ProductionStage.REJECTED]: [
+                client_1.ProductionStage.PENDING,
+                client_1.ProductionStage.DESIGN,
+                client_1.ProductionStage.PREPARATION,
+                client_1.ProductionStage.PAINTING,
+                client_1.ProductionStage.SEWING,
+                client_1.ProductionStage.ASSEMBLY,
+            ],
         };
         const allowedTransitions = validTransitions[currentStage] || [];
         if (!allowedTransitions.includes(newStage)) {

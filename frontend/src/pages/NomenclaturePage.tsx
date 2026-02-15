@@ -97,6 +97,10 @@ export const NomenclaturePage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.productTypeId) {
+      alert('Выберите тип товара');
+      return;
+    }
     if (editingItem) {
       updateMutation.mutate({ id: editingItem.id, data: formData });
     } else {

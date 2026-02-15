@@ -29,7 +29,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreateNomenclatureDto.prototype, "description", void 0);
 __decorate([
-    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateNomenclatureDto.prototype, "productTypeId", void 0);
 __decorate([

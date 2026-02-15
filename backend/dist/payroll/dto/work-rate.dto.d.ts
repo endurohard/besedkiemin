@@ -1,6 +1,7 @@
 import { ProductionStage } from '@prisma/client';
 export declare class CreateWorkRateDto {
     productTypeId: string;
+    nomenclatureId?: string;
     stage: ProductionStage;
     workflowStageId?: string;
     pricePerUnit: number;

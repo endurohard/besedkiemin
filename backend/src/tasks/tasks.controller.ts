@@ -40,16 +40,23 @@ export class TasksController {
     return this.tasksService.getDepartmentWorkers(req.user.userId);
   }
 
+  @Get('department-tasks')
+  @ApiOperation({ summary: 'Получить задачи отдела (принятые другими сотрудниками)' })
+  async getDepartmentTasks(@Req() req) {
+    return this.tasksService.getDepartmentTasks(req.user.userId);
+  }
+
   @Post(':id/accept')
   @ApiOperation({ summary: 'Принять задачу в работу' })
   async acceptTask(
     @Param('id') id: string,
     @Body('selectedUserId') selectedUserId: string,
+    @Body('quantity') quantity: number,
     @Req() req,
   ) {
     // Если selectedUserId передан - используем его, иначе текущего пользователя
     const workerId = selectedUserId || req.user.userId;
-    return this.tasksService.acceptTask(id, workerId, req.user.userId);
+    return this.tasksService.acceptTask(id, workerId, req.user.userId, quantity);
   }
 
   @Post(':id/complete')

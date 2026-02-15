@@ -418,8 +418,8 @@ export const tasksApi = {
     return response.data;
   },
 
-  acceptTask: async (id: string, selectedUserId?: string): Promise<Task> => {
-    const response = await api.post<Task>(`/tasks/${id}/accept`, { selectedUserId });
+  acceptTask: async (id: string, selectedUserId?: string, quantity?: number): Promise<Task> => {
+    const response = await api.post<Task>(`/tasks/${id}/accept`, { selectedUserId, quantity });
     return response.data;
   },
 
@@ -430,6 +430,19 @@ export const tasksApi = {
     role: { id: string; name: string; code: string };
   }>> => {
     const response = await api.get('/tasks/department-workers');
+    return response.data;
+  },
+
+  getDepartmentTasks: async (): Promise<Array<{
+    worker: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      isCurrentUser: boolean;
+    };
+    tasks: Task[];
+  }>> => {
+    const response = await api.get('/tasks/department-tasks');
     return response.data;
   },
 
@@ -450,6 +463,11 @@ export const tasksApi = {
 
   approveTask: async (id: string, data: ApproveTaskDto): Promise<Task> => {
     const response = await api.post<Task>(`/tasks/${id}/approve`, data);
+    return response.data;
+  },
+
+  getUnacceptedDefectsCount: async (): Promise<{ count: number }> => {
+    const response = await api.get<{ count: number }>('/tasks/defects/unaccepted/count');
     return response.data;
   },
 };

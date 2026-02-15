@@ -841,6 +841,8 @@ export interface WorkRate {
   id: string;
   productTypeId: string;
   productType?: ProductType;
+  nomenclatureId?: string;
+  nomenclature?: Nomenclature;
   stage: ProductionStage;
   workflowStageId?: string;
   workflowStage?: WorkflowStage;
@@ -964,6 +966,7 @@ export interface PayrollSummary {
 // DTOs для Payroll
 export interface CreateWorkRateDto {
   productTypeId: string;
+  nomenclatureId?: string;
   stage: ProductionStage;
   workflowStageId?: string;
   pricePerUnit: number;

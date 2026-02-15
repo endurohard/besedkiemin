@@ -23,6 +23,7 @@ export class PayrollService {
     return this.prisma.workRate.findMany({
       include: {
         productType: true,
+        nomenclature: true,
         workflowStage: true,
       },
       orderBy: [
@@ -37,6 +38,7 @@ export class PayrollService {
       where: { isActive: true },
       include: {
         productType: true,
+        nomenclature: true,
         workflowStage: true,
       },
       orderBy: [
@@ -46,10 +48,28 @@ export class PayrollService {
     });
   }
 
-  async findWorkRate(productTypeId: string, stage: ProductionStage) {
-    return this.prisma.workRate.findUnique({
+  async findWorkRate(productTypeId: string, stage: ProductionStage, nomenclatureId?: string) {
+    // Сначала ищем по номенклатуре (если указана)
+    if (nomenclatureId) {
+      const byNomenclature = await this.prisma.workRate.findUnique({
+        where: {
+          nomenclatureId_stage: { nomenclatureId, stage },
+        },
+        include: {
+          productType: true,
+          nomenclature: true,
+          workflowStage: true,
+        },
+      });
+      if (byNomenclature) return byNomenclature;
+    }
+
+    // Если не найдено по номенклатуре - ищем по типу продукта
+    return this.prisma.workRate.findFirst({
       where: {
-        productTypeId_stage: { productTypeId, stage },
+        productTypeId,
+        stage,
+        nomenclatureId: null,
       },
       include: {
         productType: true,
@@ -59,15 +79,18 @@ export class PayrollService {
   }
 
   async createWorkRate(dto: CreateWorkRateDto) {
-    const existing = await this.prisma.workRate.findUnique({
+    // Проверяем существование расценки
+    const existing = await this.prisma.workRate.findFirst({
       where: {
-        productTypeId_stage: { productTypeId: dto.productTypeId, stage: dto.stage },
+        productTypeId: dto.productTypeId,
+        stage: dto.stage,
+        nomenclatureId: dto.nomenclatureId || null,
       },
     });
 
     if (existing) {
       throw new ConflictException(
-        `Расценка для типа продукта и этапа "${dto.stage}" уже существует`,
+        `Расценка для этого изделия и этапа "${dto.stage}" уже существует`,
       );
     }
 
@@ -75,6 +98,7 @@ export class PayrollService {
       data: dto,
       include: {
         productType: true,
+        nomenclature: true,
         workflowStage: true,
       },
     });
@@ -673,20 +697,29 @@ export class PayrollService {
     productId: string;
     taskId?: string;
     productTypeId: string;
+    nomenclatureId?: string;
     stage: ProductionStage;
     workflowStageId?: string;
     quantity: number;
     completedAt: Date;
     notes?: string;
   }) {
-    // Получаем расценку
-    const workRate = await this.findWorkRate(data.productTypeId, data.stage);
+    // Получаем расценку - сначала по номенклатуре, потом по типу
+    const workRate = await this.findWorkRate(data.productTypeId, data.stage, data.nomenclatureId);
     const pricePerUnit = workRate?.pricePerUnit || 0;
     const totalAmount = data.quantity * pricePerUnit;
 
     return this.prisma.workLog.create({
       data: {
-        ...data,
+        userId: data.userId,
+        productId: data.productId,
+        taskId: data.taskId,
+        productTypeId: data.productTypeId,
+        stage: data.stage,
+        workflowStageId: data.workflowStageId,
+        quantity: data.quantity,
+        completedAt: data.completedAt,
+        notes: data.notes,
         pricePerUnit,
         totalAmount,
       },
@@ -830,12 +863,19 @@ export class PayrollService {
         commissionAmount = ordersAmount * (userCommission.commissionPercent / 100);
       }
 
-      const totalAmount = workAmount + commissionAmount - penaltyAmount;
+      // Получаем baseSalary из настроек комиссии (если есть)
+      let baseSalary = 0;
+      if (userCommission) {
+        baseSalary = userCommission.baseSalary || 0;
+      }
+
+      const totalAmount = baseSalary + workAmount + commissionAmount - penaltyAmount;
 
       return {
         userId: user.id,
         userName: `${user.firstName} ${user.lastName}`,
         role: user.role?.name || 'Без роли',
+        baseSalary,
         workAmount,
         commissionAmount,
         penaltyAmount,

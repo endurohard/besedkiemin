@@ -410,6 +410,19 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash('password123', 10);
 
+  // SUPER_ADMIN user
+  const superAdmin = await prisma.user.upsert({
+    where: { email: 'admin@example.com' },
+    update: {},
+    create: {
+      email: 'admin@example.com',
+      password: hashedPassword,
+      firstName: 'Супер',
+      lastName: 'Администратор',
+      roleId: superAdminRole.id,
+    },
+  });
+
   const owner = await prisma.user.upsert({
     where: { email: 'owner@example.com' },
     update: {},
@@ -928,6 +941,7 @@ async function main() {
 
   console.log('\n🎉 База данных успешно заполнена!');
   console.log('\n📧 Учетные данные для входа:');
+  console.log('   Супер-админ: admin@example.com / password123');
   console.log('   Владелец: owner@example.com / password123');
   console.log('   Менеджер: manager@example.com / password123');
   console.log('   Проектировщик: designer@example.com / password123');

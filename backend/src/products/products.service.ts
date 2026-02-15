@@ -24,31 +24,22 @@ export class ProductsService {
       throw new NotFoundException('Заказ не найден');
     }
 
-    // Получаем первую активную стадию workflow (должна быть PENDING - Менеджер)
+    // Получаем первую активную стадию workflow
     const firstWorkflowStage = await this.prisma.workflowStage.findFirst({
       where: { isActive: true },
-      orderBy: { order: 'asc' },
-    });
-
-    if (!firstWorkflowStage) {
-      throw new NotFoundException('Не найдены активные стадии workflow');
-    }
-
-    // Получаем вторую стадию workflow с ролями
-    const secondWorkflowStage = await this.prisma.workflowStage.findFirst({
-      where: {
-        isActive: true,
-        order: { gt: firstWorkflowStage.order }
-      },
       orderBy: { order: 'asc' },
       include: {
         roles: { include: { role: true } },
       },
     });
 
-    // Получаем работников следующей стадии заранее (через many-to-many связь ролей)
-    const roleIds = secondWorkflowStage?.roles.map(r => r.roleId) || [];
-    const nextWorkers = roleIds.length > 0
+    if (!firstWorkflowStage) {
+      throw new NotFoundException('Не найдены активные стадии workflow');
+    }
+
+    // Получаем работников первой стадии
+    const roleIds = firstWorkflowStage.roles.map(r => r.roleId) || [];
+    const workers = roleIds.length > 0
       ? await this.prisma.user.findMany({
           where: {
             roleId: { in: roleIds },
@@ -60,7 +51,7 @@ export class ProductsService {
 
     // Используем транзакцию для атомарности
     const product = await this.prisma.$transaction(async (tx) => {
-      // Создаем продукт в первой стадии workflow
+      // Создаем продукт на первой стадии workflow
       const newProduct = await tx.product.create({
         data: {
           name: createProductDto.name,
@@ -71,7 +62,11 @@ export class ProductsService {
           schemaImageUrl: createProductDto.schemaImageUrl,
           orderId: createProductDto.orderId,
           deadline: createProductDto.deadline,
-          stage: secondWorkflowStage?.legacyStage || firstWorkflowStage.legacyStage,
+          stage: firstWorkflowStage.legacyStage,
+          color: createProductDto.color,
+          upholsteryMaterial: createProductDto.upholsteryMaterial,
+          requiresSewing: createProductDto.requiresSewing,
+          nomenclatureId: createProductDto.nomenclatureId,
         },
         include: {
           order: true,
@@ -79,31 +74,19 @@ export class ProductsService {
         },
       });
 
-      if (secondWorkflowStage) {
-        // Создаем запись в истории для первой стадии
-        await tx.productHistory.create({
-          data: {
-            productId: newProduct.id,
-            userId: order.createdById,
-            stage: firstWorkflowStage.legacyStage,
-            status: 'PASSED',
-            startedAt: new Date(),
-            completedAt: new Date(),
-            passedAt: new Date(),
-          },
-        });
-
-        // Создаем задачи для работников следующей стадии параллельно
+      // Создаем задачи для работников первой стадии
+      if (workers.length > 0) {
         await Promise.all(
-          nextWorkers.map((worker) =>
+          workers.map((worker) =>
             tx.task.create({
               data: {
-                title: `${newProduct.name} - ${secondWorkflowStage.name}`,
+                title: `${newProduct.name} - ${firstWorkflowStage.name}`,
                 description: `Новый продукт. Заказ: ${order.orderNumber}`,
-                stage: secondWorkflowStage.legacyStage,
+                stage: firstWorkflowStage.legacyStage,
                 productId: newProduct.id,
                 assignedToId: worker.id,
                 quantity: newProduct.quantity,
+                workflowStageId: firstWorkflowStage.id,
               },
             })
           )
@@ -120,9 +103,9 @@ export class ProductsService {
     });
 
     // Отправляем Telegram-уведомления вне транзакции (fire-and-forget)
-    if (secondWorkflowStage) {
+    if (workers.length > 0) {
       Promise.allSettled(
-        nextWorkers
+        workers
           .filter((worker) => worker.telegramId)
           .map(async (worker) => {
             const message =
@@ -130,7 +113,7 @@ export class ProductsService {
               `*Продукт:* ${product.name}\n` +
               `*Тип:* ${product.productType?.name || 'Н/Д'}\n` +
               `*Количество:* ${product.quantity} шт.\n` +
-              `*Стадия:* ${secondWorkflowStage.name}\n` +
+              `*Стадия:* ${firstWorkflowStage.name}\n` +
               `*Заказ:* ${order.orderNumber}\n\n` +
               `✅ Откройте раздел "Мои задачи" для выполнения`;
 
@@ -397,10 +380,22 @@ export class ProductsService {
       [ProductionStage.QUALITY_CHECK]: [
         ProductionStage.COMPLETED,
         ProductionStage.REJECTED,
-        ProductionStage.ASSEMBLY, // Возврат на сборку при браке
+        ProductionStage.PENDING,
+        ProductionStage.DESIGN,
+        ProductionStage.PREPARATION,
+        ProductionStage.PAINTING,
+        ProductionStage.SEWING,
+        ProductionStage.ASSEMBLY,
       ],
       [ProductionStage.COMPLETED]: [], // Финальный этап
-      [ProductionStage.REJECTED]: [ProductionStage.ASSEMBLY], // Можно вернуть на сборку
+      [ProductionStage.REJECTED]: [
+        ProductionStage.PENDING,
+        ProductionStage.DESIGN,
+        ProductionStage.PREPARATION,
+        ProductionStage.PAINTING,
+        ProductionStage.SEWING,
+        ProductionStage.ASSEMBLY,
+      ], // Брак можно вернуть на любую стадию
     };
 
     const allowedTransitions = validTransitions[currentStage] || [];

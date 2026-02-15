@@ -124,7 +124,8 @@ model User {
   password  String
   firstName String  @map("first_name")
   lastName  String  @map("last_name")
-  isActive  Boolean @default(true) @map("is_active")
+  isActive            Boolean @default(true) @map("is_active")
+  isDepartmentAccount Boolean @default(false) @map("is_department_account")
 
   // Связь с ролью (динамические роли)
   roleId String @map("role_id")
@@ -283,6 +284,11 @@ model Nomenclature {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // Продукты этой номенклатуры
+  products Product[]
+  // Расценки за работу по этому изделию
+  workRates WorkRate[]
+
   @@map("nomenclatures")
 }
 
@@ -345,6 +351,10 @@ model Product {
   orderId String @map("order_id")
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
+  // Связь с номенклатурой (конкретная модель изделия)
+  nomenclatureId String?       @map("nomenclature_id")
+  nomenclature   Nomenclature? @relation(fields: [nomenclatureId], references: [id])
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -364,6 +374,7 @@ model Product {
   @@index([stage])
   @@index([orderId])
   @@index([productTypeId])
+  @@index([nomenclatureId])
   @@map("products")
 }
 
@@ -861,13 +872,17 @@ enum PayrollStatus {
   CANCELLED // Отменен
 }
 
-// Расценки за работу (цена за изделие по типу/этапу)
+// Расценки за работу (цена за изделие по типу/этапу или по номенклатуре)
 model WorkRate {
   id String @id @default(uuid())
 
-  // Тип продукта
-  productTypeId String      @map("product_type_id")
-  productType   ProductType @relation(fields: [productTypeId], references: [id])
+  // Тип продукта (опционально, если не указана номенклатура)
+  productTypeId String?      @map("product_type_id")
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
+
+  // Номенклатура (конкретное изделие) - приоритет над типом
+  nomenclatureId String?       @map("nomenclature_id")
+  nomenclature   Nomenclature? @relation(fields: [nomenclatureId], references: [id])
 
   // Этап производства (старый enum для совместимости)
   stage ProductionStage
@@ -887,7 +902,8 @@ model WorkRate {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([productTypeId, stage])
+  @@unique([nomenclatureId, stage]) // Уникальная расценка по номенклатуре+стадии
+  @@unique([productTypeId, stage, nomenclatureId]) // Уникальная расценка по типу+стадии (когда nomenclatureId=null)
   @@map("work_rates")
 }
 

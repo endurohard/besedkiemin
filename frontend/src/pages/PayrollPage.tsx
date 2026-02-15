@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { payrollApi, usersApi, productTypesApi } from '@/lib/api';
+import { payrollApi, usersApi, productTypesApi, nomenclatureApi } from '@/lib/api';
 import type {
   WorkRate,
   WorkLog,
@@ -54,6 +54,7 @@ export default function PayrollPage() {
   const [workRates, setWorkRates] = useState<WorkRate[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
+  const [nomenclatures, setNomenclatures] = useState<Array<{ id: string; name: string; sku?: string; color?: string }>>([]);
 
   // Filter states
   const [periodStart, setPeriodStart] = useState(() => {
@@ -78,6 +79,7 @@ export default function PayrollPage() {
   // Form states
   const [workRateForm, setWorkRateForm] = useState({
     productTypeId: '',
+    nomenclatureId: '',
     stage: ProductionStage.DESIGN,
     pricePerUnit: 0,
     description: '',
@@ -103,6 +105,17 @@ export default function PayrollPage() {
     else if (activeTab === 'penalties') loadPenalties();
     else if (activeTab === 'work-rates') loadWorkRates();
   }, [activeTab, periodStart, periodEnd, selectedUserId]);
+
+  // Загружаем номенклатуры при выборе типа продукта
+  useEffect(() => {
+    if (workRateForm.productTypeId) {
+      nomenclatureApi.getByProductType(workRateForm.productTypeId)
+        .then(data => setNomenclatures(data))
+        .catch(err => console.error('Error loading nomenclatures:', err));
+    } else {
+      setNomenclatures([]);
+    }
+  }, [workRateForm.productTypeId]);
 
   const loadInitialData = async () => {
     try {
@@ -241,7 +254,7 @@ export default function PayrollPage() {
       await payrollApi.createWorkRate(workRateForm);
       setShowWorkRateModal(false);
       loadWorkRates();
-      setWorkRateForm({ productTypeId: '', stage: ProductionStage.DESIGN, pricePerUnit: 0, description: '' });
+      setWorkRateForm({ productTypeId: '', nomenclatureId: '', stage: ProductionStage.DESIGN, pricePerUnit: 0, description: '' });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка создания расценки');
     }
@@ -815,7 +828,7 @@ export default function PayrollPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Тип продукта</label>
                   <select
                     value={workRateForm.productTypeId}
-                    onChange={(e) => setWorkRateForm({ ...workRateForm, productTypeId: e.target.value })}
+                    onChange={(e) => setWorkRateForm({ ...workRateForm, productTypeId: e.target.value, nomenclatureId: '' })}
                     className="w-full border rounded-lg px-3 py-2"
                     required
                   >
@@ -825,6 +838,40 @@ export default function PayrollPage() {
                     ))}
                   </select>
                 </div>
+                {workRateForm.productTypeId && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Изделие (номенклатура) <span className="text-gray-400 text-xs">— необязательно</span>
+                    </label>
+                    {nomenclatures.length > 0 ? (
+                      <>
+                        <select
+                          value={workRateForm.nomenclatureId}
+                          onChange={(e) => setWorkRateForm({ ...workRateForm, nomenclatureId: e.target.value })}
+                          className="w-full border rounded-lg px-3 py-2"
+                        >
+                          <option value="">Все изделия этого типа</option>
+                          {nomenclatures.map((nom) => (
+                            <option key={nom.id} value={nom.id}>
+                              {nom.name} {nom.color ? `(${nom.color})` : ''} {nom.sku ? `[${nom.sku}]` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Выберите конкретное изделие для индивидуальной расценки
+                        </p>
+                      </>
+                    ) : (
+                      <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                        Нет номенклатур для этого типа продукта. Расценка будет применяться ко всем изделиям этого типа.
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          Создайте номенклатуры в разделе "Каталог" для индивидуальных расценок.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Этап</label>
                   <select

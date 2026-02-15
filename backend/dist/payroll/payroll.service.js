@@ -21,6 +21,7 @@ let PayrollService = class PayrollService {
         return this.prisma.workRate.findMany({
             include: {
                 productType: true,
+                nomenclature: true,
                 workflowStage: true,
             },
             orderBy: [
@@ -34,6 +35,7 @@ let PayrollService = class PayrollService {
             where: { isActive: true },
             include: {
                 productType: true,
+                nomenclature: true,
                 workflowStage: true,
             },
             orderBy: [
@@ -42,10 +44,26 @@ let PayrollService = class PayrollService {
             ],
         });
     }
-    async findWorkRate(productTypeId, stage) {
-        return this.prisma.workRate.findUnique({
+    async findWorkRate(productTypeId, stage, nomenclatureId) {
+        if (nomenclatureId) {
+            const byNomenclature = await this.prisma.workRate.findUnique({
+                where: {
+                    nomenclatureId_stage: { nomenclatureId, stage },
+                },
+                include: {
+                    productType: true,
+                    nomenclature: true,
+                    workflowStage: true,
+                },
+            });
+            if (byNomenclature)
+                return byNomenclature;
+        }
+        return this.prisma.workRate.findFirst({
             where: {
-                productTypeId_stage: { productTypeId, stage },
+                productTypeId,
+                stage,
+                nomenclatureId: null,
             },
             include: {
                 productType: true,
@@ -54,18 +72,21 @@ let PayrollService = class PayrollService {
         });
     }
     async createWorkRate(dto) {
-        const existing = await this.prisma.workRate.findUnique({
+        const existing = await this.prisma.workRate.findFirst({
             where: {
-                productTypeId_stage: { productTypeId: dto.productTypeId, stage: dto.stage },
+                productTypeId: dto.productTypeId,
+                stage: dto.stage,
+                nomenclatureId: dto.nomenclatureId || null,
             },
         });
         if (existing) {
-            throw new common_1.ConflictException(`Расценка для типа продукта и этапа "${dto.stage}" уже существует`);
+            throw new common_1.ConflictException(`Расценка для этого изделия и этапа "${dto.stage}" уже существует`);
         }
         return this.prisma.workRate.create({
             data: dto,
             include: {
                 productType: true,
+                nomenclature: true,
                 workflowStage: true,
             },
         });
@@ -551,12 +572,20 @@ let PayrollService = class PayrollService {
         return { success: true };
     }
     async createWorkLog(data) {
-        const workRate = await this.findWorkRate(data.productTypeId, data.stage);
+        const workRate = await this.findWorkRate(data.productTypeId, data.stage, data.nomenclatureId);
         const pricePerUnit = workRate?.pricePerUnit || 0;
         const totalAmount = data.quantity * pricePerUnit;
         return this.prisma.workLog.create({
             data: {
-                ...data,
+                userId: data.userId,
+                productId: data.productId,
+                taskId: data.taskId,
+                productTypeId: data.productTypeId,
+                stage: data.stage,
+                workflowStageId: data.workflowStageId,
+                quantity: data.quantity,
+                completedAt: data.completedAt,
+                notes: data.notes,
                 pricePerUnit,
                 totalAmount,
             },
@@ -667,11 +696,16 @@ let PayrollService = class PayrollService {
                 const ordersAmount = ordersData._sum.totalAmount || 0;
                 commissionAmount = ordersAmount * (userCommission.commissionPercent / 100);
             }
-            const totalAmount = workAmount + commissionAmount - penaltyAmount;
+            let baseSalary = 0;
+            if (userCommission) {
+                baseSalary = userCommission.baseSalary || 0;
+            }
+            const totalAmount = baseSalary + workAmount + commissionAmount - penaltyAmount;
             return {
                 userId: user.id,
                 userName: `${user.firstName} ${user.lastName}`,
                 role: user.role?.name || 'Без роли',
+                baseSalary,
                 workAmount,
                 commissionAmount,
                 penaltyAmount,

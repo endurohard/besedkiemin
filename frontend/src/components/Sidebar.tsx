@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { TaskStatus, ShipmentStatus, FeatureFlagsMap } from '@/types';
-import { tasksApi, featureFlagsApi } from '@/lib/api';
+import { TaskStatus, ShipmentStatus, FeatureFlagsMap, Shipment } from '@/types';
+import { tasksApi, shipmentsApi, featureFlagsApi } from '@/lib/api';
 import {
   LayoutDashboard,
   BarChart3,
@@ -22,7 +22,8 @@ import {
   UserCog,
   Wallet,
   HardHat,
-  Globe
+  Globe,
+  User
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -33,6 +34,10 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = false }: SidebarProps) => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectedWorkerId = searchParams.get('worker');
+
   // Проверка наличия permission
   const hasPermission = (perm: string) => {
     if (userRole === 'SUPER_ADMIN' || userRole === 'OWNER') return true;
@@ -40,6 +45,9 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
   };
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Проверяем, является ли пользователь производственным работником
+  const isProductionWorker = ['PREPARER', 'PAINTER', 'SEWER', 'ASSEMBLER'].includes(userRole || '');
 
   // Fetch task counts for production workers
   const { data: tasks } = useQuery({
@@ -49,17 +57,18 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
     refetchInterval: 30000,
   });
 
+  // Fetch department tasks (all workers in department)
+  const { data: departmentTasks } = useQuery({
+    queryKey: ['department-tasks'],
+    queryFn: tasksApi.getDepartmentTasks,
+    enabled: isProductionWorker && !isCollapsed,
+    refetchInterval: 30000,
+  });
+
   // Fetch shipments for users with shipments:view permission
-  const { data: shipments } = useQuery({
+  const { data: shipments } = useQuery<Shipment[]>({
     queryKey: ['shipments'],
-    queryFn: async () => {
-      const response = await fetch('/api/shipments', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      return response.json();
-    },
+    queryFn: shipmentsApi.getAll,
     enabled: hasPermission('shipments:view'),
     refetchInterval: 30000,
   });
@@ -67,14 +76,7 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
   // Fetch unaccepted defects count for users with defects:view permission
   const { data: defectsCountData } = useQuery({
     queryKey: ['defects-count'],
-    queryFn: async () => {
-      const response = await fetch('/api/tasks/defects/unaccepted/count', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      return response.json();
-    },
+    queryFn: tasksApi.getUnacceptedDefectsCount,
     enabled: hasPermission('defects:view'),
     refetchInterval: 30000,
   });
@@ -103,6 +105,18 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
 
   // Calculate defects count (unaccepted defects for painter)
   const defectCount = defectsCountData?.count || 0;
+
+  // Выбрать сотрудника и показать его задачи в main
+  const selectWorker = (workerId: string) => {
+    navigate(`/app?worker=${workerId}`);
+    onNavigate?.();
+  };
+
+  // Показать все задачи (сбросить фильтр)
+  const showAllTasks = () => {
+    navigate('/app');
+    onNavigate?.();
+  };
 
   const NavLink = ({
     to,
@@ -155,9 +169,52 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
     );
   };
 
+  // Компонент для отображения сотрудника в списке
+  const WorkerButton = ({
+    worker,
+    taskCount,
+    isCurrentUser
+  }: {
+    worker: { id: string; firstName: string; lastName: string };
+    taskCount: number;
+    isCurrentUser: boolean;
+  }) => {
+    const isSelected = selectedWorkerId === worker.id;
+
+    return (
+      <button
+        onClick={() => selectWorker(worker.id)}
+        className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
+          isSelected
+            ? 'bg-primary text-primary-foreground'
+            : isCurrentUser
+              ? 'bg-blue-50 hover:bg-blue-100'
+              : 'hover:bg-gray-50'
+        }`}
+      >
+        <User size={14} className={isSelected ? 'text-white' : isCurrentUser ? 'text-blue-600' : 'text-gray-400'} />
+        <span className={`flex-1 text-xs font-medium truncate ${
+          isSelected ? 'text-white' : isCurrentUser ? 'text-blue-800' : 'text-gray-700'
+        }`}>
+          {worker.lastName} {worker.firstName}
+          {isCurrentUser && ' (Я)'}
+        </span>
+        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+          isSelected
+            ? 'bg-white text-primary'
+            : isCurrentUser
+              ? 'bg-blue-500 text-white'
+              : 'bg-yellow-500 text-white'
+        }`}>
+          {taskCount}
+        </span>
+      </button>
+    );
+  };
+
   return (
     <aside className={`
-      border-r bg-card min-h-[calc(100vh-49px)] transition-all duration-200
+      border-r bg-card min-h-[calc(100vh-49px)] transition-all duration-200 flex flex-col
       ${isMobile ? 'w-56' : (isCollapsed ? 'w-14' : 'w-48')}
     `}>
       {/* Toggle button - hidden on mobile */}
@@ -272,6 +329,44 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
           <NavLink to="/app/feature-flags" icon={Shield} label="Функции" />
         )}
       </nav>
+
+      {/* Секция "Отдел" - сотрудники с задачами (только для производственных работников) */}
+      {isProductionWorker && !isCollapsed && departmentTasks && departmentTasks.length > 0 && (
+        <div className="flex-1 border-t mt-2 overflow-hidden flex flex-col">
+          <div className="px-3 py-2 bg-gray-50 border-b flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HardHat size={14} className="text-gray-600" />
+              <span className="text-xs font-semibold text-gray-700 uppercase">Отдел</span>
+            </div>
+            {selectedWorkerId && (
+              <button
+                onClick={showAllTasks}
+                className="text-[10px] text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Все задачи
+              </button>
+            )}
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {/* Сначала показываем текущего пользователя */}
+            {departmentTasks
+              .sort((a, b) => {
+                // Текущий пользователь первым
+                if (a.worker.isCurrentUser) return -1;
+                if (b.worker.isCurrentUser) return 1;
+                return a.worker.lastName.localeCompare(b.worker.lastName);
+              })
+              .map(item => (
+                <WorkerButton
+                  key={item.worker.id}
+                  worker={item.worker}
+                  taskCount={item.tasks.filter(t => t.status === TaskStatus.ACCEPTED).length}
+                  isCurrentUser={item.worker.isCurrentUser}
+                />
+              ))}
+          </div>
+        </div>
+      )}
     </aside>
   );
 };
