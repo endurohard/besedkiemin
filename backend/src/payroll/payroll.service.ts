@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PayrollStatus, ProductionStage } from '@prisma/client';
 import {
@@ -15,6 +15,8 @@ import {
 
 @Injectable()
 export class PayrollService {
+  private readonly logger = new Logger(PayrollService.name);
+
   constructor(private prisma: PrismaService) {}
 
   // ==================== РАСЦЕНКИ (WorkRate) ====================
@@ -141,10 +143,12 @@ export class PayrollService {
     if (filters?.startDate || filters?.endDate) {
       where.date = {};
       if (filters.startDate) {
-        where.date.gte = new Date(filters.startDate);
+        const d = new Date(filters.startDate);
+        if (!isNaN(d.getTime())) where.date.gte = d;
       }
       if (filters.endDate) {
-        where.date.lte = new Date(filters.endDate);
+        const d = new Date(filters.endDate);
+        if (!isNaN(d.getTime())) where.date.lte = d;
       }
     }
 
@@ -228,6 +232,16 @@ export class PayrollService {
       throw new BadRequestException('Штраф уже отменен');
     }
 
+    // Нельзя отменять штрафы, включённые в выплаченный расчёт
+    if (penalty.payrollPeriodId) {
+      const period = await this.prisma.payrollPeriod.findUnique({
+        where: { id: penalty.payrollPeriodId },
+      });
+      if (period?.status === PayrollStatus.PAID) {
+        throw new BadRequestException('Нельзя отменить штраф, включённый в выплаченный расчёт');
+      }
+    }
+
     return this.prisma.penalty.update({
       where: { id },
       data: {
@@ -284,13 +298,32 @@ export class PayrollService {
   }
 
   async createManagerCommission(dto: CreateManagerCommissionDto) {
+    // Проверяем существование пользователя
     if (dto.userId) {
+      const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+      if (!user) {
+        throw new NotFoundException('Пользователь не найден');
+      }
+
       const existing = await this.prisma.managerCommission.findUnique({
         where: { userId: dto.userId },
       });
       if (existing) {
         throw new ConflictException('Настройки комиссии для этого пользователя уже существуют');
       }
+    }
+
+    // Проверяем существование роли
+    if (dto.roleId) {
+      const role = await this.prisma.role.findUnique({ where: { id: dto.roleId } });
+      if (!role) {
+        throw new NotFoundException('Роль не найдена');
+      }
+    }
+
+    // Должен быть указан хотя бы userId или roleId
+    if (!dto.userId && !dto.roleId) {
+      throw new BadRequestException('Необходимо указать userId или roleId');
     }
 
     return this.prisma.managerCommission.create({
@@ -704,6 +737,21 @@ export class PayrollService {
     completedAt: Date;
     notes?: string;
   }) {
+    // Проверяем что номенклатура соответствует типу продукта
+    if (data.nomenclatureId) {
+      const nomenclature = await this.prisma.nomenclature.findUnique({
+        where: { id: data.nomenclatureId },
+        select: { productTypeId: true },
+      });
+      if (nomenclature && nomenclature.productTypeId !== data.productTypeId) {
+        this.logger.warn(
+          `Nomenclature ${data.nomenclatureId} belongs to productType ${nomenclature.productTypeId}, ` +
+          `but workLog has productType ${data.productTypeId}. Ignoring nomenclatureId.`
+        );
+        data.nomenclatureId = undefined;
+      }
+    }
+
     // Получаем расценку - сначала по номенклатуре, потом по типу
     const workRate = await this.findWorkRate(data.productTypeId, data.stage, data.nomenclatureId);
     const pricePerUnit = workRate?.pricePerUnit || 0;
@@ -752,10 +800,12 @@ export class PayrollService {
     if (filters?.startDate || filters?.endDate) {
       where.completedAt = {};
       if (filters.startDate) {
-        where.completedAt.gte = new Date(filters.startDate);
+        const d = new Date(filters.startDate);
+        if (!isNaN(d.getTime())) where.completedAt.gte = d;
       }
       if (filters.endDate) {
-        where.completedAt.lte = new Date(filters.endDate);
+        const d = new Date(filters.endDate);
+        if (!isNaN(d.getTime())) where.completedAt.lte = d;
       }
     }
 
@@ -792,10 +842,144 @@ export class PayrollService {
     });
   }
 
+  // Заработок работника (для PIN-входа и просмотра своих данных)
+  async getWorkerEarnings(userId: string, startDate?: string, endDate?: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    // Определяем период (по умолчанию — текущий месяц)
+    const now = new Date();
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = endDate
+      ? new Date(endDate)
+      : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // Заработок за сегодня
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const [workLogs, todayLogs, penalties, todayPenalties] = await Promise.all([
+      // Все работы за период
+      this.prisma.workLog.findMany({
+        where: {
+          userId,
+          completedAt: { gte: start, lte: end },
+        },
+        include: {
+          product: {
+            select: { id: true, name: true },
+          },
+          productType: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: { completedAt: 'desc' },
+      }),
+      // Работы за сегодня
+      this.prisma.workLog.findMany({
+        where: {
+          userId,
+          completedAt: { gte: todayStart, lte: todayEnd },
+        },
+        include: {
+          product: { select: { id: true, name: true } },
+          productType: { select: { id: true, name: true } },
+        },
+        orderBy: { completedAt: 'desc' },
+      }),
+      // Штрафы за период
+      this.prisma.penalty.findMany({
+        where: {
+          userId,
+          date: { gte: start, lte: end },
+          isCancelled: false,
+        },
+        orderBy: { date: 'desc' },
+      }),
+      // Штрафы за сегодня
+      this.prisma.penalty.findMany({
+        where: {
+          userId,
+          date: { gte: todayStart, lte: todayEnd },
+          isCancelled: false,
+        },
+      }),
+    ]);
+
+    const periodTotal = workLogs.reduce((sum, log) => sum + log.totalAmount, 0);
+    const todayTotal = todayLogs.reduce((sum, log) => sum + log.totalAmount, 0);
+    const penaltyTotal = penalties.reduce((sum, p) => sum + p.amount, 0);
+    const todayPenaltyTotal = todayPenalties.reduce((sum, p) => sum + p.amount, 0);
+
+    return {
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role?.name,
+      },
+      period: {
+        start: start.toISOString(),
+        end: end.toISOString(),
+      },
+      today: {
+        earnings: todayTotal,
+        penalties: todayPenaltyTotal,
+        net: todayTotal - todayPenaltyTotal,
+        workLogs: todayLogs.map(log => ({
+          id: log.id,
+          product: log.product?.name,
+          productType: log.productType?.name,
+          stage: log.stage,
+          quantity: log.quantity,
+          pricePerUnit: log.pricePerUnit,
+          totalAmount: log.totalAmount,
+          completedAt: log.completedAt,
+        })),
+      },
+      period_totals: {
+        earnings: periodTotal,
+        penalties: penaltyTotal,
+        net: periodTotal - penaltyTotal,
+        workLogsCount: workLogs.length,
+      },
+      recentWorkLogs: workLogs.slice(0, 20).map(log => ({
+        id: log.id,
+        product: log.product?.name,
+        productType: log.productType?.name,
+        stage: log.stage,
+        quantity: log.quantity,
+        pricePerUnit: log.pricePerUnit,
+        totalAmount: log.totalAmount,
+        completedAt: log.completedAt,
+      })),
+      penalties: penalties.map(p => ({
+        id: p.id,
+        amount: p.amount,
+        reason: p.reason,
+        date: p.date,
+      })),
+    };
+  }
+
   // Сводка по зарплате за период
   async getPayrollSummary(periodStart: string, periodEnd: string) {
     const start = new Date(periodStart);
     const end = new Date(periodEnd);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new BadRequestException('Неверный формат даты периода');
+    }
 
     // Получаем все работы за период сгруппированные по пользователям
     const workLogsByUser = await this.prisma.workLog.groupBy({
@@ -835,8 +1019,66 @@ export class PayrollService {
       where: { isActive: true },
     });
 
-    // Формируем сводку по каждому пользователю
-    const usersPromises = usersData.map(async (user) => {
+    // Batch-load order totals for users with commissions (fix N+1)
+    const usersWithCommissions = usersData.filter(u => {
+      return commissions.some(c => c.userId === u.id || c.roleId === u.roleId);
+    });
+    const commissionUserIds = usersWithCommissions.map(u => u.id);
+
+    // Single groupBy query instead of N individual aggregates
+    let ordersByUser = new Map<string, number>();
+    let ordersWithMinByUser = new Map<string, number>();
+
+    if (commissionUserIds.length > 0) {
+      const orderGroups = await this.prisma.order.groupBy({
+        by: ['createdById'],
+        _sum: { totalAmount: true },
+        where: {
+          createdById: { in: commissionUserIds },
+          createdAt: { gte: start, lte: end },
+          totalAmount: { not: null },
+        },
+      });
+
+      for (const group of orderGroups) {
+        ordersByUser.set(group.createdById, group._sum.totalAmount || 0);
+      }
+
+      // For commissions with minOrderAmount, we need filtered totals
+      // Collect unique minOrderAmounts
+      const minAmounts = [...new Set(
+        commissions.filter(c => c.minOrderAmount).map(c => c.minOrderAmount)
+      )];
+
+      if (minAmounts.length > 0) {
+        // For each distinct minOrderAmount, run one query for all relevant users
+        for (const minAmount of minAmounts) {
+          const relevantUserIds = commissionUserIds.filter(uid => {
+            const uc = commissions.find(c => c.userId === uid) ||
+              commissions.find(c => c.roleId === usersData.find(u => u.id === uid)?.roleId);
+            return uc?.minOrderAmount === minAmount;
+          });
+
+          if (relevantUserIds.length > 0) {
+            const filteredGroups = await this.prisma.order.groupBy({
+              by: ['createdById'],
+              _sum: { totalAmount: true },
+              where: {
+                createdById: { in: relevantUserIds },
+                createdAt: { gte: start, lte: end },
+                totalAmount: { gte: minAmount! },
+              },
+            });
+            for (const group of filteredGroups) {
+              ordersWithMinByUser.set(group.createdById, group._sum.totalAmount || 0);
+            }
+          }
+        }
+      }
+    }
+
+    // Формируем сводку по каждому пользователю (synchronous now - no DB calls)
+    const users = usersData.map((user) => {
       const workData = workLogsByUser.find((w) => w.userId === user.id);
       const penaltyData = penaltiesByUser.find((p) => p.userId === user.id);
 
@@ -845,28 +1087,16 @@ export class PayrollService {
 
       // Расчёт комиссии для менеджеров
       let commissionAmount = 0;
+      let baseSalary = 0;
       const userCommission = commissions.find(c => c.userId === user.id)
         || commissions.find(c => c.roleId === user.roleId);
 
       if (userCommission) {
-        const ordersData = await this.prisma.order.aggregate({
-          where: {
-            createdById: user.id,
-            createdAt: { gte: start, lte: end },
-            totalAmount: userCommission.minOrderAmount
-              ? { gte: userCommission.minOrderAmount }
-              : { not: null },
-          },
-          _sum: { totalAmount: true },
-        });
-        const ordersAmount = ordersData._sum.totalAmount || 0;
-        commissionAmount = ordersAmount * (userCommission.commissionPercent / 100);
-      }
-
-      // Получаем baseSalary из настроек комиссии (если есть)
-      let baseSalary = 0;
-      if (userCommission) {
         baseSalary = userCommission.baseSalary || 0;
+        const ordersAmount = userCommission.minOrderAmount
+          ? (ordersWithMinByUser.get(user.id) || 0)
+          : (ordersByUser.get(user.id) || 0);
+        commissionAmount = ordersAmount * (userCommission.commissionPercent / 100);
       }
 
       const totalAmount = baseSalary + workAmount + commissionAmount - penaltyAmount;
@@ -883,8 +1113,6 @@ export class PayrollService {
         workLogsCount: workData?._count || 0,
       };
     });
-
-    const users = await Promise.all(usersPromises);
 
     // Итоги
     const totals = {

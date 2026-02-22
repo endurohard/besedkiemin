@@ -85,8 +85,7 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
   const { data: featureFlags } = useQuery<FeatureFlagsMap>({
     queryKey: ['feature-flags-public'],
     queryFn: featureFlagsApi.getPublic,
-    staleTime: 5000, // Cache for 5 seconds
-    refetchOnMount: true,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const isActive = (path: string) => {

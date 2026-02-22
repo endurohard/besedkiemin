@@ -1,5 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsDateString, Min, IsEnum } from 'class-validator';
-import { PayrollStatus } from '@prisma/client';
+import { IsString, IsOptional, IsNumber, IsDateString, Min } from 'class-validator';
 
 export class CreatePayrollPeriodDto {
   @IsString()

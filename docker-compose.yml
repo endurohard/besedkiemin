@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: besedki_emin
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -37,7 +37,7 @@ services:
     ports:
       - '80:80'     # HTTP на стандартном порту (без :8000 в URL)
       - '443:443'   # HTTPS на стандартном порту
-      - '8001:8001' # Kong Admin API (read-only in DB-less mode)
+      - '127.0.0.1:8001:8001' # Kong Admin API (read-only in DB-less mode)
     volumes:
       - ./kong.yml:/usr/local/kong/declarative/kong.yml:ro
     healthcheck:

@@ -55,18 +55,21 @@ let OrdersService = class OrdersService {
     async create(createOrderDto, userId) {
         let orderNumber = createOrderDto.orderNumber?.trim();
         if (!orderNumber) {
-            const lastOrder = await this.prisma.order.findFirst({
-                orderBy: { createdAt: 'desc' },
+            const allOrders = await this.prisma.order.findMany({
+                where: { orderNumber: { startsWith: 'ORD-' } },
+                select: { orderNumber: true },
             });
-            if (lastOrder) {
-                const parts = lastOrder.orderNumber.split('-');
-                const numPart = parts.length >= 2 ? parseInt(parts[1], 10) : 0;
-                const nextNum = isNaN(numPart) ? 1 : numPart + 1;
-                orderNumber = `ORD-${String(nextNum).padStart(3, '0')}`;
+            let maxNum = 0;
+            for (const o of allOrders) {
+                const parts = o.orderNumber.split('-');
+                if (parts.length >= 2) {
+                    const num = parseInt(parts[1], 10);
+                    if (!isNaN(num) && num > maxNum) {
+                        maxNum = num;
+                    }
+                }
             }
-            else {
-                orderNumber = 'ORD-001';
-            }
+            orderNumber = `ORD-${String(maxNum + 1).padStart(3, '0')}`;
         }
         const { orderNumber: _, ...restDto } = createOrderDto;
         return this.prisma.order.create({
@@ -116,10 +119,14 @@ let OrdersService = class OrdersService {
         if (filters?.startDate || filters?.endDate) {
             where.createdAt = {};
             if (filters.startDate) {
-                where.createdAt.gte = new Date(filters.startDate);
+                const d = new Date(filters.startDate);
+                if (!isNaN(d.getTime()))
+                    where.createdAt.gte = d;
             }
             if (filters.endDate) {
-                where.createdAt.lte = new Date(filters.endDate);
+                const d = new Date(filters.endDate);
+                if (!isNaN(d.getTime()))
+                    where.createdAt.lte = d;
             }
         }
         const [orders, total] = await Promise.all([
@@ -275,10 +282,14 @@ let OrdersService = class OrdersService {
         if (filters?.startDate || filters?.endDate) {
             where.createdAt = {};
             if (filters.startDate) {
-                where.createdAt.gte = new Date(filters.startDate);
+                const d = new Date(filters.startDate);
+                if (!isNaN(d.getTime()))
+                    where.createdAt.gte = d;
             }
             if (filters.endDate) {
-                where.createdAt.lte = new Date(filters.endDate);
+                const d = new Date(filters.endDate);
+                if (!isNaN(d.getTime()))
+                    where.createdAt.lte = d;
             }
         }
         const [total, newOrders, inProduction, completed, cancelled] = await Promise.all([

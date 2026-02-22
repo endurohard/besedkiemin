@@ -127,6 +127,29 @@ let UsersService = class UsersService {
         });
         return new user_entity_1.UserEntity(updatedUser);
     }
+    async setPin(id, pin) {
+        await this.findOne(id);
+        const hashedPin = await bcrypt.hash(pin, constants_1.AUTH.BCRYPT_SALT_ROUNDS);
+        await this.prisma.user.update({
+            where: { id },
+            data: { pin: hashedPin },
+        });
+    }
+    async findByPin(pin) {
+        const users = await this.prisma.user.findMany({
+            where: {
+                isActive: true,
+                pin: { not: null },
+            },
+            include: { role: true },
+        });
+        for (const user of users) {
+            if (user.pin && await bcrypt.compare(pin, user.pin)) {
+                return user;
+            }
+        }
+        return null;
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

@@ -50,7 +50,9 @@ export class UserEntity {
 
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);
-    // Удаляем пароль из ответа
+    // Удаляем секретные поля из ответа
     delete (this as any).password;
+    delete (this as any).sipPassword;
+    delete (this as any).pin;
   }
 }

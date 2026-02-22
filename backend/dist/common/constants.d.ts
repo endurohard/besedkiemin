@@ -1,3 +1,4 @@
+import { ProductionStage } from '@prisma/client';
 export declare const PAGINATION: {
     readonly DEFAULT_PAGE: 1;
     readonly DEFAULT_PAGE_SIZE: 50;
@@ -39,3 +40,8 @@ export declare const SYSTEM_ROLES: {
     readonly ASSEMBLER: "ASSEMBLER";
     readonly WAREHOUSE: "WAREHOUSE";
 };
+export declare const ROLE_TO_STAGE: Record<string, ProductionStage>;
+export declare const STAGE_TO_NAME: Record<string, string>;
+export declare function isDepartmentAccount(user: {
+    isDepartmentAccount?: boolean;
+}): boolean;

@@ -101,7 +101,7 @@ let ClaudeCodeService = ClaudeCodeService_1 = class ClaudeCodeService {
             return {
                 success: false,
                 output: '',
-                error: 'Another Claude Code request is already in progress',
+                error: 'Другой запрос Claude Code уже выполняется',
             };
         }
         this.isProcessing = true;
@@ -195,14 +195,14 @@ let ClaudeCodeService = ClaudeCodeService_1 = class ClaudeCodeService {
             return {
                 success: false,
                 output: '',
-                error: 'Preview not found or expired',
+                error: 'Превью не найдено или истекло',
             };
         }
         if (this.isProcessing) {
             return {
                 success: false,
                 output: '',
-                error: 'Another operation is in progress',
+                error: 'Другая операция уже выполняется',
             };
         }
         this.isProcessing = true;
@@ -254,7 +254,7 @@ let ClaudeCodeService = ClaudeCodeService_1 = class ClaudeCodeService {
             return {
                 success: false,
                 output: '',
-                error: 'Preview not found',
+                error: 'Превью не найдено',
             };
         }
         this.logger.log(`Cancelling preview: ${previewId}`);
@@ -301,7 +301,7 @@ let ClaudeCodeService = ClaudeCodeService_1 = class ClaudeCodeService {
             return {
                 success: false,
                 output: '',
-                error: 'Another Claude Code request is already in progress',
+                error: 'Другой запрос Claude Code уже выполняется',
             };
         }
         this.isProcessing = true;
@@ -380,7 +380,7 @@ let ClaudeCodeService = ClaudeCodeService_1 = class ClaudeCodeService {
             return {
                 success: false,
                 output: '',
-                error: 'Another Claude Code request is already in progress',
+                error: 'Другой запрос Claude Code уже выполняется',
             };
         }
         this.isProcessing = true;

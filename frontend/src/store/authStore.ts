@@ -14,6 +14,7 @@ interface AuthState {
   pollingIntervalId: NodeJS.Timeout | null;
 
   login: (email: string, password: string) => Promise<void>;
+  pinLogin: (pin: string) => Promise<void>;
   logout: () => void;
   initializeAuth: () => void;
   refreshUser: () => Promise<void>;
@@ -47,6 +48,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error: any) {
       set({
         error: error.response?.data?.message || 'Ошибка авторизации',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  pinLogin: async (pin: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authApi.pinLogin(pin);
+      localStorage.setItem('token', response.access_token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      set({
+        user: response.user,
+        token: response.access_token,
+        isLoading: false,
+      });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || 'Неверный PIN-код',
         isLoading: false,
       });
       throw error;

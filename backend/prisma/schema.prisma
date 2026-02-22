@@ -131,6 +131,9 @@ model User {
   roleId String @map("role_id")
   role   Role   @relation(fields: [roleId], references: [id])
 
+  // PIN-код для быстрого входа производственных работников (хранится в виде хеша bcrypt)
+  pin String? @map("pin")
+
   // Telegram для уведомлений
   telegramId String? @map("telegram_id")
 
@@ -478,6 +481,7 @@ model Task {
   @@index([productId, status])
   @@index([productId, assignedToId])
   @@index([status])
+  @@index([stage, status])
   @@map("tasks")
 }
 
@@ -544,6 +548,8 @@ model Shipment {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([status])
+  @@index([shippedById])
   @@map("shipments")
 }
 
@@ -958,6 +964,8 @@ model WorkLog {
 
   @@index([userId, completedAt])
   @@index([productTypeId, stage])
+  @@index([completedAt])
+  @@index([payrollPeriodId])
   @@map("work_logs")
 }
 

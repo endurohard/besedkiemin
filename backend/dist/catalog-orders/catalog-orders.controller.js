@@ -32,10 +32,12 @@ let CatalogOrdersController = class CatalogOrdersController {
         return this.ordersService.create(createDto);
     }
     findAll(status, page, limit) {
+        const parsedPage = page ? parseInt(page, 10) : undefined;
+        const parsedLimit = limit ? parseInt(limit, 10) : undefined;
         return this.ordersService.findAll({
             status,
-            page: page ? parseInt(page, 10) : undefined,
-            limit: limit ? parseInt(limit, 10) : undefined,
+            page: parsedPage && !isNaN(parsedPage) ? parsedPage : undefined,
+            limit: parsedLimit && !isNaN(parsedLimit) ? parsedLimit : undefined,
         });
     }
     findOne(id) {

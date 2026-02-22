@@ -22,6 +22,9 @@ export class TelegramService implements OnModuleInit {
     photosCollected?: string[];
   }>();
 
+  // Таймауты для автоочистки состояний пользователей (30 минут)
+  private userStateTimeouts = new Map<number, NodeJS.Timeout>();
+
   // Хранилище кодов авторизации: код -> { userId, expiresAt }
   private loginCodes = new Map<string, { userId: string; expiresAt: Date }>();
 
@@ -36,7 +39,11 @@ export class TelegramService implements OnModuleInit {
 
   async onModuleInit() {
     if (!this.botToken) {
-      this.logger.warn('TELEGRAM_BOT_TOKEN not configured. Telegram bot disabled.');
+      if (process.env.NODE_ENV === 'production') {
+        this.logger.error('TELEGRAM_BOT_TOKEN not configured in production! Telegram notifications will not work.');
+      } else {
+        this.logger.warn('TELEGRAM_BOT_TOKEN not configured. Telegram bot disabled.');
+      }
       return;
     }
     this.logger.log('Initializing Telegram Bot...');
@@ -61,6 +68,32 @@ export class TelegramService implements OnModuleInit {
         const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
         if (!user) {
           await this.bot.sendMessage(chatId, '❌ Пользователь не найден');
+          return;
+        }
+
+        // Проверяем: если этот Telegram уже привязан к другому аккаунту,
+        // разрешаем привязку только если запрашивающий — OWNER/SUPER_ADMIN
+        const existingBinding = await this.prisma.user.findFirst({
+          where: { telegramId, id: { not: userId } },
+          include: { role: true },
+        });
+
+        if (existingBinding) {
+          // Telegram уже привязан к другому пользователю — проверяем права
+          const callerAsUser = await this.prisma.user.findFirst({
+            where: { telegramId },
+            include: { role: true },
+          });
+          const callerRole = callerAsUser?.role?.code;
+          if (callerRole !== 'OWNER' && callerRole !== 'SUPER_ADMIN') {
+            await this.bot.sendMessage(chatId, '❌ Этот Telegram уже привязан к другому аккаунту. Обратитесь к руководителю.');
+            return;
+          }
+        }
+
+        // Проверяем: если к целевому пользователю уже привязан другой Telegram
+        if (user.telegramId && user.telegramId !== telegramId) {
+          await this.bot.sendMessage(chatId, '❌ К этому пользователю уже привязан другой Telegram аккаунт. Сначала отвяжите его.');
           return;
         }
 
@@ -243,6 +276,12 @@ export class TelegramService implements OnModuleInit {
         }
 
         this.userStates.delete(msg.from!.id);
+        // Очищаем таймаут автоочистки
+        const timeout = this.userStateTimeouts.get(msg.from!.id);
+        if (timeout) {
+          clearTimeout(timeout);
+          this.userStateTimeouts.delete(msg.from!.id);
+        }
       }
     });
 
@@ -622,14 +661,25 @@ export class TelegramService implements OnModuleInit {
       this.logger.error(`Invalid Telegram ID for user ${userId}: ${user.telegramId}`);
       return false;
     }
+    // Очищаем предыдущий таймаут если был
+    const prevTimeout = this.userStateTimeouts.get(chatId);
+    if (prevTimeout) clearTimeout(prevTimeout);
+
     this.userStates.set(chatId, {
       action: 'reject_task',
       taskId,
       reason,
-      quantity,
-      photosToCollect: quantity,  // Сколько фото нужно собрать
-      photosCollected: [],         // Массив собранных URL фото
+      quantity: Math.max(1, quantity),
+      photosToCollect: Math.max(1, quantity),  // Сколько фото нужно собрать
+      photosCollected: [],                      // Массив собранных URL фото
     });
+
+    // Автоочистка состояния через 30 минут
+    this.userStateTimeouts.set(chatId, setTimeout(() => {
+      this.userStates.delete(chatId);
+      this.userStateTimeouts.delete(chatId);
+      this.logger.warn(`Photo collection state expired for chat ${chatId}, task ${taskId}`);
+    }, 30 * 60 * 1000));
 
     try {
       await this.bot.sendMessage(

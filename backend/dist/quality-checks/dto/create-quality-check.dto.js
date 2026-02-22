@@ -33,4 +33,10 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateQualityCheckDto.prototype, "notes", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: client_1.ProductionStage, required: false, description: 'Этап для возврата при браке' }),
+    (0, class_validator_1.IsEnum)(client_1.ProductionStage),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateQualityCheckDto.prototype, "returnToStage", void 0);
 //# sourceMappingURL=create-quality-check.dto.js.map

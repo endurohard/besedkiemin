@@ -24,6 +24,8 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
         sipWsPort: number | null;
+        isDepartmentAccount: boolean;
+        pin: string | null;
     }>;
     findByEmailWithRole(email: string): Promise<{
         role: {
@@ -55,8 +57,44 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
         sipWsPort: number | null;
+        isDepartmentAccount: boolean;
+        pin: string | null;
     }>;
     update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity>;
     remove(id: string): Promise<void>;
     toggleActive(id: string): Promise<UserEntity>;
+    setPin(id: string, pin: string): Promise<void>;
+    findByPin(pin: string): Promise<{
+        role: {
+            description: string | null;
+            order: number;
+            name: string;
+            isActive: boolean;
+            id: string;
+            code: string;
+            color: string | null;
+            isSystem: boolean;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        roleId: string;
+        sipServer: string | null;
+        sipUser: string | null;
+        sipPassword: string | null;
+        sipPort: number | null;
+        isActive: boolean;
+        telegramId: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        sipWsPort: number | null;
+        isDepartmentAccount: boolean;
+        pin: string | null;
+    }>;
 }

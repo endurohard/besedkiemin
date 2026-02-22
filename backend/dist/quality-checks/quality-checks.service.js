@@ -59,14 +59,30 @@ let QualityChecksService = class QualityChecksService {
             },
         });
         if (createQualityCheckDto.status === client_1.QualityStatus.REJECTED) {
+            let returnStage;
+            if (createQualityCheckDto.returnToStage) {
+                returnStage = createQualityCheckDto.returnToStage;
+            }
+            else {
+                const currentWorkflowStage = await this.prisma.workflowStage.findFirst({
+                    where: { legacyStage: product.stage, isActive: true },
+                });
+                const previousStage = currentWorkflowStage
+                    ? await this.prisma.workflowStage.findFirst({
+                        where: { order: { lt: currentWorkflowStage.order }, isActive: true },
+                        orderBy: { order: 'desc' },
+                    })
+                    : null;
+                returnStage = previousStage?.legacyStage || client_1.ProductionStage.PAINTING;
+            }
             await this.prisma.product.update({
                 where: { id: createQualityCheckDto.productId },
-                data: { stage: client_1.ProductionStage.PAINTING },
+                data: { stage: returnStage },
             });
             await this.prisma.productHistory.create({
                 data: {
                     productId: createQualityCheckDto.productId,
-                    stage: client_1.ProductionStage.PAINTING,
+                    stage: returnStage,
                     userId,
                     notes: 'Возврат на доработку после браковки',
                 },

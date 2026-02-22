@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PublicController = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
 let PublicController = class PublicController {
     constructor(prisma) {
         this.prisma = prisma;
@@ -48,7 +49,7 @@ let PublicController = class PublicController {
             statusText = 'В производстве';
             statusEmoji = '⚙️';
             const totalProducts = order.products.length;
-            const completedProducts = order.products.filter(p => p.stage === 'COMPLETED' || p.stage === 'QUALITY_CHECK').length;
+            const completedProducts = order.products.filter(p => p.stage === client_1.ProductionStage.COMPLETED || p.stage === client_1.ProductionStage.QUALITY_CHECK).length;
             detailedStatus = `Изготовление: ${completedProducts} из ${totalProducts} изделий готово`;
         }
         else if (order.status === 'COMPLETED') {

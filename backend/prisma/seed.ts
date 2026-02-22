@@ -238,10 +238,10 @@ async function main() {
     where: { order: 1 },
     update: {},
     create: {
-      name: 'Проектирование',
-      description: 'Создание чертежей и проектной документации',
+      name: 'Заготовка',
+      description: 'Подготовка материалов и заготовок',
       order: 1,
-      legacyStage: ProductionStage.DESIGN,
+      legacyStage: ProductionStage.PREPARATION,
       isActive: true,
     },
   });
@@ -250,10 +250,10 @@ async function main() {
     where: { order: 2 },
     update: {},
     create: {
-      name: 'Заготовка',
-      description: 'Подготовка материалов и заготовок',
+      name: 'Сборка',
+      description: 'Сборка изделий',
       order: 2,
-      legacyStage: ProductionStage.PREPARATION,
+      legacyStage: ProductionStage.ASSEMBLY,
       isActive: true,
     },
   });
@@ -286,21 +286,9 @@ async function main() {
     where: { order: 5 },
     update: {},
     create: {
-      name: 'Сборка',
-      description: 'Сборка изделий',
-      order: 5,
-      legacyStage: ProductionStage.ASSEMBLY,
-      isActive: true,
-    },
-  });
-
-  const stage6 = await prisma.workflowStage.upsert({
-    where: { order: 6 },
-    update: {},
-    create: {
       name: 'Склад',
       description: 'Проверка качества, упаковка и отгрузка',
-      order: 6,
+      order: 5,
       legacyStage: ProductionStage.QUALITY_CHECK,
       isActive: true,
     },
@@ -312,32 +300,32 @@ async function main() {
   // СВЯЗЬ РОЛЕЙ С ЭТАПАМИ WORKFLOW
   // =============================================
 
-  // Проектировщик -> Проектирование
-  await prisma.roleWorkflowStage.upsert({
-    where: {
-      roleId_workflowStageId: {
-        roleId: designerRole.id,
-        workflowStageId: stage1.id,
-      },
-    },
-    update: {},
-    create: {
-      roleId: designerRole.id,
-      workflowStageId: stage1.id,
-    },
-  });
-
   // Заготовщик -> Заготовка
   await prisma.roleWorkflowStage.upsert({
     where: {
       roleId_workflowStageId: {
         roleId: preparerRole.id,
-        workflowStageId: stage2.id,
+        workflowStageId: stage1.id,
       },
     },
     update: {},
     create: {
       roleId: preparerRole.id,
+      workflowStageId: stage1.id,
+    },
+  });
+
+  // Сборщик -> Сборка
+  await prisma.roleWorkflowStage.upsert({
+    where: {
+      roleId_workflowStageId: {
+        roleId: assemblerRole.id,
+        workflowStageId: stage2.id,
+      },
+    },
+    update: {},
+    create: {
+      roleId: assemblerRole.id,
       workflowStageId: stage2.id,
     },
   });
@@ -372,33 +360,18 @@ async function main() {
     },
   });
 
-  // Сборщик -> Сборка
-  await prisma.roleWorkflowStage.upsert({
-    where: {
-      roleId_workflowStageId: {
-        roleId: assemblerRole.id,
-        workflowStageId: stage5.id,
-      },
-    },
-    update: {},
-    create: {
-      roleId: assemblerRole.id,
-      workflowStageId: stage5.id,
-    },
-  });
-
   // Складист -> Склад
   await prisma.roleWorkflowStage.upsert({
     where: {
       roleId_workflowStageId: {
         roleId: warehouseRole.id,
-        workflowStageId: stage6.id,
+        workflowStageId: stage5.id,
       },
     },
     update: {},
     create: {
       roleId: warehouseRole.id,
-      workflowStageId: stage6.id,
+      workflowStageId: stage5.id,
     },
   });
 

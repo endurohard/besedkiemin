@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { PayrollService } from '../payroll/payroll.service';
 import { TaskStatus, ProductionStage } from '@prisma/client';
+import { ROLE_TO_STAGE, STAGE_TO_NAME, isDepartmentAccount } from '../common/constants';
 
 @Injectable()
 export class TasksService {
@@ -11,7 +12,6 @@ export class TasksService {
   constructor(
     private prisma: PrismaService,
     private telegramService: TelegramService,
-    @Inject(forwardRef(() => PayrollService))
     private payrollService: PayrollService,
   ) {}
 
@@ -25,18 +25,8 @@ export class TasksService {
       throw new NotFoundException('Пользователь не найден');
     }
 
-    // Определяем стадию по роли
-    const stageMapping = {
-      ['DESIGNER']: ProductionStage.DESIGN,
-      ['PREPARER']: ProductionStage.PREPARATION,
-      ['PAINTER']: ProductionStage.PAINTING,
-      ['SEWER']: ProductionStage.SEWING,
-      ['ASSEMBLER']: ProductionStage.ASSEMBLY,
-      ['WAREHOUSE']: ProductionStage.QUALITY_CHECK,
-    };
-
     const roleCode = user.role?.code;
-    const stage = roleCode ? stageMapping[roleCode] : undefined;
+    const stage = roleCode ? ROLE_TO_STAGE[roleCode] : undefined;
 
     if (!stage) {
       // Для MANAGER возвращаем пустой массив - у них нет производственных задач
@@ -77,15 +67,12 @@ export class TasksService {
       });
     }
 
-    // Проверяем, является ли это "учёткой отдела" (видит все задачи отдела)
-    const isDepartmentAccount = user.isDepartmentAccount === true ||
-      user.email?.endsWith('@example.com') || user.email?.endsWith('@factory.com');
-
     // Для работников возвращаем задачи на их стадии, отсортированные по приоритету
     // Для учёток отдела - все задачи стадии, для обычных работников - только их задачи
+    const isDeptAccount = isDepartmentAccount(user);
     const tasks = await this.prisma.task.findMany({
       where: {
-        ...(isDepartmentAccount ? {} : { assignedToId: userId }), // Учётка отдела видит все
+        ...(isDeptAccount ? {} : { assignedToId: userId }), // Учётка отдела видит все
         stage: stage,
       },
       include: {
@@ -139,18 +126,8 @@ export class TasksService {
       throw new NotFoundException('Пользователь не найден');
     }
 
-    // Определяем стадию по роли
-    const stageMapping = {
-      ['DESIGNER']: ProductionStage.DESIGN,
-      ['PREPARER']: ProductionStage.PREPARATION,
-      ['PAINTER']: ProductionStage.PAINTING,
-      ['SEWER']: ProductionStage.SEWING,
-      ['ASSEMBLER']: ProductionStage.ASSEMBLY,
-      ['WAREHOUSE']: ProductionStage.QUALITY_CHECK,
-    };
-
     const roleCode = user.role?.code;
-    const stage = roleCode ? stageMapping[roleCode] : undefined;
+    const stage = roleCode ? ROLE_TO_STAGE[roleCode] : undefined;
 
     if (!stage) {
       return [];
@@ -269,23 +246,14 @@ export class TasksService {
 
   // Принять задачу в работу
   async acceptTask(taskId: string, workerId: string, requesterId?: string, acceptQuantity?: number) {
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
-      include: {
-        product: true,
-        assignedTo: { include: { role: true } },
-      },
-    });
-
-    if (!task) {
-      throw new NotFoundException('Задача не найдена');
+    // Валидация количества
+    if (acceptQuantity !== undefined && acceptQuantity !== null) {
+      if (!Number.isFinite(acceptQuantity) || acceptQuantity <= 0) {
+        throw new BadRequestException('Количество должно быть положительным числом');
+      }
     }
 
-    if (task.status !== TaskStatus.NEW) {
-      throw new BadRequestException('Задача уже принята или завершена');
-    }
-
-    // Получаем информацию о выбранном работнике
+    // Предварительные проверки вне транзакции (быстрый отказ)
     const worker = await this.prisma.user.findUnique({
       where: { id: workerId },
       include: { role: true },
@@ -295,12 +263,6 @@ export class TasksService {
       throw new NotFoundException('Работник не найден');
     }
 
-    // Проверяем что выбранный работник из того же отдела (та же роль)
-    if (task.assignedTo?.roleId !== worker.roleId) {
-      throw new ForbiddenException('Работник не из этого отдела');
-    }
-
-    // Если передан requesterId, проверяем что запрашивающий тоже из того же отдела
     if (requesterId && requesterId !== workerId) {
       const requester = await this.prisma.user.findUnique({
         where: { id: requesterId },
@@ -311,70 +273,97 @@ export class TasksService {
       }
     }
 
-    // Для задач с браком - только назначенный работник может принять
-    const isDefectTask = task.title?.includes('БРАК');
-    if (isDefectTask && task.assignedToId !== workerId) {
-      throw new ForbiddenException('Задача брака может быть принята только назначенным работником');
-    }
-
-    // Определяем количество для принятия
-    const taskQuantity = task.quantity || task.product?.quantity || 1;
-    const quantityToAccept = acceptQuantity && acceptQuantity > 0 && acceptQuantity < taskQuantity
-      ? acceptQuantity
-      : taskQuantity;
-    const remainingQuantity = taskQuantity - quantityToAccept;
-
-    // Удаляем копии этой задачи у других работников той же роли (только для обычных задач)
-    if (!isDefectTask) {
-      await this.prisma.task.deleteMany({
-        where: {
-          productId: task.productId,
-          stage: task.stage,
-          status: TaskStatus.NEW,
-          id: { not: taskId }, // Все кроме текущей
+    // Атомарная транзакция для предотвращения race condition
+    return this.prisma.$transaction(async (tx) => {
+      const task = await tx.task.findUnique({
+        where: { id: taskId },
+        include: {
+          product: true,
+          assignedTo: { include: { role: true } },
         },
       });
-    }
 
-    // Если есть остаток - создаём новые задачи для всех работников отдела
-    if (remainingQuantity > 0 && !isDefectTask) {
-      // Получаем всех работников этого отдела
-      const departmentWorkers = await this.prisma.user.findMany({
-        where: { roleId: worker.roleId },
-      });
+      if (!task) {
+        throw new NotFoundException('Задача не найдена');
+      }
 
-      // Создаём задачи для оставшегося количества
-      for (const deptWorker of departmentWorkers) {
-        await this.prisma.task.create({
-          data: {
-            title: task.title,
-            stage: task.stage,
-            quantity: remainingQuantity,
+      if (task.status !== TaskStatus.NEW) {
+        throw new BadRequestException('Задача уже принята или завершена');
+      }
+
+      // Проверяем что выбранный работник из того же отдела (та же роль)
+      if (task.assignedTo?.roleId !== worker.roleId) {
+        throw new ForbiddenException('Работник не из этого отдела');
+      }
+
+      // Для задач с браком - только назначенный работник может принять
+      const isDefectTask = task.title?.includes('БРАК');
+      if (isDefectTask && task.assignedToId !== workerId) {
+        throw new ForbiddenException('Задача брака может быть принята только назначенным работником');
+      }
+
+      // Определяем количество для принятия
+      const taskQuantity = task.quantity || task.product?.quantity || 1;
+
+      if (acceptQuantity && acceptQuantity > taskQuantity) {
+        throw new BadRequestException(`Нельзя принять ${acceptQuantity} шт. Доступно только ${taskQuantity} шт.`);
+      }
+
+      const quantityToAccept = acceptQuantity && acceptQuantity > 0 && acceptQuantity < taskQuantity
+        ? acceptQuantity
+        : taskQuantity;
+      const remainingQuantity = taskQuantity - quantityToAccept;
+
+      // Удаляем копии этой задачи у других работников той же роли (только для обычных задач)
+      if (!isDefectTask) {
+        await tx.task.deleteMany({
+          where: {
             productId: task.productId,
-            assignedToId: deptWorker.id,
-            priority: task.priority,
+            stage: task.stage,
+            status: TaskStatus.NEW,
+            id: { not: taskId },
           },
         });
       }
-    }
 
-    // Обновляем задачу и назначаем выбранному работнику
-    return this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        status: TaskStatus.ACCEPTED,
-        acceptedAt: new Date(),
-        assignedToId: workerId,
-        quantity: quantityToAccept, // Устанавливаем принятое количество
-      },
-      include: {
-        product: {
-          include: {
-            productType: true,
-            order: true,
+      // Если есть остаток - создаём новые задачи для всех работников отдела
+      if (remainingQuantity > 0 && !isDefectTask) {
+        const departmentWorkers = await tx.user.findMany({
+          where: { roleId: worker.roleId },
+        });
+
+        for (const deptWorker of departmentWorkers) {
+          await tx.task.create({
+            data: {
+              title: task.title,
+              stage: task.stage,
+              quantity: remainingQuantity,
+              productId: task.productId,
+              assignedToId: deptWorker.id,
+              priority: task.priority,
+            },
+          });
+        }
+      }
+
+      // Обновляем задачу и назначаем выбранному работнику
+      return tx.task.update({
+        where: { id: taskId },
+        data: {
+          status: TaskStatus.ACCEPTED,
+          acceptedAt: new Date(),
+          assignedToId: workerId,
+          quantity: quantityToAccept,
+        },
+        include: {
+          product: {
+            include: {
+              productType: true,
+              order: true,
+            },
           },
         },
-      },
+      });
     });
   }
 
@@ -408,6 +397,16 @@ export class TasksService {
 
       if (task.status !== TaskStatus.ACCEPTED) {
         throw new BadRequestException('Задача должна быть сначала принята в работу');
+      }
+
+      // Валидация количества
+      if (quantity !== undefined && quantity !== null) {
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+          throw new BadRequestException('Количество должно быть положительным числом');
+        }
+        if (quantity > task.quantity) {
+          throw new BadRequestException(`Нельзя завершить ${quantity} шт. В задаче только ${task.quantity} шт.`);
+        }
       }
 
       // Если количество не указано, используем количество из задачи
@@ -533,39 +532,44 @@ export class TasksService {
 
     const completedQuantity = task.quantity || task.product.quantity;
 
-    // Обновляем задачу
-    const updatedTask = await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        status: TaskStatus.PASSED,
-        passedAt: new Date(),
-      },
+    // Атомарная транзакция: обновляем задачу, историю и стадию продукта
+    const updatedTask = await this.prisma.$transaction(async (tx) => {
+      // Обновляем задачу
+      const updated = await tx.task.update({
+        where: { id: taskId },
+        data: {
+          status: TaskStatus.PASSED,
+          passedAt: new Date(),
+        },
+      });
+
+      // Создаем запись в истории
+      await tx.productHistory.create({
+        data: {
+          productId: task.productId,
+          userId: userId,
+          stage: task.stage,
+          status: TaskStatus.PASSED,
+          completedAt: new Date(),
+          passedAt: new Date(),
+        },
+      });
+
+      // WorkLog НЕ создаётся здесь - оплата начисляется только когда склад принимает изделие
+      // См. метод approveTask
+
+      // Обновляем стадию продукта
+      await tx.product.update({
+        where: { id: task.productId },
+        data: {
+          stage: nextWorkflowStage.legacyStage,
+        },
+      });
+
+      return updated;
     });
 
-    // Создаем запись в истории
-    await this.prisma.productHistory.create({
-      data: {
-        productId: task.productId,
-        userId: userId,
-        stage: task.stage,
-        status: TaskStatus.PASSED,
-        completedAt: new Date(),
-        passedAt: new Date(),
-      },
-    });
-
-    // WorkLog НЕ создаётся здесь - оплата начисляется только когда склад принимает изделие
-    // См. метод approveTask
-
-    // Обновляем стадию продукта
-    await this.prisma.product.update({
-      where: { id: task.productId },
-      data: {
-        stage: nextWorkflowStage.legacyStage,
-      },
-    });
-
-    // Обновляем статус заказа
+    // Обновляем статус заказа (вне транзакции — не критично)
     await this.updateOrderStatus(task.product.orderId);
 
     // Создаем новые задачи для всех работников следующей стадии
@@ -612,11 +616,11 @@ export class TasksService {
       if (worker.telegramId) {
         const message =
           `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
-          `*Продукт:* ${newTask.product.name}\n` +
-          `*Тип:* ${(newTask.product as any).productType?.name || 'Н/Д'}\n` +
+          `*Продукт:* ${newTask.product?.name || 'Н/Д'}\n` +
+          `*Тип:* ${(newTask.product as any)?.productType?.name || 'Н/Д'}\n` +
           `*Количество:* ${completedQuantity} шт.\n` +
           `*Стадия:* ${nextWorkflowStage.name}\n` +
-          `*Заказ:* ${(newTask.product as any).order?.orderNumber || 'Н/Д'}\n\n` +
+          `*Заказ:* ${(newTask.product as any)?.order?.orderNumber || 'Н/Д'}\n\n` +
           `✅ Откройте раздел "Мои задачи" для выполнения`;
 
         try {
@@ -665,11 +669,7 @@ export class TasksService {
       throw new NotFoundException('Задача не найдена');
     }
 
-    // Учётки отдела могут браковать любые задачи своей стадии
-    const isDepartmentAccount = user.isDepartmentAccount === true ||
-      user.email?.endsWith('@example.com') || user.email?.endsWith('@factory.com');
-
-    if (task.assignedToId !== userId && !isDepartmentAccount) {
+    if (task.assignedToId !== userId && !isDepartmentAccount(user)) {
       this.logger.warn('Task not assigned to user', { taskId, userId });
       throw new ForbiddenException('Вы не можете забраковать эту задачу');
     }
@@ -680,6 +680,13 @@ export class TasksService {
     }
 
     this.logger.debug('All validations passed, proceeding with rejection');
+
+    // Валидация количества
+    if (quantity !== undefined && quantity !== null) {
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        throw new BadRequestException('Количество должно быть положительным числом');
+      }
+    }
 
     // Проверяем доступное количество для брака
     const availableQuantity = task.quantity - task.quantityProcessed;
@@ -707,10 +714,37 @@ export class TasksService {
       },
     });
 
-    // Определяем стадию возврата
-    let returnStage: ProductionStage = ProductionStage.PAINTING;
+    // Определяем стадию возврата — динамически из WorkflowStage
+    let returnStage: ProductionStage;
     if (returnToStage && Object.values(ProductionStage).includes(returnToStage as ProductionStage)) {
       returnStage = returnToStage as ProductionStage;
+    } else {
+      // По умолчанию — предыдущий этап из workflow
+      const currentWorkflowStage = await this.prisma.workflowStage.findFirst({
+        where: { legacyStage: task.stage, isActive: true },
+      });
+      const previousStage = currentWorkflowStage
+        ? await this.prisma.workflowStage.findFirst({
+            where: { order: { lt: currentWorkflowStage.order }, isActive: true },
+            orderBy: { order: 'desc' },
+          })
+        : null;
+      returnStage = (previousStage?.legacyStage as ProductionStage) || ProductionStage.PAINTING;
+    }
+
+    // Перепроверяем актуальное состояние продукта перед изменением стадии
+    const currentProduct = await this.prisma.product.findUnique({
+      where: { id: task.productId },
+      select: { stage: true },
+    });
+
+    if (!currentProduct || currentProduct.stage !== ProductionStage.QUALITY_CHECK) {
+      this.logger.warn('Product stage changed during reject processing', {
+        taskId,
+        expectedStage: ProductionStage.QUALITY_CHECK,
+        actualStage: currentProduct?.stage,
+      });
+      throw new BadRequestException('Продукт уже перемещён на другую стадию. Повторите операцию.');
     }
 
     // Возвращаем ТОЛЬКО забракованное количество продукта на выбранную стадию
@@ -775,30 +809,7 @@ export class TasksService {
       }
     }
 
-    // Определяем название стадии для уведомления
-    let targetStageName = 'Покраска';
-    switch (returnStage) {
-      case ProductionStage.PENDING:
-        targetStageName = 'Менеджер';
-        break;
-      case ProductionStage.DESIGN:
-        targetStageName = 'Проектирование';
-        break;
-      case ProductionStage.PREPARATION:
-        targetStageName = 'Заготовка';
-        break;
-      case ProductionStage.ASSEMBLY:
-        targetStageName = 'Сборка';
-        break;
-      case ProductionStage.PAINTING:
-        targetStageName = 'Покраска';
-        break;
-      case ProductionStage.SEWING:
-        targetStageName = 'Пошив';
-        break;
-      default:
-        targetStageName = 'Покраска';
-    }
+    const targetStageName = STAGE_TO_NAME[returnStage] || 'Покраска';
 
     // Ищем КОНКРЕТНОГО работника, который работал над этим изделием на указанной стадии
     const originalTask = await this.prisma.task.findFirst({
@@ -848,8 +859,40 @@ export class TasksService {
         await this.telegramService.sendMessage(originalWorker.telegramId, message);
       }
     } else {
-      // Если не нашли конкретного работника, логируем предупреждение
-      this.logger.warn(`Could not find original worker for product ${task.productId} at stage ${returnStage}. No task created.`);
+      // Не нашли конкретного работника — назначаем любому доступному работнику этой стадии
+      this.logger.warn(`Could not find original worker for product ${task.productId} at stage ${returnStage}. Searching for any available worker.`);
+
+      const stageRoleCode = Object.entries(ROLE_TO_STAGE).find(([, stage]) => stage === returnStage)?.[0];
+      if (stageRoleCode) {
+        const availableWorkers = await this.prisma.user.findMany({
+          where: {
+            role: { code: stageRoleCode },
+            isActive: true,
+          },
+        });
+
+        if (availableWorkers.length > 0) {
+          // Создаём задачу для всех работников этой стадии (как обычную задачу)
+          for (const worker of availableWorkers) {
+            await this.prisma.task.create({
+              data: {
+                title: `${task.product.name} - ${targetStageName} (БРАК)`,
+                description: `Доработка после контроля качества.\n\nПричина брака: ${notes}\n\nЗабраковал: ${user.firstName} ${user.lastName}`,
+                stage: returnStage,
+                productId: rejectedProductId,
+                assignedToId: worker.id,
+                quantity: rejectQuantity,
+                status: TaskStatus.NEW,
+              },
+            });
+          }
+          this.logger.log(`Defect tasks created for ${availableWorkers.length} workers at stage ${returnStage}`);
+        } else {
+          this.logger.error(`No active workers found for stage ${returnStage}. Product ${task.productId} stuck without task!`);
+        }
+      } else {
+        this.logger.error(`No role mapping found for stage ${returnStage}. Product ${task.productId} stuck without task!`);
+      }
     }
 
     this.logger.log('Task rejected successfully', { taskId });
@@ -858,6 +901,7 @@ export class TasksService {
 
   // Принять товар на склад (для складиста)
   async approveTask(taskId: string, userId: string, quantity: number) {
+    // Validation before transaction (read-only checks)
     const user = await this.prisma.user.findUnique({
       where: { id: userId }, include: { role: true },
     });
@@ -882,16 +926,11 @@ export class TasksService {
       throw new NotFoundException('Задача не найдена');
     }
 
-    // Проверяем статус задачи — принять можно только NEW или PASSED задачи
     if (task.status !== TaskStatus.NEW && task.status !== TaskStatus.PASSED) {
       throw new BadRequestException(`Нельзя принять задачу в статусе "${task.status}"`);
     }
 
-    // Учётки отдела (isDepartmentAccount) могут принимать любые задачи своей стадии
-    const isDepartmentAccount = user.isDepartmentAccount === true ||
-      user.email?.endsWith('@example.com') || user.email?.endsWith('@factory.com');
-
-    if (task.assignedToId !== userId && !isDepartmentAccount) {
+    if (task.assignedToId !== userId && !isDepartmentAccount(user)) {
       throw new ForbiddenException('Вы не можете принять эту задачу');
     }
 
@@ -899,77 +938,77 @@ export class TasksService {
       throw new BadRequestException('Принять можно только на стадии проверки качества');
     }
 
-    // Обновляем задачу
-    const updatedTask = await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        status: TaskStatus.PASSED,
-        completedAt: new Date(),
-        passedAt: new Date(),
-        quantity,
-      },
+    // Batch-load workflow stages for all production stages (fix N+1)
+    const workflowStages = await this.prisma.workflowStage.findMany({
+      where: { isActive: true, legacyStage: { not: null } },
     });
+    const workflowStageMap = new Map(
+      workflowStages.map(ws => [ws.legacyStage as string, ws]),
+    );
 
-    // Обновляем продукт
-    await this.prisma.product.update({
-      where: { id: task.productId },
-      data: {
-        stage: ProductionStage.COMPLETED,
-        quantity,
-      },
-    });
-
-    // Создаем запись в проверке качества
-    await this.prisma.qualityCheck.create({
-      data: {
-        productId: task.productId,
-        checkedById: userId,
-        status: 'APPROVED',
-        checkedAt: new Date(),
-      },
-    });
-
-    // Создаем записи в журнале работ для ВСЕХ работников, кто работал над этим изделием
-    // Оплата начисляется только когда склад принимает готовое изделие
-    try {
-      // Используем прямую связь Product → Nomenclature (по FK)
-      const nomenclatureId = task.product.nomenclatureId || null;
-      const nomenclature = nomenclatureId
-        ? await this.prisma.nomenclature.findUnique({ where: { id: nomenclatureId } })
-        : null;
-
-      // Получаем все PASSED задачи для этого продукта (работники, которые завершили работу)
-      const passedTasks = await this.prisma.task.findMany({
-        where: {
-          productId: task.productId,
+    // All writes inside a single transaction
+    const updatedTask = await this.prisma.$transaction(async (tx) => {
+      // 1. Update task
+      const updated = await tx.task.update({
+        where: { id: taskId },
+        data: {
           status: TaskStatus.PASSED,
-          stage: { not: ProductionStage.QUALITY_CHECK }, // Исключаем склад, его добавим отдельно
-        },
-        include: {
-          assignedTo: true,
+          completedAt: new Date(),
+          passedAt: new Date(),
+          quantity,
         },
       });
 
-      // Создаём work_log для каждого работника, кто работал над изделием
-      for (const passedTask of passedTasks) {
-        // Проверяем, не создан ли уже work_log для этой задачи
-        const existingLog = await this.prisma.workLog.findFirst({
-          where: { taskId: passedTask.id },
-        });
+      // 2. Update product
+      await tx.product.update({
+        where: { id: task.productId },
+        data: {
+          stage: ProductionStage.COMPLETED,
+          quantity,
+        },
+      });
 
-        if (!existingLog) {
-          const workflowStage = await this.prisma.workflowStage.findFirst({
-            where: { legacyStage: passedTask.stage, isActive: true },
-          });
+      // 3. Create quality check record
+      await tx.qualityCheck.create({
+        data: {
+          productId: task.productId,
+          checkedById: userId,
+          status: 'APPROVED',
+          checkedAt: new Date(),
+        },
+      });
+
+      // 4. Create work logs for ALL workers who worked on this product
+      const nomenclatureId = task.product.nomenclatureId || null;
+
+      const passedTasks = await tx.task.findMany({
+        where: {
+          productId: task.productId,
+          status: TaskStatus.PASSED,
+          stage: { not: ProductionStage.QUALITY_CHECK },
+        },
+        include: { assignedTo: true },
+      });
+
+      // Check which tasks already have work logs (batch query)
+      const existingLogs = await tx.workLog.findMany({
+        where: { taskId: { in: passedTasks.map(t => t.id) } },
+        select: { taskId: true },
+      });
+      const existingLogTaskIds = new Set(existingLogs.map(l => l.taskId));
+
+      for (const passedTask of passedTasks) {
+        if (!existingLogTaskIds.has(passedTask.id)) {
+          const ws = workflowStageMap.get(passedTask.stage);
 
           await this.payrollService.createWorkLog({
             userId: passedTask.assignedToId,
             productId: task.productId,
             taskId: passedTask.id,
             productTypeId: task.product.productTypeId,
-            nomenclatureId: nomenclature?.id,
+            nomenclatureId: nomenclatureId || undefined,
             stage: passedTask.stage,
-            workflowStageId: workflowStage?.id,
+            workflowStageId: ws?.id,
             quantity: passedTask.quantity,
             completedAt: passedTask.passedAt || new Date(),
             notes: passedTask.notes || undefined,
@@ -978,58 +1017,49 @@ export class TasksService {
         }
       }
 
-      // Складисты не получают сдельную оплату - work_log не создаётся
-    } catch (error) {
-      this.logger.error(`Failed to create WorkLogs for product ${task.productId}:`, error);
-    }
+      // 5. Add to inventory
+      const existingInventory = await tx.inventoryItem.findFirst({
+        where: { productId: task.productId },
+      });
 
-    // Добавляем товар на склад (создаём или обновляем складской остаток)
-    const existingInventory = await this.prisma.inventoryItem.findFirst({
-      where: {
-        productId: task.productId,
-      },
+      if (existingInventory) {
+        await tx.inventoryItem.update({
+          where: { id: existingInventory.id },
+          data: { quantity: existingInventory.quantity + quantity },
+        });
+      } else {
+        await tx.inventoryItem.create({
+          data: {
+            name: task.product.name,
+            quantity,
+            productId: task.productId,
+            productTypeId: task.product.productTypeId,
+            orderId: task.product.orderId,
+            notes: `Принято на склад из заказа ${task.product.order.orderNumber}`,
+          },
+        });
+      }
+
+      // 6. Update order status
+      await this.updateOrderStatus(task.product.orderId, tx);
+
+      return updated;
     });
-
-    if (existingInventory) {
-      // Если товар уже есть на складе, увеличиваем количество
-      await this.prisma.inventoryItem.update({
-        where: { id: existingInventory.id },
-        data: {
-          quantity: existingInventory.quantity + quantity,
-        },
-      });
-    } else {
-      // Создаём новую запись складского остатка
-      await this.prisma.inventoryItem.create({
-        data: {
-          name: task.product.name,
-          quantity,
-          productId: task.productId,
-          productTypeId: task.product.productTypeId,
-          orderId: task.product.orderId,
-          notes: `Принято на склад из заказа ${task.product.order.orderNumber}`,
-        },
-      });
-    }
-
-    // Обновляем статус заказа
-    await this.updateOrderStatus(task.product.orderId);
 
     return updatedTask;
   }
 
   // Автоматическое обновление статуса заказа
-  private async updateOrderStatus(orderId: string) {
-    const products = await this.prisma.product.findMany({
+  private async updateOrderStatus(orderId: string, tx?: any) {
+    const db = tx || this.prisma;
+    const products = await db.product.findMany({
       where: { orderId },
     });
 
-    // Если все продукты завершены
     const allCompleted = products.every(
       (p) => p.stage === ProductionStage.COMPLETED,
     );
 
-    // Если хотя бы один продукт не в PENDING
     const hasStarted = products.some(
       (p) => p.stage !== ProductionStage.PENDING,
     );
@@ -1043,7 +1073,7 @@ export class TasksService {
     }
 
     if (newStatus) {
-      await this.prisma.order.update({
+      await db.order.update({
         where: { id: orderId },
         data: { status: newStatus },
       });
@@ -1113,32 +1143,7 @@ export class TasksService {
 
     // Производственные рабочие видят только браки на своей стадии
     if (user) {
-      let userStage: ProductionStage | null = null;
-
-      switch (user.role?.code) {
-        case 'DESIGNER':
-          userStage = ProductionStage.DESIGN;
-          break;
-        case 'PREPARER':
-          userStage = ProductionStage.PREPARATION;
-          break;
-        case 'PAINTER':
-          userStage = ProductionStage.PAINTING;
-          break;
-        case 'SEWER':
-          userStage = ProductionStage.SEWING;
-          break;
-        case 'ASSEMBLER':
-          userStage = ProductionStage.ASSEMBLY;
-          break;
-        case 'WAREHOUSE':
-          userStage = ProductionStage.QUALITY_CHECK;
-          break;
-        default:
-          userStage = ProductionStage.PENDING;
-      }
-
-      // Фильтруем только браки на стадии пользователя
+      const userStage = (user.role?.code ? ROLE_TO_STAGE[user.role.code] : null) || ProductionStage.PENDING;
       filteredDefects = filteredDefects.filter((d) => d.product?.stage === userStage);
     }
 
@@ -1156,41 +1161,16 @@ export class TasksService {
     }
 
     // Определяем стадию на основе роли пользователя
+    const roleCode = user.role?.code;
     let userStage: ProductionStage;
-    let stageName: string;
-
-    switch (user.role?.code) {
-      case 'MANAGER':
-        userStage = ProductionStage.PENDING;
-        stageName = 'ПРОВЕРКА (МЕНЕДЖЕР)';
-        break;
-      case 'DESIGNER':
-        userStage = ProductionStage.DESIGN;
-        stageName = 'ПРОЕКТИРОВАНИЕ';
-        break;
-      case 'PREPARER':
-        userStage = ProductionStage.PREPARATION;
-        stageName = 'ЗАГОТОВКА';
-        break;
-      case 'PAINTER':
-        userStage = ProductionStage.PAINTING;
-        stageName = 'ПОКРАСКА';
-        break;
-      case 'SEWER':
-        userStage = ProductionStage.SEWING;
-        stageName = 'ПОШИВ';
-        break;
-      case 'ASSEMBLER':
-        userStage = ProductionStage.ASSEMBLY;
-        stageName = 'СБОРКА';
-        break;
-      case 'WAREHOUSE':
-        userStage = ProductionStage.QUALITY_CHECK;
-        stageName = 'ПРОВЕРКА КАЧЕСТВА';
-        break;
-      default:
-        throw new ForbiddenException('Ваша роль не может принимать браки на доработку');
+    if (roleCode === 'MANAGER') {
+      userStage = ProductionStage.PENDING;
+    } else if (roleCode && ROLE_TO_STAGE[roleCode]) {
+      userStage = ROLE_TO_STAGE[roleCode];
+    } else {
+      throw new ForbiddenException('Ваша роль не может принимать браки на доработку');
     }
+    const stageName = (STAGE_TO_NAME[userStage] || userStage).toUpperCase();
 
     // Проверяем, есть ли уже задача на этот продукт для этого работника
     const existingTask = await this.prisma.task.findFirst({
@@ -1268,32 +1248,19 @@ export class TasksService {
     }
 
     // Определяем стадию на основе роли пользователя
+    const userRoleCode = user.role?.code;
     let userStage: ProductionStage | null = null;
 
-    switch (user.role?.code) {
-      case 'MANAGER':
-        userStage = ProductionStage.PENDING;
-        break;
-      case 'DESIGNER':
-        userStage = ProductionStage.DESIGN;
-        break;
-      case 'PREPARER':
-        userStage = ProductionStage.PREPARATION;
-        break;
-      case 'PAINTER':
-        userStage = ProductionStage.PAINTING;
-        break;
-      case 'SEWER':
-        userStage = ProductionStage.SEWING;
-        break;
-      default:
-        // Для OWNER, WAREHOUSE и других - показываем все браки
-        const allDefects = await this.prisma.task.findMany({
-          where: {
-            status: TaskStatus.REJECTED,
-          },
-        });
-        return { count: allDefects.length };
+    if (userRoleCode === 'MANAGER') {
+      userStage = ProductionStage.PENDING;
+    } else if (userRoleCode && ROLE_TO_STAGE[userRoleCode] && userRoleCode !== 'WAREHOUSE') {
+      userStage = ROLE_TO_STAGE[userRoleCode];
+    } else {
+      // Для OWNER, WAREHOUSE и других - показываем все браки
+      const allDefectsCount = await this.prisma.task.count({
+        where: { status: TaskStatus.REJECTED },
+      });
+      return { count: allDefectsCount };
     }
 
     // Получаем rejected tasks с информацией о продукте, фильтруем по стадии продукта

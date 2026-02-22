@@ -365,12 +365,12 @@ let AnalyticsService = class AnalyticsService {
         const avgDelivery = cycleStats.length > 0
             ? cycleStats.reduce((sum, stat) => sum + stat.durations.deliveryHours, 0) / cycleStats.length
             : 0;
-        const allStages = [
-            client_1.ProductionStage.DESIGN,
-            client_1.ProductionStage.PREPARATION,
-            client_1.ProductionStage.PAINTING,
-            client_1.ProductionStage.QUALITY_CHECK,
-        ];
+        const workflowStages = await this.prisma.workflowStage.findMany({
+            where: { isActive: true },
+            orderBy: { order: 'asc' },
+            select: { legacyStage: true },
+        });
+        const allStages = workflowStages.map(s => s.legacyStage);
         const avgStages = {};
         allStages.forEach(stage => {
             const stageData = cycleStats

@@ -11,6 +11,7 @@ export declare class TelegramService implements OnModuleInit {
     private readonly botToken;
     private readonly adminId;
     private userStates;
+    private userStateTimeouts;
     private loginCodes;
     constructor(prisma: PrismaService, configService: ConfigService, claudeCodeService: ClaudeCodeService);
     onModuleInit(): Promise<void>;

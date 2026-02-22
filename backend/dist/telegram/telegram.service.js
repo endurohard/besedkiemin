@@ -27,13 +27,19 @@ let TelegramService = TelegramService_1 = class TelegramService {
         this.claudeCodeService = claudeCodeService;
         this.logger = new common_1.Logger(TelegramService_1.name);
         this.userStates = new Map();
+        this.userStateTimeouts = new Map();
         this.loginCodes = new Map();
         this.botToken = this.configService.get('TELEGRAM_BOT_TOKEN') || '';
         this.adminId = this.configService.get('TELEGRAM_ADMIN_ID') || '';
     }
     async onModuleInit() {
         if (!this.botToken) {
-            this.logger.warn('TELEGRAM_BOT_TOKEN not configured. Telegram bot disabled.');
+            if (process.env.NODE_ENV === 'production') {
+                this.logger.error('TELEGRAM_BOT_TOKEN not configured in production! Telegram notifications will not work.');
+            }
+            else {
+                this.logger.warn('TELEGRAM_BOT_TOKEN not configured. Telegram bot disabled.');
+            }
             return;
         }
         this.logger.log('Initializing Telegram Bot...');
@@ -54,6 +60,25 @@ let TelegramService = TelegramService_1 = class TelegramService {
                 const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
                 if (!user) {
                     await this.bot.sendMessage(chatId, '❌ Пользователь не найден');
+                    return;
+                }
+                const existingBinding = await this.prisma.user.findFirst({
+                    where: { telegramId, id: { not: userId } },
+                    include: { role: true },
+                });
+                if (existingBinding) {
+                    const callerAsUser = await this.prisma.user.findFirst({
+                        where: { telegramId },
+                        include: { role: true },
+                    });
+                    const callerRole = callerAsUser?.role?.code;
+                    if (callerRole !== 'OWNER' && callerRole !== 'SUPER_ADMIN') {
+                        await this.bot.sendMessage(chatId, '❌ Этот Telegram уже привязан к другому аккаунту. Обратитесь к руководителю.');
+                        return;
+                    }
+                }
+                if (user.telegramId && user.telegramId !== telegramId) {
+                    await this.bot.sendMessage(chatId, '❌ К этому пользователю уже привязан другой Telegram аккаунт. Сначала отвяжите его.');
                     return;
                 }
                 await this.prisma.user.update({
@@ -179,6 +204,11 @@ let TelegramService = TelegramService_1 = class TelegramService {
                     await this.bot.sendMessage(chatId, '❌ Ошибка при обновлении задачи');
                 }
                 this.userStates.delete(msg.from.id);
+                const timeout = this.userStateTimeouts.get(msg.from.id);
+                if (timeout) {
+                    clearTimeout(timeout);
+                    this.userStateTimeouts.delete(msg.from.id);
+                }
             }
         });
         this.bot.onText(/\/claude (.+)/, async (msg, match) => {
@@ -484,14 +514,22 @@ let TelegramService = TelegramService_1 = class TelegramService {
             this.logger.error(`Invalid Telegram ID for user ${userId}: ${user.telegramId}`);
             return false;
         }
+        const prevTimeout = this.userStateTimeouts.get(chatId);
+        if (prevTimeout)
+            clearTimeout(prevTimeout);
         this.userStates.set(chatId, {
             action: 'reject_task',
             taskId,
             reason,
-            quantity,
-            photosToCollect: quantity,
+            quantity: Math.max(1, quantity),
+            photosToCollect: Math.max(1, quantity),
             photosCollected: [],
         });
+        this.userStateTimeouts.set(chatId, setTimeout(() => {
+            this.userStates.delete(chatId);
+            this.userStateTimeouts.delete(chatId);
+            this.logger.warn(`Photo collection state expired for chat ${chatId}, task ${taskId}`);
+        }, 30 * 60 * 1000));
         try {
             await this.bot.sendMessage(chatId, `📸 *Фото брака*\n📝 ${reason}\n📊 ${quantity} шт.\n\n` +
                 `Отправьте ${quantity} ${quantity === 1 ? 'фото' : quantity < 5 ? 'фото' : 'фото'} брака (по одному на каждую штуку).\n` +

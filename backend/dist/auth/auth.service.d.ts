@@ -46,11 +46,43 @@ export declare class AuthService {
             telegramId: string;
             sipServer: string;
             sipUser: string;
-            sipPassword: string;
             sipPort: number;
             sipWsPort: number;
         };
     }>;
     findUserById(userId: string): Promise<import("../users/entities/user.entity").UserEntity>;
+    validatePin(pin: string): Promise<{
+        role: {
+            description: string | null;
+            order: number;
+            name: string;
+            isActive: boolean;
+            id: string;
+            code: string;
+            color: string | null;
+            isSystem: boolean;
+            permissions: import("@prisma/client/runtime/library").JsonValue;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        roleId: string;
+        sipServer: string | null;
+        sipUser: string | null;
+        sipPassword: string | null;
+        sipPort: number | null;
+        isActive: boolean;
+        telegramId: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        sipWsPort: number | null;
+        isDepartmentAccount: boolean;
+        pin: string | null;
+    }>;
 }
 export {};

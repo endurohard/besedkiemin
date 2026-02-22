@@ -119,38 +119,33 @@ let WorkflowService = class WorkflowService {
         }
         const defaultStages = [
             {
-                name: 'Менеджер',
-                description: 'Прием и оформление заказа',
-                order: 1,
-                role: 'MANAGER',
-                legacyStage: 'PENDING',
-            },
-            {
-                name: 'Проектировщик',
-                description: 'Разработка проекта',
-                order: 2,
-                role: 'DESIGNER',
-                legacyStage: 'DESIGN',
-            },
-            {
                 name: 'Заготовка',
                 description: 'Подготовка материалов и заготовок',
-                order: 3,
-                role: 'PREPARER',
+                order: 1,
                 legacyStage: 'PREPARATION',
             },
             {
-                name: 'Маляр',
-                description: 'Покраска изделий',
-                order: 4,
-                role: 'PAINTER',
+                name: 'Сборка',
+                description: 'Сборка изделий',
+                order: 2,
+                legacyStage: 'ASSEMBLY',
+            },
+            {
+                name: 'Покраска',
+                description: 'Покраска и финишная обработка',
+                order: 3,
                 legacyStage: 'PAINTING',
             },
             {
+                name: 'Пошив',
+                description: 'Пошив и обивка изделий',
+                order: 4,
+                legacyStage: 'SEWING',
+            },
+            {
                 name: 'Склад',
-                description: 'Контроль качества и хранение',
+                description: 'Проверка качества, упаковка и отгрузка',
                 order: 5,
-                role: 'WAREHOUSE',
                 legacyStage: 'QUALITY_CHECK',
             },
         ];

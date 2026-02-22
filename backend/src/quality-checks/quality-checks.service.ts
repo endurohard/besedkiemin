@@ -62,18 +62,36 @@ export class QualityChecksService {
       },
     });
 
-    // Если брак - возвращаем продукт на покраску
+    // Если брак - возвращаем продукт на указанный этап или предыдущий по workflow
     if (createQualityCheckDto.status === QualityStatus.REJECTED) {
+      let returnStage: ProductionStage;
+
+      if (createQualityCheckDto.returnToStage) {
+        returnStage = createQualityCheckDto.returnToStage;
+      } else {
+        // Определяем предыдущий этап динамически из WorkflowStage
+        const currentWorkflowStage = await this.prisma.workflowStage.findFirst({
+          where: { legacyStage: product.stage, isActive: true },
+        });
+        const previousStage = currentWorkflowStage
+          ? await this.prisma.workflowStage.findFirst({
+              where: { order: { lt: currentWorkflowStage.order }, isActive: true },
+              orderBy: { order: 'desc' },
+            })
+          : null;
+        returnStage = (previousStage?.legacyStage as ProductionStage) || ProductionStage.PAINTING;
+      }
+
       await this.prisma.product.update({
         where: { id: createQualityCheckDto.productId },
-        data: { stage: ProductionStage.PAINTING },
+        data: { stage: returnStage },
       });
 
       // Создаем запись в истории
       await this.prisma.productHistory.create({
         data: {
           productId: createQualityCheckDto.productId,
-          stage: ProductionStage.PAINTING,
+          stage: returnStage,
           userId,
           notes: 'Возврат на доработку после браковки',
         },

@@ -24,12 +24,38 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import { PayrollStatus, ProductionStage } from '@prisma/client';
 
 @Controller('payroll')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PayrollController {
   constructor(private readonly payrollService: PayrollService) {}
+
+  // ==================== МОИ ЗАРАБОТКИ (для работников) ====================
+
+  @Get('my-earnings')
+  async getMyEarnings(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.payrollService.getWorkerEarnings(user.userId, startDate, endDate);
+  }
+
+  @Get('my-earnings/today')
+  async getMyEarningsToday(@CurrentUser() user: AuthenticatedUser) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return this.payrollService.getWorkerEarnings(
+      user.userId,
+      today.toISOString(),
+      tomorrow.toISOString(),
+    );
+  }
 
   // ==================== РАСЦЕНКИ ====================
 

@@ -285,12 +285,20 @@ let ShipmentsService = class ShipmentsService {
                 where: { id },
                 data: { status: client_1.ShipmentStatus.CANCELLED },
             });
-            await Promise.all(shipment.items.map((item) => tx.inventoryItem.update({
-                where: { id: item.inventoryItemId },
-                data: {
-                    quantity: item.inventoryItem.quantity + item.quantity,
-                },
-            })));
+            for (const item of shipment.items) {
+                const inventoryItem = await tx.inventoryItem.findUnique({
+                    where: { id: item.inventoryItemId },
+                });
+                if (!inventoryItem) {
+                    throw new common_1.NotFoundException(`Позиция склада ${item.inventoryItemId} не найдена. Отмена отгрузки прервана.`);
+                }
+                await tx.inventoryItem.update({
+                    where: { id: item.inventoryItemId },
+                    data: {
+                        quantity: inventoryItem.quantity + item.quantity,
+                    },
+                });
+            }
             return cancelled;
         });
         return updatedShipment;

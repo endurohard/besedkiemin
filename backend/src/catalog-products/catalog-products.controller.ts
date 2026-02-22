@@ -49,7 +49,8 @@ export class CatalogProductsController {
   @Get('featured')
   @ApiOperation({ summary: 'Получить рекомендуемые товары (публичный доступ)' })
   getFeatured(@Query('limit') limit?: string) {
-    return this.productsService.getFeatured(limit ? parseInt(limit) : undefined);
+    const parsedLimit = limit ? parseInt(limit, 10) : undefined;
+    return this.productsService.getFeatured(parsedLimit && !isNaN(parsedLimit) ? parsedLimit : undefined);
   }
 
   @Get(':id')

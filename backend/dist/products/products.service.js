@@ -236,7 +236,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
     }
     async moveToStage(productId, newStage, userId, notes) {
         const product = await this.findOne(productId);
-        this.validateStageTransition(product.stage, newStage);
+        await this.validateStageTransition(product.stage, newStage);
         const activeHistory = await this.prisma.productHistory.findFirst({
             where: {
                 productId,
@@ -307,38 +307,48 @@ let ProductsService = ProductsService_1 = class ProductsService {
             },
         });
     }
-    validateStageTransition(currentStage, newStage) {
-        const validTransitions = {
-            [client_1.ProductionStage.PENDING]: [client_1.ProductionStage.DESIGN],
-            [client_1.ProductionStage.DESIGN]: [client_1.ProductionStage.PREPARATION, client_1.ProductionStage.PENDING],
-            [client_1.ProductionStage.PREPARATION]: [client_1.ProductionStage.PAINTING, client_1.ProductionStage.DESIGN],
-            [client_1.ProductionStage.PAINTING]: [client_1.ProductionStage.SEWING, client_1.ProductionStage.ASSEMBLY],
-            [client_1.ProductionStage.SEWING]: [client_1.ProductionStage.ASSEMBLY, client_1.ProductionStage.PAINTING],
-            [client_1.ProductionStage.ASSEMBLY]: [client_1.ProductionStage.QUALITY_CHECK, client_1.ProductionStage.SEWING, client_1.ProductionStage.PAINTING],
-            [client_1.ProductionStage.QUALITY_CHECK]: [
-                client_1.ProductionStage.COMPLETED,
-                client_1.ProductionStage.REJECTED,
-                client_1.ProductionStage.PENDING,
-                client_1.ProductionStage.DESIGN,
-                client_1.ProductionStage.PREPARATION,
-                client_1.ProductionStage.PAINTING,
-                client_1.ProductionStage.SEWING,
-                client_1.ProductionStage.ASSEMBLY,
-            ],
-            [client_1.ProductionStage.COMPLETED]: [],
-            [client_1.ProductionStage.REJECTED]: [
-                client_1.ProductionStage.PENDING,
-                client_1.ProductionStage.DESIGN,
-                client_1.ProductionStage.PREPARATION,
-                client_1.ProductionStage.PAINTING,
-                client_1.ProductionStage.SEWING,
-                client_1.ProductionStage.ASSEMBLY,
-            ],
-        };
-        const allowedTransitions = validTransitions[currentStage] || [];
-        if (!allowedTransitions.includes(newStage)) {
+    async validateStageTransition(currentStage, newStage) {
+        if (currentStage === client_1.ProductionStage.COMPLETED) {
             throw new common_1.BadRequestException(`Невозможен переход с этапа ${currentStage} на ${newStage}`);
         }
+        if (currentStage === client_1.ProductionStage.REJECTED) {
+            const activeStages = await this.prisma.workflowStage.findMany({
+                where: { isActive: true },
+                select: { legacyStage: true },
+            });
+            const activeStageValues = activeStages.map(s => s.legacyStage);
+            if (!activeStageValues.includes(newStage)) {
+                throw new common_1.BadRequestException(`Невозможен переход с этапа ${currentStage} на ${newStage}`);
+            }
+            return;
+        }
+        const workflowStages = await this.prisma.workflowStage.findMany({
+            where: { isActive: true },
+            orderBy: { order: 'asc' },
+        });
+        const currentIndex = workflowStages.findIndex(s => s.legacyStage === currentStage);
+        const newIndex = workflowStages.findIndex(s => s.legacyStage === newStage);
+        const lastStage = workflowStages[workflowStages.length - 1];
+        if (lastStage && currentStage === lastStage.legacyStage) {
+            if (newStage === client_1.ProductionStage.COMPLETED || newStage === client_1.ProductionStage.REJECTED) {
+                return;
+            }
+            if (newIndex >= 0) {
+                return;
+            }
+        }
+        if (currentIndex >= 0 && newIndex >= 0) {
+            if (newIndex === currentIndex + 1 || newIndex === currentIndex + 2) {
+                return;
+            }
+            if (newIndex < currentIndex) {
+                return;
+            }
+        }
+        if (currentStage === client_1.ProductionStage.PENDING && newIndex === 0) {
+            return;
+        }
+        throw new common_1.BadRequestException(`Невозможен переход с этапа ${currentStage} на ${newStage}`);
     }
     async updateOrderStatus(orderId) {
         const products = await this.prisma.product.findMany({

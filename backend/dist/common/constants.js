@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SYSTEM_ROLES = exports.ORDER = exports.RATE_LIMIT = exports.TELEGRAM = exports.AUTH = exports.FILE_UPLOAD = exports.PAGINATION = void 0;
+exports.STAGE_TO_NAME = exports.ROLE_TO_STAGE = exports.SYSTEM_ROLES = exports.ORDER = exports.RATE_LIMIT = exports.TELEGRAM = exports.AUTH = exports.FILE_UPLOAD = exports.PAGINATION = void 0;
+exports.isDepartmentAccount = isDepartmentAccount;
+const client_1 = require("@prisma/client");
 exports.PAGINATION = {
     DEFAULT_PAGE: 1,
     DEFAULT_PAGE_SIZE: 50,
@@ -42,4 +44,25 @@ exports.SYSTEM_ROLES = {
     ASSEMBLER: 'ASSEMBLER',
     WAREHOUSE: 'WAREHOUSE',
 };
+exports.ROLE_TO_STAGE = {
+    DESIGNER: client_1.ProductionStage.DESIGN,
+    PREPARER: client_1.ProductionStage.PREPARATION,
+    PAINTER: client_1.ProductionStage.PAINTING,
+    SEWER: client_1.ProductionStage.SEWING,
+    ASSEMBLER: client_1.ProductionStage.ASSEMBLY,
+    WAREHOUSE: client_1.ProductionStage.QUALITY_CHECK,
+};
+exports.STAGE_TO_NAME = {
+    [client_1.ProductionStage.PENDING]: 'Ожидание',
+    [client_1.ProductionStage.DESIGN]: 'Проектирование',
+    [client_1.ProductionStage.PREPARATION]: 'Заготовка',
+    [client_1.ProductionStage.ASSEMBLY]: 'Сборка',
+    [client_1.ProductionStage.PAINTING]: 'Покраска',
+    [client_1.ProductionStage.SEWING]: 'Пошив',
+    [client_1.ProductionStage.QUALITY_CHECK]: 'Склад',
+    [client_1.ProductionStage.COMPLETED]: 'Завершено',
+};
+function isDepartmentAccount(user) {
+    return user.isDepartmentAccount === true;
+}
 //# sourceMappingURL=constants.js.map

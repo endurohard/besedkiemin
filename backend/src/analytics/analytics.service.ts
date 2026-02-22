@@ -452,13 +452,13 @@ export class AnalyticsService {
       ? cycleStats.reduce((sum, stat) => sum + stat.durations.deliveryHours, 0) / cycleStats.length
       : 0;
 
-    // Средние показатели по этапам
-    const allStages = [
-      ProductionStage.DESIGN,
-      ProductionStage.PREPARATION,
-      ProductionStage.PAINTING,
-      ProductionStage.QUALITY_CHECK,
-    ];
+    // Средние показатели по этапам — динамически из WorkflowStage
+    const workflowStages = await this.prisma.workflowStage.findMany({
+      where: { isActive: true },
+      orderBy: { order: 'asc' },
+      select: { legacyStage: true },
+    });
+    const allStages = workflowStages.map(s => s.legacyStage as ProductionStage);
 
     const avgStages: Record<string, number> = {};
     allStages.forEach(stage => {

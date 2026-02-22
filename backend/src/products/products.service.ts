@@ -276,8 +276,8 @@ export class ProductsService {
   ) {
     const product = await this.findOne(productId);
 
-    // Валидация перехода между этапами
-    this.validateStageTransition(product.stage, newStage);
+    // Валидация перехода между этапами (динамически из WorkflowStage)
+    await this.validateStageTransition(product.stage, newStage);
 
     // Завершаем текущий этап если есть активная история
     const activeHistory = await this.prisma.productHistory.findFirst({
@@ -364,47 +364,73 @@ export class ProductsService {
     });
   }
 
-  // Валидация переходов между этапами
-  private validateStageTransition(
+  // Валидация переходов между этапами — динамически из WorkflowStage
+  private async validateStageTransition(
     currentStage: ProductionStage,
     newStage: ProductionStage,
   ) {
-    const validTransitions: Record<ProductionStage, ProductionStage[]> = {
-      [ProductionStage.PENDING]: [ProductionStage.DESIGN],
-      [ProductionStage.DESIGN]: [ProductionStage.PREPARATION, ProductionStage.PENDING],
-      [ProductionStage.PREPARATION]: [ProductionStage.PAINTING, ProductionStage.DESIGN],
-      // PAINTING может перейти в SEWING или ASSEMBLY (если пошив не нужен), но не назад в PREPARATION
-      [ProductionStage.PAINTING]: [ProductionStage.SEWING, ProductionStage.ASSEMBLY],
-      [ProductionStage.SEWING]: [ProductionStage.ASSEMBLY, ProductionStage.PAINTING],
-      [ProductionStage.ASSEMBLY]: [ProductionStage.QUALITY_CHECK, ProductionStage.SEWING, ProductionStage.PAINTING],
-      [ProductionStage.QUALITY_CHECK]: [
-        ProductionStage.COMPLETED,
-        ProductionStage.REJECTED,
-        ProductionStage.PENDING,
-        ProductionStage.DESIGN,
-        ProductionStage.PREPARATION,
-        ProductionStage.PAINTING,
-        ProductionStage.SEWING,
-        ProductionStage.ASSEMBLY,
-      ],
-      [ProductionStage.COMPLETED]: [], // Финальный этап
-      [ProductionStage.REJECTED]: [
-        ProductionStage.PENDING,
-        ProductionStage.DESIGN,
-        ProductionStage.PREPARATION,
-        ProductionStage.PAINTING,
-        ProductionStage.SEWING,
-        ProductionStage.ASSEMBLY,
-      ], // Брак можно вернуть на любую стадию
-    };
-
-    const allowedTransitions = validTransitions[currentStage] || [];
-
-    if (!allowedTransitions.includes(newStage)) {
+    // COMPLETED — финальный этап, переходов нет
+    if (currentStage === ProductionStage.COMPLETED) {
       throw new BadRequestException(
         `Невозможен переход с этапа ${currentStage} на ${newStage}`,
       );
     }
+
+    // REJECTED — можно вернуть на любой активный этап workflow
+    if (currentStage === ProductionStage.REJECTED) {
+      const activeStages = await this.prisma.workflowStage.findMany({
+        where: { isActive: true },
+        select: { legacyStage: true },
+      });
+      const activeStageValues = activeStages.map(s => s.legacyStage);
+      if (!activeStageValues.includes(newStage)) {
+        throw new BadRequestException(
+          `Невозможен переход с этапа ${currentStage} на ${newStage}`,
+        );
+      }
+      return;
+    }
+
+    // Получаем все активные этапы workflow по порядку
+    const workflowStages = await this.prisma.workflowStage.findMany({
+      where: { isActive: true },
+      orderBy: { order: 'asc' },
+    });
+
+    const currentIndex = workflowStages.findIndex(s => s.legacyStage === currentStage);
+    const newIndex = workflowStages.findIndex(s => s.legacyStage === newStage);
+    const lastStage = workflowStages[workflowStages.length - 1];
+
+    // С последнего этапа workflow можно перейти в COMPLETED, REJECTED или любой предыдущий
+    if (lastStage && currentStage === lastStage.legacyStage) {
+      if (newStage === ProductionStage.COMPLETED || newStage === ProductionStage.REJECTED) {
+        return;
+      }
+      if (newIndex >= 0) {
+        return; // Можно вернуть на любой этап workflow
+      }
+    }
+
+    // Между этапами workflow: можно вперёд на +1 или назад на любой предыдущий
+    if (currentIndex >= 0 && newIndex >= 0) {
+      // Вперёд: только следующий этап (или через один при пропуске SEWING)
+      if (newIndex === currentIndex + 1 || newIndex === currentIndex + 2) {
+        return;
+      }
+      // Назад: любой предыдущий этап (возврат на доработку)
+      if (newIndex < currentIndex) {
+        return;
+      }
+    }
+
+    // PENDING → первый этап workflow
+    if (currentStage === ProductionStage.PENDING && newIndex === 0) {
+      return;
+    }
+
+    throw new BadRequestException(
+      `Невозможен переход с этапа ${currentStage} на ${newStage}`,
+    );
   }
 
   // Автоматическое обновление статуса заказа

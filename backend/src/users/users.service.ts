@@ -109,4 +109,33 @@ export class UsersService {
 
     return new UserEntity(updatedUser);
   }
+
+  // PIN management
+  async setPin(id: string, pin: string): Promise<void> {
+    await this.findOne(id);
+    const hashedPin = await bcrypt.hash(pin, AUTH.BCRYPT_SALT_ROUNDS);
+    await this.prisma.user.update({
+      where: { id },
+      data: { pin: hashedPin },
+    });
+  }
+
+  async findByPin(pin: string) {
+    // Получаем всех активных работников с PIN
+    const users = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        pin: { not: null },
+      },
+      include: { role: true },
+    });
+
+    // Проверяем PIN по хешу
+    for (const user of users) {
+      if (user.pin && await bcrypt.compare(pin, user.pin)) {
+        return user;
+      }
+    }
+    return null;
+  }
 }

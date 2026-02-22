@@ -19,10 +19,21 @@ const dto_1 = require("./dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 const client_1 = require("@prisma/client");
 let PayrollController = class PayrollController {
     constructor(payrollService) {
         this.payrollService = payrollService;
+    }
+    async getMyEarnings(user, startDate, endDate) {
+        return this.payrollService.getWorkerEarnings(user.userId, startDate, endDate);
+    }
+    async getMyEarningsToday(user) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return this.payrollService.getWorkerEarnings(user.userId, today.toISOString(), tomorrow.toISOString());
     }
     findAllWorkRates() {
         return this.payrollService.findAllWorkRates();
@@ -115,6 +126,22 @@ let PayrollController = class PayrollController {
     }
 };
 exports.PayrollController = PayrollController;
+__decorate([
+    (0, common_1.Get)('my-earnings'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)('startDate')),
+    __param(2, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], PayrollController.prototype, "getMyEarnings", null);
+__decorate([
+    (0, common_1.Get)('my-earnings/today'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], PayrollController.prototype, "getMyEarningsToday", null);
 __decorate([
     (0, common_1.Get)('work-rates'),
     (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),

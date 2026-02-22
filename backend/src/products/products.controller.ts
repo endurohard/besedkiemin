@@ -45,6 +45,7 @@ export class ProductsController {
   }
 
   @Get('stage/:stage')
+  @Roles('MANAGER', 'OWNER', 'SUPER_ADMIN', 'WAREHOUSE')
   @ApiOperation({ summary: 'Получить продукты на определенном этапе' })
   getByStage(@Param('stage') stage: ProductionStage) {
     return this.productsService.getProductsByStage(stage);
@@ -57,6 +58,7 @@ export class ProductsController {
   }
 
   @Get(':id/history')
+  @Roles('MANAGER', 'OWNER', 'SUPER_ADMIN', 'WAREHOUSE')
   @ApiOperation({ summary: 'Получить историю прохождения продукта по этапам' })
   getHistory(@Param('id') id: string) {
     return this.productsService.getProductHistory(id);

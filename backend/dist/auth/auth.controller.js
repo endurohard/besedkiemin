@@ -17,14 +17,19 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
+const pin_login_dto_1 = require("./dto/pin-login.dto");
 const local_auth_guard_1 = require("./guards/local-auth.guard");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const roles_guard_1 = require("./guards/roles.guard");
+const roles_decorator_1 = require("./decorators/roles.decorator");
 const current_user_decorator_1 = require("./decorators/current-user.decorator");
 const telegram_service_1 = require("../telegram/telegram.service");
+const users_service_1 = require("../users/users.service");
 let AuthController = class AuthController {
-    constructor(authService, telegramService) {
+    constructor(authService, telegramService, usersService) {
         this.authService = authService;
         this.telegramService = telegramService;
+        this.usersService = usersService;
     }
     async login(loginDto, req) {
         return this.authService.login(req.user);
@@ -61,6 +66,33 @@ let AuthController = class AuthController {
             status: 'pending',
             message: 'Ожидание подтверждения в Telegram'
         };
+    }
+    async pinLogin(pinLoginDto) {
+        const user = await this.authService.validatePin(pinLoginDto.pin);
+        if (!user) {
+            throw new common_1.UnauthorizedException('Неверный PIN-код');
+        }
+        return this.authService.login(user);
+    }
+    async setMyPin(user, body) {
+        if (!body.pin || body.pin.length < 4 || body.pin.length > 6) {
+            throw new common_1.BadRequestException('PIN-код должен содержать от 4 до 6 цифр');
+        }
+        if (!/^\d+$/.test(body.pin)) {
+            throw new common_1.BadRequestException('PIN-код должен содержать только цифры');
+        }
+        await this.usersService.setPin(user.userId, body.pin);
+        return { success: true, message: 'PIN-код установлен' };
+    }
+    async setUserPin(userId, body) {
+        if (!body.pin || body.pin.length < 4 || body.pin.length > 6) {
+            throw new common_1.BadRequestException('PIN-код должен содержать от 4 до 6 цифр');
+        }
+        if (!/^\d+$/.test(body.pin)) {
+            throw new common_1.BadRequestException('PIN-код должен содержать только цифры');
+        }
+        await this.usersService.setPin(userId, body.pin);
+        return { success: true, message: 'PIN-код установлен' };
     }
 };
 exports.AuthController = AuthController;
@@ -100,10 +132,42 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "checkTelegramAuth", null);
+__decorate([
+    (0, common_1.Post)('pin-login'),
+    (0, swagger_1.ApiOperation)({ summary: 'Вход по PIN-коду (для производственных работников)' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [pin_login_dto_1.PinLoginDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "pinLogin", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.Post)('set-pin'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Установить PIN-код для текущего пользователя' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "setMyPin", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('OWNER', 'SUPER_ADMIN'),
+    (0, common_1.Post)('set-pin/:userId'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Установить PIN-код для работника (только владелец)' }),
+    __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "setUserPin", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
-        telegram_service_1.TelegramService])
+        telegram_service_1.TelegramService,
+        users_service_1.UsersService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

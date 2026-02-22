@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
-import { QualityStatus } from '@prisma/client';
+import { QualityStatus, ProductionStage } from '@prisma/client';
 
 export class CreateQualityCheckDto {
   @ApiProperty({ example: 'uuid-product-id' })
@@ -16,4 +16,9 @@ export class CreateQualityCheckDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @ApiProperty({ enum: ProductionStage, required: false, description: 'Этап для возврата при браке' })
+  @IsEnum(ProductionStage)
+  @IsOptional()
+  returnToStage?: ProductionStage;
 }

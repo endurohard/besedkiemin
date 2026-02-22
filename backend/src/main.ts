@@ -24,6 +24,11 @@ async function bootstrap() {
     logger.warn('WARNING: Using default JWT_SECRET in production. Please change it!');
   }
 
+  // Warn about wildcard CORS in production
+  if (process.env.NODE_ENV === 'production' && process.env.CORS_ORIGIN === '*') {
+    logger.warn('WARNING: CORS_ORIGIN=* in production. Set to your actual domain!');
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Global exception filter for consistent error responses

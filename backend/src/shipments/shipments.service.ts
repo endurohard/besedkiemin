@@ -343,17 +343,25 @@ export class ShipmentsService {
         data: { status: ShipmentStatus.CANCELLED },
       });
 
-      // Возвращаем товары на склад параллельно
-      await Promise.all(
-        shipment.items.map((item) =>
-          tx.inventoryItem.update({
-            where: { id: item.inventoryItemId },
-            data: {
-              quantity: item.inventoryItem.quantity + item.quantity,
-            },
-          })
-        )
-      );
+      // Возвращаем товары на склад последовательно с проверкой
+      for (const item of shipment.items) {
+        const inventoryItem = await tx.inventoryItem.findUnique({
+          where: { id: item.inventoryItemId },
+        });
+
+        if (!inventoryItem) {
+          throw new NotFoundException(
+            `Позиция склада ${item.inventoryItemId} не найдена. Отмена отгрузки прервана.`,
+          );
+        }
+
+        await tx.inventoryItem.update({
+          where: { id: item.inventoryItemId },
+          data: {
+            quantity: inventoryItem.quantity + item.quantity,
+          },
+        });
+      }
 
       return cancelled;
     });

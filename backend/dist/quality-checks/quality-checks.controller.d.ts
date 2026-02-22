@@ -41,6 +41,7 @@ export declare class QualityChecksController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            nomenclatureId: string | null;
         };
         checkedBy: {
             role: {
@@ -240,6 +241,7 @@ export declare class QualityChecksController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            nomenclatureId: string | null;
         };
         checkedBy: {
             role: {
@@ -287,6 +289,7 @@ export declare class QualityChecksController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            nomenclatureId: string | null;
         };
         checkedBy: {
             role: {

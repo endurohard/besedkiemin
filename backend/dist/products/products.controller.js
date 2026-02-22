@@ -74,6 +74,7 @@ __decorate([
 ], ProductsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('stage/:stage'),
+    (0, roles_decorator_1.Roles)('MANAGER', 'OWNER', 'SUPER_ADMIN', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить продукты на определенном этапе' }),
     __param(0, (0, common_1.Param)('stage')),
     __metadata("design:type", Function),
@@ -90,6 +91,7 @@ __decorate([
 ], ProductsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Get)(':id/history'),
+    (0, roles_decorator_1.Roles)('MANAGER', 'OWNER', 'SUPER_ADMIN', 'WAREHOUSE'),
     (0, swagger_1.ApiOperation)({ summary: 'Получить историю прохождения продукта по этапам' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

@@ -8,14 +8,16 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var PayrollService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PayrollService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
-let PayrollService = class PayrollService {
+let PayrollService = PayrollService_1 = class PayrollService {
     constructor(prisma) {
         this.prisma = prisma;
+        this.logger = new common_1.Logger(PayrollService_1.name);
     }
     async findAllWorkRates() {
         return this.prisma.workRate.findMany({
@@ -116,10 +118,14 @@ let PayrollService = class PayrollService {
         if (filters?.startDate || filters?.endDate) {
             where.date = {};
             if (filters.startDate) {
-                where.date.gte = new Date(filters.startDate);
+                const d = new Date(filters.startDate);
+                if (!isNaN(d.getTime()))
+                    where.date.gte = d;
             }
             if (filters.endDate) {
-                where.date.lte = new Date(filters.endDate);
+                const d = new Date(filters.endDate);
+                if (!isNaN(d.getTime()))
+                    where.date.lte = d;
             }
         }
         return this.prisma.penalty.findMany({
@@ -197,6 +203,14 @@ let PayrollService = class PayrollService {
         if (penalty.isCancelled) {
             throw new common_1.BadRequestException('Штраф уже отменен');
         }
+        if (penalty.payrollPeriodId) {
+            const period = await this.prisma.payrollPeriod.findUnique({
+                where: { id: penalty.payrollPeriodId },
+            });
+            if (period?.status === client_1.PayrollStatus.PAID) {
+                throw new common_1.BadRequestException('Нельзя отменить штраф, включённый в выплаченный расчёт');
+            }
+        }
         return this.prisma.penalty.update({
             where: { id },
             data: {
@@ -244,12 +258,25 @@ let PayrollService = class PayrollService {
     }
     async createManagerCommission(dto) {
         if (dto.userId) {
+            const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+            if (!user) {
+                throw new common_1.NotFoundException('Пользователь не найден');
+            }
             const existing = await this.prisma.managerCommission.findUnique({
                 where: { userId: dto.userId },
             });
             if (existing) {
                 throw new common_1.ConflictException('Настройки комиссии для этого пользователя уже существуют');
             }
+        }
+        if (dto.roleId) {
+            const role = await this.prisma.role.findUnique({ where: { id: dto.roleId } });
+            if (!role) {
+                throw new common_1.NotFoundException('Роль не найдена');
+            }
+        }
+        if (!dto.userId && !dto.roleId) {
+            throw new common_1.BadRequestException('Необходимо указать userId или roleId');
         }
         return this.prisma.managerCommission.create({
             data: dto,
@@ -572,6 +599,17 @@ let PayrollService = class PayrollService {
         return { success: true };
     }
     async createWorkLog(data) {
+        if (data.nomenclatureId) {
+            const nomenclature = await this.prisma.nomenclature.findUnique({
+                where: { id: data.nomenclatureId },
+                select: { productTypeId: true },
+            });
+            if (nomenclature && nomenclature.productTypeId !== data.productTypeId) {
+                this.logger.warn(`Nomenclature ${data.nomenclatureId} belongs to productType ${nomenclature.productTypeId}, ` +
+                    `but workLog has productType ${data.productTypeId}. Ignoring nomenclatureId.`);
+                data.nomenclatureId = undefined;
+            }
+        }
         const workRate = await this.findWorkRate(data.productTypeId, data.stage, data.nomenclatureId);
         const pricePerUnit = workRate?.pricePerUnit || 0;
         const totalAmount = data.quantity * pricePerUnit;
@@ -605,10 +643,14 @@ let PayrollService = class PayrollService {
         if (filters?.startDate || filters?.endDate) {
             where.completedAt = {};
             if (filters.startDate) {
-                where.completedAt.gte = new Date(filters.startDate);
+                const d = new Date(filters.startDate);
+                if (!isNaN(d.getTime()))
+                    where.completedAt.gte = d;
             }
             if (filters.endDate) {
-                where.completedAt.lte = new Date(filters.endDate);
+                const d = new Date(filters.endDate);
+                if (!isNaN(d.getTime()))
+                    where.completedAt.lte = d;
             }
         }
         if (filters?.unassigned) {
@@ -642,9 +684,128 @@ let PayrollService = class PayrollService {
             orderBy: { completedAt: 'desc' },
         });
     }
+    async getWorkerEarnings(userId, startDate, endDate) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            include: { role: true },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Пользователь не найден');
+        }
+        const now = new Date();
+        const start = startDate
+            ? new Date(startDate)
+            : new Date(now.getFullYear(), now.getMonth(), 1);
+        const end = endDate
+            ? new Date(endDate)
+            : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date(now);
+        todayEnd.setHours(23, 59, 59, 999);
+        const [workLogs, todayLogs, penalties, todayPenalties] = await Promise.all([
+            this.prisma.workLog.findMany({
+                where: {
+                    userId,
+                    completedAt: { gte: start, lte: end },
+                },
+                include: {
+                    product: {
+                        select: { id: true, name: true },
+                    },
+                    productType: {
+                        select: { id: true, name: true },
+                    },
+                },
+                orderBy: { completedAt: 'desc' },
+            }),
+            this.prisma.workLog.findMany({
+                where: {
+                    userId,
+                    completedAt: { gte: todayStart, lte: todayEnd },
+                },
+                include: {
+                    product: { select: { id: true, name: true } },
+                    productType: { select: { id: true, name: true } },
+                },
+                orderBy: { completedAt: 'desc' },
+            }),
+            this.prisma.penalty.findMany({
+                where: {
+                    userId,
+                    date: { gte: start, lte: end },
+                    isCancelled: false,
+                },
+                orderBy: { date: 'desc' },
+            }),
+            this.prisma.penalty.findMany({
+                where: {
+                    userId,
+                    date: { gte: todayStart, lte: todayEnd },
+                    isCancelled: false,
+                },
+            }),
+        ]);
+        const periodTotal = workLogs.reduce((sum, log) => sum + log.totalAmount, 0);
+        const todayTotal = todayLogs.reduce((sum, log) => sum + log.totalAmount, 0);
+        const penaltyTotal = penalties.reduce((sum, p) => sum + p.amount, 0);
+        const todayPenaltyTotal = todayPenalties.reduce((sum, p) => sum + p.amount, 0);
+        return {
+            user: {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role?.name,
+            },
+            period: {
+                start: start.toISOString(),
+                end: end.toISOString(),
+            },
+            today: {
+                earnings: todayTotal,
+                penalties: todayPenaltyTotal,
+                net: todayTotal - todayPenaltyTotal,
+                workLogs: todayLogs.map(log => ({
+                    id: log.id,
+                    product: log.product?.name,
+                    productType: log.productType?.name,
+                    stage: log.stage,
+                    quantity: log.quantity,
+                    pricePerUnit: log.pricePerUnit,
+                    totalAmount: log.totalAmount,
+                    completedAt: log.completedAt,
+                })),
+            },
+            period_totals: {
+                earnings: periodTotal,
+                penalties: penaltyTotal,
+                net: periodTotal - penaltyTotal,
+                workLogsCount: workLogs.length,
+            },
+            recentWorkLogs: workLogs.slice(0, 20).map(log => ({
+                id: log.id,
+                product: log.product?.name,
+                productType: log.productType?.name,
+                stage: log.stage,
+                quantity: log.quantity,
+                pricePerUnit: log.pricePerUnit,
+                totalAmount: log.totalAmount,
+                completedAt: log.completedAt,
+            })),
+            penalties: penalties.map(p => ({
+                id: p.id,
+                amount: p.amount,
+                reason: p.reason,
+                date: p.date,
+            })),
+        };
+    }
     async getPayrollSummary(periodStart, periodEnd) {
         const start = new Date(periodStart);
         const end = new Date(periodEnd);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            throw new common_1.BadRequestException('Неверный формат даты периода');
+        }
         const workLogsByUser = await this.prisma.workLog.groupBy({
             by: ['userId'],
             where: {
@@ -674,31 +835,65 @@ let PayrollService = class PayrollService {
         const commissions = await this.prisma.managerCommission.findMany({
             where: { isActive: true },
         });
-        const usersPromises = usersData.map(async (user) => {
+        const usersWithCommissions = usersData.filter(u => {
+            return commissions.some(c => c.userId === u.id || c.roleId === u.roleId);
+        });
+        const commissionUserIds = usersWithCommissions.map(u => u.id);
+        let ordersByUser = new Map();
+        let ordersWithMinByUser = new Map();
+        if (commissionUserIds.length > 0) {
+            const orderGroups = await this.prisma.order.groupBy({
+                by: ['createdById'],
+                _sum: { totalAmount: true },
+                where: {
+                    createdById: { in: commissionUserIds },
+                    createdAt: { gte: start, lte: end },
+                    totalAmount: { not: null },
+                },
+            });
+            for (const group of orderGroups) {
+                ordersByUser.set(group.createdById, group._sum.totalAmount || 0);
+            }
+            const minAmounts = [...new Set(commissions.filter(c => c.minOrderAmount).map(c => c.minOrderAmount))];
+            if (minAmounts.length > 0) {
+                for (const minAmount of minAmounts) {
+                    const relevantUserIds = commissionUserIds.filter(uid => {
+                        const uc = commissions.find(c => c.userId === uid) ||
+                            commissions.find(c => c.roleId === usersData.find(u => u.id === uid)?.roleId);
+                        return uc?.minOrderAmount === minAmount;
+                    });
+                    if (relevantUserIds.length > 0) {
+                        const filteredGroups = await this.prisma.order.groupBy({
+                            by: ['createdById'],
+                            _sum: { totalAmount: true },
+                            where: {
+                                createdById: { in: relevantUserIds },
+                                createdAt: { gte: start, lte: end },
+                                totalAmount: { gte: minAmount },
+                            },
+                        });
+                        for (const group of filteredGroups) {
+                            ordersWithMinByUser.set(group.createdById, group._sum.totalAmount || 0);
+                        }
+                    }
+                }
+            }
+        }
+        const users = usersData.map((user) => {
             const workData = workLogsByUser.find((w) => w.userId === user.id);
             const penaltyData = penaltiesByUser.find((p) => p.userId === user.id);
             const workAmount = workData?._sum.totalAmount || 0;
             const penaltyAmount = penaltyData?._sum.amount || 0;
             let commissionAmount = 0;
+            let baseSalary = 0;
             const userCommission = commissions.find(c => c.userId === user.id)
                 || commissions.find(c => c.roleId === user.roleId);
             if (userCommission) {
-                const ordersData = await this.prisma.order.aggregate({
-                    where: {
-                        createdById: user.id,
-                        createdAt: { gte: start, lte: end },
-                        totalAmount: userCommission.minOrderAmount
-                            ? { gte: userCommission.minOrderAmount }
-                            : { not: null },
-                    },
-                    _sum: { totalAmount: true },
-                });
-                const ordersAmount = ordersData._sum.totalAmount || 0;
-                commissionAmount = ordersAmount * (userCommission.commissionPercent / 100);
-            }
-            let baseSalary = 0;
-            if (userCommission) {
                 baseSalary = userCommission.baseSalary || 0;
+                const ordersAmount = userCommission.minOrderAmount
+                    ? (ordersWithMinByUser.get(user.id) || 0)
+                    : (ordersByUser.get(user.id) || 0);
+                commissionAmount = ordersAmount * (userCommission.commissionPercent / 100);
             }
             const totalAmount = baseSalary + workAmount + commissionAmount - penaltyAmount;
             return {
@@ -713,7 +908,6 @@ let PayrollService = class PayrollService {
                 workLogsCount: workData?._count || 0,
             };
         });
-        const users = await Promise.all(usersPromises);
         const totals = {
             workAmount: users.reduce((sum, u) => sum + u.workAmount, 0),
             commissionAmount: users.reduce((sum, u) => sum + u.commissionAmount, 0),
@@ -728,7 +922,7 @@ let PayrollService = class PayrollService {
     }
 };
 exports.PayrollService = PayrollService;
-exports.PayrollService = PayrollService = __decorate([
+exports.PayrollService = PayrollService = PayrollService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], PayrollService);

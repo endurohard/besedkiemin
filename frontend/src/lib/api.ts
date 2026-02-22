@@ -124,6 +124,15 @@ export const authApi = {
     const response = await api.post<TelegramCheckAuthResponse>('/auth/telegram/check-auth', data);
     return response.data;
   },
+
+  pinLogin: async (pin: string): Promise<LoginResponse> => {
+    const response = await api.post<LoginResponse>('/auth/pin-login', { pin });
+    return response.data;
+  },
+
+  setPin: async (pin: string): Promise<void> => {
+    await api.post('/auth/set-pin', { pin });
+  },
 };
 
 // Paginated response type
@@ -946,6 +955,20 @@ export const payrollApi = {
     const response = await api.get<PayrollSummary>('/payroll/summary', {
       params: { periodStart, periodEnd },
     });
+    return response.data;
+  },
+
+  // Worker-facing endpoints
+  getMyEarnings: async (startDate?: string, endDate?: string) => {
+    const params: any = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    const response = await api.get('/payroll/my-earnings', { params });
+    return response.data;
+  },
+
+  getMyEarningsToday: async () => {
+    const response = await api.get('/payroll/my-earnings/today');
     return response.data;
   },
 };

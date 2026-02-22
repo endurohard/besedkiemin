@@ -1,5 +1,6 @@
 import { Controller, Get, Query, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ProductionStage } from '@prisma/client';
 
 @Controller('public')
 export class PublicController {
@@ -42,7 +43,7 @@ export class PublicController {
       // Подсчитываем прогресс
       const totalProducts = order.products.length;
       const completedProducts = order.products.filter(
-        p => p.stage === 'COMPLETED' || p.stage === 'QUALITY_CHECK'
+        p => p.stage === ProductionStage.COMPLETED || p.stage === ProductionStage.QUALITY_CHECK
       ).length;
 
       detailedStatus = `Изготовление: ${completedProducts} из ${totalProducts} изделий готово`;

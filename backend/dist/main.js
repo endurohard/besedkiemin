@@ -18,6 +18,9 @@ async function bootstrap() {
     if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET === 'super-secret-jwt-key-change-in-production') {
         logger.warn('WARNING: Using default JWT_SECRET in production. Please change it!');
     }
+    if (process.env.NODE_ENV === 'production' && process.env.CORS_ORIGIN === '*') {
+        logger.warn('WARNING: CORS_ORIGIN=* in production. Set to your actual domain!');
+    }
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.useGlobalFilters(new filters_1.GlobalExceptionFilter());
     app.useGlobalInterceptors(new interceptors_1.LoggingInterceptor());

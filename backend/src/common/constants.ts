@@ -2,6 +2,8 @@
  * Application-wide constants
  */
 
+import { ProductionStage } from '@prisma/client';
+
 // Pagination
 export const PAGINATION = {
   DEFAULT_PAGE: 1,
@@ -56,3 +58,30 @@ export const SYSTEM_ROLES = {
   ASSEMBLER: 'ASSEMBLER',
   WAREHOUSE: 'WAREHOUSE',
 } as const;
+
+// Role code -> Production stage mapping
+export const ROLE_TO_STAGE: Record<string, ProductionStage> = {
+  DESIGNER: ProductionStage.DESIGN,
+  PREPARER: ProductionStage.PREPARATION,
+  PAINTER: ProductionStage.PAINTING,
+  SEWER: ProductionStage.SEWING,
+  ASSEMBLER: ProductionStage.ASSEMBLY,
+  WAREHOUSE: ProductionStage.QUALITY_CHECK,
+};
+
+// Production stage -> display name mapping (fallback; prefer WorkflowStage.name from DB)
+export const STAGE_TO_NAME: Record<string, string> = {
+  [ProductionStage.PENDING]: 'Ожидание',
+  [ProductionStage.DESIGN]: 'Проектирование',
+  [ProductionStage.PREPARATION]: 'Заготовка',
+  [ProductionStage.ASSEMBLY]: 'Сборка',
+  [ProductionStage.PAINTING]: 'Покраска',
+  [ProductionStage.SEWING]: 'Пошив',
+  [ProductionStage.QUALITY_CHECK]: 'Склад',
+  [ProductionStage.COMPLETED]: 'Завершено',
+};
+
+// Check if a user is a department account (sees all department tasks)
+export function isDepartmentAccount(user: { isDepartmentAccount?: boolean }): boolean {
+  return user.isDepartmentAccount === true;
+}

@@ -88,6 +88,7 @@ export declare class OrdersService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            nomenclatureId: string | null;
         })[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -257,6 +258,7 @@ export declare class OrdersService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            nomenclatureId: string | null;
         })[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;
@@ -322,6 +324,7 @@ export declare class OrdersService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            nomenclatureId: string | null;
         }[];
     } & {
         status: import(".prisma/client").$Enums.OrderStatus;

@@ -97,6 +97,7 @@ export declare class InventoryService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            nomenclatureId: string | null;
         };
     } & {
         name: string;
@@ -153,6 +154,7 @@ export declare class InventoryService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            nomenclatureId: string | null;
         };
     } & {
         name: string;
@@ -209,6 +211,7 @@ export declare class InventoryService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            nomenclatureId: string | null;
         };
         shipmentItems: ({
             shipment: {

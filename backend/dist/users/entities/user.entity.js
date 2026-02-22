@@ -15,6 +15,8 @@ class UserEntity {
     constructor(partial) {
         Object.assign(this, partial);
         delete this.password;
+        delete this.sipPassword;
+        delete this.pin;
     }
 }
 exports.UserEntity = UserEntity;

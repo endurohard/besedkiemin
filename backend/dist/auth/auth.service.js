@@ -77,7 +77,6 @@ let AuthService = class AuthService {
                 telegramId: user.telegramId,
                 sipServer: user.sipServer,
                 sipUser: user.sipUser,
-                sipPassword: user.sipPassword,
                 sipPort: user.sipPort,
                 sipWsPort: user.sipWsPort,
             },
@@ -85,6 +84,9 @@ let AuthService = class AuthService {
     }
     async findUserById(userId) {
         return await this.usersService.findOne(userId);
+    }
+    async validatePin(pin) {
+        return this.usersService.findByPin(pin);
     }
 };
 exports.AuthService = AuthService;
