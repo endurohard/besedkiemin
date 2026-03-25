@@ -213,7 +213,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
     return (
       <button
         onClick={handleOpenChat}
-        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-transform hover:scale-110 z-50"
+        className="fixed bottom-6 right-6 bg-[#1A1A1A] hover:bg-[#2A2A2A] text-[#C5A55A] rounded-full p-4 shadow-[0_0_20px_rgba(197,165,90,.2)] border border-[#C5A55A]/30 transition-all hover:scale-110 hover:shadow-[0_0_30px_rgba(197,165,90,.3)] z-50"
         title="Открыть чат"
       >
         <svg
@@ -236,9 +236,9 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
 
   // Окно чата (развернутый)
   return (
-    <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
+    <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-[#1A1A1A] rounded-lg shadow-2xl flex flex-col z-50 border border-[#C5A55A]/30">
       {/* Заголовок */}
-      <div className="bg-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+      <div className="bg-[#111] text-white p-4 rounded-t-lg flex items-center justify-between border-b border-[#C5A55A]/20">
         <div>
           <h3 className="font-semibold">Онлайн-консультант</h3>
           <p className="text-xs">
@@ -261,7 +261,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
         </div>
         <button
           onClick={handleCloseChat}
-          className="hover:bg-blue-700 rounded p-1"
+          className="hover:bg-[#C5A55A]/20 rounded p-1 text-[#C5A55A]"
           title="Закрыть"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,16 +277,16 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
 
       {/* Сообщение о нерабочих часах */}
       {!onlineStatus.online && !showOfflineForm && (
-        <div className="bg-yellow-50 border-b border-yellow-200 p-3">
-          <p className="text-sm text-yellow-800">{onlineStatus.message}</p>
+        <div className="bg-[#2A2A2A] border-b border-[#C5A55A]/20 p-3">
+          <p className="text-sm text-gray-600">{onlineStatus.message}</p>
           {onlineStatus.workingHours && (
-            <p className="text-xs text-yellow-700 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               Рабочие часы: {onlineStatus.workingHours.start} - {onlineStatus.workingHours.end}
             </p>
           )}
           <button
             onClick={() => setShowOfflineForm(true)}
-            className="mt-2 text-sm text-blue-600 hover:underline font-medium"
+            className="mt-2 text-sm text-[#C5A55A] hover:underline font-medium"
           >
             Оставить заявку на звонок →
           </button>
@@ -296,7 +296,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
       {/* Форма ввода имени гостя */}
       {showNameForm ? (
         <div className="flex-1 overflow-y-auto p-4">
-          <h4 className="font-semibold mb-3">Представьтесь, пожалуйста</h4>
+          <h4 className="font-semibold mb-3 text-[#C5A55A]">Представьтесь, пожалуйста</h4>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -327,7 +327,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
             <Button
               type="submit"
               disabled={!guestName.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-[#C5A55A] hover:bg-[#D4AF37] text-[#111]"
             >
               Начать чат
             </Button>
@@ -335,7 +335,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
         </div>
       ) : showOfflineForm ? (
         <div className="flex-1 overflow-y-auto p-4">
-          <h4 className="font-semibold mb-3">Заявка на обратный звонок</h4>
+          <h4 className="font-semibold mb-3 text-[#C5A55A]">Заявка на обратный звонок</h4>
           <form onSubmit={handleSubmitCallback} className="space-y-3">
             <div>
               <label className="block text-sm font-medium mb-1">Ваше имя *</label>
@@ -361,7 +361,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
                 value={callbackForm.message}
                 onChange={(e) => setCallbackForm({ ...callbackForm, message: e.target.value })}
                 placeholder="Опишите ваш вопрос..."
-                className="w-full border rounded p-2 text-sm"
+                className="w-full border border-[#333] rounded p-2 text-sm bg-[#111] text-white placeholder-gray-600 focus:border-[#C5A55A] outline-none"
                 rows={3}
               />
             </div>
@@ -377,14 +377,14 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
               <Button
                 type="submit"
                 disabled={isSubmittingCallback}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 bg-[#C5A55A] hover:bg-[#D4AF37] text-[#111]"
               >
                 {isSubmittingCallback ? 'Отправка...' : 'Отправить заявку'}
               </Button>
               <Button
                 type="button"
                 onClick={() => setShowOfflineForm(false)}
-                className="bg-gray-500 hover:bg-gray-600"
+                className="bg-[#333] hover:bg-[#444] text-white"
               >
                 Назад
               </Button>
@@ -394,15 +394,15 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
       ) : (
         <>
           {/* Сообщения */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#111]">
             {isLoadingRoom ? (
               <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">Загрузка чата...</p>
+                <p className="text-gray-400">Загрузка чата...</p>
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
                 <svg
-                  className="w-16 h-16 mb-2 text-gray-300"
+                  className="w-16 h-16 mb-2 text-gray-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -426,16 +426,16 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
                   <div
                     className={`max-w-[75%] rounded-lg px-3 py-2 ${
                       msg.senderType === 'CUSTOMER'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white border border-gray-200'
+                        ? 'bg-[#C5A55A] text-[#111]'
+                        : 'bg-[#2A2A2A] border border-[#333]'
                     }`}
                   >
                     {msg.senderType === 'MANAGER' && (
-                      <p className="text-xs font-medium text-gray-600 mb-1">{msg.senderName}</p>
+                      <p className="text-xs font-medium text-[#C5A55A] mb-1">{msg.senderName}</p>
                     )}
-                    <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words text-current">{msg.content}</p>
                     <p
-                      className={`text-xs mt-1 ${msg.senderType === 'CUSTOMER' ? 'text-blue-100' : 'text-gray-400'}`}
+                      className={`text-xs mt-1 ${msg.senderType === 'CUSTOMER' ? 'text-[#111]/60' : 'text-gray-500'}`}
                     >
                       {formatTime(msg.createdAt)}
                       {msg.senderType === 'CUSTOMER' && msg.isRead && ' ✓✓'}
@@ -446,7 +446,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
             )}
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+                <div className="bg-[#2A2A2A] border border-[#333] rounded-lg px-3 py-2">
                   <div className="flex gap-1">
                     <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
                     <span
@@ -465,7 +465,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
           </div>
 
           {/* Поле ввода */}
-          <div className="border-t p-3 bg-white rounded-b-lg">
+          <div className="border-t border-[#C5A55A]/20 p-3 bg-[#1A1A1A] rounded-b-lg">
             <div className="flex gap-2">
               <Input
                 value={messageText}
@@ -478,7 +478,7 @@ export const CustomerChatWidget: React.FC<CustomerChatWidgetProps> = ({
               <Button
                 onClick={handleSendMessage}
                 disabled={!messageText.trim() || !isConnected || !roomId || !onlineStatus.online}
-                className="bg-blue-600 hover:bg-blue-700 px-4"
+                className="bg-[#C5A55A] hover:bg-[#D4AF37] text-[#111] px-4"
               >
                 <svg
                   className="w-5 h-5"

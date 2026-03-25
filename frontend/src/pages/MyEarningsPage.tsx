@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { payrollApi } from '@/lib/api';
@@ -7,7 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { STAGE_TO_NAME } from '@/lib/labels';
 
 export const MyEarningsPage = () => {
-  const { user, logout } = useAuthStore();
+  const { user, returnToDepartment, logout } = useAuthStore();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<'today' | 'month'>('today');
 
   const { data: earnings, isLoading } = useQuery({
@@ -16,7 +18,6 @@ export const MyEarningsPage = () => {
       period === 'today'
         ? payrollApi.getMyEarningsToday()
         : payrollApi.getMyEarnings(),
-    refetchInterval: 30000, // Обновлять каждые 30 сек
   });
 
   const formatMoney = (amount: number) =>
@@ -39,8 +40,15 @@ export const MyEarningsPage = () => {
             </h1>
             <p className="text-sm text-muted-foreground">{user?.role?.name}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={logout}>
-            Выйти
+          <Button variant="outline" size="sm" onClick={() => {
+            if (returnToDepartment()) {
+              navigate('/app');
+            } else {
+              logout();
+              navigate('/app/login');
+            }
+          }}>
+            ← В отдел
           </Button>
         </div>
 

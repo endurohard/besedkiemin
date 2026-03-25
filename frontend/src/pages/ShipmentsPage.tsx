@@ -21,7 +21,6 @@ export const ShipmentsPage = () => {
   const { data: shipments, isLoading, error } = useQuery({
     queryKey: ['shipments'],
     queryFn: shipmentsApi.getAll,
-    refetchInterval: 30000,
   });
 
   const updateStatusMutation = useMutation({
@@ -279,7 +278,7 @@ export const ShipmentsPage = () => {
 
                           {/* Кнопка "Доставлено" для статуса IN_TRANSIT (только для MANAGER и OWNER) */}
                           {shipment.status === ShipmentStatus.IN_TRANSIT &&
-                            (user?.role?.code === 'MANAGER' || user?.role?.code === 'OWNER') && (
+                            (user?.role?.code === 'MANAGER' || user?.role?.code === 'OWNER' || user?.role?.code === 'SUPER_ADMIN') && (
                               <Button
                                 onClick={() => handleUpdateStatus(shipment.id, ShipmentStatus.DELIVERED)}
                                 disabled={updateStatusMutation.isPending}

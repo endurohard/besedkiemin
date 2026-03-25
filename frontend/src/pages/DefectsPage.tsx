@@ -29,7 +29,6 @@ export const DefectsPage = () => {
       if (!response.ok) throw new Error('Failed to fetch defects');
       return response.json();
     },
-    refetchInterval: 30000,
   });
 
   // Mutation for accepting defect rework

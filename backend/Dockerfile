@@ -1,26 +1,30 @@
-FROM node:18-alpine AS builder
-
+FROM node:18-slim AS base
 WORKDIR /app
 
-COPY package*.json ./
+# Dependencies layer (cached separately)
+FROM base AS deps
+COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
+RUN npm ci --production=false && npx prisma generate
 
-RUN npm install
-
+# Development
+FROM base AS development
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
 COPY . .
+CMD ["npx", "nest", "start", "--watch"]
 
-RUN npm run prisma:generate
-RUN npm run build
+# Production build
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npx nest build
 
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY --from=builder /app/node_modules ./node_modules
+# Production
+FROM base AS production
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY package*.json ./
-
-EXPOSE 3000
-
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && npm run start:prod"]
+COPY prisma ./prisma/
+COPY uploads ./uploads/
+CMD ["node", "dist/main"]

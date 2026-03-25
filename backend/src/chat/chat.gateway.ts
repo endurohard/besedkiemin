@@ -9,11 +9,17 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 
 @WebSocketGateway({
   cors: {
-    origin: '*', // В продакшене указать конкретный домен
+    origin: [
+      'http://176.98.155.17',
+      'http://176.98.155.17:5173',
+      'http://localhost',
+      'http://localhost:5173',
+    ],
     credentials: true,
   },
   namespace: '/chat',
@@ -27,10 +33,40 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // Отслеживание подключенных пользователей
   private connectedUsers = new Map<string, { socketId: string; roomId: string; userType: string }>();
 
-  constructor(private chatService: ChatService) {}
+  constructor(
+    private chatService: ChatService,
+    private jwtService: JwtService,
+  ) {}
 
   handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
+    // Для customer-типа (публичный чат) — пропускаем JWT
+    const userType = client.handshake.query?.userType as string;
+    if (userType === 'customer') {
+      this.logger.log(`Customer connected: ${client.id}`);
+      return;
+    }
+
+    // Для manager-типа — требуем JWT
+    const token = client.handshake.auth?.token
+      || client.handshake.headers?.authorization?.replace('Bearer ', '');
+
+    if (!token) {
+      this.logger.warn(`Connection rejected (no token): ${client.id}`);
+      client.emit('error', { message: 'Требуется авторизация' });
+      client.disconnect();
+      return;
+    }
+
+    try {
+      const payload = this.jwtService.verify(token);
+      (client as any).userId = payload.sub;
+      (client as any).userEmail = payload.email;
+      this.logger.log(`Manager connected: ${client.id} (user: ${payload.email})`);
+    } catch (error) {
+      this.logger.warn(`Connection rejected (invalid token): ${client.id}`);
+      client.emit('error', { message: 'Неверный токен авторизации' });
+      client.disconnect();
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -55,6 +91,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     try {
       const { roomId, userType, userId } = data;
+
+      // Менеджер должен быть аутентифицирован
+      if (userType === 'manager' && !(client as any).userId) {
+        client.emit('error', { message: 'Требуется авторизация для менеджера' });
+        return { success: false, error: 'Unauthorized' };
+      }
 
       // Проверить существование комнаты
       const room = await this.chatService.getRoom(roomId);
@@ -127,6 +169,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const { roomId, content, senderType, senderId, senderName } = data;
 
+      // Менеджер должен быть аутентифицирован
+      if (senderType === 'MANAGER' && !(client as any).userId) {
+        client.emit('error', { message: 'Требуется авторизация' });
+        return { success: false, error: 'Unauthorized' };
+      }
+
       // Сохранить сообщение в БД
       const message = await this.chatService.sendMessage({
         roomId,
@@ -164,12 +212,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { roomId: string; userType: string; userName: string },
   ) {
     const { roomId, userType, userName } = data;
-
-    // Отправить индикатор набора другим участникам комнаты
-    client.to(roomId).emit('user_typing', {
-      userType,
-      userName,
-    });
+    client.to(roomId).emit('user_typing', { userType, userName });
   }
 
   /**
@@ -194,7 +237,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       await this.chatService.markMessagesAsRead(roomId, messageIds);
 
-      // Уведомить всех в комнате
       this.server.to(roomId).emit('messages_read', {
         roomId,
         messageIds,
@@ -215,10 +257,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { roomId } = data;
     client.leave(roomId);
     this.logger.log(`Client ${client.id} left room ${roomId}`);
-
-    // Уведомить других участников
     client.to(roomId).emit('user_left');
-
     return { success: true };
   }
 

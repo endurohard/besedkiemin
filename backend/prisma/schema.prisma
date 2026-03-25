@@ -109,6 +109,12 @@ enum TaskPriority {
   URGENT // Срочный
 }
 
+// Тип оплаты сотрудника
+enum PaymentType {
+  PIECE_RATE // Сдельная оплата (по расценкам за изделие)
+  SALARY     // Оклад (фиксированная зарплата, только учёт выработки)
+}
+
 // Статус отгрузки со склада
 enum ShipmentStatus {
   PENDING // Ожидает отгрузки
@@ -130,6 +136,11 @@ model User {
   // Связь с ролью (динамические роли)
   roleId String @map("role_id")
   role   Role   @relation(fields: [roleId], references: [id])
+
+  // Тип оплаты: сдельная или оклад
+  paymentType   PaymentType @default(PIECE_RATE) @map("payment_type")
+  // Оклад (только для paymentType = SALARY), руб/мес
+  monthlySalary Float?      @map("monthly_salary")
 
   // PIN-код для быстрого входа производственных работников (хранится в виде хеша bcrypt)
   pin String? @map("pin")
@@ -350,6 +361,9 @@ model Product {
 
   // Материал обшивки (ткань/кожа) - если указан, автоматически включается пошив
   upholsteryMaterial String? @map("upholstery_material")
+
+  // Назначения работников на этапы {stage: userId}
+  stageAssignments Json? @map("stage_assignments")
 
   orderId String @map("order_id")
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)

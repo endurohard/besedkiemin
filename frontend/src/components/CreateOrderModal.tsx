@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ordersApi, productsApi, productTypesApi, uploadApi, orderSourcesApi, nomenclatureApi } from '@/lib/api';
+import { ordersApi, productsApi, productTypesApi, uploadApi, orderSourcesApi, nomenclatureApi, usersApi } from '@/lib/api';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { AddressInput } from './AddressInput';
 import { CustomerNameInput } from './CustomerNameInput';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
-import { OrderPriority, Nomenclature } from '@/types';
+import { OrderPriority, Nomenclature, User } from '@/types';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ interface ProductFormData {
   requiresSewing?: boolean | null; // null = берётся из типа продукта
   color?: string; // Цвет/покрытие (для маляра)
   upholsteryMaterial?: string; // Материал обшивки (для швеи)
+  stageAssignments?: Record<string, string>; // {PREPARATION: userId, PAINTING: userId, ...}
 }
 
 export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => {
@@ -49,6 +50,25 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     queryFn: () => nomenclatureApi.getAll(),
     enabled: isOpen,
   });
+
+  // Fetch production workers for all stages
+  const { data: allWorkers = [] } = useQuery({
+    queryKey: ['production-workers'],
+    queryFn: () => usersApi.getAll(),
+    enabled: isOpen,
+  });
+  const workersByRole: Record<string, User[]> = {
+    PREPARER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PREPARER'),
+    PAINTER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PAINTER'),
+    SEWER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'SEWER'),
+    ASSEMBLER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'ASSEMBLER'),
+  };
+  const stageConfig = [
+    { stage: 'PREPARATION', role: 'PREPARER', label: 'Заготовщик', icon: '🪚' },
+    { stage: 'PAINTING', role: 'PAINTER', label: 'Маляр', icon: '🎨' },
+    { stage: 'SEWING', role: 'SEWER', label: 'Швея', icon: '🧵' },
+    { stage: 'ASSEMBLY', role: 'ASSEMBLER', label: 'Сборщик', icon: '🔧' },
+  ];
 
   const [isInternalOrder, setIsInternalOrder] = useState(false);
   const [autoGenerateOrderNumber, setAutoGenerateOrderNumber] = useState(true);
@@ -95,6 +115,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             requiresSewing: product.requiresSewing,
             color: product.color || undefined,
             upholsteryMaterial: product.upholsteryMaterial || undefined,
+            stageAssignments: product.stageAssignments && Object.keys(product.stageAssignments).length > 0 ? product.stageAssignments : undefined,
           });
         }
       }
@@ -146,7 +167,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
   };
 
   const addProduct = () => {
-    setProducts([...products, { nomenclatureId: '', name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '', requiresSewing: null, color: '', upholsteryMaterial: '' }]);
+    setProducts([...products, { nomenclatureId: '', name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '', requiresSewing: null, color: '', upholsteryMaterial: '', stageAssignments: {} }]);
   };
 
   // Обработчик выбора из номенклатуры
@@ -503,6 +524,45 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                   />
                   <p className="text-xs text-gray-500">
                     Если указан материал - этап пошива включается автоматически
+                  </p>
+                </div>
+
+                {/* Назначить работников на этапы */}
+                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-md space-y-2">
+                  <label className="block text-xs font-medium text-indigo-900">
+                    👷 Назначить работников на этапы
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {stageConfig.map(({ stage, role, label, icon }) => {
+                      const workers = workersByRole[role] || [];
+                      if (workers.length === 0) return null;
+                      return (
+                        <div key={stage}>
+                          <label className="block text-xs text-gray-600 mb-0.5">{icon} {label}</label>
+                          <select
+                            value={product.stageAssignments?.[stage] || ''}
+                            onChange={(e) => {
+                              const newAssignments = { ...(product.stageAssignments || {}) };
+                              if (e.target.value) {
+                                newAssignments[stage] = e.target.value;
+                              } else {
+                                delete newAssignments[stage];
+                              }
+                              updateProduct(index, 'stageAssignments', newAssignments);
+                            }}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          >
+                            <option value="">Все</option>
+                            {workers.map((w: User) => (
+                              <option key={w.id} value={w.id}>{w.lastName} {w.firstName}</option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Не выбрано — задача пойдёт всем работникам этапа
                   </p>
                 </div>
 

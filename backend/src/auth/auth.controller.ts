@@ -1,4 +1,5 @@
 import { Controller, Post, Body, UseGuards, Request, Get, Param, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -21,7 +22,8 @@ export class AuthController {
     private readonly usersService: UsersService,
   ) {}
 
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(ThrottlerGuard, LocalAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('login')
   @ApiOperation({ summary: 'Вход в систему' })
   async login(@Body() loginDto: LoginDto, @Request() req) {
@@ -36,6 +38,8 @@ export class AuthController {
     return user;
   }
 
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('telegram/request-code')
   @ApiOperation({ summary: 'Запросить код для авторизации через Telegram (публичный)' })
   async requestTelegramCode(@Body() body: { email: string; password: string }) {
@@ -65,7 +69,7 @@ export class AuthController {
     }
 
     // Проверяем, был ли использован код (привязан ли Telegram)
-    const user = await this.authService.findUserById(validation.userId);
+    const user = await this.authService.findUserById(validation.userId!);
     if (!user) {
       throw new UnauthorizedException('Пользователь не найден');
     }
@@ -83,6 +87,8 @@ export class AuthController {
     };
   }
 
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('pin-login')
   @ApiOperation({ summary: 'Вход по PIN-коду (для производственных работников)' })
   async pinLogin(@Body() pinLoginDto: PinLoginDto) {

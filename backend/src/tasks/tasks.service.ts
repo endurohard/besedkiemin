@@ -4,6 +4,7 @@ import { TelegramService } from '../telegram/telegram.service';
 import { PayrollService } from '../payroll/payroll.service';
 import { TaskStatus, ProductionStage } from '@prisma/client';
 import { ROLE_TO_STAGE, STAGE_TO_NAME, isDepartmentAccount } from '../common/constants';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class TasksService {
@@ -13,6 +14,7 @@ export class TasksService {
     private prisma: PrismaService,
     private telegramService: TelegramService,
     private payrollService: PayrollService,
+    private notifications: NotificationsGateway,
   ) {}
 
   // Получить задачи текущего пользователя
@@ -562,7 +564,7 @@ export class TasksService {
       await tx.product.update({
         where: { id: task.productId },
         data: {
-          stage: nextWorkflowStage.legacyStage,
+          stage: nextWorkflowStage.legacyStage!,
         },
       });
 
@@ -591,13 +593,22 @@ export class TasksService {
       this.logger.warn(`No active workers found for stage ${nextWorkflowStage.name}. Product ${task.product.name} moved but no tasks created.`);
     }
 
+    // Проверяем назначения работников из stageAssignments продукта
+    const stageAssignments = (task.product as any).stageAssignments as Record<string, string> | null;
+    const assignedId = stageAssignments && nextWorkflowStage.legacyStage
+      ? stageAssignments[nextWorkflowStage.legacyStage]
+      : undefined;
+    const filteredWorkers = assignedId
+      ? nextWorkers.filter(w => w.id === assignedId)
+      : nextWorkers;
+
     // Создаем задачу для каждого работника (общий цех) с переданным количеством
-    for (const worker of nextWorkers) {
+    for (const worker of filteredWorkers) {
       const newTask = await this.prisma.task.create({
         data: {
           title: `${task.product.name} - ${nextWorkflowStage.name}`,
           description: `Количество: ${completedQuantity} шт.`,
-          stage: nextWorkflowStage.legacyStage,
+          stage: nextWorkflowStage.legacyStage!,
           productId: task.productId,
           assignedToId: worker.id,
           quantity: completedQuantity, // Устанавливаем переданное количество
@@ -616,11 +627,11 @@ export class TasksService {
       if (worker.telegramId) {
         const message =
           `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
-          `*Продукт:* ${newTask.product?.name || 'Н/Д'}\n` +
-          `*Тип:* ${(newTask.product as any)?.productType?.name || 'Н/Д'}\n` +
+          `*Продукт:* ${(newTask as any).product?.name || 'Н/Д'}\n` +
+          `*Тип:* ${(newTask as any).product?.productType?.name || 'Н/Д'}\n` +
           `*Количество:* ${completedQuantity} шт.\n` +
           `*Стадия:* ${nextWorkflowStage.name}\n` +
-          `*Заказ:* ${(newTask.product as any)?.order?.orderNumber || 'Н/Д'}\n\n` +
+          `*Заказ:* ${(newTask as any).product?.order?.orderNumber || 'Н/Д'}\n\n` +
           `✅ Откройте раздел "Мои задачи" для выполнения`;
 
         try {
@@ -719,16 +730,36 @@ export class TasksService {
     if (returnToStage && Object.values(ProductionStage).includes(returnToStage as ProductionStage)) {
       returnStage = returnToStage as ProductionStage;
     } else {
-      // По умолчанию — предыдущий этап из workflow
+      // По умолчанию — предыдущий этап из workflow, пропускаем SEWING если продукт не требует пошива
       const currentWorkflowStage = await this.prisma.workflowStage.findFirst({
         where: { legacyStage: task.stage, isActive: true },
       });
-      const previousStage = currentWorkflowStage
+
+      // Определяем, нужен ли пошив для продукта
+      const productForSewing = task.product;
+      const productTypeForSewing = (productForSewing as any).productType;
+      const needsSewing = productForSewing.upholsteryMaterial
+        ? true
+        : (productForSewing.requiresSewing !== null
+            ? productForSewing.requiresSewing
+            : productTypeForSewing?.requiresSewing ?? false);
+
+      let previousStage = currentWorkflowStage
         ? await this.prisma.workflowStage.findFirst({
             where: { order: { lt: currentWorkflowStage.order }, isActive: true },
             orderBy: { order: 'desc' },
           })
         : null;
+
+      // Если предыдущий этап SEWING и продукт не требует пошива — пропускаем его
+      if (previousStage?.legacyStage === ProductionStage.SEWING && !needsSewing) {
+        this.logger.log(`Skipping SEWING stage for return (product does not require sewing)`);
+        previousStage = await this.prisma.workflowStage.findFirst({
+          where: { order: { lt: previousStage.order }, isActive: true },
+          orderBy: { order: 'desc' },
+        });
+      }
+
       returnStage = (previousStage?.legacyStage as ProductionStage) || ProductionStage.PAINTING;
     }
 
@@ -1064,7 +1095,7 @@ export class TasksService {
       (p) => p.stage !== ProductionStage.PENDING,
     );
 
-    let newStatus = null;
+    let newStatus: string | null = null;
 
     if (allCompleted && products.length > 0) {
       newStatus = 'COMPLETED';
@@ -1083,9 +1114,9 @@ export class TasksService {
   // Получить все браки (с фото и без)
   async getDefectsWithPhotos(userId?: string) {
     // Получаем информацию о пользователе
-    let user = null;
+    let user: { role?: { code: string } | null } | null = null;
     if (userId) {
-      user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
+      user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } }) as any;
     }
 
     // Оптимизированный запрос: получаем rejected tasks с включёнными qualityChecks через product

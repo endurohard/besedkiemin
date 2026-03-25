@@ -111,15 +111,8 @@ function App() {
             <Route path="/app/login" element={<LoginPage />} />
             <Route path="/pin" element={<PinLoginPage />} />
 
-            {/* Мои заработки (для работников с PIN-входом) */}
-            <Route
-              path="/app/my-earnings"
-              element={
-                <PrivateRoute>
-                  <MyEarningsPage />
-                </PrivateRoute>
-              }
-            />
+            {/* Мои заработки (для работников с PIN-входом) — без Layout */}
+            <Route path="/app/my-earnings" element={<MyEarningsPage />} />
 
             {/* Система управления производством */}
             <Route

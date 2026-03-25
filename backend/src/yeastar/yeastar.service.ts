@@ -7,7 +7,7 @@ interface YeastarConfig {
   host: string; // IP адрес Yeastar S100
   username: string; // API username
   password: string; // API password
-  extension: string; // Extension для звонков
+  extension: string | null; // Extension для звонков
 }
 
 interface YeastarCallResponse {
@@ -61,7 +61,7 @@ export class YeastarService {
       // Токен действителен 30 минут
       this.tokenExpiry = new Date(Date.now() + 30 * 60 * 1000);
 
-      return this.accessToken;
+      return this.accessToken!;
     } catch (error: any) {
       this.logger.error('Yeastar login error:', error.response?.data || error.message);
       throw new HttpException(

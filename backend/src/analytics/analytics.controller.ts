@@ -63,4 +63,17 @@ export class AnalyticsController {
     const end = endDate ? new Date(endDate) : undefined;
     return this.analyticsService.getFullCycleAnalytics(start, end);
   }
+
+  @Get('productivity')
+  @ApiOperation({ summary: 'Производительность сотрудников: коэффициент полезности, окладники vs сдельники (только OWNER)' })
+  @ApiQuery({ name: 'startDate', required: false, type: String, description: 'Дата начала (ISO 8601), по умолчанию начало месяца' })
+  @ApiQuery({ name: 'endDate', required: false, type: String, description: 'Дата окончания (ISO 8601), по умолчанию сегодня' })
+  getProductivityReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.analyticsService.getProductivityReport(start, end);
+  }
 }

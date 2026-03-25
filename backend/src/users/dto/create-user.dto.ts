@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional, IsInt, IsNumber, IsEnum, Min, Max } from 'class-validator';
+import { PaymentType } from '@prisma/client';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'user@example.com' })
@@ -50,4 +51,15 @@ export class CreateUserDto {
   @Min(1)
   @Max(65535)
   sipPort?: number;
+
+  @ApiProperty({ enum: PaymentType, default: PaymentType.PIECE_RATE, required: false, description: 'Тип оплаты: PIECE_RATE (сдельная) или SALARY (оклад)' })
+  @IsEnum(PaymentType)
+  @IsOptional()
+  paymentType?: PaymentType;
+
+  @ApiProperty({ example: 50000, required: false, description: 'Оклад в рублях/мес (только для SALARY)' })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  monthlySalary?: number;
 }

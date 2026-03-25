@@ -16,14 +16,12 @@ export const TasksPage = () => {
   const { data: tasks, isLoading, error } = useQuery({
     queryKey: ['tasks'],
     queryFn: tasksApi.getMyTasks,
-    refetchInterval: 30000,
   });
 
   // Загружаем задачи отдела (для отображения задач выбранного сотрудника)
   const { data: departmentTasks } = useQuery({
     queryKey: ['department-tasks'],
     queryFn: tasksApi.getDepartmentTasks,
-    refetchInterval: 30000,
     enabled: !!selectedWorkerId,
   });
 

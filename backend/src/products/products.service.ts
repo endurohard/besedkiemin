@@ -49,6 +49,15 @@ export class ProductsService {
         })
       : [];
 
+    // Определяем работников для назначения
+    const assignments = createProductDto.stageAssignments || {};
+    const firstStageKey = firstWorkflowStage.legacyStage;
+    const assignedWorkerId = createProductDto.assignedWorkerId
+      || (firstStageKey ? assignments[firstStageKey] : undefined);
+    const taskWorkers = assignedWorkerId
+      ? workers.filter(w => w.id === assignedWorkerId)
+      : workers;
+
     // Используем транзакцию для атомарности
     const product = await this.prisma.$transaction(async (tx) => {
       // Создаем продукт на первой стадии workflow
@@ -62,11 +71,12 @@ export class ProductsService {
           schemaImageUrl: createProductDto.schemaImageUrl,
           orderId: createProductDto.orderId,
           deadline: createProductDto.deadline,
-          stage: firstWorkflowStage.legacyStage,
+          stage: firstWorkflowStage.legacyStage!,
           color: createProductDto.color,
           upholsteryMaterial: createProductDto.upholsteryMaterial,
           requiresSewing: createProductDto.requiresSewing,
           nomenclatureId: createProductDto.nomenclatureId,
+          stageAssignments: createProductDto.stageAssignments || undefined,
         },
         include: {
           order: true,
@@ -75,14 +85,14 @@ export class ProductsService {
       });
 
       // Создаем задачи для работников первой стадии
-      if (workers.length > 0) {
+      if (taskWorkers.length > 0) {
         await Promise.all(
-          workers.map((worker) =>
+          taskWorkers.map((worker) =>
             tx.task.create({
               data: {
                 title: `${newProduct.name} - ${firstWorkflowStage.name}`,
                 description: `Новый продукт. Заказ: ${order.orderNumber}`,
-                stage: firstWorkflowStage.legacyStage,
+                stage: firstWorkflowStage.legacyStage!,
                 productId: newProduct.id,
                 assignedToId: worker.id,
                 quantity: newProduct.quantity,
@@ -103,22 +113,22 @@ export class ProductsService {
     });
 
     // Отправляем Telegram-уведомления вне транзакции (fire-and-forget)
-    if (workers.length > 0) {
+    if (taskWorkers.length > 0) {
       Promise.allSettled(
-        workers
+        taskWorkers
           .filter((worker) => worker.telegramId)
           .map(async (worker) => {
             const message =
               `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
               `*Продукт:* ${product.name}\n` +
-              `*Тип:* ${product.productType?.name || 'Н/Д'}\n` +
+              `*Тип:* ${(product as any).productType?.name || 'Н/Д'}\n` +
               `*Количество:* ${product.quantity} шт.\n` +
               `*Стадия:* ${firstWorkflowStage.name}\n` +
               `*Заказ:* ${order.orderNumber}\n\n` +
               `✅ Откройте раздел "Мои задачи" для выполнения`;
 
             try {
-              await this.telegramService.sendMessage(worker.telegramId, message);
+              await this.telegramService.sendMessage(worker.telegramId!, message);
               this.logger.log(`Уведомление отправлено работнику ${worker.email}`);
             } catch (error) {
               this.logger.error(`Ошибка отправки уведомления работнику ${worker.email}:`, error);
@@ -133,6 +143,8 @@ export class ProductsService {
   async findAll(filters?: {
     orderId?: string;
     stage?: ProductionStage;
+    page?: number;
+    limit?: number;
   }) {
     const where: any = {};
 
@@ -144,51 +156,70 @@ export class ProductsService {
       where.stage = filters.stage;
     }
 
-    return this.prisma.product.findMany({
-      where,
-      include: {
-        order: {
-          select: {
-            id: true,
-            orderNumber: true,
-            customerName: true,
-            status: true,
-          },
-        },
-        history: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                role: true,
-              },
+    const page = Math.max(1, filters?.page || 1);
+    const limit = Math.min(200, Math.max(1, filters?.limit || 200));
+
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              customerName: true,
+              status: true,
+              priority: true,
             },
           },
-          orderBy: {
-            startedAt: 'desc',
-          },
-        },
-        qualityChecks: {
-          include: {
-            checkedBy: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
+          productType: {
+            select: {
+              id: true,
+              name: true,
             },
           },
-          orderBy: {
-            createdAt: 'desc',
+          history: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  role: true,
+                },
+              },
+            },
+            orderBy: {
+              startedAt: 'desc',
+            },
+            take: 5, // Только последние 5 записей истории для списка
+          },
+          qualityChecks: {
+            include: {
+              checkedBy: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+            take: 3, // Только последние 3 проверки для списка
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return products;
   }
 
   async findOne(id: string) {
@@ -439,29 +470,38 @@ export class ProductsService {
       where: { orderId },
     });
 
+    if (products.length === 0) return;
+
     // Если все продукты завершены
     const allCompleted = products.every(
       (p) => p.stage === ProductionStage.COMPLETED,
     );
 
-    // Если хотя бы один продукт не в PENDING
+    // Если все продукты в PENDING — возвращаем заказ в NEW
+    const allPending = products.every(
+      (p) => p.stage === ProductionStage.PENDING,
+    );
+
+    // Если хотя бы один продукт не в PENDING и не COMPLETED
     const hasStarted = products.some(
       (p) => p.stage !== ProductionStage.PENDING,
     );
 
-    let newStatus: OrderStatus | null = null;
+    let newStatus: OrderStatus;
 
-    if (allCompleted && products.length > 0) {
+    if (allCompleted) {
       newStatus = OrderStatus.COMPLETED;
+    } else if (allPending) {
+      newStatus = OrderStatus.NEW;
     } else if (hasStarted) {
       newStatus = OrderStatus.IN_PRODUCTION;
+    } else {
+      return;
     }
 
-    if (newStatus) {
-      await this.prisma.order.update({
-        where: { id: orderId },
-        data: { status: newStatus },
-      });
-    }
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: newStatus },
+    });
   }
 }

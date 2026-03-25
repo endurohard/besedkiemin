@@ -60,6 +60,7 @@ export class AuthService {
         sipUser: user.sipUser,
         sipPort: user.sipPort,
         sipWsPort: user.sipWsPort,
+        // sipPassword убран из ответа для безопасности
       },
     };
   }

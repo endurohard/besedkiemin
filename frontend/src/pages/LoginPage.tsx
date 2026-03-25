@@ -68,6 +68,16 @@ export const LoginPage = () => {
     }
   };
 
+  const handleDepartmentLogin = async (deptEmail: string, deptPassword: string) => {
+    setEmail(deptEmail);
+    setPassword(deptPassword);
+    try {
+      await login(deptEmail, deptPassword);
+    } catch (err) {
+      // Ошибка уже обработана в store
+    }
+  };
+
   const handleTelegramLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -108,6 +118,7 @@ export const LoginPage = () => {
                 <Input
                   id="email"
                   type="text"
+                  autoComplete="username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="user@factory.com"
@@ -176,7 +187,7 @@ export const LoginPage = () => {
                 )}
               </div>
 
-              {/* Демо аккаунты для отделов */}
+              {/* Быстрый вход в отдел */}
               <div className="mt-6 pt-4 border-t">
                 <p className="text-xs text-muted-foreground text-center mb-3">
                   Выберите отдел
@@ -184,29 +195,33 @@ export const LoginPage = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => { setEmail('preparer@example.com'); setPassword('123456'); }}
-                    className="p-3 bg-orange-50 hover:bg-orange-100 rounded-lg text-orange-700 font-medium transition-colors border border-orange-200"
+                    onClick={() => handleDepartmentLogin('preparer@example.com', 'password123')}
+                    disabled={isLoading}
+                    className="p-3 bg-orange-50 hover:bg-orange-100 rounded-lg text-orange-700 font-medium transition-colors border border-orange-200 disabled:opacity-50"
                   >
                     Заготовка
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setEmail('painter@example.com'); setPassword('123456'); }}
-                    className="p-3 bg-green-50 hover:bg-green-100 rounded-lg text-green-700 font-medium transition-colors border border-green-200"
+                    onClick={() => handleDepartmentLogin('painter@example.com', 'password123')}
+                    disabled={isLoading}
+                    className="p-3 bg-green-50 hover:bg-green-100 rounded-lg text-green-700 font-medium transition-colors border border-green-200 disabled:opacity-50"
                   >
                     Малярка
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setEmail('assembler@test.com'); setPassword('123456'); }}
-                    className="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-700 font-medium transition-colors border border-blue-200"
+                    onClick={() => handleDepartmentLogin('assembler@example.com', 'password123')}
+                    disabled={isLoading}
+                    className="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-700 font-medium transition-colors border border-blue-200 disabled:opacity-50"
                   >
                     Сборка
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setEmail('warehouse@example.com'); setPassword('123456'); }}
-                    className="p-3 bg-teal-50 hover:bg-teal-100 rounded-lg text-teal-700 font-medium transition-colors border border-teal-200"
+                    onClick={() => handleDepartmentLogin('warehouse@example.com', 'password123')}
+                    disabled={isLoading}
+                    className="p-3 bg-teal-50 hover:bg-teal-100 rounded-lg text-teal-700 font-medium transition-colors border border-teal-200 disabled:opacity-50"
                   >
                     Склад
                   </button>

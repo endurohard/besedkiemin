@@ -23,23 +23,10 @@ export const PhoneWidget = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [callDurations, setCallDurations] = useState<Record<string, number>>({});
 
-  // Логирование для отладки
-  console.log('[PhoneWidget] User:', user);
-  console.log('[PhoneWidget] SIP Data:', {
-    server: user?.sipServer,
-    user: user?.sipUser,
-    hasPassword: !!user?.sipPassword,
-    port: user?.sipPort,
-    wsPort: user?.sipWsPort,
-  });
-
   // Если нет SIP данных, не показываем виджет
   if (!user?.sipServer || !user?.sipUser || !user?.sipPassword) {
-    console.log('[PhoneWidget] Not showing widget - missing SIP data');
     return null;
   }
-
-  console.log('[PhoneWidget] Rendering widget');
 
   // Обновление длительности звонков
   useEffect(() => {

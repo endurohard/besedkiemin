@@ -752,10 +752,22 @@ export class PayrollService {
       }
     }
 
-    // Получаем расценку - сначала по номенклатуре, потом по типу
-    const workRate = await this.findWorkRate(data.productTypeId, data.stage, data.nomenclatureId);
-    const pricePerUnit = workRate?.pricePerUnit || 0;
-    const totalAmount = data.quantity * pricePerUnit;
+    // Проверяем тип оплаты сотрудника
+    const worker = await this.prisma.user.findUnique({
+      where: { id: data.userId },
+      select: { paymentType: true },
+    });
+    const isSalaryWorker = worker?.paymentType === 'SALARY';
+
+    // Для окладников расценка = 0 (только учёт выработки, зарплата фиксированная)
+    let pricePerUnit = 0;
+    let totalAmount = 0;
+    if (!isSalaryWorker) {
+      // Получаем расценку - сначала по номенклатуре, потом по типу
+      const workRate = await this.findWorkRate(data.productTypeId, data.stage, data.nomenclatureId);
+      pricePerUnit = workRate?.pricePerUnit || 0;
+      totalAmount = data.quantity * pricePerUnit;
+    }
 
     return this.prisma.workLog.create({
       data: {
@@ -1128,4 +1140,81 @@ export class PayrollService {
       users,
     };
   }
+
+  // Статистика производственных работников за период
+  async getWorkerStats(startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Производственные роли
+    const productionRoleCodes = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'SEWER'];
+
+    const workers = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        role: { code: { in: productionRoleCodes } },
+      },
+      include: {
+        role: true,
+      },
+    });
+
+    const stats = await Promise.all(
+      workers.map(async (worker) => {
+        const workLogs = await this.prisma.workLog.findMany({
+          where: {
+            userId: worker.id,
+            completedAt: { gte: start, lte: end },
+          },
+          select: {
+            quantity: true,
+            totalAmount: true,
+            pricePerUnit: true,
+            stage: true,
+            completedAt: true,
+          },
+        });
+
+        const penalties = await this.prisma.penalty.aggregate({
+          where: {
+            userId: worker.id,
+            date: { gte: start, lte: end },
+            isCancelled: false,
+          },
+          _sum: { amount: true },
+          _count: true,
+        });
+
+        const itemsCompleted = workLogs.reduce((sum, wl) => sum + wl.quantity, 0);
+        const workAmount = workLogs.reduce((sum, wl) => sum + wl.totalAmount, 0);
+        const penaltyAmount = penalties._sum.amount || 0;
+        const netAmount = workAmount - penaltyAmount;
+
+        // Коэффициент эффективности для зарплатников
+        let efficiencyCoefficient: number | null = null;
+        if (worker.paymentType === 'SALARY' && worker.monthlySalary && worker.monthlySalary > 0) {
+          efficiencyCoefficient = Math.round((workAmount / worker.monthlySalary) * 100) / 100;
+        }
+
+        return {
+          userId: worker.id,
+          firstName: worker.firstName,
+          lastName: worker.lastName,
+          roleCode: worker.role?.code,
+          paymentType: worker.paymentType,
+          monthlySalary: worker.monthlySalary,
+          itemsCompleted,
+          workAmount,
+          penaltyAmount,
+          penaltyCount: penalties._count,
+          netAmount,
+          efficiencyCoefficient,
+          workLogsCount: workLogs.length,
+        };
+      }),
+    );
+
+    return stats;
+  }
+
 }

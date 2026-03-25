@@ -7,6 +7,9 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   error: string | null;
+  // Department session (saved when worker logs in via PIN)
+  departmentUser: User | null;
+  departmentToken: string | null;
   // Telegram auth
   telegramCode: string | null;
   telegramCodeExpiry: number | null;
@@ -16,6 +19,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   pinLogin: (pin: string) => Promise<void>;
   logout: () => void;
+  returnToDepartment: () => boolean;
   initializeAuth: () => void;
   refreshUser: () => Promise<void>;
   requestTelegramCode: (email: string, password: string) => Promise<void>;
@@ -29,6 +33,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   isLoading: false,
   error: null,
+  departmentUser: null,
+  departmentToken: null,
   telegramCode: null,
   telegramCodeExpiry: null,
   isTelegramAuth: false,
@@ -57,12 +63,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   pinLogin: async (pin: string) => {
     set({ isLoading: true, error: null });
     try {
+      // Save current department session before replacing
+      const currentUser = get().user;
+      const currentToken = get().token;
+      if (currentUser && currentToken) {
+        localStorage.setItem('departmentToken', currentToken);
+        localStorage.setItem('departmentUser', JSON.stringify(currentUser));
+      }
+
       const response = await authApi.pinLogin(pin);
       localStorage.setItem('token', response.access_token);
       localStorage.setItem('user', JSON.stringify(response.user));
       set({
         user: response.user,
         token: response.access_token,
+        departmentUser: currentUser,
+        departmentToken: currentToken,
         isLoading: false,
       });
     } catch (error: any) {
@@ -79,7 +95,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     stopTelegramPolling();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    set({ user: null, token: null });
+    localStorage.removeItem('departmentToken');
+    localStorage.removeItem('departmentUser');
+    set({ user: null, token: null, departmentUser: null, departmentToken: null });
+  },
+
+  returnToDepartment: () => {
+    const deptToken = localStorage.getItem('departmentToken');
+    const deptUserStr = localStorage.getItem('departmentUser');
+    if (deptToken && deptUserStr) {
+      try {
+        const deptUser = JSON.parse(deptUserStr);
+        localStorage.setItem('token', deptToken);
+        localStorage.setItem('user', deptUserStr);
+        localStorage.removeItem('departmentToken');
+        localStorage.removeItem('departmentUser');
+        set({ user: deptUser, token: deptToken, departmentUser: null, departmentToken: null });
+        return true;
+      } catch {
+        // Invalid stored data, fall through
+      }
+    }
+    return false;
   },
 
   initializeAuth: () => {

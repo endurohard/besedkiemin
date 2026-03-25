@@ -38,6 +38,7 @@ const mockPrisma = () => ({
     delete: jest.fn(),
   },
   managerCommission: {
+    findUnique: jest.fn(),
     findFirst: jest.fn(),
     findMany: jest.fn(),
     create: jest.fn(),
@@ -227,6 +228,7 @@ describe('PayrollService', () => {
         { id: 'p-1', amount: 100, userId },
       ]);
 
+      prisma.managerCommission.findUnique.mockResolvedValue(null);
       prisma.managerCommission.findFirst.mockResolvedValue(null);
 
       const txMock = {

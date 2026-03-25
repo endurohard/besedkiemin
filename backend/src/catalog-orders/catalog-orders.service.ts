@@ -94,7 +94,7 @@ export class CatalogOrdersService {
       if (order.items.length > 0) {
         message += `\n📦 <b>Товары:</b>\n`;
         order.items.forEach((item) => {
-          message += `   • ${item.product.name} x ${item.quantity} = ${(item.price * item.quantity).toLocaleString('ru-RU')} ₽\n`;
+          message += `   • ${item.product.name} x ${item.quantity} = ${((item.price ?? 0) * item.quantity).toLocaleString('ru-RU')} ₽\n`;
         });
         message += `\n💰 <b>Итого: ${totalAmount.toLocaleString('ru-RU')} ₽</b>`;
       } else {
@@ -318,7 +318,7 @@ export class CatalogOrdersService {
               orderId: productionOrder.id,
               quantity: item.quantity,
               productTypeId: defaultProductType.id,
-              stage: firstStage.legacyStage,
+              stage: firstStage.legacyStage!,
             },
           })
         )
@@ -331,7 +331,7 @@ export class CatalogOrdersService {
             data: {
               title: `${product.name} - ${firstStage.name}`,
               description: `Новый продукт для обработки. Заказ: ${productionOrder.orderNumber}`,
-              stage: firstStage.legacyStage,
+              stage: firstStage.legacyStage!,
               productId: product.id,
               assignedToId: worker.id,
             },
@@ -377,7 +377,7 @@ export class CatalogOrdersService {
               `✅ Откройте раздел "Мои задачи" для выполнения`;
 
             try {
-              await this.telegramService.sendMessage(worker.telegramId, message);
+              await this.telegramService.sendMessage(worker.telegramId!, message);
               this.logger.log(`Уведомление отправлено работнику ${worker.email}`);
             } catch (error) {
               this.logger.error(`Ошибка отправки уведомления работнику ${worker.email}:`, error);

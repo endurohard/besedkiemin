@@ -23,7 +23,8 @@ import {
   Wallet,
   HardHat,
   Globe,
-  User
+  User,
+  KeyRound,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -47,14 +48,13 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Проверяем, является ли пользователь производственным работником
-  const isProductionWorker = ['PREPARER', 'PAINTER', 'SEWER', 'ASSEMBLER'].includes(userRole || '');
+  const isProductionWorker = ['PREPARER', 'PAINTER', 'SEWER', 'ASSEMBLER', 'WAREHOUSE'].includes(userRole || '');
 
   // Fetch task counts for production workers
   const { data: tasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: tasksApi.getMyTasks,
     enabled: hasPermission('tasks:view_own') && !hasPermission('kanban:view'),
-    refetchInterval: 30000,
   });
 
   // Fetch department tasks (all workers in department)
@@ -62,7 +62,6 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
     queryKey: ['department-tasks'],
     queryFn: tasksApi.getDepartmentTasks,
     enabled: isProductionWorker && !isCollapsed,
-    refetchInterval: 30000,
   });
 
   // Fetch shipments for users with shipments:view permission
@@ -70,7 +69,6 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
     queryKey: ['shipments'],
     queryFn: shipmentsApi.getAll,
     enabled: hasPermission('shipments:view'),
-    refetchInterval: 30000,
   });
 
   // Fetch unaccepted defects count for users with defects:view permission
@@ -78,7 +76,6 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
     queryKey: ['defects-count'],
     queryFn: tasksApi.getUnacceptedDefectsCount,
     enabled: hasPermission('defects:view'),
-    refetchInterval: 30000,
   });
 
   // Fetch feature flags to determine which menu items to show
@@ -237,6 +234,15 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
             icon={ClipboardList}
             label="Мои задачи"
             badge={taskCount}
+          />
+        )}
+
+        {/* Личный кабинет - вход по PIN для производственных работников и склада */}
+        {isProductionWorker && (
+          <NavLink
+            to="/pin"
+            icon={KeyRound}
+            label="Личный кабинет"
           />
         )}
 

@@ -267,4 +267,15 @@ export class PayrollController {
   ) {
     return this.payrollService.getPayrollSummary(periodStart, periodEnd);
   }
+
+  // ==================== СТАТИСТИКА РАБОТНИКОВ ====================
+
+  @Get('worker-stats')
+  @Roles('SUPER_ADMIN', 'OWNER')
+  getWorkerStats(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.payrollService.getWorkerStats(startDate, endDate);
+  }
 }

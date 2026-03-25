@@ -242,6 +242,8 @@ export interface CreateNomenclatureDto {
 export interface UpdateNomenclatureDto extends Partial<CreateNomenclatureDto> {}
 
 // User interface
+export type PaymentType = 'PIECE_RATE' | 'SALARY';
+
 export interface User {
   id: string;
   email: string;
@@ -252,6 +254,9 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  // Тип оплаты
+  paymentType: PaymentType;
+  monthlySalary?: number | null;
   // Telegram для уведомлений
   telegramId?: string;
   // SIP телефония (для менеджеров)
@@ -399,6 +404,8 @@ export interface CreateProductDto {
   requiresSewing?: boolean | null;
   color?: string; // Цвет/покрытие (для маляра)
   upholsteryMaterial?: string; // Материал обшивки (для швеи)
+  assignedWorkerId?: string;
+  stageAssignments?: Record<string, string>;
 }
 
 export interface UpdateProductDto extends Partial<CreateProductDto> {
@@ -446,6 +453,8 @@ export interface CreateUserDto {
   firstName: string;
   lastName: string;
   roleId: string; // ID роли
+  paymentType?: PaymentType;
+  monthlySalary?: number;
   // SIP телефония (для менеджеров)
   sipServer?: string;
   sipUser?: string;

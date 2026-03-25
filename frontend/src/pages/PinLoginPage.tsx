@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -8,9 +8,11 @@ export const PinLoginPage = () => {
   const [pin, setPin] = useState('');
   const { pinLogin, isLoading, error, user } = useAuthStore();
   const navigate = useNavigate();
+  const pinLoginDone = useRef(false);
 
+  // Редирект только после успешного PIN-входа (не при загрузке страницы)
   useEffect(() => {
-    if (user) {
+    if (user && pinLoginDone.current) {
       navigate('/app/my-earnings');
     }
   }, [user, navigate]);
@@ -29,6 +31,7 @@ export const PinLoginPage = () => {
   const handleSubmit = useCallback(async () => {
     if (pin.length < 4) return;
     try {
+      pinLoginDone.current = true;
       await pinLogin(pin);
     } catch {
       setPin('');
@@ -63,7 +66,7 @@ export const PinLoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center pb-2">
-          <CardTitle className="text-xl">Вход по PIN</CardTitle>
+          <CardTitle className="text-xl">Личный кабинет</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
             Введите ваш PIN-код
           </p>
@@ -128,12 +131,12 @@ export const PinLoginPage = () => {
           </div>
 
           <div className="text-center pt-2">
-            <Link
-              to="/app/login"
+            <button
+              onClick={() => navigate(-1)}
               className="text-sm text-blue-600 hover:underline"
             >
-              Вход по email
-            </Link>
+              ← Назад
+            </button>
           </div>
         </CardContent>
       </Card>

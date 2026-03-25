@@ -289,9 +289,6 @@ export const usePhoneSIP = (user: User | null) => {
 
   // Автоматическое подключение при наличии SIP данных
   useEffect(() => {
-    console.log('[usePhoneSIP] User changed:', user);
-    console.log('[usePhoneSIP] UA exists:', !!uaRef.current);
-
     if (
       user &&
       user.sipServer &&
@@ -299,13 +296,6 @@ export const usePhoneSIP = (user: User | null) => {
       user.sipPassword &&
       !uaRef.current
     ) {
-      console.log('[usePhoneSIP] Initializing SIP with config:', {
-        server: user.sipServer,
-        user: user.sipUser,
-        port: user.sipPort || 5060,
-        wsPort: user.sipWsPort || 8088,
-      });
-
       const config: PhoneSIPConfig = {
         server: user.sipServer,
         user: user.sipUser,
@@ -316,8 +306,6 @@ export const usePhoneSIP = (user: User | null) => {
       };
 
       initializeSIP(config);
-    } else {
-      console.log('[usePhoneSIP] Not initializing - conditions not met');
     }
 
     // Cleanup при размонтировании

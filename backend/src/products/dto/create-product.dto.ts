@@ -60,4 +60,13 @@ export class CreateProductDto {
   @IsUUID()
   @IsOptional()
   nomenclatureId?: string;
+
+  @ApiProperty({ example: 'uuid-worker-id', required: false, description: 'ID работника для назначения на первый этап' })
+  @IsUUID()
+  @IsOptional()
+  assignedWorkerId?: string;
+
+  @ApiProperty({ required: false, description: 'Назначения работников на этапы: {"PREPARATION": "userId", "PAINTING": "userId", ...}' })
+  @IsOptional()
+  stageAssignments?: Record<string, string>;
 }

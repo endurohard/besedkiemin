@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { Role, PaymentType } from '@prisma/client';
 
 export class UserEntity {
   @ApiProperty()
@@ -34,19 +34,25 @@ export class UserEntity {
 
   // SIP телефония (для менеджеров)
   @ApiProperty({ required: false })
-  sipServer?: string;
+  sipServer?: string | null;
 
   @ApiProperty({ required: false })
-  sipUser?: string;
+  sipUser?: string | null;
 
   @ApiProperty({ required: false })
-  sipPassword?: string;
+  sipPassword?: string | null;
 
   @ApiProperty({ required: false })
-  sipPort?: number;
+  sipPort?: number | null;
 
   @ApiProperty({ required: false })
-  sipWsPort?: number;
+  sipWsPort?: number | null;
+
+  @ApiProperty({ enum: PaymentType, default: PaymentType.PIECE_RATE })
+  paymentType: PaymentType;
+
+  @ApiProperty({ required: false, description: 'Оклад руб/мес (для SALARY)' })
+  monthlySalary?: number | null;
 
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);

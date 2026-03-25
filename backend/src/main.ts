@@ -64,7 +64,7 @@ async function bootstrap() {
       'http://localhost:8000', // Kong Gateway (development)
       'http://localhost',      // Kong Gateway на порту 80
       process.env.CORS_ORIGIN
-    ].filter(Boolean),
+    ].filter((v): v is string => Boolean(v)),
     credentials: true,
   });
 

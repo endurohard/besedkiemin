@@ -30,6 +30,7 @@ import { NomenclatureModule } from './nomenclature/nomenclature.module';
 import { RolesModule } from './roles/roles.module';
 import { OrderSourcesModule } from './order-sources/order-sources.module';
 import { PayrollModule } from './payroll/payroll.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { PayrollModule } from './payroll/payroll.module';
     RolesModule,
     OrderSourcesModule,
     PayrollModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

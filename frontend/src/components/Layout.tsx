@@ -6,6 +6,7 @@ import { LogOut, Menu, X } from 'lucide-react';
 import { PhoneWidget } from './PhoneWidget';
 import { Sidebar } from './Sidebar';
 import { TelegramLinkWidget } from './TelegramLinkWidget';
+import { useNotifications } from '@/hooks/useNotifications';
 
 // Роли рабочих которые должны всегда попадать на страницу задач
 const WORKER_ROLES = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'DESIGNER'];
@@ -20,6 +21,9 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // WebSocket подписка на real-time уведомления
+  useNotifications();
 
   // Редирект рабочих на страницу задач при загрузке
   useEffect(() => {

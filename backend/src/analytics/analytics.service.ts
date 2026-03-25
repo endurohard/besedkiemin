@@ -383,8 +383,8 @@ export class AnalyticsService {
     // Статистика по завершенным циклам
     const cycleStats = deliveredShipments.flatMap(shipment =>
       shipment.items.map(item => {
-        const product = item.inventoryItem.product;
-        const order = product.order;
+        const product = item.inventoryItem.product!;
+        const order = product.order!;
         const history = product.history;
 
         // Время от создания заказа до доставки (полный цикл)
@@ -539,5 +539,113 @@ export class AnalyticsService {
         b.currentDurationHours - a.currentDurationHours
       ),
     };
+  }
+
+  // Отчёт производительности сотрудников (коэффициент полезности)
+  async getProductivityReport(startDate?: Date, endDate?: Date) {
+    const start = startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const end = endDate || new Date();
+
+    // Рабочих дней в периоде (пн-пт)
+    const workingDays = this.countWorkingDays(start, end);
+
+    // Получаем всех активных производственников
+    const workers = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        role: { code: { notIn: ['SUPER_ADMIN', 'MANAGER', 'OWNER'] } },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        paymentType: true,
+        monthlySalary: true,
+        role: { select: { name: true, code: true, color: true } },
+      },
+    });
+
+    // Получаем work_logs за период по всем работникам
+    const workLogs = await this.prisma.workLog.groupBy({
+      by: ['userId'],
+      where: {
+        completedAt: { gte: start, lte: end },
+      },
+      _sum: { quantity: true, totalAmount: true },
+      _count: { id: true },
+    });
+
+    const logMap = new Map(workLogs.map(l => [l.userId, l]));
+
+    // Детали по этапам
+    const stageDetails = await this.prisma.workLog.groupBy({
+      by: ['userId', 'stage'],
+      where: { completedAt: { gte: start, lte: end } },
+      _sum: { quantity: true },
+    });
+
+    const stageMap = new Map<string, Record<string, number>>();
+    for (const s of stageDetails) {
+      if (!stageMap.has(s.userId)) stageMap.set(s.userId, {});
+      stageMap.get(s.userId)![s.stage] = s._sum.quantity || 0;
+    }
+
+    const report = workers.map(worker => {
+      const logs = logMap.get(worker.id);
+      const itemsMade = logs?._sum?.quantity || 0;
+      const earnedAmount = logs?._sum?.totalAmount || 0;
+      const tasksCompleted = logs?._count?.id || 0;
+
+      // Коэффициент полезности = изделий в день (за рабочие дни периода)
+      const coefficient = workingDays > 0
+        ? Math.round((itemsMade / workingDays) * 100) / 100
+        : 0;
+
+      return {
+        worker: {
+          id: worker.id,
+          name: `${worker.firstName} ${worker.lastName}`,
+          role: worker.role,
+          paymentType: worker.paymentType,
+          monthlySalary: worker.monthlySalary,
+        },
+        stats: {
+          itemsMade,
+          tasksCompleted,
+          earnedAmount: worker.paymentType === 'SALARY' ? 0 : earnedAmount,
+          coefficient,        // изделий/рабочий день
+          workingDays,
+          stageBreakdown: stageMap.get(worker.id) || {},
+        },
+      };
+    });
+
+    // Сортировка: сначала окладники, потом сдельники — по убыванию коэффициента
+    report.sort((a, b) => {
+      if (a.worker.paymentType !== b.worker.paymentType) {
+        return a.worker.paymentType === 'SALARY' ? -1 : 1;
+      }
+      return b.stats.coefficient - a.stats.coefficient;
+    });
+
+    return {
+      period: { start, end, workingDays },
+      totalWorkers: workers.length,
+      salaryWorkers: workers.filter(w => w.paymentType === 'SALARY').length,
+      pieceRateWorkers: workers.filter(w => w.paymentType === 'PIECE_RATE').length,
+      workers: report,
+    };
+  }
+
+  // Подсчёт рабочих дней (пн-пт) в периоде
+  private countWorkingDays(start: Date, end: Date): number {
+    let count = 0;
+    const current = new Date(start);
+    while (current <= end) {
+      const day = current.getDay();
+      if (day !== 0 && day !== 6) count++;
+      current.setDate(current.getDate() + 1);
+    }
+    return count || 1; // минимум 1 чтобы не делить на 0
   }
 }

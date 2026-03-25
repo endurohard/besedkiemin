@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ShipmentStatus } from '@prisma/client';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class ShipmentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsGateway,
+  ) {}
 
   // Создать отгрузку (списание со склада)
   async createShipment(
@@ -64,6 +68,11 @@ export class ShipmentsService {
     }
 
     // Используем транзакцию для атомарности операций
+    // Convert deliveryDate string to Date object if needed (Prisma requires Date, not string)
+    const deliveryDateValue = data.deliveryDate
+      ? (data.deliveryDate instanceof Date ? data.deliveryDate : new Date(data.deliveryDate))
+      : undefined;
+
     const shipment = await this.prisma.$transaction(async (tx) => {
       // Создаём отгрузку с позициями
       const newShipment = await tx.shipment.create({
@@ -71,7 +80,7 @@ export class ShipmentsService {
           customerName: data.customerName,
           customerPhone: data.customerPhone,
           deliveryAddress: data.deliveryAddress,
-          deliveryDate: data.deliveryDate,
+          deliveryDate: deliveryDateValue,
           notes: data.notes,
           orderNumber: data.orderNumber,
           shippedById: userId,
@@ -110,7 +119,7 @@ export class ShipmentsService {
       // Уменьшаем количество на складе для каждого товара (в транзакции)
       await Promise.all(
         data.items.map(async (itemData) => {
-          const inventoryItem = inventoryItems.find(i => i.id === itemData.inventoryItemId);
+          const inventoryItem = inventoryItems.find(i => i.id === itemData.inventoryItemId)!;
           return tx.inventoryItem.update({
             where: { id: itemData.inventoryItemId },
             data: {
@@ -123,6 +132,8 @@ export class ShipmentsService {
       return newShipment;
     });
 
+    this.notifications.notifyShipmentsChanged();
+    this.notifications.notifyInventoryChanged();
     return shipment;
   }
 
@@ -279,7 +290,7 @@ export class ShipmentsService {
       throw new NotFoundException('Отгрузка не найдена');
     }
 
-    return this.prisma.shipment.update({
+    const updated = await this.prisma.shipment.update({
       where: { id },
       data: { status },
       include: {
@@ -303,6 +314,9 @@ export class ShipmentsService {
         },
       },
     });
+
+    this.notifications.notifyShipmentsChanged();
+    return updated;
   }
 
   // Отменить отгрузку (вернуть товары на склад)
@@ -333,6 +347,10 @@ export class ShipmentsService {
 
     if (shipment.status === ShipmentStatus.DELIVERED) {
       throw new BadRequestException('Нельзя отменить доставленную отгрузку');
+    }
+
+    if (shipment.status === ShipmentStatus.CANCELLED) {
+      throw new BadRequestException('Отгрузка уже отменена');
     }
 
     // Используем транзакцию для атомарности
@@ -366,6 +384,8 @@ export class ShipmentsService {
       return cancelled;
     });
 
+    this.notifications.notifyShipmentsChanged();
+    this.notifications.notifyInventoryChanged();
     return updatedShipment;
   }
 

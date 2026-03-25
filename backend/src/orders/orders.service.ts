@@ -6,34 +6,31 @@ import { OrderStatus, Prisma } from '@prisma/client';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
 import { PAGINATION, ORDER } from '../common/constants';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsGateway,
+  ) {}
 
   async create(createOrderDto: CreateOrderDto, userId: string) {
     let orderNumber = createOrderDto.orderNumber?.trim();
 
-    // Если номер заказа не передан - генерируем автоматически
+    // Если номер заказа не передан - генерируем атомарно через SQL
     if (!orderNumber) {
-      // Ищем максимальный номер среди всех заказов формата ORD-NNN
-      const allOrders = await this.prisma.order.findMany({
-        where: { orderNumber: { startsWith: 'ORD-' } },
-        select: { orderNumber: true },
-      });
-
-      let maxNum = 0;
-      for (const o of allOrders) {
-        const parts = o.orderNumber.split('-');
-        if (parts.length >= 2) {
-          const num = parseInt(parts[1], 10);
-          if (!isNaN(num) && num > maxNum) {
-            maxNum = num;
-          }
-        }
-      }
-
-      orderNumber = `ORD-${String(maxNum + 1).padStart(3, '0')}`;
+      const result: [{ next_num: number }] = await this.prisma.$queryRawUnsafe(
+        `SELECT COALESCE(
+          MAX(CAST(SUBSTRING(order_number FROM $1) AS INTEGER)), 0
+        ) + 1 AS next_num
+        FROM orders
+        WHERE order_number ~ $2`,
+        'ORD-(\\d+)',
+        '^ORD-\\d+$'
+      );
+      const nextNum = Number(result[0]?.next_num || 1);
+      orderNumber = `ORD-${String(nextNum).padStart(3, '0')}`;
     }
 
     // Извлекаем orderNumber из DTO чтобы не дублировать

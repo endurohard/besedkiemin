@@ -4,7 +4,7 @@ import { usersApi, rolesApi } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { User, Role, CreateUserDto, UpdateUserDto } from '@/types';
+import { User, Role, CreateUserDto, UpdateUserDto, PaymentType } from '@/types';
 import { Pencil, Trash2, Plus, X, Check } from 'lucide-react';
 
 export const UserManagementPage = () => {
@@ -17,6 +17,8 @@ export const UserManagementPage = () => {
     firstName: '',
     lastName: '',
     roleId: '',
+    paymentType: 'PIECE_RATE',
+    monthlySalary: undefined,
     sipServer: '',
     sipUser: '',
     sipPassword: '',
@@ -86,6 +88,8 @@ export const UserManagementPage = () => {
       firstName: '',
       lastName: '',
       roleId: defaultRoleId,
+      paymentType: 'PIECE_RATE',
+      monthlySalary: undefined,
       sipServer: '',
       sipUser: '',
       sipPassword: '',
@@ -115,6 +119,8 @@ export const UserManagementPage = () => {
       firstName: user.firstName,
       lastName: user.lastName,
       roleId: user.roleId,
+      paymentType: user.paymentType || 'PIECE_RATE',
+      monthlySalary: user.monthlySalary || undefined,
       sipServer: user.sipServer || '',
       sipUser: user.sipUser || '',
       sipPassword: user.sipPassword || '',
@@ -130,6 +136,8 @@ export const UserManagementPage = () => {
       firstName: formData.firstName,
       lastName: formData.lastName,
       roleId: formData.roleId,
+      paymentType: formData.paymentType,
+      monthlySalary: formData.paymentType === 'SALARY' ? formData.monthlySalary : undefined,
       sipServer: formData.sipServer,
       sipUser: formData.sipUser,
       sipPassword: formData.sipPassword,
@@ -263,6 +271,42 @@ export const UserManagementPage = () => {
               </div>
             </div>
 
+            {/* Тип оплаты */}
+            <div className="border-t pt-4 mt-2">
+              <h3 className="text-lg font-semibold mb-4">Тип оплаты</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Способ оплаты</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={formData.paymentType || 'PIECE_RATE'}
+                    onChange={(e) =>
+                      setFormData({ ...formData, paymentType: e.target.value as PaymentType, monthlySalary: undefined })
+                    }
+                  >
+                    <option value="PIECE_RATE">Сдельная (по расценкам за изделие)</option>
+                    <option value="SALARY">Оклад (фиксированная зарплата)</option>
+                  </select>
+                </div>
+                {formData.paymentType === 'SALARY' && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Оклад (руб/мес)</label>
+                    <Input
+                      type="number"
+                      value={formData.monthlySalary || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, monthlySalary: parseFloat(e.target.value) || undefined })
+                      }
+                      placeholder="50000"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Выработка будет учитываться для аналитики, но начисление сдельной зарплаты отключено
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* SIP настройки для менеджеров */}
             {isManagerRole() && (
               <div className="border-t pt-4 mt-4">
@@ -355,6 +399,7 @@ export const UserManagementPage = () => {
                   <th className="text-left p-2">ФИО</th>
                   <th className="text-left p-2">Email</th>
                   <th className="text-left p-2">Роль</th>
+                  <th className="text-center p-2">Тип оплаты</th>
                   <th className="text-center p-2">Статус</th>
                   <th className="text-center p-2">Дата создания</th>
                   <th className="text-right p-2">Действия</th>
@@ -374,6 +419,17 @@ export const UserManagementPage = () => {
                       >
                         {user.role?.name || 'Не указана'}
                       </span>
+                    </td>
+                    <td className="p-2 text-center">
+                      {user.paymentType === 'SALARY' ? (
+                        <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 font-medium">
+                          Оклад{user.monthlySalary ? ` ${user.monthlySalary.toLocaleString()}₽` : ''}
+                        </span>
+                      ) : (
+                        <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">
+                          Сдельная
+                        </span>
+                      )}
                     </td>
                     <td className="p-2 text-center">
                       <button

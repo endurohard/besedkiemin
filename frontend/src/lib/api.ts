@@ -133,6 +133,10 @@ export const authApi = {
   setPin: async (pin: string): Promise<void> => {
     await api.post('/auth/set-pin', { pin });
   },
+
+  setUserPin: async (userId: string, pin: string): Promise<void> => {
+    await api.post(`/auth/set-pin/${userId}`, { pin });
+  },
 };
 
 // Paginated response type
@@ -969,6 +973,11 @@ export const payrollApi = {
 
   getMyEarningsToday: async () => {
     const response = await api.get('/payroll/my-earnings/today');
+    return response.data;
+  },
+
+  getWorkerStats: async (startDate: string, endDate: string) => {
+    const response = await api.get('/payroll/worker-stats', { params: { startDate, endDate } });
     return response.data;
   },
 };

@@ -73,7 +73,8 @@ async function main() {
         'kanban:view',
         'chat:view', 'chat:manage',
         'tasks:view_own',
-        'shipments:view',
+        'shipments:view', 'shipments:create',
+        'inventory:view',
       ],
     },
   });

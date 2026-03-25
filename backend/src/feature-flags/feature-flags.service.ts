@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateFeatureFlagDto } from './dto/update-feature-flag.dto';
+import { FeatureFlag } from '@prisma/client';
 
 // Дефолтные feature flags для системы
 const DEFAULT_FEATURE_FLAGS = [
@@ -180,7 +181,7 @@ export class FeatureFlagsService {
 
   // Массовое обновление флагов
   async bulkUpdate(updates: { key: string; isEnabled: boolean }[]) {
-    const results = [];
+    const results: FeatureFlag[] = [];
 
     for (const update of updates) {
       try {

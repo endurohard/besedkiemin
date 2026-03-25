@@ -48,7 +48,6 @@ export const InventoryPage = () => {
   const { data: inventory, isLoading, error } = useQuery({
     queryKey: ['inventory'],
     queryFn: inventoryApi.getAll,
-    refetchInterval: 30000,
   });
 
   const { data: summary } = useQuery({
@@ -220,7 +219,7 @@ export const InventoryPage = () => {
             Управление товарами на складе и создание отгрузок
           </p>
         </div>
-        {(user?.role?.code === 'OWNER' || user?.role?.code === 'MANAGER') && (
+        {(user?.role?.code === 'OWNER' || user?.role?.code === 'MANAGER' || user?.role?.code === 'SUPER_ADMIN' || user?.role?.code === 'WAREHOUSE') && (
           <div className="flex gap-2">
             <Button
               onClick={() => setShowAddItemModal(true)}
