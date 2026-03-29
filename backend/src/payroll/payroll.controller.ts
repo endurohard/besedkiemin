@@ -125,7 +125,7 @@ export class PayrollController {
   @Post('penalties')
   @Roles('SUPER_ADMIN', 'OWNER', 'WAREHOUSE')
   createPenalty(@Body() dto: CreatePenaltyDto, @Request() req: any) {
-    return this.payrollService.createPenalty(dto, req.user.id);
+    return this.payrollService.createPenalty(dto, req.user.userId);
   }
 
   @Put('penalties/:id')
@@ -141,7 +141,7 @@ export class PayrollController {
     @Body() dto: CancelPenaltyDto,
     @Request() req: any,
   ) {
-    return this.payrollService.cancelPenalty(id, req.user.id, dto.notes);
+    return this.payrollService.cancelPenalty(id, req.user.userId, dto.notes);
   }
 
   // ==================== НАСТРОЙКИ КОМИССИИ МЕНЕДЖЕРА ====================
@@ -216,7 +216,7 @@ export class PayrollController {
     @Body() body: { notes?: string },
     @Request() req: any,
   ) {
-    return this.payrollService.approvePayrollPeriod(id, req.user.id, body.notes);
+    return this.payrollService.approvePayrollPeriod(id, req.user.userId, body.notes);
   }
 
   @Post('periods/:id/pay')
@@ -226,7 +226,7 @@ export class PayrollController {
     @Body() body: { notes?: string },
     @Request() req: any,
   ) {
-    return this.payrollService.markPayrollAsPaid(id, req.user.id, body.notes);
+    return this.payrollService.markPayrollAsPaid(id, req.user.userId, body.notes);
   }
 
   @Post('periods/:id/cancel')
