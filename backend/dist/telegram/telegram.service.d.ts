@@ -27,6 +27,12 @@ export declare class TelegramService implements OnModuleInit {
         notes?: string;
         photoUrl?: string;
     }): Promise<void>;
+    sendPenaltyNotification(data: {
+        userId: string;
+        amount: number;
+        reason: string;
+        createdByName: string;
+    }): Promise<void>;
     sendMessage(chatId: string, message: string): Promise<void>;
     sendPhotoMessage(chatId: string, photoUrl: string, caption: string): Promise<void>;
     generateLoginCode(userId: string): string;

@@ -45,3 +45,4 @@ export declare const STAGE_TO_NAME: Record<string, string>;
 export declare function isDepartmentAccount(user: {
     isDepartmentAccount?: boolean;
 }): boolean;
+export declare const PENALTY_AMOUNTS: number[];

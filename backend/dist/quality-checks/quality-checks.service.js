@@ -95,6 +95,38 @@ let QualityChecksService = class QualityChecksService {
                 notes: createQualityCheckDto.notes,
                 photoUrl,
             });
+            if (createQualityCheckDto.penaltyAmount) {
+                const lastHistory = await this.prisma.productHistory.findFirst({
+                    where: {
+                        productId: createQualityCheckDto.productId,
+                        stage: returnStage,
+                        completedAt: { not: null },
+                    },
+                    orderBy: { completedAt: 'desc' },
+                    select: { userId: true },
+                });
+                const penaltyUserId = lastHistory?.userId;
+                if (penaltyUserId) {
+                    const checkerName = qualityCheck.checkedBy
+                        ? `${qualityCheck.checkedBy.lastName} ${qualityCheck.checkedBy.firstName}`
+                        : 'Склад';
+                    await this.prisma.penalty.create({
+                        data: {
+                            userId: penaltyUserId,
+                            amount: createQualityCheckDto.penaltyAmount,
+                            reason: createQualityCheckDto.notes || 'Брак на контроле качества',
+                            productId: createQualityCheckDto.productId,
+                            createdById: userId,
+                        },
+                    });
+                    await this.telegramService.sendPenaltyNotification({
+                        userId: penaltyUserId,
+                        amount: createQualityCheckDto.penaltyAmount,
+                        reason: createQualityCheckDto.notes || 'Брак на контроле качества',
+                        createdByName: checkerName,
+                    });
+                }
+            }
         }
         if (createQualityCheckDto.status === client_1.QualityStatus.APPROVED) {
             await this.prisma.product.update({

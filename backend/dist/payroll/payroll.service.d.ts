@@ -1,10 +1,12 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { TelegramService } from '../telegram/telegram.service';
 import { PayrollStatus, ProductionStage } from '@prisma/client';
 import { CreateWorkRateDto, UpdateWorkRateDto, CreatePenaltyDto, UpdatePenaltyDto, CalculatePayrollDto, CreateManagerCommissionDto, UpdateManagerCommissionDto } from './dto';
 export declare class PayrollService {
     private prisma;
+    private telegramService;
     private readonly logger;
-    constructor(prisma: PrismaService);
+    constructor(prisma: PrismaService, telegramService: TelegramService);
     findAllWorkRates(): Promise<({
         productType: {
             description: string | null;
@@ -15,7 +17,7 @@ export declare class PayrollService {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         nomenclature: {
             description: string | null;
             name: string;
@@ -33,7 +35,7 @@ export declare class PayrollService {
             weight: number | null;
             basePrice: number | null;
             discontinuedAt: Date | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -43,7 +45,7 @@ export declare class PayrollService {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -66,7 +68,7 @@ export declare class PayrollService {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         nomenclature: {
             description: string | null;
             name: string;
@@ -84,7 +86,7 @@ export declare class PayrollService {
             weight: number | null;
             basePrice: number | null;
             discontinuedAt: Date | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -94,7 +96,7 @@ export declare class PayrollService {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -107,7 +109,7 @@ export declare class PayrollService {
         nomenclatureId: string | null;
         pricePerUnit: number;
     })[]>;
-    findWorkRate(productTypeId: string, stage: ProductionStage, nomenclatureId?: string): Promise<{
+    findWorkRate(productTypeId: string, stage: ProductionStage, nomenclatureId?: string): Promise<({
         productType: {
             description: string | null;
             name: string;
@@ -117,7 +119,7 @@ export declare class PayrollService {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -127,7 +129,7 @@ export declare class PayrollService {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -139,7 +141,7 @@ export declare class PayrollService {
         productTypeId: string | null;
         nomenclatureId: string | null;
         pricePerUnit: number;
-    }>;
+    }) | null>;
     createWorkRate(dto: CreateWorkRateDto): Promise<{
         productType: {
             description: string | null;
@@ -150,7 +152,7 @@ export declare class PayrollService {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         nomenclature: {
             description: string | null;
             name: string;
@@ -168,7 +170,7 @@ export declare class PayrollService {
             weight: number | null;
             basePrice: number | null;
             discontinuedAt: Date | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -178,7 +180,7 @@ export declare class PayrollService {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -201,7 +203,7 @@ export declare class PayrollService {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -211,7 +213,7 @@ export declare class PayrollService {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -264,7 +266,7 @@ export declare class PayrollService {
             };
             name: string;
             id: string;
-        };
+        } | null;
         createdBy: {
             firstName: string;
             lastName: string;
@@ -278,8 +280,8 @@ export declare class PayrollService {
         productId: string | null;
         createdById: string;
         userId: string;
-        reason: string;
         amount: number;
+        reason: string;
         date: Date;
         isCancelled: boolean;
         cancelledAt: Date | null;
@@ -321,8 +323,9 @@ export declare class PayrollService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
-        };
+        } | null;
         createdBy: {
             firstName: string;
             lastName: string;
@@ -336,8 +339,8 @@ export declare class PayrollService {
         productId: string | null;
         createdById: string;
         userId: string;
-        reason: string;
         amount: number;
+        reason: string;
         date: Date;
         isCancelled: boolean;
         cancelledAt: Date | null;
@@ -355,6 +358,8 @@ export declare class PayrollService {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -380,8 +385,9 @@ export declare class PayrollService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
-        };
+        } | null;
         createdBy: {
             email: string;
             password: string;
@@ -392,6 +398,8 @@ export declare class PayrollService {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -409,8 +417,8 @@ export declare class PayrollService {
         productId: string | null;
         createdById: string;
         userId: string;
-        reason: string;
         amount: number;
+        reason: string;
         date: Date;
         isCancelled: boolean;
         cancelledAt: Date | null;
@@ -425,8 +433,8 @@ export declare class PayrollService {
         productId: string | null;
         createdById: string;
         userId: string;
-        reason: string;
         amount: number;
+        reason: string;
         date: Date;
         isCancelled: boolean;
         cancelledAt: Date | null;
@@ -446,7 +454,7 @@ export declare class PayrollService {
             permissions: import("@prisma/client/runtime/library").JsonValue;
             createdAt: Date;
             updatedAt: Date;
-        };
+        } | null;
         user: {
             role: {
                 description: string | null;
@@ -464,7 +472,7 @@ export declare class PayrollService {
             firstName: string;
             lastName: string;
             id: string;
-        };
+        } | null;
     } & {
         roleId: string | null;
         isActive: boolean;
@@ -476,7 +484,7 @@ export declare class PayrollService {
         commissionPercent: number;
         minOrderAmount: number | null;
     })[]>;
-    findManagerCommission(userId: string): Promise<{
+    findManagerCommission(userId: string): Promise<({
         role: {
             description: string | null;
             order: number;
@@ -489,7 +497,7 @@ export declare class PayrollService {
             permissions: import("@prisma/client/runtime/library").JsonValue;
             createdAt: Date;
             updatedAt: Date;
-        };
+        } | null;
         user: {
             email: string;
             password: string;
@@ -500,6 +508,8 @@ export declare class PayrollService {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -508,7 +518,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
-        };
+        } | null;
     } & {
         roleId: string | null;
         isActive: boolean;
@@ -519,7 +529,7 @@ export declare class PayrollService {
         baseSalary: number;
         commissionPercent: number;
         minOrderAmount: number | null;
-    }>;
+    }) | null>;
     createManagerCommission(dto: CreateManagerCommissionDto): Promise<{
         role: {
             description: string | null;
@@ -533,7 +543,7 @@ export declare class PayrollService {
             permissions: import("@prisma/client/runtime/library").JsonValue;
             createdAt: Date;
             updatedAt: Date;
-        };
+        } | null;
         user: {
             email: string;
             password: string;
@@ -544,6 +554,8 @@ export declare class PayrollService {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -552,7 +564,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
-        };
+        } | null;
     } & {
         roleId: string | null;
         isActive: boolean;
@@ -577,7 +589,7 @@ export declare class PayrollService {
             permissions: import("@prisma/client/runtime/library").JsonValue;
             createdAt: Date;
             updatedAt: Date;
-        };
+        } | null;
         user: {
             email: string;
             password: string;
@@ -588,6 +600,8 @@ export declare class PayrollService {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -596,7 +610,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
-        };
+        } | null;
     } & {
         roleId: string | null;
         isActive: boolean;
@@ -662,6 +676,7 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             };
         } & {
@@ -677,9 +692,9 @@ export declare class PayrollService {
             totalAmount: number;
             productTypeId: string;
             userId: string;
-            pricePerUnit: number;
             payrollPeriodId: string | null;
             taskId: string | null;
+            pricePerUnit: number;
         })[];
         penalties: {
             id: string;
@@ -689,8 +704,8 @@ export declare class PayrollService {
             productId: string | null;
             createdById: string;
             userId: string;
-            reason: string;
             amount: number;
+            reason: string;
             date: Date;
             isCancelled: boolean;
             cancelledAt: Date | null;
@@ -705,13 +720,13 @@ export declare class PayrollService {
         notes: string | null;
         totalAmount: number;
         userId: string;
+        penaltyAmount: number;
         periodStart: Date;
         periodEnd: Date;
         baseSalary: number;
         workAmount: number;
         commissionAmount: number;
         ordersAmount: number;
-        penaltyAmount: number;
         approvedById: string | null;
         approvedAt: Date | null;
         paidById: string | null;
@@ -780,6 +795,7 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             };
             task: {
@@ -802,7 +818,7 @@ export declare class PayrollService {
                 productId: string;
                 assignedToId: string;
                 workflowStageId: string | null;
-            };
+            } | null;
         } & {
             id: string;
             createdAt: Date;
@@ -816,9 +832,9 @@ export declare class PayrollService {
             totalAmount: number;
             productTypeId: string;
             userId: string;
-            pricePerUnit: number;
             payrollPeriodId: string | null;
             taskId: string | null;
+            pricePerUnit: number;
         })[];
         penalties: ({
             product: {
@@ -837,8 +853,9 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
-            };
+            } | null;
             createdBy: {
                 firstName: string;
                 lastName: string;
@@ -852,8 +869,8 @@ export declare class PayrollService {
             productId: string | null;
             createdById: string;
             userId: string;
-            reason: string;
             amount: number;
+            reason: string;
             date: Date;
             isCancelled: boolean;
             cancelledAt: Date | null;
@@ -868,13 +885,13 @@ export declare class PayrollService {
         notes: string | null;
         totalAmount: number;
         userId: string;
+        penaltyAmount: number;
         periodStart: Date;
         periodEnd: Date;
         baseSalary: number;
         workAmount: number;
         commissionAmount: number;
         ordersAmount: number;
-        penaltyAmount: number;
         approvedById: string | null;
         approvedAt: Date | null;
         paidById: string | null;
@@ -943,6 +960,7 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             };
             task: {
@@ -965,7 +983,7 @@ export declare class PayrollService {
                 productId: string;
                 assignedToId: string;
                 workflowStageId: string | null;
-            };
+            } | null;
         } & {
             id: string;
             createdAt: Date;
@@ -979,9 +997,9 @@ export declare class PayrollService {
             totalAmount: number;
             productTypeId: string;
             userId: string;
-            pricePerUnit: number;
             payrollPeriodId: string | null;
             taskId: string | null;
+            pricePerUnit: number;
         })[];
         penalties: ({
             product: {
@@ -1000,8 +1018,9 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
-            };
+            } | null;
             createdBy: {
                 firstName: string;
                 lastName: string;
@@ -1015,8 +1034,8 @@ export declare class PayrollService {
             productId: string | null;
             createdById: string;
             userId: string;
-            reason: string;
             amount: number;
+            reason: string;
             date: Date;
             isCancelled: boolean;
             cancelledAt: Date | null;
@@ -1031,13 +1050,13 @@ export declare class PayrollService {
         notes: string | null;
         totalAmount: number;
         userId: string;
+        penaltyAmount: number;
         periodStart: Date;
         periodEnd: Date;
         baseSalary: number;
         workAmount: number;
         commissionAmount: number;
         ordersAmount: number;
-        penaltyAmount: number;
         approvedById: string | null;
         approvedAt: Date | null;
         paidById: string | null;
@@ -1055,6 +1074,8 @@ export declare class PayrollService {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -1072,13 +1093,13 @@ export declare class PayrollService {
         notes: string | null;
         totalAmount: number;
         userId: string;
+        penaltyAmount: number;
         periodStart: Date;
         periodEnd: Date;
         baseSalary: number;
         workAmount: number;
         commissionAmount: number;
         ordersAmount: number;
-        penaltyAmount: number;
         approvedById: string | null;
         approvedAt: Date | null;
         paidById: string | null;
@@ -1095,6 +1116,8 @@ export declare class PayrollService {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -1112,13 +1135,13 @@ export declare class PayrollService {
         notes: string | null;
         totalAmount: number;
         userId: string;
+        penaltyAmount: number;
         periodStart: Date;
         periodEnd: Date;
         baseSalary: number;
         workAmount: number;
         commissionAmount: number;
         ordersAmount: number;
-        penaltyAmount: number;
         approvedById: string | null;
         approvedAt: Date | null;
         paidById: string | null;
@@ -1154,9 +1177,9 @@ export declare class PayrollService {
         totalAmount: number;
         productTypeId: string;
         userId: string;
-        pricePerUnit: number;
         payrollPeriodId: string | null;
         taskId: string | null;
+        pricePerUnit: number;
     }>;
     findWorkLogs(filters?: {
         userId?: string;
@@ -1216,6 +1239,7 @@ export declare class PayrollService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         task: {
@@ -1238,7 +1262,7 @@ export declare class PayrollService {
             productId: string;
             assignedToId: string;
             workflowStageId: string | null;
-        };
+        } | null;
     } & {
         id: string;
         createdAt: Date;
@@ -1252,9 +1276,9 @@ export declare class PayrollService {
         totalAmount: number;
         productTypeId: string;
         userId: string;
-        pricePerUnit: number;
         payrollPeriodId: string | null;
         taskId: string | null;
+        pricePerUnit: number;
     })[]>;
     getWorkerEarnings(userId: string, startDate?: string, endDate?: string): Promise<{
         user: {
@@ -1328,4 +1352,19 @@ export declare class PayrollService {
             workLogsCount: number;
         }[];
     }>;
+    getWorkerStats(startDate: string, endDate: string): Promise<{
+        userId: string;
+        firstName: string;
+        lastName: string;
+        roleCode: string;
+        paymentType: import(".prisma/client").$Enums.PaymentType;
+        monthlySalary: number | null;
+        itemsCompleted: number;
+        workAmount: number;
+        penaltyAmount: number;
+        penaltyCount: number;
+        netAmount: number;
+        efficiencyCoefficient: number | null;
+        workLogsCount: number;
+    }[]>;
 }

@@ -647,7 +647,7 @@ export class TasksService {
   }
 
   // Забраковать задачу (только для складиста)
-  async rejectTask(taskId: string, userId: string, notes: string, quantity?: number, defectPhotoUrl?: string, requestPhoto?: boolean, returnToStage?: string) {
+  async rejectTask(taskId: string, userId: string, notes: string, quantity?: number, defectPhotoUrl?: string, requestPhoto?: boolean, returnToStage?: string, penaltyAmount?: number) {
     this.logger.debug('rejectTask called', { taskId, userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage });
 
     const user = await this.prisma.user.findUnique({
@@ -923,6 +923,48 @@ export class TasksService {
         }
       } else {
         this.logger.error(`No role mapping found for stage ${returnStage}. Product ${task.productId} stuck without task!`);
+      }
+    }
+
+    // Создаём штраф если указана сумма
+    if (penaltyAmount && penaltyAmount > 0) {
+      try {
+        // Находим предыдущего исполнителя
+        const lastHistory = await this.prisma.productHistory.findFirst({
+          where: {
+            productId: task.productId,
+            completedAt: { not: null },
+          },
+          orderBy: { completedAt: 'desc' },
+          select: { userId: true },
+        });
+
+        const penaltyUserId = lastHistory?.userId;
+
+        if (penaltyUserId) {
+          await this.prisma.penalty.create({
+            data: {
+              userId: penaltyUserId,
+              amount: penaltyAmount,
+              reason: notes || 'Брак на контроле качества',
+              productId: task.productId,
+              createdById: userId,
+            },
+          });
+
+          // Telegram уведомление
+          const checkerName = user ? `${user.lastName || ''} ${user.firstName || ''}`.trim() : 'Склад';
+          await this.telegramService.sendPenaltyNotification({
+            userId: penaltyUserId,
+            amount: penaltyAmount,
+            reason: notes || 'Брак на контроле качества',
+            createdByName: checkerName,
+          });
+
+          this.logger.log('Penalty created during task rejection', { penaltyUserId, penaltyAmount });
+        }
+      } catch (error) {
+        this.logger.error('Failed to create penalty during rejection', error);
       }
     }
 

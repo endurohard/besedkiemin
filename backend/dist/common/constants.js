@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.STAGE_TO_NAME = exports.ROLE_TO_STAGE = exports.SYSTEM_ROLES = exports.ORDER = exports.RATE_LIMIT = exports.TELEGRAM = exports.AUTH = exports.FILE_UPLOAD = exports.PAGINATION = void 0;
+exports.PENALTY_AMOUNTS = exports.STAGE_TO_NAME = exports.ROLE_TO_STAGE = exports.SYSTEM_ROLES = exports.ORDER = exports.RATE_LIMIT = exports.TELEGRAM = exports.AUTH = exports.FILE_UPLOAD = exports.PAGINATION = void 0;
 exports.isDepartmentAccount = isDepartmentAccount;
 const client_1 = require("@prisma/client");
 exports.PAGINATION = {
@@ -65,4 +65,5 @@ exports.STAGE_TO_NAME = {
 function isDepartmentAccount(user) {
     return user.isDepartmentAccount === true;
 }
+exports.PENALTY_AMOUNTS = [200, 400, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000];
 //# sourceMappingURL=constants.js.map

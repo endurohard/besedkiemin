@@ -106,6 +106,46 @@ export class QualityChecksService {
         notes: createQualityCheckDto.notes,
         photoUrl,
       });
+
+      // Создаём штраф если указана сумма
+      if (createQualityCheckDto.penaltyAmount) {
+        // Находим последнего исполнителя на этапе, с которого вернули
+        const lastHistory = await this.prisma.productHistory.findFirst({
+          where: {
+            productId: createQualityCheckDto.productId,
+            stage: returnStage,
+            completedAt: { not: null },
+          },
+          orderBy: { completedAt: 'desc' },
+          select: { userId: true },
+        });
+
+        const penaltyUserId = lastHistory?.userId;
+
+        if (penaltyUserId) {
+          const checkerName = qualityCheck.checkedBy
+            ? `${qualityCheck.checkedBy.lastName} ${qualityCheck.checkedBy.firstName}`
+            : 'Склад';
+
+          await this.prisma.penalty.create({
+            data: {
+              userId: penaltyUserId,
+              amount: createQualityCheckDto.penaltyAmount,
+              reason: createQualityCheckDto.notes || 'Брак на контроле качества',
+              productId: createQualityCheckDto.productId,
+              createdById: userId,
+            },
+          });
+
+          // Уведомление в Telegram о штрафе
+          await this.telegramService.sendPenaltyNotification({
+            userId: penaltyUserId,
+            amount: createQualityCheckDto.penaltyAmount,
+            reason: createQualityCheckDto.notes || 'Брак на контроле качества',
+            createdByName: checkerName,
+          });
+        }
+      }
     }
 
     // Если принято - переводим в завершенные

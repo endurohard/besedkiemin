@@ -17,11 +17,13 @@ const telegram_service_1 = require("../telegram/telegram.service");
 const payroll_service_1 = require("../payroll/payroll.service");
 const client_1 = require("@prisma/client");
 const constants_1 = require("../common/constants");
+const notifications_gateway_1 = require("../notifications/notifications.gateway");
 let TasksService = TasksService_1 = class TasksService {
-    constructor(prisma, telegramService, payrollService) {
+    constructor(prisma, telegramService, payrollService, notifications) {
         this.prisma = prisma;
         this.telegramService = telegramService;
         this.payrollService = payrollService;
+        this.notifications = notifications;
         this.logger = new common_1.Logger(TasksService_1.name);
     }
     async getMyTasks(userId) {
@@ -485,7 +487,14 @@ let TasksService = TasksService_1 = class TasksService {
         if (nextWorkers.length === 0) {
             this.logger.warn(`No active workers found for stage ${nextWorkflowStage.name}. Product ${task.product.name} moved but no tasks created.`);
         }
-        for (const worker of nextWorkers) {
+        const stageAssignments = task.product.stageAssignments;
+        const assignedId = stageAssignments && nextWorkflowStage.legacyStage
+            ? stageAssignments[nextWorkflowStage.legacyStage]
+            : undefined;
+        const filteredWorkers = assignedId
+            ? nextWorkers.filter(w => w.id === assignedId)
+            : nextWorkers;
+        for (const worker of filteredWorkers) {
             const newTask = await this.prisma.task.create({
                 data: {
                     title: `${task.product.name} - ${nextWorkflowStage.name}`,
@@ -523,7 +532,7 @@ let TasksService = TasksService_1 = class TasksService {
         }
         return updatedTask;
     }
-    async rejectTask(taskId, userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage) {
+    async rejectTask(taskId, userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage, penaltyAmount) {
         this.logger.debug('rejectTask called', { taskId, userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage });
         const user = await this.prisma.user.findUnique({
             where: { id: userId }, include: { role: true },
@@ -588,12 +597,26 @@ let TasksService = TasksService_1 = class TasksService {
             const currentWorkflowStage = await this.prisma.workflowStage.findFirst({
                 where: { legacyStage: task.stage, isActive: true },
             });
-            const previousStage = currentWorkflowStage
+            const productForSewing = task.product;
+            const productTypeForSewing = productForSewing.productType;
+            const needsSewing = productForSewing.upholsteryMaterial
+                ? true
+                : (productForSewing.requiresSewing !== null
+                    ? productForSewing.requiresSewing
+                    : productTypeForSewing?.requiresSewing ?? false);
+            let previousStage = currentWorkflowStage
                 ? await this.prisma.workflowStage.findFirst({
                     where: { order: { lt: currentWorkflowStage.order }, isActive: true },
                     orderBy: { order: 'desc' },
                 })
                 : null;
+            if (previousStage?.legacyStage === client_1.ProductionStage.SEWING && !needsSewing) {
+                this.logger.log(`Skipping SEWING stage for return (product does not require sewing)`);
+                previousStage = await this.prisma.workflowStage.findFirst({
+                    where: { order: { lt: previousStage.order }, isActive: true },
+                    orderBy: { order: 'desc' },
+                });
+            }
             returnStage = previousStage?.legacyStage || client_1.ProductionStage.PAINTING;
         }
         const currentProduct = await this.prisma.product.findUnique({
@@ -727,6 +750,41 @@ let TasksService = TasksService_1 = class TasksService {
             }
             else {
                 this.logger.error(`No role mapping found for stage ${returnStage}. Product ${task.productId} stuck without task!`);
+            }
+        }
+        if (penaltyAmount && penaltyAmount > 0) {
+            try {
+                const lastHistory = await this.prisma.productHistory.findFirst({
+                    where: {
+                        productId: task.productId,
+                        completedAt: { not: null },
+                    },
+                    orderBy: { completedAt: 'desc' },
+                    select: { userId: true },
+                });
+                const penaltyUserId = lastHistory?.userId;
+                if (penaltyUserId) {
+                    await this.prisma.penalty.create({
+                        data: {
+                            userId: penaltyUserId,
+                            amount: penaltyAmount,
+                            reason: notes || 'Брак на контроле качества',
+                            productId: task.productId,
+                            createdById: userId,
+                        },
+                    });
+                    const checkerName = user ? `${user.lastName || ''} ${user.firstName || ''}`.trim() : 'Склад';
+                    await this.telegramService.sendPenaltyNotification({
+                        userId: penaltyUserId,
+                        amount: penaltyAmount,
+                        reason: notes || 'Брак на контроле качества',
+                        createdByName: checkerName,
+                    });
+                    this.logger.log('Penalty created during task rejection', { penaltyUserId, penaltyAmount });
+                }
+            }
+            catch (error) {
+                this.logger.error('Failed to create penalty during rejection', error);
             }
         }
         this.logger.log('Task rejected successfully', { taskId });
@@ -1060,6 +1118,7 @@ exports.TasksService = TasksService = TasksService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         telegram_service_1.TelegramService,
-        payroll_service_1.PayrollService])
+        payroll_service_1.PayrollService,
+        notifications_gateway_1.NotificationsGateway])
 ], TasksService);
 //# sourceMappingURL=tasks.service.js.map

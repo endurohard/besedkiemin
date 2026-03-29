@@ -547,6 +547,28 @@ let TelegramService = TelegramService_1 = class TelegramService {
     async sendDefectNotification(productData) {
         this.logger.log(`Defect notification requested for product: ${productData.productName}`);
     }
+    async sendPenaltyNotification(data) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: data.userId },
+                select: { telegramId: true, firstName: true, lastName: true },
+            });
+            if (!user?.telegramId) {
+                this.logger.warn(`User ${data.userId} has no Telegram ID for penalty notification`);
+                return;
+            }
+            const message = `⚠️ *Вам назначен штраф!*\n\n` +
+                `💰 Сумма: *${data.amount} ₽*\n` +
+                `📝 Причина: ${data.reason}\n` +
+                `👤 Назначил: ${data.createdByName}\n` +
+                `📅 Дата: ${new Date().toLocaleDateString("ru-RU")}`;
+            await this.sendMessage(user.telegramId, message);
+            this.logger.log(`Penalty notification sent to user ${data.userId}`);
+        }
+        catch (error) {
+            this.logger.error(`Failed to send penalty notification to user ${data.userId}`, error);
+        }
+    }
     async sendMessage(chatId, message) {
         if (!this.bot) {
             this.logger.warn('Telegram bot not configured. Skipping message.');

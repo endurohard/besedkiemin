@@ -302,9 +302,9 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
           <NavLink to="/app/analytics" icon={BarChart3} label="Аналитика" />
         )}
 
-        {/* Зарплата - только для OWNER и SUPER_ADMIN */}
-        {(userRole === 'OWNER' || userRole === 'SUPER_ADMIN') && (
-          <NavLink to="/app/payroll" icon={Wallet} label="Зарплата" />
+        {/* Зарплата - для OWNER, SUPER_ADMIN и WAREHOUSE */}
+        {(userRole === 'OWNER' || userRole === 'SUPER_ADMIN' || userRole === 'WAREHOUSE') && (
+          <NavLink to="/app/payroll" icon={Wallet} label={userRole === 'WAREHOUSE' ? 'Штрафы' : 'Зарплата'} />
         )}
 
         {/* Сотрудники производства - только для OWNER и SUPER_ADMIN */}

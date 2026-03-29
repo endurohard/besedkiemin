@@ -1,12 +1,14 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { PayrollService } from '../payroll/payroll.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 export declare class TasksService {
     private prisma;
     private telegramService;
     private payrollService;
+    private notifications;
     private readonly logger;
-    constructor(prisma: PrismaService, telegramService: TelegramService, payrollService: PayrollService);
+    constructor(prisma: PrismaService, telegramService: TelegramService, payrollService: PayrollService, notifications: NotificationsGateway);
     getMyTasks(userId: string): Promise<({
         product: {
             order: {
@@ -41,6 +43,7 @@ export declare class TasksService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         assignedTo: {
@@ -113,6 +116,7 @@ export declare class TasksService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             };
             assignedTo: {
@@ -196,6 +200,7 @@ export declare class TasksService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
     } & {
@@ -263,6 +268,7 @@ export declare class TasksService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
     } & {
@@ -307,7 +313,7 @@ export declare class TasksService {
         assignedToId: string;
         workflowStageId: string | null;
     }>;
-    rejectTask(taskId: string, userId: string, notes: string, quantity?: number, defectPhotoUrl?: string, requestPhoto?: boolean, returnToStage?: string): Promise<{
+    rejectTask(taskId: string, userId: string, notes: string, quantity?: number, defectPhotoUrl?: string, requestPhoto?: boolean, returnToStage?: string, penaltyAmount?: number): Promise<{
         status: import(".prisma/client").$Enums.TaskStatus;
         description: string | null;
         title: string;
@@ -352,7 +358,7 @@ export declare class TasksService {
     private updateOrderStatus;
     getDefectsWithPhotos(userId?: string): Promise<{
         product: {
-            qualityChecks: any;
+            qualityChecks: undefined;
             order: {
                 status: import(".prisma/client").$Enums.OrderStatus;
                 description: string | null;
@@ -394,6 +400,7 @@ export declare class TasksService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         defectPhotos: string[];
@@ -407,6 +414,8 @@ export declare class TasksService {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -415,7 +424,7 @@ export declare class TasksService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
-        };
+        } | null;
         status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
         createdAt: Date;
@@ -470,6 +479,7 @@ export declare class TasksService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
     } & {

@@ -49,8 +49,8 @@ let TasksController = class TasksController {
     async passTask(id, req) {
         return this.tasksService.passTask(id, req.user.userId);
     }
-    async rejectTask(id, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage, req) {
-        return this.tasksService.rejectTask(id, req.user.userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage);
+    async rejectTask(id, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage, penaltyAmount, req) {
+        return this.tasksService.rejectTask(id, req.user.userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage, penaltyAmount);
     }
     async approveTask(id, quantity, req) {
         return this.tasksService.approveTask(id, req.user.userId, quantity);
@@ -146,9 +146,10 @@ __decorate([
     __param(3, (0, common_1.Body)('defectPhotoUrl')),
     __param(4, (0, common_1.Body)('requestPhoto')),
     __param(5, (0, common_1.Body)('returnToStage')),
-    __param(6, (0, common_1.Req)()),
+    __param(6, (0, common_1.Body)('penaltyAmount')),
+    __param(7, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Number, String, Boolean, String, Object]),
+    __metadata("design:paramtypes", [String, String, Number, String, Boolean, String, Number, Object]),
     __metadata("design:returntype", Promise)
 ], TasksController.prototype, "rejectTask", null);
 __decorate([

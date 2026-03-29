@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { TelegramService } from '../telegram/telegram.service';
 import { PayrollStatus, ProductionStage } from '@prisma/client';
 import {
   CreateWorkRateDto,
@@ -17,7 +18,10 @@ import {
 export class PayrollService {
   private readonly logger = new Logger(PayrollService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private telegramService: TelegramService,
+  ) {}
 
   // ==================== РАСЦЕНКИ (WorkRate) ====================
 
@@ -183,7 +187,7 @@ export class PayrollService {
   }
 
   async createPenalty(dto: CreatePenaltyDto, createdById: string) {
-    return this.prisma.penalty.create({
+    const penalty = await this.prisma.penalty.create({
       data: {
         ...dto,
         date: dto.date ? new Date(dto.date) : new Date(),
@@ -208,6 +212,23 @@ export class PayrollService {
         },
       },
     });
+
+    // Отправляем уведомление в Telegram
+    try {
+      const createdByName = penalty.createdBy
+        ? `${penalty.createdBy.lastName} ${penalty.createdBy.firstName}`
+        : 'Система';
+      await this.telegramService.sendPenaltyNotification({
+        userId: dto.userId,
+        amount: dto.amount,
+        reason: dto.reason,
+        createdByName,
+      });
+    } catch (error) {
+      this.logger.error('Failed to send penalty Telegram notification', error);
+    }
+
+    return penalty;
   }
 
   async updatePenalty(id: string, dto: UpdatePenaltyDto) {

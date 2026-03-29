@@ -41,6 +41,7 @@ export declare class QualityChecksController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         checkedBy: {
@@ -60,7 +61,7 @@ export declare class QualityChecksController {
             firstName: string;
             lastName: string;
             id: string;
-        };
+        } | null;
     } & {
         status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
@@ -105,7 +106,7 @@ export declare class QualityChecksController {
             firstName: string;
             lastName: string;
             id: string;
-        };
+        } | null;
     } & {
         status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
@@ -150,7 +151,7 @@ export declare class QualityChecksController {
             firstName: string;
             lastName: string;
             id: string;
-        };
+        } | null;
     } & {
         status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
@@ -195,7 +196,7 @@ export declare class QualityChecksController {
             firstName: string;
             lastName: string;
             id: string;
-        };
+        } | null;
     } & {
         status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
@@ -241,6 +242,7 @@ export declare class QualityChecksController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         checkedBy: {
@@ -260,7 +262,7 @@ export declare class QualityChecksController {
             firstName: string;
             lastName: string;
             id: string;
-        };
+        } | null;
     } & {
         status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
@@ -289,6 +291,7 @@ export declare class QualityChecksController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         checkedBy: {
@@ -308,7 +311,7 @@ export declare class QualityChecksController {
             firstName: string;
             lastName: string;
             id: string;
-        };
+        } | null;
     } & {
         status: import(".prisma/client").$Enums.QualityStatus;
         id: string;

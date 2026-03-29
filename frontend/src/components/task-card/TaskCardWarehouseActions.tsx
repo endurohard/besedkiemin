@@ -19,6 +19,8 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
   const [requestPhotoViaTelegram, setRequestPhotoViaTelegram] = useState(false);
   const [returnToStage, setReturnToStage] = useState<string>('PAINTING');
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [enablePenalty, setEnablePenalty] = useState(false);
+  const [penaltyAmount, setPenaltyAmount] = useState(0);
   const [showApproveForm, setShowApproveForm] = useState(false);
 
   const availableQuantity = (task.quantity || task.product?.quantity || 0) - (task.quantityProcessed || 0);
@@ -30,6 +32,7 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
         quantity: rejectQuantity,
         requestPhoto: requestPhotoViaTelegram,
         returnToStage,
+        ...(enablePenalty && penaltyAmount > 0 ? { penaltyAmount } : {}),
       });
     },
     onSuccess: () => {
@@ -37,6 +40,8 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
       setRejectNotes('');
       setRejectQuantity(1);
       setRequestPhotoViaTelegram(false);
+      setEnablePenalty(false);
+      setPenaltyAmount(0);
       setShowRejectForm(false);
     },
     onError: (error: any) => handleMutationError(error, 'Ошибка при браковке'),
@@ -174,6 +179,65 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
             </label>
           </div>
 
+          <div className="p-2 border border-orange-200 rounded-md bg-orange-50">
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="checkbox"
+                id="enablePenaltyCheckbox"
+                checked={enablePenalty}
+                onChange={(e) => {
+                  setEnablePenalty(e.target.checked);
+                  if (!e.target.checked) setPenaltyAmount(0);
+                }}
+                className="w-4 h-4"
+              />
+              <label htmlFor="enablePenaltyCheckbox" className="text-sm font-medium text-orange-900 cursor-pointer">
+                ⚠️ Назначить штраф
+              </label>
+            </div>
+            {enablePenalty && (
+              <div className="space-y-2">
+                <div className="grid grid-cols-5 gap-1">
+                  {[200, 400, 600, 800, 1000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setPenaltyAmount(amt)}
+                      className={`px-1 py-1.5 rounded text-xs font-medium border transition-colors ${
+                        penaltyAmount === amt
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {amt} ₽
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-4 gap-1">
+                  {[1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setPenaltyAmount(amt)}
+                      className={`px-1 py-1.5 rounded text-xs font-medium border transition-colors ${
+                        penaltyAmount === amt
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {amt} ₽
+                    </button>
+                  ))}
+                </div>
+                {penaltyAmount > 0 && (
+                  <p className="text-xs text-red-700 font-medium">
+                    💰 Штраф: {penaltyAmount} ₽
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-2">
             <Button
               onClick={() => rejectMutation.mutate()}
@@ -188,6 +252,8 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
                 setShowRejectForm(false);
                 setRejectNotes('');
                 setRequestPhotoViaTelegram(false);
+                setEnablePenalty(false);
+                setPenaltyAmount(0);
               }}
               variant="outline"
             >

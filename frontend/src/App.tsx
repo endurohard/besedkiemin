@@ -70,6 +70,16 @@ const OwnerRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const OwnerOrWarehouseRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuthStore();
+  const roleCode = user?.role?.code || '';
+  return (roleCode === 'OWNER' || roleCode === 'SUPER_ADMIN' || roleCode === 'WAREHOUSE') ? (
+    <Layout>{children}</Layout>
+  ) : (
+    <Navigate to="/app" />
+  );
+};
+
 const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuthStore();
   return user?.role?.code === 'SUPER_ADMIN' ? (
@@ -254,9 +264,9 @@ function App() {
             <Route
               path="/app/payroll"
               element={
-                <OwnerRoute>
+                <OwnerOrWarehouseRoute>
                   <PayrollPage />
-                </OwnerRoute>
+                </OwnerOrWarehouseRoute>
               }
             />
             <Route

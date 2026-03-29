@@ -511,6 +511,7 @@ export interface RejectTaskDto {
   defectPhotoUrl?: string;
   requestPhoto?: boolean; // Запросить фото через Telegram бот
   returnToStage?: string; // Стадия для возврата брака
+  penaltyAmount?: number; // Сумма штрафа при браке
 }
 
 export interface ApproveTaskDto {

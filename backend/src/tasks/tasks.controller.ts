@@ -85,9 +85,10 @@ export class TasksController {
     @Body('defectPhotoUrl') defectPhotoUrl: string,
     @Body('requestPhoto') requestPhoto: boolean,
     @Body('returnToStage') returnToStage: string,
+    @Body('penaltyAmount') penaltyAmount: number,
     @Req() req,
   ) {
-    return this.tasksService.rejectTask(id, req.user.userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage);
+    return this.tasksService.rejectTask(id, req.user.userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage, penaltyAmount);
   }
 
   @Post(':id/approve')

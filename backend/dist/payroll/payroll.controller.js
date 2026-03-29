@@ -21,6 +21,7 @@ const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 const client_1 = require("@prisma/client");
+const constants_1 = require("../common/constants");
 let PayrollController = class PayrollController {
     constructor(payrollService) {
         this.payrollService = payrollService;
@@ -52,6 +53,9 @@ let PayrollController = class PayrollController {
     }
     deleteWorkRate(id) {
         return this.payrollService.deleteWorkRate(id);
+    }
+    getPenaltyAmounts() {
+        return { amounts: constants_1.PENALTY_AMOUNTS };
     }
     findAllPenalties(userId, startDate, endDate, includeCancelled) {
         return this.payrollService.findAllPenalties({
@@ -124,6 +128,9 @@ let PayrollController = class PayrollController {
     getPayrollSummary(periodStart, periodEnd) {
         return this.payrollService.getPayrollSummary(periodStart, periodEnd);
     }
+    getWorkerStats(startDate, endDate) {
+        return this.payrollService.getWorkerStats(startDate, endDate);
+    }
 };
 exports.PayrollController = PayrollController;
 __decorate([
@@ -191,8 +198,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "deleteWorkRate", null);
 __decorate([
+    (0, common_1.Get)('penalties/amounts'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "getPenaltyAmounts", null);
+__decorate([
     (0, common_1.Get)('penalties'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'WAREHOUSE'),
     __param(0, (0, common_1.Query)('userId')),
     __param(1, (0, common_1.Query)('startDate')),
     __param(2, (0, common_1.Query)('endDate')),
@@ -203,7 +216,7 @@ __decorate([
 ], PayrollController.prototype, "findAllPenalties", null);
 __decorate([
     (0, common_1.Post)('penalties'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'WAREHOUSE'),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -354,6 +367,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "getPayrollSummary", null);
+__decorate([
+    (0, common_1.Get)('worker-stats'),
+    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "getWorkerStats", null);
 exports.PayrollController = PayrollController = __decorate([
     (0, common_1.Controller)('payroll'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

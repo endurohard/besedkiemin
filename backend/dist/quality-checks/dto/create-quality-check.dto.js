@@ -13,6 +13,7 @@ exports.CreateQualityCheckDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
+const constants_1 = require("../../common/constants");
 class CreateQualityCheckDto {
 }
 exports.CreateQualityCheckDto = CreateQualityCheckDto;
@@ -39,4 +40,11 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateQualityCheckDto.prototype, "returnToStage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, description: 'Сумма штрафа при браке (из предопределённого списка)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsIn)(constants_1.PENALTY_AMOUNTS, { message: 'Сумма штрафа должна быть из предопределённого списка' }),
+    __metadata("design:type", Number)
+], CreateQualityCheckDto.prototype, "penaltyAmount", void 0);
 //# sourceMappingURL=create-quality-check.dto.js.map

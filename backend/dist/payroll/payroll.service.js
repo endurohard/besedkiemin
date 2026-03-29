@@ -13,10 +13,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PayrollService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const telegram_service_1 = require("../telegram/telegram.service");
 const client_1 = require("@prisma/client");
 let PayrollService = PayrollService_1 = class PayrollService {
-    constructor(prisma) {
+    constructor(prisma, telegramService) {
         this.prisma = prisma;
+        this.telegramService = telegramService;
         this.logger = new common_1.Logger(PayrollService_1.name);
     }
     async findAllWorkRates() {
@@ -158,7 +160,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
         });
     }
     async createPenalty(dto, createdById) {
-        return this.prisma.penalty.create({
+        const penalty = await this.prisma.penalty.create({
             data: {
                 ...dto,
                 date: dto.date ? new Date(dto.date) : new Date(),
@@ -183,6 +185,21 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 },
             },
         });
+        try {
+            const createdByName = penalty.createdBy
+                ? `${penalty.createdBy.lastName} ${penalty.createdBy.firstName}`
+                : 'Система';
+            await this.telegramService.sendPenaltyNotification({
+                userId: dto.userId,
+                amount: dto.amount,
+                reason: dto.reason,
+                createdByName,
+            });
+        }
+        catch (error) {
+            this.logger.error('Failed to send penalty Telegram notification', error);
+        }
+        return penalty;
     }
     async updatePenalty(id, dto) {
         return this.prisma.penalty.update({
@@ -610,9 +627,18 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 data.nomenclatureId = undefined;
             }
         }
-        const workRate = await this.findWorkRate(data.productTypeId, data.stage, data.nomenclatureId);
-        const pricePerUnit = workRate?.pricePerUnit || 0;
-        const totalAmount = data.quantity * pricePerUnit;
+        const worker = await this.prisma.user.findUnique({
+            where: { id: data.userId },
+            select: { paymentType: true },
+        });
+        const isSalaryWorker = worker?.paymentType === 'SALARY';
+        let pricePerUnit = 0;
+        let totalAmount = 0;
+        if (!isSalaryWorker) {
+            const workRate = await this.findWorkRate(data.productTypeId, data.stage, data.nomenclatureId);
+            pricePerUnit = workRate?.pricePerUnit || 0;
+            totalAmount = data.quantity * pricePerUnit;
+        }
         return this.prisma.workLog.create({
             data: {
                 userId: data.userId,
@@ -920,10 +946,73 @@ let PayrollService = PayrollService_1 = class PayrollService {
             users,
         };
     }
+    async getWorkerStats(startDate, endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const productionRoleCodes = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'SEWER'];
+        const workers = await this.prisma.user.findMany({
+            where: {
+                isActive: true,
+                role: { code: { in: productionRoleCodes } },
+            },
+            include: {
+                role: true,
+            },
+        });
+        const stats = await Promise.all(workers.map(async (worker) => {
+            const workLogs = await this.prisma.workLog.findMany({
+                where: {
+                    userId: worker.id,
+                    completedAt: { gte: start, lte: end },
+                },
+                select: {
+                    quantity: true,
+                    totalAmount: true,
+                    pricePerUnit: true,
+                    stage: true,
+                    completedAt: true,
+                },
+            });
+            const penalties = await this.prisma.penalty.aggregate({
+                where: {
+                    userId: worker.id,
+                    date: { gte: start, lte: end },
+                    isCancelled: false,
+                },
+                _sum: { amount: true },
+                _count: true,
+            });
+            const itemsCompleted = workLogs.reduce((sum, wl) => sum + wl.quantity, 0);
+            const workAmount = workLogs.reduce((sum, wl) => sum + wl.totalAmount, 0);
+            const penaltyAmount = penalties._sum.amount || 0;
+            const netAmount = workAmount - penaltyAmount;
+            let efficiencyCoefficient = null;
+            if (worker.paymentType === 'SALARY' && worker.monthlySalary && worker.monthlySalary > 0) {
+                efficiencyCoefficient = Math.round((workAmount / worker.monthlySalary) * 100) / 100;
+            }
+            return {
+                userId: worker.id,
+                firstName: worker.firstName,
+                lastName: worker.lastName,
+                roleCode: worker.role?.code,
+                paymentType: worker.paymentType,
+                monthlySalary: worker.monthlySalary,
+                itemsCompleted,
+                workAmount,
+                penaltyAmount,
+                penaltyCount: penalties._count,
+                netAmount,
+                efficiencyCoefficient,
+                workLogsCount: workLogs.length,
+            };
+        }));
+        return stats;
+    }
 };
 exports.PayrollService = PayrollService;
 exports.PayrollService = PayrollService = PayrollService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        telegram_service_1.TelegramService])
 ], PayrollService);
 //# sourceMappingURL=payroll.service.js.map

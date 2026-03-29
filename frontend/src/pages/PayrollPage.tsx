@@ -42,7 +42,7 @@ const statusNames: Record<PayrollStatus, string> = {
 
 export default function PayrollPage() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<Tab>('summary');
+  const [activeTab, setActiveTab] = useState<Tab>(user?.role.code === 'WAREHOUSE' ? 'penalties' : 'summary');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -93,6 +93,8 @@ export default function PayrollPage() {
   });
 
   const canManage = user?.role.code === 'SUPER_ADMIN' || user?.role.code === 'OWNER';
+  const canManagePenalties = canManage || user?.role.code === 'WAREHOUSE';
+  const isWarehouse = user?.role.code === 'WAREHOUSE';
 
   useEffect(() => {
     loadInitialData();
@@ -397,11 +399,15 @@ export default function PayrollPage() {
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
           {[
-            { id: 'summary', name: 'Сводка' },
-            { id: 'periods', name: 'Расчеты' },
-            { id: 'work-logs', name: 'Журнал работ' },
+            ...(!isWarehouse ? [
+              { id: 'summary', name: 'Сводка' },
+              { id: 'periods', name: 'Расчеты' },
+              { id: 'work-logs', name: 'Журнал работ' },
+            ] : []),
             { id: 'penalties', name: 'Штрафы' },
-            { id: 'work-rates', name: 'Расценки' },
+            ...(!isWarehouse ? [
+              { id: 'work-rates', name: 'Расценки' },
+            ] : []),
           ].map((tab) => (
             <button
               key={tab.id}
@@ -640,7 +646,7 @@ export default function PayrollPage() {
       {/* Penalties Tab */}
       {activeTab === 'penalties' && (
         <div>
-          {canManage && (
+          {canManagePenalties && (
             <div className="mb-4">
               <button
                 onClick={() => setShowPenaltyModal(true)}
@@ -954,16 +960,42 @@ export default function PayrollPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Сумма (руб.)</label>
-                  <input
-                    type="number"
-                    value={penaltyForm.amount}
-                    onChange={(e) => setPenaltyForm({ ...penaltyForm, amount: Number(e.target.value) })}
-                    className="w-full border rounded-lg px-3 py-2"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Сумма штрафа (руб.)</label>
+                  <div className="grid grid-cols-5 gap-2 mb-2">
+                    {[200, 400, 600, 800, 1000].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setPenaltyForm({ ...penaltyForm, amount: amt })}
+                        className={`px-2 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                          penaltyForm.amount === amt
+                            ? 'bg-red-600 text-white border-red-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {amt} ₽
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setPenaltyForm({ ...penaltyForm, amount: amt })}
+                        className={`px-2 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                          penaltyForm.amount === amt
+                            ? 'bg-red-600 text-white border-red-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {amt} ₽
+                      </button>
+                    ))}
+                  </div>
+                  {penaltyForm.amount === 0 && (
+                    <p className="text-xs text-red-500 mt-1">Выберите сумму штрафа</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Причина</label>

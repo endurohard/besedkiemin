@@ -85,3 +85,6 @@ export const STAGE_TO_NAME: Record<string, string> = {
 export function isDepartmentAccount(user: { isDepartmentAccount?: boolean }): boolean {
   return user.isDepartmentAccount === true;
 }
+
+// Predefined penalty amounts (in rubles)
+export const PENALTY_AMOUNTS = [200, 400, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000];

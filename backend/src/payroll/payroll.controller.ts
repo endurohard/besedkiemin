@@ -27,6 +27,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import { PayrollStatus, ProductionStage } from '@prisma/client';
+import { PENALTY_AMOUNTS } from '../common/constants';
 
 @Controller('payroll')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -100,8 +101,13 @@ export class PayrollController {
 
   // ==================== ШТРАФЫ ====================
 
+  @Get('penalties/amounts')
+  getPenaltyAmounts() {
+    return { amounts: PENALTY_AMOUNTS };
+  }
+
   @Get('penalties')
-  @Roles('SUPER_ADMIN', 'OWNER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'WAREHOUSE')
   findAllPenalties(
     @Query('userId') userId?: string,
     @Query('startDate') startDate?: string,
@@ -117,7 +123,7 @@ export class PayrollController {
   }
 
   @Post('penalties')
-  @Roles('SUPER_ADMIN', 'OWNER')
+  @Roles('SUPER_ADMIN', 'OWNER', 'WAREHOUSE')
   createPenalty(@Body() dto: CreatePenaltyDto, @Request() req: any) {
     return this.payrollService.createPenalty(dto, req.user.id);
   }

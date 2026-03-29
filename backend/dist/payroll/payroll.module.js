@@ -11,12 +11,13 @@ const common_1 = require("@nestjs/common");
 const payroll_controller_1 = require("./payroll.controller");
 const payroll_service_1 = require("./payroll.service");
 const prisma_module_1 = require("../prisma/prisma.module");
+const telegram_module_1 = require("../telegram/telegram.module");
 let PayrollModule = class PayrollModule {
 };
 exports.PayrollModule = PayrollModule;
 exports.PayrollModule = PayrollModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [prisma_module_1.PrismaModule, telegram_module_1.TelegramModule],
         controllers: [payroll_controller_1.PayrollController],
         providers: [payroll_service_1.PayrollService],
         exports: [payroll_service_1.PayrollService],

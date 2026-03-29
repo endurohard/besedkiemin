@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, IsNumber, IsIn } from 'class-validator';
 import { QualityStatus, ProductionStage } from '@prisma/client';
+import { PENALTY_AMOUNTS } from '../../common/constants';
 
 export class CreateQualityCheckDto {
   @ApiProperty({ example: 'uuid-product-id' })
@@ -21,4 +22,10 @@ export class CreateQualityCheckDto {
   @IsEnum(ProductionStage)
   @IsOptional()
   returnToStage?: ProductionStage;
+
+  @ApiProperty({ required: false, description: 'Сумма штрафа при браке (из предопределённого списка)' })
+  @IsOptional()
+  @IsNumber()
+  @IsIn(PENALTY_AMOUNTS, { message: 'Сумма штрафа должна быть из предопределённого списка' })
+  penaltyAmount?: number;
 }

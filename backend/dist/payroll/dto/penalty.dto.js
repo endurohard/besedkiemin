@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CancelPenaltyDto = exports.UpdatePenaltyDto = exports.CreatePenaltyDto = void 0;
 const class_validator_1 = require("class-validator");
+const constants_1 = require("../../common/constants");
 class CreatePenaltyDto {
 }
 exports.CreatePenaltyDto = CreatePenaltyDto;
@@ -20,7 +21,7 @@ __decorate([
 ], CreatePenaltyDto.prototype, "userId", void 0);
 __decorate([
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsIn)(constants_1.PENALTY_AMOUNTS, { message: 'Сумма штрафа должна быть из предопределённого списка' }),
     __metadata("design:type", Number)
 ], CreatePenaltyDto.prototype, "amount", void 0);
 __decorate([
@@ -48,7 +49,7 @@ exports.UpdatePenaltyDto = UpdatePenaltyDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsIn)(constants_1.PENALTY_AMOUNTS, { message: 'Сумма штрафа должна быть из предопределённого списка' }),
     __metadata("design:type", Number)
 ], UpdatePenaltyDto.prototype, "amount", void 0);
 __decorate([

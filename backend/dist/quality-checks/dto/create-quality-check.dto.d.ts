@@ -4,4 +4,5 @@ export declare class CreateQualityCheckDto {
     status: QualityStatus;
     notes?: string;
     returnToStage?: ProductionStage;
+    penaltyAmount?: number;
 }

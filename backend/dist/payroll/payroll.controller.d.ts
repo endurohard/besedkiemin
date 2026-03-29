@@ -113,7 +113,7 @@ export declare class PayrollController {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         nomenclature: {
             description: string | null;
             name: string;
@@ -131,7 +131,7 @@ export declare class PayrollController {
             weight: number | null;
             basePrice: number | null;
             discontinuedAt: Date | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -141,7 +141,7 @@ export declare class PayrollController {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -164,7 +164,7 @@ export declare class PayrollController {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         nomenclature: {
             description: string | null;
             name: string;
@@ -182,7 +182,7 @@ export declare class PayrollController {
             weight: number | null;
             basePrice: number | null;
             discontinuedAt: Date | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -192,7 +192,7 @@ export declare class PayrollController {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -205,7 +205,7 @@ export declare class PayrollController {
         nomenclatureId: string | null;
         pricePerUnit: number;
     })[]>;
-    findWorkRate(productTypeId: string, stage: ProductionStage): Promise<{
+    findWorkRate(productTypeId: string, stage: ProductionStage): Promise<({
         productType: {
             description: string | null;
             name: string;
@@ -215,7 +215,7 @@ export declare class PayrollController {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -225,7 +225,7 @@ export declare class PayrollController {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -237,7 +237,7 @@ export declare class PayrollController {
         productTypeId: string | null;
         nomenclatureId: string | null;
         pricePerUnit: number;
-    }>;
+    }) | null>;
     createWorkRate(dto: CreateWorkRateDto): Promise<{
         productType: {
             description: string | null;
@@ -248,7 +248,7 @@ export declare class PayrollController {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         nomenclature: {
             description: string | null;
             name: string;
@@ -266,7 +266,7 @@ export declare class PayrollController {
             weight: number | null;
             basePrice: number | null;
             discontinuedAt: Date | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -276,7 +276,7 @@ export declare class PayrollController {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -299,7 +299,7 @@ export declare class PayrollController {
             updatedAt: Date;
             requiresSewing: boolean;
             productionTimeHours: number | null;
-        };
+        } | null;
         workflowStage: {
             description: string | null;
             order: number;
@@ -309,7 +309,7 @@ export declare class PayrollController {
             createdAt: Date;
             updatedAt: Date;
             legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-        };
+        } | null;
     } & {
         description: string | null;
         isActive: boolean;
@@ -325,6 +325,9 @@ export declare class PayrollController {
     deleteWorkRate(id: string): Promise<{
         success: boolean;
     }>;
+    getPenaltyAmounts(): {
+        amounts: number[];
+    };
     findAllPenalties(userId?: string, startDate?: string, endDate?: string, includeCancelled?: string): Promise<({
         user: {
             role: {
@@ -357,7 +360,7 @@ export declare class PayrollController {
             };
             name: string;
             id: string;
-        };
+        } | null;
         createdBy: {
             firstName: string;
             lastName: string;
@@ -371,8 +374,8 @@ export declare class PayrollController {
         productId: string | null;
         createdById: string;
         userId: string;
-        reason: string;
         amount: number;
+        reason: string;
         date: Date;
         isCancelled: boolean;
         cancelledAt: Date | null;
@@ -414,8 +417,9 @@ export declare class PayrollController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
-        };
+        } | null;
         createdBy: {
             firstName: string;
             lastName: string;
@@ -429,8 +433,8 @@ export declare class PayrollController {
         productId: string | null;
         createdById: string;
         userId: string;
-        reason: string;
         amount: number;
+        reason: string;
         date: Date;
         isCancelled: boolean;
         cancelledAt: Date | null;
@@ -448,6 +452,8 @@ export declare class PayrollController {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -473,8 +479,9 @@ export declare class PayrollController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
-        };
+        } | null;
         createdBy: {
             email: string;
             password: string;
@@ -485,6 +492,8 @@ export declare class PayrollController {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -502,8 +511,8 @@ export declare class PayrollController {
         productId: string | null;
         createdById: string;
         userId: string;
-        reason: string;
         amount: number;
+        reason: string;
         date: Date;
         isCancelled: boolean;
         cancelledAt: Date | null;
@@ -518,8 +527,8 @@ export declare class PayrollController {
         productId: string | null;
         createdById: string;
         userId: string;
-        reason: string;
         amount: number;
+        reason: string;
         date: Date;
         isCancelled: boolean;
         cancelledAt: Date | null;
@@ -539,7 +548,7 @@ export declare class PayrollController {
             permissions: import("@prisma/client/runtime/library").JsonValue;
             createdAt: Date;
             updatedAt: Date;
-        };
+        } | null;
         user: {
             role: {
                 description: string | null;
@@ -557,7 +566,7 @@ export declare class PayrollController {
             firstName: string;
             lastName: string;
             id: string;
-        };
+        } | null;
     } & {
         roleId: string | null;
         isActive: boolean;
@@ -569,7 +578,7 @@ export declare class PayrollController {
         commissionPercent: number;
         minOrderAmount: number | null;
     })[]>;
-    findManagerCommission(userId: string): Promise<{
+    findManagerCommission(userId: string): Promise<({
         role: {
             description: string | null;
             order: number;
@@ -582,7 +591,7 @@ export declare class PayrollController {
             permissions: import("@prisma/client/runtime/library").JsonValue;
             createdAt: Date;
             updatedAt: Date;
-        };
+        } | null;
         user: {
             email: string;
             password: string;
@@ -593,6 +602,8 @@ export declare class PayrollController {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -601,7 +612,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
-        };
+        } | null;
     } & {
         roleId: string | null;
         isActive: boolean;
@@ -612,7 +623,7 @@ export declare class PayrollController {
         baseSalary: number;
         commissionPercent: number;
         minOrderAmount: number | null;
-    }>;
+    }) | null>;
     createManagerCommission(dto: CreateManagerCommissionDto): Promise<{
         role: {
             description: string | null;
@@ -626,7 +637,7 @@ export declare class PayrollController {
             permissions: import("@prisma/client/runtime/library").JsonValue;
             createdAt: Date;
             updatedAt: Date;
-        };
+        } | null;
         user: {
             email: string;
             password: string;
@@ -637,6 +648,8 @@ export declare class PayrollController {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -645,7 +658,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
-        };
+        } | null;
     } & {
         roleId: string | null;
         isActive: boolean;
@@ -670,7 +683,7 @@ export declare class PayrollController {
             permissions: import("@prisma/client/runtime/library").JsonValue;
             createdAt: Date;
             updatedAt: Date;
-        };
+        } | null;
         user: {
             email: string;
             password: string;
@@ -681,6 +694,8 @@ export declare class PayrollController {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -689,7 +704,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
-        };
+        } | null;
     } & {
         roleId: string | null;
         isActive: boolean;
@@ -750,6 +765,7 @@ export declare class PayrollController {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             };
         } & {
@@ -765,9 +781,9 @@ export declare class PayrollController {
             totalAmount: number;
             productTypeId: string;
             userId: string;
-            pricePerUnit: number;
             payrollPeriodId: string | null;
             taskId: string | null;
+            pricePerUnit: number;
         })[];
         penalties: {
             id: string;
@@ -777,8 +793,8 @@ export declare class PayrollController {
             productId: string | null;
             createdById: string;
             userId: string;
-            reason: string;
             amount: number;
+            reason: string;
             date: Date;
             isCancelled: boolean;
             cancelledAt: Date | null;
@@ -793,13 +809,13 @@ export declare class PayrollController {
         notes: string | null;
         totalAmount: number;
         userId: string;
+        penaltyAmount: number;
         periodStart: Date;
         periodEnd: Date;
         baseSalary: number;
         workAmount: number;
         commissionAmount: number;
         ordersAmount: number;
-        penaltyAmount: number;
         approvedById: string | null;
         approvedAt: Date | null;
         paidById: string | null;
@@ -868,6 +884,7 @@ export declare class PayrollController {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             };
             task: {
@@ -890,7 +907,7 @@ export declare class PayrollController {
                 productId: string;
                 assignedToId: string;
                 workflowStageId: string | null;
-            };
+            } | null;
         } & {
             id: string;
             createdAt: Date;
@@ -904,9 +921,9 @@ export declare class PayrollController {
             totalAmount: number;
             productTypeId: string;
             userId: string;
-            pricePerUnit: number;
             payrollPeriodId: string | null;
             taskId: string | null;
+            pricePerUnit: number;
         })[];
         penalties: ({
             product: {
@@ -925,8 +942,9 @@ export declare class PayrollController {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
-            };
+            } | null;
             createdBy: {
                 firstName: string;
                 lastName: string;
@@ -940,8 +958,8 @@ export declare class PayrollController {
             productId: string | null;
             createdById: string;
             userId: string;
-            reason: string;
             amount: number;
+            reason: string;
             date: Date;
             isCancelled: boolean;
             cancelledAt: Date | null;
@@ -956,13 +974,13 @@ export declare class PayrollController {
         notes: string | null;
         totalAmount: number;
         userId: string;
+        penaltyAmount: number;
         periodStart: Date;
         periodEnd: Date;
         baseSalary: number;
         workAmount: number;
         commissionAmount: number;
         ordersAmount: number;
-        penaltyAmount: number;
         approvedById: string | null;
         approvedAt: Date | null;
         paidById: string | null;
@@ -982,6 +1000,8 @@ export declare class PayrollController {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -999,13 +1019,13 @@ export declare class PayrollController {
         notes: string | null;
         totalAmount: number;
         userId: string;
+        penaltyAmount: number;
         periodStart: Date;
         periodEnd: Date;
         baseSalary: number;
         workAmount: number;
         commissionAmount: number;
         ordersAmount: number;
-        penaltyAmount: number;
         approvedById: string | null;
         approvedAt: Date | null;
         paidById: string | null;
@@ -1024,6 +1044,8 @@ export declare class PayrollController {
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
             isActive: boolean;
             telegramId: string | null;
             id: string;
@@ -1041,13 +1063,13 @@ export declare class PayrollController {
         notes: string | null;
         totalAmount: number;
         userId: string;
+        penaltyAmount: number;
         periodStart: Date;
         periodEnd: Date;
         baseSalary: number;
         workAmount: number;
         commissionAmount: number;
         ordersAmount: number;
-        penaltyAmount: number;
         approvedById: string | null;
         approvedAt: Date | null;
         paidById: string | null;
@@ -1110,6 +1132,7 @@ export declare class PayrollController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         task: {
@@ -1132,7 +1155,7 @@ export declare class PayrollController {
             productId: string;
             assignedToId: string;
             workflowStageId: string | null;
-        };
+        } | null;
     } & {
         id: string;
         createdAt: Date;
@@ -1146,9 +1169,9 @@ export declare class PayrollController {
         totalAmount: number;
         productTypeId: string;
         userId: string;
-        pricePerUnit: number;
         payrollPeriodId: string | null;
         taskId: string | null;
+        pricePerUnit: number;
     })[]>;
     getPayrollSummary(periodStart: string, periodEnd: string): Promise<{
         period: {
@@ -1173,4 +1196,19 @@ export declare class PayrollController {
             workLogsCount: number;
         }[];
     }>;
+    getWorkerStats(startDate: string, endDate: string): Promise<{
+        userId: string;
+        firstName: string;
+        lastName: string;
+        roleCode: string;
+        paymentType: import(".prisma/client").$Enums.PaymentType;
+        monthlySalary: number | null;
+        itemsCompleted: number;
+        workAmount: number;
+        penaltyAmount: number;
+        penaltyCount: number;
+        netAmount: number;
+        efficiencyCoefficient: number | null;
+        workLogsCount: number;
+    }[]>;
 }
