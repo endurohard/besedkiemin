@@ -37,7 +37,11 @@ export class CreateNomenclatureDto {
 
   @IsOptional()
   @IsNumber()
-  basePrice?: number;
+  costPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  retailPrice?: number;
 
   @IsOptional()
   @IsNumber()

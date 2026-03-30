@@ -216,7 +216,8 @@ export interface Nomenclature {
   color?: string;
   upholsteryMaterial?: string; // Материал обшивки (ткань/кожа)
   weight?: number;
-  basePrice?: number;
+  costPrice?: number;
+  retailPrice?: number;
   productionTimeHours?: number;
   isActive: boolean;
   discontinuedAt?: string | null; // Дата прекращения выпуска
@@ -234,7 +235,8 @@ export interface CreateNomenclatureDto {
   color?: string;
   upholsteryMaterial?: string; // Материал обшивки
   weight?: number;
-  basePrice?: number;
+  costPrice?: number;
+  retailPrice?: number;
   productionTimeHours?: number;
   isActive?: boolean;
 }

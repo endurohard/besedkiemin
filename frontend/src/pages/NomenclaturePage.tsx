@@ -24,7 +24,8 @@ export const NomenclaturePage = () => {
     color: '',
     upholsteryMaterial: '',
     weight: undefined,
-    basePrice: undefined,
+    costPrice: undefined,
+    retailPrice: undefined,
     productionTimeHours: undefined,
   });
 
@@ -90,7 +91,8 @@ export const NomenclaturePage = () => {
       color: '',
       upholsteryMaterial: '',
       weight: undefined,
-      basePrice: undefined,
+      costPrice: undefined,
+    retailPrice: undefined,
       productionTimeHours: undefined,
     });
   };
@@ -120,7 +122,8 @@ export const NomenclaturePage = () => {
       color: item.color || '',
       upholsteryMaterial: item.upholsteryMaterial || '',
       weight: item.weight || undefined,
-      basePrice: item.basePrice || undefined,
+      costPrice: item.costPrice || undefined,
+      retailPrice: item.retailPrice || undefined,
       productionTimeHours: item.productionTimeHours || undefined,
     });
     setIsCreateModalOpen(true);
@@ -217,7 +220,7 @@ export const NomenclaturePage = () => {
                     <th className="px-4 py-2 font-medium">Название</th>
                     <th className="px-4 py-2 font-medium">Артикул</th>
                     <th className="px-4 py-2 font-medium">Размеры</th>
-                    <th className="px-4 py-2 font-medium">Цена</th>
+                    <th className="px-4 py-2 font-medium">Себестоимость / Розница</th>
                     <th className="px-4 py-2 font-medium">Статус</th>
                     <th className="px-4 py-2 font-medium text-right">Действия</th>
                   </tr>
@@ -236,7 +239,7 @@ export const NomenclaturePage = () => {
                       <td className="px-4 py-3 text-sm">{item.sku || '-'}</td>
                       <td className="px-4 py-3 text-sm">{item.dimensions || '-'}</td>
                       <td className="px-4 py-3 text-sm">
-                        {item.basePrice ? `${item.basePrice.toLocaleString()} ₽` : '-'}
+                        {item.costPrice ? `${item.costPrice.toLocaleString()} ₽` : '-'} / {item.retailPrice ? `${item.retailPrice.toLocaleString()} ₽` : '-'}
                       </td>
                       <td className="px-4 py-3">
                         <button
@@ -399,12 +402,22 @@ export const NomenclaturePage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Цена (₽)</label>
+                  <label className="block text-sm font-medium mb-1">Себестоимость (₽)</label>
                   <Input
                     type="number"
-                    value={formData.basePrice || ''}
-                    onChange={(e) => setFormData({ ...formData, basePrice: e.target.value ? parseFloat(e.target.value) : undefined })}
-                    placeholder="50000"
+                    value={formData.costPrice || ''}
+                    onChange={(e) => setFormData({ ...formData, costPrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+                    placeholder="Себестоимость"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Розница (₽)</label>
+                  <input
+                    type="number"
+                    className="w-full border rounded-lg px-3 py-2"
+                    value={formData.retailPrice || ''}
+                    onChange={(e) => setFormData({ ...formData, retailPrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+                    placeholder="Розничная цена"
                   />
                 </div>
                 <div>

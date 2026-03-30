@@ -287,7 +287,8 @@ model Nomenclature {
   weight             Float? // Вес в кг
 
   // Цены
-  basePrice Float? @map("base_price") // Базовая цена
+  costPrice   Float? @map("cost_price")   // Себестоимость
+  retailPrice Float? @map("retail_price") // Розничная цена
 
   // Нормативное время производства (в часах), переопределяет время из типа
   productionTimeHours Float? @map("production_time_hours")
