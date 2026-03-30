@@ -41,7 +41,7 @@ export class CatalogProductsController {
   ) {
     return this.productsService.findAll({
       categoryId,
-      isFeatured: isFeatured === 'true',
+      isFeatured: isFeatured !== undefined ? isFeatured === 'true' : undefined,
       includeInactive: includeInactive === 'true',
     });
   }
