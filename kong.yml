@@ -37,6 +37,14 @@ services:
         protocols:
           - http
           - https
+      - name: backend-uploads-route
+        paths:
+          - /uploads
+        strip_path: false
+        preserve_host: false
+        protocols:
+          - http
+          - https
     plugins:
       - name: cors
         config:

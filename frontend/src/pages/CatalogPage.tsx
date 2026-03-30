@@ -11,18 +11,18 @@ import api, { featureFlagsApi } from '../lib/api';
 import { FeatureFlagsMap } from '../types';
 
 const sampleProducts = [
-  { id: '1', name: 'Беседка восьмигранник', description: 'Классическая восьмигранная беседка из натурального дерева', price: 285000, image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800', category: 'Беседки', dimensions: '3.5x3.5 м' },
-  { id: '2', name: 'Беседка стандартная', description: 'Просторная беседка для семейного отдыха', price: 195000, image: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?w=800', category: 'Беседки', dimensions: '3x4 м' },
-  { id: '3', name: 'Беседка с мангальной зоной', description: 'Беседка с встроенной зоной для приготовления шашлыка', price: 345000, image: 'https://images.unsplash.com/photo-1600585154084-4e5fe7c39198?w=800', category: 'Беседки', dimensions: '4x5 м' },
-  { id: '4', name: 'Арка садовая', description: 'Декоративная арка для сада из массива дерева', price: 35000, image: 'https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?w=800', category: 'Арки и навесы', dimensions: '2.5x1.2 м' },
-  { id: '5', name: 'Пергола', description: 'Элегантная пергола для создания тени', price: 125000, image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800', category: 'Арки и навесы', dimensions: '3x3 м' },
-  { id: '6', name: 'Качеля-лавочка', description: 'Удобные парковые качели на 3 человека', price: 45000, image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800', category: 'Качели', dimensions: '2x1.5 м' },
-  { id: '7', name: 'Тахта садовая', description: 'Удобная тахта для отдыха на свежем воздухе', price: 28500, image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800', category: 'Мебель', dimensions: '180x80 см' },
-  { id: '8', name: 'Кресло-качалка Лорд', description: 'Классическое кресло-качалка из массива', price: 18500, image: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=800', category: 'Мебель', dimensions: '70x90 см' },
-  { id: '9', name: 'Стол кафельный', description: 'Прочный стол с керамической плиткой', price: 22000, image: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=800', category: 'Мебель', dimensions: '120x80 см' },
-  { id: '10', name: 'Вазон садовый', description: 'Декоративный вазон для цветов из дерева', price: 8500, image: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800', category: 'Вазоны', dimensions: '50x50 см' },
-  { id: '11', name: 'Навес для автомобиля', description: 'Прочный деревянный навес для машины', price: 185000, image: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800', category: 'Арки и навесы', dimensions: '6x3 м' },
-  { id: '12', name: 'Лежак парковый', description: 'Комфортный лежак для отдыха у бассейна', price: 15900, image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=800', category: 'Мебель', dimensions: '180x60 см' },
+  { id: '1', name: 'Беседка восьмигранник', description: 'Классическая восьмигранная беседка из натурального дерева', price: 285000, image: '/uploads/catalog/besedka_8.jpg', category: 'Беседки', dimensions: '3.5x3.5 м' },
+  { id: '2', name: 'Беседка стандартная', description: 'Просторная беседка для семейного отдыха', price: 195000, image: '/uploads/catalog/besedka_std.jpg', category: 'Беседки', dimensions: '3x4 м' },
+  { id: '3', name: 'Беседка с мангальной зоной', description: 'Беседка с встроенной зоной для приготовления шашлыка', price: 345000, image: '/uploads/catalog/besedka_mangal.jpg', category: 'Беседки', dimensions: '4x5 м' },
+  { id: '4', name: 'Арка садовая', description: 'Декоративная арка для сада из массива дерева', price: 35000, image: '/uploads/catalog/arka.jpg', category: 'Арки и навесы', dimensions: '2.5x1.2 м' },
+  { id: '5', name: 'Пергола', description: 'Элегантная пергола для создания тени', price: 125000, image: '/uploads/catalog/pergola.jpg', category: 'Арки и навесы', dimensions: '3x3 м' },
+  { id: '6', name: 'Качеля-лавочка', description: 'Удобные парковые качели на 3 человека', price: 45000, image: '/uploads/catalog/kacheli.jpg', category: 'Качели', dimensions: '2x1.5 м' },
+  { id: '7', name: 'Тахта садовая', description: 'Удобная тахта для отдыха на свежем воздухе', price: 28500, image: '/uploads/catalog/tahta.jpg', category: 'Мебель', dimensions: '180x80 см' },
+  { id: '8', name: 'Кресло-качалка Лорд', description: 'Классическое кресло-качалка из массива', price: 18500, image: '/uploads/catalog/kreslo.jpg', category: 'Мебель', dimensions: '70x90 см' },
+  { id: '9', name: 'Стол кафельный', description: 'Прочный стол с керамической плиткой', price: 22000, image: '/uploads/catalog/stol.jpg', category: 'Мебель', dimensions: '120x80 см' },
+  { id: '10', name: 'Вазон садовый', description: 'Декоративный вазон для цветов из дерева', price: 8500, image: '/uploads/catalog/vazon.jpg', category: 'Вазоны', dimensions: '50x50 см' },
+  { id: '11', name: 'Навес для автомобиля', description: 'Прочный деревянный навес для машины', price: 185000, image: '/uploads/catalog/naves.jpg', category: 'Арки и навесы', dimensions: '6x3 м' },
+  { id: '12', name: 'Лежак парковый', description: 'Комфортный лежак для отдыха у бассейна', price: 15900, image: '/uploads/catalog/lezhak.jpg', category: 'Мебель', dimensions: '180x60 см' },
 ];
 
 const CATEGORIES = ['Все', 'Беседки', 'Арки и навесы', 'Качели', 'Мебель', 'Вазоны'];
@@ -145,7 +145,7 @@ const CatalogPage: React.FC = () => {
 
       {/* Hero */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80')" }} />
+        <div className="absolute inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: "url('/uploads/catalog/hero.jpg')" }} />
         <div className="absolute inset-0 bg-gradient-to-b from-[#111]/80 via-[#111]/60 to-[#111]" />
         {/* Decorative gold lines */}
         <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#C5A55A]/20 to-transparent" />
