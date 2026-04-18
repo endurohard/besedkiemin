@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as fs from 'fs';
@@ -25,7 +25,7 @@ export class UploadService {
       fileFilter: (req, file, callback) => {
         // Разрешаем только изображения
         if (!file.originalname.match(FILE_UPLOAD.ALLOWED_EXTENSIONS)) {
-          return callback(new Error('Разрешены только изображения!'), false);
+          return callback(new BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
         }
         callback(null, true);
       },

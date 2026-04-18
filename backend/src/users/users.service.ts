@@ -11,11 +11,17 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserEntity> {
+    // Auto-generate email if not provided
+    if (!createUserDto.email) {
+      createUserDto.email = `worker_${Date.now()}@internal`;
+    }
+
     const hashedPassword = await bcrypt.hash(createUserDto.password, AUTH.BCRYPT_SALT_ROUNDS);
 
     const user = await this.prisma.user.create({
       data: {
         ...createUserDto,
+        email: createUserDto.email!,
         password: hashedPassword,
       },
     });

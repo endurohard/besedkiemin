@@ -8,6 +8,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatModule = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
+const config_1 = require("@nestjs/config");
 const chat_service_1 = require("./chat.service");
 const chat_gateway_1 = require("./chat.gateway");
 const chat_controller_1 = require("./chat.controller");
@@ -20,7 +22,17 @@ let ChatModule = class ChatModule {
 exports.ChatModule = ChatModule;
 exports.ChatModule = ChatModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, telegram_module_1.TelegramModule],
+        imports: [
+            prisma_module_1.PrismaModule,
+            telegram_module_1.TelegramModule,
+            jwt_1.JwtModule.registerAsync({
+                imports: [config_1.ConfigModule],
+                useFactory: (configService) => ({
+                    secret: configService.get('JWT_SECRET'),
+                }),
+                inject: [config_1.ConfigService],
+            }),
+        ],
         controllers: [chat_controller_1.ChatController, callback_controller_1.CallbackController],
         providers: [chat_service_1.ChatService, callback_service_1.CallbackService, chat_gateway_1.ChatGateway],
         exports: [chat_service_1.ChatService, callback_service_1.CallbackService],

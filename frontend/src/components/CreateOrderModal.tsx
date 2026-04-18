@@ -35,6 +35,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     queryKey: ['product-types'],
     queryFn: () => productTypesApi.getAll(),
     enabled: isOpen,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
   });
 
   // Fetch order sources
@@ -49,6 +51,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     queryKey: ['nomenclature'],
     queryFn: () => nomenclatureApi.getAll(),
     enabled: isOpen,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
   });
 
   // Fetch production workers for all stages
@@ -101,8 +105,12 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
           // Загружаем фото схемы, если есть
           let schemaImageUrl = product.schemaImageUrl;
           if (product.schemaFile) {
-            const uploadResult = await uploadApi.uploadSchemaImage(product.schemaFile);
-            schemaImageUrl = uploadResult.url;
+            try {
+              const uploadResult = await uploadApi.uploadSchemaImage(product.schemaFile);
+              schemaImageUrl = uploadResult.url;
+            } catch (err) {
+              console.warn('Не удалось загрузить фото схемы, продукт будет создан без неё:', err);
+            }
           }
 
           await productsApi.create({
@@ -167,7 +175,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
   };
 
   const addProduct = () => {
-    setProducts([...products, { nomenclatureId: '', name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '', requiresSewing: null, color: '', upholsteryMaterial: '', stageAssignments: {} }]);
+    setProducts([{ nomenclatureId: '', name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '', requiresSewing: null, color: '', upholsteryMaterial: '', stageAssignments: {} }, ...products]);
   };
 
   // Обработчик выбора из номенклатуры

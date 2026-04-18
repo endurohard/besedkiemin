@@ -1,19 +1,41 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ordersApi, productsApi, tasksApi } from '@/lib/api';
+import { ordersApi, productsApi, tasksApi, productTypesApi, nomenclatureApi, uploadApi, usersApi } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { OrderStatus, ProductionStage, Product, Order } from '@/types';
+import { OrderStatus, ProductionStage, Product, Order, Nomenclature, User } from '@/types';
 import { useAuthStore } from '@/store/authStore';
-import { Package, Clock, CheckCircle, ArrowRight, Plus, Search, Calendar, X } from 'lucide-react';
+import { Package, Clock, CheckCircle, ArrowRight, Plus, Search, Calendar, X, Trash2, Pencil, Eye } from 'lucide-react';
 import { CreateOrderModal } from '@/components/CreateOrderModal';
 import { getPriorityLabel, getPriorityColor, getPrioritySortOrder } from '@/lib/priority-utils';
+
+// Product form for adding/editing products in order
+interface ProductEditForm {
+  id?: string; // existing product id
+  nomenclatureId?: string;
+  name: string;
+  productTypeId: string;
+  quantity: number;
+  dimensions?: string;
+  color?: string;
+  upholsteryMaterial?: string;
+  schemaImageUrl?: string;
+  schemaFile?: File;
+  stageAssignments?: Record<string, string>;
+  isNew?: boolean; // flag for new products
+  stage?: ProductionStage; // track current stage for safety checks
+}
 
 export const KanbanPage = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '' });
+  const [editProducts, setEditProducts] = useState<ProductEditForm[]>([]);
+  const [productsToDelete, setProductsToDelete] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const [dateFrom, setDateFrom] = useState('');
@@ -22,17 +44,55 @@ export const KanbanPage = () => {
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders'],
     queryFn: () => ordersApi.getAll(),
+    refetchInterval: 15000,
   });
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => productsApi.getAll(),
+    refetchInterval: 15000,
   });
+
+  // Product types for editing
+  const { data: productTypes = [] } = useQuery({
+    queryKey: ['product-types'],
+    queryFn: () => productTypesApi.getAll(),
+    enabled: !!selectedOrder,
+  });
+
+  // Nomenclature for product selection
+  const { data: nomenclature = [] } = useQuery({
+    queryKey: ['nomenclature'],
+    queryFn: () => nomenclatureApi.getAll(),
+    enabled: !!selectedOrder && isEditing,
+  });
+
+  // Workers for stage assignments
+  const { data: allWorkers = [] } = useQuery({
+    queryKey: ['production-workers'],
+    queryFn: () => usersApi.getAll(),
+    enabled: !!selectedOrder && isEditing,
+  });
+
+  const workersByRole: Record<string, User[]> = {
+    PREPARER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PREPARER'),
+    PAINTER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PAINTER'),
+    SEWER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'SEWER'),
+    ASSEMBLER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'ASSEMBLER'),
+  };
+
+  const stageConfig = [
+    { stage: 'PREPARATION', role: 'PREPARER', label: 'Заготовщик', icon: '🪚' },
+    { stage: 'PAINTING', role: 'PAINTER', label: 'Маляр', icon: '🎨' },
+    { stage: 'SEWING', role: 'SEWER', label: 'Швея', icon: '🧵' },
+    { stage: 'ASSEMBLY', role: 'ASSEMBLER', label: 'Сборщик', icon: '🔧' },
+  ];
 
   // Получаем задачи текущего пользователя для фильтрации
   const { data: myTasks = [] } = useQuery({
     queryKey: ['my-tasks'],
     queryFn: () => tasksApi.getMyTasks(),
+    refetchInterval: 15000,
     enabled: user?.role?.code !== 'OWNER' && user?.role?.code !== 'MANAGER',
   });
 
@@ -44,6 +104,239 @@ export const KanbanPage = () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
   });
+
+  const deleteOrderMutation = useMutation({
+    mutationFn: (orderId: string) => ordersApi.delete(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+
+  const handleDeleteOrder = (order: Order) => {
+    if (!confirm(`Вы уверены, что хотите удалить заказ ${order.orderNumber}? Все продукты и связанные данные будут удалены безвозвратно.`)) return;
+    deleteOrderMutation.mutate(order.id);
+    if (selectedOrder?.id === order.id) {
+      setSelectedOrder(null);
+      setIsEditing(false);
+    }
+  };
+
+  const updateOrderMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => ordersApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+
+  const createProductMutation = useMutation({
+    mutationFn: (data: any) => productsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => productsApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: (id: string) => productsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+
+  // Open order detail modal (view mode) — fetch full order data
+  const handleOpenOrder = async (order: Order) => {
+    setSelectedOrder(order); // show immediately with partial data
+    setIsEditing(false);
+    setProductsToDelete([]);
+    try {
+      const fullOrder = await ordersApi.getOne(order.id);
+      setSelectedOrder(fullOrder);
+    } catch (e) {
+      console.error('Failed to fetch order details:', e);
+    }
+  };
+
+  // Switch to edit mode
+  const handleStartEdit = () => {
+    if (!selectedOrder) return;
+    setIsEditing(true);
+    setEditOrderForm({
+      customerName: selectedOrder.customerName || '',
+      customerPhone: selectedOrder.customerPhone || '',
+      customerAddress: selectedOrder.customerAddress || '',
+      description: selectedOrder.description || '',
+      totalAmount: selectedOrder.totalAmount ? String(selectedOrder.totalAmount) : '',
+      priority: selectedOrder.priority || 'NORMAL',
+      sourceId: selectedOrder.sourceId || '',
+    });
+    // Load existing products into edit form
+    const existingProducts: ProductEditForm[] = (selectedOrder.products || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      productTypeId: p.productTypeId || '',
+      quantity: p.quantity,
+      dimensions: p.dimensions || '',
+      color: p.color || '',
+      upholsteryMaterial: p.upholsteryMaterial || '',
+      schemaImageUrl: p.schemaImageUrl || '',
+      isNew: false,
+      stage: p.stage,
+    }));
+    setEditProducts(existingProducts);
+    setProductsToDelete([]);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedOrder(null);
+    setIsEditing(false);
+    setEditProducts([]);
+    setProductsToDelete([]);
+  };
+
+  const handleAddProduct = () => {
+    setEditProducts([
+      {
+        nomenclatureId: '',
+        name: '',
+        productTypeId: '',
+        quantity: 1,
+        dimensions: '',
+        color: '',
+        upholsteryMaterial: '',
+        schemaImageUrl: '',
+        stageAssignments: {},
+        isNew: true,
+      },
+      ...editProducts,
+    ]);
+  };
+
+  const handleRemoveProduct = (index: number) => {
+    const product = editProducts[index];
+    if (product.id && product.stage && product.stage !== ProductionStage.PENDING) {
+      if (!confirm(`Позиция "${product.name}" уже в работе (этап: ${getStageName(product.stage)}). Удалить? Все связанные задачи будут потеряны.`)) {
+        return;
+      }
+    }
+    if (product.id) {
+      setProductsToDelete([...productsToDelete, product.id]);
+    }
+    setEditProducts(editProducts.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateProductField = (index: number, field: keyof ProductEditForm, value: any) => {
+    const updated = [...editProducts];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditProducts(updated);
+  };
+
+  const handleNomenclatureSelect = (index: number, nomenclatureId: string) => {
+    const item = nomenclature.find((n: Nomenclature) => n.id === nomenclatureId);
+    if (item) {
+      const updated = [...editProducts];
+      updated[index] = {
+        ...updated[index],
+        nomenclatureId,
+        name: item.name,
+        productTypeId: item.productTypeId,
+        dimensions: item.dimensions || '',
+        color: item.color || '',
+        upholsteryMaterial: item.upholsteryMaterial || '',
+      };
+      setEditProducts(updated);
+    } else {
+      const updated = [...editProducts];
+      updated[index] = {
+        ...updated[index],
+        nomenclatureId: '',
+      };
+      setEditProducts(updated);
+    }
+  };
+
+  const handleSaveOrder = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      // 1. Update order metadata
+      await updateOrderMutation.mutateAsync({
+        id: selectedOrder.id,
+        data: {
+          customerName: editOrderForm.customerName,
+          customerPhone: editOrderForm.customerPhone,
+          customerAddress: editOrderForm.customerAddress,
+          description: editOrderForm.description,
+          totalAmount: editOrderForm.totalAmount ? parseFloat(editOrderForm.totalAmount) : undefined,
+          priority: editOrderForm.priority,
+          sourceId: editOrderForm.sourceId || undefined,
+        },
+      });
+
+      // 2. Delete removed products
+      for (const productId of productsToDelete) {
+        await deleteProductMutation.mutateAsync(productId);
+      }
+
+      // 3. Update existing products and create new ones
+      for (const product of editProducts) {
+        if (product.isNew) {
+          if (product.name.trim() && product.productTypeId) {
+            let schemaImageUrl = product.schemaImageUrl;
+            if (product.schemaFile) {
+              try {
+                const uploadResult = await uploadApi.uploadSchemaImage(product.schemaFile);
+                schemaImageUrl = uploadResult.url;
+              } catch (err) {
+                console.warn('Не удалось загрузить фото схемы, продукт будет создан без неё:', err);
+              }
+            }
+            await createProductMutation.mutateAsync({
+              name: product.name,
+              productTypeId: product.productTypeId,
+              quantity: product.quantity,
+              dimensions: product.dimensions || undefined,
+              orderId: selectedOrder.id,
+              color: product.color || undefined,
+              upholsteryMaterial: product.upholsteryMaterial || undefined,
+              schemaImageUrl: schemaImageUrl || undefined,
+              stageAssignments: product.stageAssignments && Object.keys(product.stageAssignments).length > 0 ? product.stageAssignments : undefined,
+            });
+          }
+        } else if (product.id) {
+          await updateProductMutation.mutateAsync({
+            id: product.id,
+            data: {
+              name: product.name,
+              productTypeId: product.productTypeId,
+              quantity: product.quantity,
+              dimensions: product.dimensions || undefined,
+              color: product.color || undefined,
+              upholsteryMaterial: product.upholsteryMaterial || undefined,
+            },
+          });
+        }
+      }
+
+      // Refresh and close edit mode
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      setIsEditing(false);
+      setSelectedOrder(null);
+    } catch (error) {
+      console.error('Error saving order:', error);
+      alert('Ошибка при сохранении заказа');
+    }
+  };
 
   // Определяем какие этапы доступны для текущей роли
   const getRoleStages = (roleCode: string | undefined) => {
@@ -115,7 +408,6 @@ export const KanbanPage = () => {
     const currentStage = product.stage;
     const nextStage = getNextStage(currentStage, user.role?.code);
 
-    // Определяем основные рабочие этапы для каждой роли
     const roleMainStage: Record<string, ProductionStage | null> = {
       'SUPER_ADMIN': null,
       'OWNER': null,
@@ -129,12 +421,10 @@ export const KanbanPage = () => {
 
     const mainStage = user.role?.code ? roleMainStage[user.role.code] : null;
 
-    // Если переходим В свой основной этап - это "Принять в работу"
     if (nextStage === mainStage) {
       return 'Принять в работу';
     }
 
-    // Если переходим ИЗ своего основного этапа - это "Передать дальше"
     if (currentStage === mainStage) {
       return 'Передать дальше';
     }
@@ -145,7 +435,7 @@ export const KanbanPage = () => {
   // Получаем список заказов с текущими задачами пользователя
   const myOrderIds = useMemo(() => {
     if (!user || user.role?.code === 'OWNER' || user.role?.code === 'MANAGER' || user.role?.code === 'SUPER_ADMIN') {
-      return null; // OWNER, MANAGER и SUPER_ADMIN видят все
+      return null;
     }
     const orderIds = new Set<string>();
     myTasks.forEach((task: any) => {
@@ -156,9 +446,9 @@ export const KanbanPage = () => {
     return orderIds;
   }, [myTasks, user]);
 
-  // Фильтрация продуктов для сотрудников (только из заказов с их задачами)
+  // Фильтрация продуктов для сотрудников
   const filteredProducts = useMemo(() => {
-    if (!myOrderIds) return products; // OWNER/MANAGER видят все
+    if (!myOrderIds) return products;
     return products.filter((product) => myOrderIds.has(product.orderId));
   }, [products, myOrderIds]);
 
@@ -169,7 +459,6 @@ export const KanbanPage = () => {
     return myProducts
       .filter((product) => product.stage === stage)
       .sort((a, b) => {
-        // Сортировка по приоритету заказа (срочные первыми)
         const priorityA = a.order?.priority || 'NORMAL';
         const priorityB = b.order?.priority || 'NORMAL';
         return getPrioritySortOrder(priorityA as any) - getPrioritySortOrder(priorityB as any);
@@ -235,14 +524,12 @@ export const KanbanPage = () => {
 
   // Фильтрация заказов
   const filteredOrders = useMemo(() => {
-    // Ensure orders is an array
     if (!Array.isArray(orders)) {
       return [];
     }
 
     let ordersToFilter = orders;
 
-    // Для сотрудников показываем только заказы с их задачами
     if (myOrderIds) {
       ordersToFilter = orders.filter((order) => myOrderIds.has(order.id));
     }
@@ -255,7 +542,6 @@ export const KanbanPage = () => {
 
       const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
 
-      // Фильтрация по датам
       let matchesDateFrom = true;
       let matchesDateTo = true;
 
@@ -282,6 +568,8 @@ export const KanbanPage = () => {
     setDateFrom('');
     setDateTo('');
   };
+
+  const canEdit = user?.role?.code === 'OWNER' || user?.role?.code === 'SUPER_ADMIN' || user?.role?.code === 'MANAGER';
 
   if (ordersLoading || productsLoading) {
     return (
@@ -392,7 +680,7 @@ export const KanbanPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Заказы</h2>
-                  <p className="text-xs text-gray-600">Управление заказами и контроль производства</p>
+                  <p className="text-xs text-gray-600">Нажмите на заказ для просмотра позиций и редактирования</p>
                 </div>
                 <Button
                   onClick={() => setIsCreateOrderModalOpen(true)}
@@ -513,7 +801,11 @@ export const KanbanPage = () => {
                     const Icon = config.icon;
 
                     return (
-                      <Card key={order.id} className="hover:shadow-md transition-shadow">
+                      <Card
+                        key={order.id}
+                        className="hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => handleOpenOrder(order)}
+                      >
                         <CardHeader className="py-2 px-3">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -528,6 +820,10 @@ export const KanbanPage = () => {
                                     {getPriorityLabel(order.priority)}
                                   </span>
                                 )}
+                                <span className="text-xs text-gray-400 ml-auto">
+                                  <Eye className="w-3 h-3 inline mr-1" />
+                                  {order.products?.length || 0} позиций
+                                </span>
                               </div>
                               {/* Информация о клиенте - только для MANAGER и LOGIST */}
                               {(user?.role?.code === 'MANAGER' || user?.role?.code === 'LOGIST') && (
@@ -543,6 +839,27 @@ export const KanbanPage = () => {
                                 </div>
                               )}
                             </div>
+                            {canEdit && (
+                              <div className="flex items-center ml-2" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={async (e) => { e.stopPropagation(); await handleOpenOrder(order); }}
+                                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  title="Просмотреть / Редактировать заказ"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                {(user?.role?.code === 'OWNER' || user?.role?.code === 'SUPER_ADMIN') && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order); }}
+                                    disabled={deleteOrderMutation.isPending}
+                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                    title="Удалить заказ"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </CardHeader>
                         <CardContent className="py-2 px-3">
@@ -564,7 +881,7 @@ export const KanbanPage = () => {
                             </div>
                           )}
 
-                          {/* Продукты */}
+                          {/* Продукты (компактный вид) */}
                           {order.products && order.products.length > 0 && (
                             <div>
                               <div className="text-xs font-medium text-gray-700 mb-1">
@@ -633,6 +950,402 @@ export const KanbanPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Модалка просмотра/редактирования заказа */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={handleCloseModal}>
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
+            {/* Заголовок */}
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="text-lg font-bold">
+                  {isEditing ? 'Редактировать' : 'Заказ'} {selectedOrder.orderNumber}
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Создан: {new Date(selectedOrder.createdAt).toLocaleDateString('ru-RU')}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {canEdit && !isEditing && (
+                  <button
+                    onClick={handleStartEdit}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Редактировать
+                  </button>
+                )}
+                <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Содержимое */}
+            <div className="p-4">
+              {!isEditing ? (
+                /* ====== РЕЖИМ ПРОСМОТРА ====== */
+                <div className="space-y-4">
+                  {/* Информация о заказе */}
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-500">Клиент:</span>
+                      <p className="font-semibold">{selectedOrder.customerName}</p>
+                    </div>
+                    {selectedOrder.customerPhone && (
+                      <div>
+                        <span className="font-medium text-gray-500">Телефон:</span>
+                        <p>{selectedOrder.customerPhone}</p>
+                      </div>
+                    )}
+                    {selectedOrder.customerAddress && (
+                      <div className="col-span-2">
+                        <span className="font-medium text-gray-500">Адрес:</span>
+                        <p>{selectedOrder.customerAddress}</p>
+                      </div>
+                    )}
+                    {selectedOrder.description && (
+                      <div className="col-span-2">
+                        <span className="font-medium text-gray-500">Описание:</span>
+                        <p>{selectedOrder.description}</p>
+                      </div>
+                    )}
+                    {selectedOrder.totalAmount && (
+                      <div>
+                        <span className="font-medium text-gray-500">Сумма:</span>
+                        <p className="font-semibold">{selectedOrder.totalAmount.toLocaleString('ru-RU')} руб.</p>
+                      </div>
+                    )}
+                    {selectedOrder.source && (
+                      <div>
+                        <span className="font-medium text-gray-500">Источник:</span>
+                        <p>{selectedOrder.source.name}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Список позиций (продуктов) */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      Позиции заказа
+                      <span className="text-xs font-normal text-gray-500">
+                        ({selectedOrder.products?.length || 0} шт.)
+                      </span>
+                    </h3>
+
+                    {(!selectedOrder.products || selectedOrder.products.length === 0) ? (
+                      <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+                        <p className="text-sm text-gray-500">Позиции не добавлены</p>
+                        {canEdit && (
+                          <button
+                            onClick={handleStartEdit}
+                            className="mt-2 text-sm text-blue-600 hover:underline"
+                          >
+                            Добавить позиции
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600">Название</th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600">Тип</th>
+                              <th className="px-3 py-2 text-center font-medium text-gray-600">Кол-во</th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600">Этап</th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600">Доп. инфо</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedOrder.products.map((product) => (
+                              <tr key={product.id} className="border-t hover:bg-gray-50">
+                                <td className="px-3 py-2 font-medium">{product.name}</td>
+                                <td className="px-3 py-2 text-gray-600">{product.productType?.name || '—'}</td>
+                                <td className="px-3 py-2 text-center">{product.quantity}</td>
+                                <td className="px-3 py-2">
+                                  <span className={`inline-block px-2 py-0.5 rounded text-xs ${getStageColor(product.stage)}`}>
+                                    {getStageName(product.stage)}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2 text-xs text-gray-500">
+                                  {product.dimensions && <div>Размеры: {product.dimensions}</div>}
+                                  {product.color && <div>Цвет: {product.color}</div>}
+                                  {product.upholsteryMaterial && <div>Обшивка: {product.upholsteryMaterial}</div>}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* ====== РЕЖИМ РЕДАКТИРОВАНИЯ ====== */
+                <div className="space-y-4">
+                  {/* Информация о заказе */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-900">Данные заказа</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Имя клиента</label>
+                        <input
+                          value={editOrderForm.customerName}
+                          onChange={(e) => setEditOrderForm({ ...editOrderForm, customerName: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Телефон</label>
+                        <input
+                          value={editOrderForm.customerPhone}
+                          onChange={(e) => setEditOrderForm({ ...editOrderForm, customerPhone: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Адрес</label>
+                      <input
+                        value={editOrderForm.customerAddress}
+                        onChange={(e) => setEditOrderForm({ ...editOrderForm, customerAddress: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Описание</label>
+                      <textarea
+                        value={editOrderForm.description}
+                        onChange={(e) => setEditOrderForm({ ...editOrderForm, description: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={2}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Сумма заказа (руб.)</label>
+                        <input
+                          type="number"
+                          value={editOrderForm.totalAmount}
+                          onChange={(e) => setEditOrderForm({ ...editOrderForm, totalAmount: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Приоритет</label>
+                        <select
+                          value={editOrderForm.priority}
+                          onChange={(e) => setEditOrderForm({ ...editOrderForm, priority: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="LOW">Низкий</option>
+                          <option value="NORMAL">Обычный</option>
+                          <option value="HIGH">Высокий</option>
+                          <option value="URGENT">Срочный</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Позиции (продукты) */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        Позиции заказа ({editProducts.length})
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={handleAddProduct}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Добавить позицию
+                      </button>
+                    </div>
+
+                    {editProducts.length === 0 && (
+                      <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+                        <p className="text-sm text-gray-500">Позиции не добавлены</p>
+                        <p className="text-xs text-gray-400 mt-1">Нажмите "Добавить позицию"</p>
+                      </div>
+                    )}
+
+                    {editProducts.map((product, index) => (
+                      <div key={product.id || `new-${index}`} className={`p-3 border rounded-lg space-y-2 ${product.stage && product.stage !== ProductionStage.PENDING && !product.isNew ? 'border-amber-300 bg-amber-50/30' : 'border-gray-200'}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-gray-700">
+                              {product.isNew ? 'Новая позиция' : product.name}
+                            </span>
+                            {product.stage && !product.isNew && (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded ${getStageColor(product.stage)}`}>
+                                {getStageName(product.stage)}
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveProduct(index)}
+                            className="text-red-500 hover:text-red-700 text-xs flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Удалить
+                          </button>
+                        </div>
+
+                        {/* Nomenclature selector for new products */}
+                        {product.isNew && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Выберите из каталога</label>
+                            <select
+                              value={product.nomenclatureId || ''}
+                              onChange={(e) => handleNomenclatureSelect(index, e.target.value)}
+                              className="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">-- Ввести вручную --</option>
+                              {nomenclature.map((item: Nomenclature) => (
+                                <option key={item.id} value={item.id}>
+                                  {item.name} {item.productType?.name ? `(${item.productType.name})` : ''} {item.color ? `- ${item.color}` : ''}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="col-span-2">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Название</label>
+                            <input
+                              value={product.name}
+                              onChange={(e) => handleUpdateProductField(index, 'name', e.target.value)}
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Название продукта"
+                              disabled={!!product.nomenclatureId}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Кол-во</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={product.quantity}
+                              onChange={(e) => handleUpdateProductField(index, 'quantity', parseInt(e.target.value) || 1)}
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Тип продукта</label>
+                            <select
+                              value={product.productTypeId}
+                              onChange={(e) => handleUpdateProductField(index, 'productTypeId', e.target.value)}
+                              className="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              disabled={!!product.nomenclatureId}
+                            >
+                              <option value="">Выберите тип</option>
+                              {productTypes.map((type) => (
+                                <option key={type.id} value={type.id}>
+                                  {type.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Размеры</label>
+                            <input
+                              value={product.dimensions || ''}
+                              onChange={(e) => handleUpdateProductField(index, 'dimensions', e.target.value)}
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="ДxШxВ"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Цвет/покрытие</label>
+                            <input
+                              value={product.color || ''}
+                              onChange={(e) => handleUpdateProductField(index, 'color', e.target.value)}
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Например: Орех, код 906"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Материал обшивки</label>
+                            <input
+                              value={product.upholsteryMaterial || ''}
+                              onChange={(e) => handleUpdateProductField(index, 'upholsteryMaterial', e.target.value)}
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Экокожа, Велюр..."
+                            />
+                          </div>
+                        </div>
+
+                        {/* Stage assignments for new products */}
+                        {product.isNew && (
+                          <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-md space-y-2">
+                            <label className="block text-xs font-medium text-indigo-900">Назначить работников</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {stageConfig.map(({ stage, role, label, icon }) => {
+                                const workers = workersByRole[role] || [];
+                                if (workers.length === 0) return null;
+                                return (
+                                  <div key={stage}>
+                                    <label className="block text-xs text-gray-600 mb-0.5">{icon} {label}</label>
+                                    <select
+                                      value={product.stageAssignments?.[stage] || ''}
+                                      onChange={(e) => {
+                                        const newAssignments = { ...(product.stageAssignments || {}) };
+                                        if (e.target.value) {
+                                          newAssignments[stage] = e.target.value;
+                                        } else {
+                                          delete newAssignments[stage];
+                                        }
+                                        handleUpdateProductField(index, 'stageAssignments', newAssignments);
+                                      }}
+                                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    >
+                                      <option value="">Все</option>
+                                      {workers.map((w: User) => (
+                                        <option key={w.id} value={w.id}>{w.lastName} {w.firstName}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Кнопки действий */}
+                  <div className="flex justify-end gap-2 pt-3 border-t">
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                    >
+                      Отмена
+                    </button>
+                    <button
+                      onClick={handleSaveOrder}
+                      disabled={updateOrderMutation.isPending}
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {updateOrderMutation.isPending ? 'Сохранение...' : 'Сохранить'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <CreateOrderModal
         isOpen={isCreateOrderModalOpen}

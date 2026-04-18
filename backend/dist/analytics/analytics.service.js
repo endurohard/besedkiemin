@@ -441,6 +441,95 @@ let AnalyticsService = class AnalyticsService {
             ordersInProgress: inProgressStats.sort((a, b) => b.currentDurationHours - a.currentDurationHours),
         };
     }
+    async getProductivityReport(startDate, endDate) {
+        const start = startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const end = endDate || new Date();
+        const workingDays = this.countWorkingDays(start, end);
+        const workers = await this.prisma.user.findMany({
+            where: {
+                isActive: true,
+                role: { code: { notIn: ['SUPER_ADMIN', 'MANAGER', 'OWNER'] } },
+            },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                paymentType: true,
+                monthlySalary: true,
+                role: { select: { name: true, code: true, color: true } },
+            },
+        });
+        const workLogs = await this.prisma.workLog.groupBy({
+            by: ['userId'],
+            where: {
+                completedAt: { gte: start, lte: end },
+            },
+            _sum: { quantity: true, totalAmount: true },
+            _count: { id: true },
+        });
+        const logMap = new Map(workLogs.map(l => [l.userId, l]));
+        const stageDetails = await this.prisma.workLog.groupBy({
+            by: ['userId', 'stage'],
+            where: { completedAt: { gte: start, lte: end } },
+            _sum: { quantity: true },
+        });
+        const stageMap = new Map();
+        for (const s of stageDetails) {
+            if (!stageMap.has(s.userId))
+                stageMap.set(s.userId, {});
+            stageMap.get(s.userId)[s.stage] = s._sum.quantity || 0;
+        }
+        const report = workers.map(worker => {
+            const logs = logMap.get(worker.id);
+            const itemsMade = logs?._sum?.quantity || 0;
+            const earnedAmount = logs?._sum?.totalAmount || 0;
+            const tasksCompleted = logs?._count?.id || 0;
+            const coefficient = workingDays > 0
+                ? Math.round((itemsMade / workingDays) * 100) / 100
+                : 0;
+            return {
+                worker: {
+                    id: worker.id,
+                    name: `${worker.firstName} ${worker.lastName}`,
+                    role: worker.role,
+                    paymentType: worker.paymentType,
+                    monthlySalary: worker.monthlySalary,
+                },
+                stats: {
+                    itemsMade,
+                    tasksCompleted,
+                    earnedAmount: worker.paymentType === 'SALARY' ? 0 : earnedAmount,
+                    coefficient,
+                    workingDays,
+                    stageBreakdown: stageMap.get(worker.id) || {},
+                },
+            };
+        });
+        report.sort((a, b) => {
+            if (a.worker.paymentType !== b.worker.paymentType) {
+                return a.worker.paymentType === 'SALARY' ? -1 : 1;
+            }
+            return b.stats.coefficient - a.stats.coefficient;
+        });
+        return {
+            period: { start, end, workingDays },
+            totalWorkers: workers.length,
+            salaryWorkers: workers.filter(w => w.paymentType === 'SALARY').length,
+            pieceRateWorkers: workers.filter(w => w.paymentType === 'PIECE_RATE').length,
+            workers: report,
+        };
+    }
+    countWorkingDays(start, end) {
+        let count = 0;
+        const current = new Date(start);
+        while (current <= end) {
+            const day = current.getDay();
+            if (day !== 0 && day !== 6)
+                count++;
+            current.setDate(current.getDate() + 1);
+        }
+        return count || 1;
+    }
 };
 exports.AnalyticsService = AnalyticsService;
 exports.AnalyticsService = AnalyticsService = __decorate([

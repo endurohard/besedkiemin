@@ -3,7 +3,7 @@ interface YeastarConfig {
     host: string;
     username: string;
     password: string;
-    extension: string;
+    extension: string | null;
 }
 interface YeastarCallResponse {
     callid: string;

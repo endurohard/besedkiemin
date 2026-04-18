@@ -183,9 +183,10 @@ export default function ProductionWorkersPage() {
     try {
       const role = getRoleByCode(activeRole);
       if (!role) { setError('Роль не найдена'); return; }
-      const { pin: _pin, ...createData } = workerForm;
+      const { pin: _pin, email, ...createData } = workerForm;
       const newUser = await usersApi.create({
         ...createData,
+        ...(email ? { email } : {}),
         roleId: role.id,
         monthlySalary: workerForm.paymentType === 'SALARY' ? workerForm.monthlySalary : undefined,
       });
@@ -302,7 +303,7 @@ export default function ProductionWorkersPage() {
     setWorkerForm({
       firstName: worker.firstName,
       lastName: worker.lastName,
-      email: worker.email,
+      email: worker.email || '',
       password: '',
       roleId: worker.roleId || '',
       paymentType: worker.paymentType || 'PIECE_RATE',
@@ -424,7 +425,7 @@ export default function ProductionWorkersPage() {
                             <EfficiencyBadge coeff={stat.efficiencyCoefficient} />
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">{worker.email}</div>
+                        <div className="text-sm text-gray-500">{worker.email?.includes("@internal") ? "" : worker.email}</div>
 
                         {/* Статистика за месяц */}
                         {stat && stat.itemsCompleted > 0 && (
@@ -536,8 +537,8 @@ export default function ProductionWorkersPage() {
                   <input type="text" value={workerForm.firstName} onChange={(e) => setWorkerForm({ ...workerForm, firstName: e.target.value })} className="w-full border rounded-lg px-3 py-2" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (логин)</label>
-                  <input type="email" value={workerForm.email} onChange={(e) => setWorkerForm({ ...workerForm, email: e.target.value })} className="w-full border rounded-lg px-3 py-2" placeholder="ivanov@example.com" required />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (необязательно)</label>
+                  <input type="email" value={workerForm.email} onChange={(e) => setWorkerForm({ ...workerForm, email: e.target.value })} className="w-full border rounded-lg px-3 py-2" placeholder="Необязательно" />
                 </div>
 
                 {/* Тип оплаты */}
@@ -609,8 +610,8 @@ export default function ProductionWorkersPage() {
                   <input type="text" value={workerForm.firstName} onChange={(e) => setWorkerForm({ ...workerForm, firstName: e.target.value })} className="w-full border rounded-lg px-3 py-2" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (логин)</label>
-                  <input type="email" value={workerForm.email} onChange={(e) => setWorkerForm({ ...workerForm, email: e.target.value })} className="w-full border rounded-lg px-3 py-2" required />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (необязательно)</label>
+                  <input type="email" value={workerForm.email} onChange={(e) => setWorkerForm({ ...workerForm, email: e.target.value })} className="w-full border rounded-lg px-3 py-2" />
                 </div>
 
                 {/* Тип оплаты */}

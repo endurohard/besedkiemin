@@ -21,6 +21,7 @@ export const ShipmentsPage = () => {
   const { data: shipments, isLoading, error } = useQuery({
     queryKey: ['shipments'],
     queryFn: shipmentsApi.getAll,
+    refetchInterval: 15000,
   });
 
   const updateStatusMutation = useMutation({

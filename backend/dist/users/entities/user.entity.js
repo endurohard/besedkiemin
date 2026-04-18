@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserEntity = void 0;
 const swagger_1 = require("@nestjs/swagger");
+const client_1 = require("@prisma/client");
 class UserEntity {
     constructor(partial) {
         Object.assign(this, partial);
@@ -58,26 +59,34 @@ __decorate([
 ], UserEntity.prototype, "updatedAt", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], UserEntity.prototype, "telegramId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], UserEntity.prototype, "sipServer", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], UserEntity.prototype, "sipUser", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], UserEntity.prototype, "sipPassword", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", Number)
+    __metadata("design:type", Object)
 ], UserEntity.prototype, "sipPort", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", Number)
+    __metadata("design:type", Object)
 ], UserEntity.prototype, "sipWsPort", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: client_1.PaymentType, default: client_1.PaymentType.PIECE_RATE }),
+    __metadata("design:type", String)
+], UserEntity.prototype, "paymentType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, description: 'Оклад руб/мес (для SALARY)' }),
+    __metadata("design:type", Object)
+], UserEntity.prototype, "monthlySalary", void 0);
 //# sourceMappingURL=user.entity.js.map

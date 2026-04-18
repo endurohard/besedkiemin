@@ -51,24 +51,32 @@ export declare class ProductsService {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
     findAll(filters?: {
         orderId?: string;
         stage?: ProductionStage;
+        page?: number;
+        limit?: number;
     }): Promise<({
         order: {
             status: import(".prisma/client").$Enums.OrderStatus;
             id: string;
+            priority: import(".prisma/client").$Enums.OrderPriority;
             orderNumber: string;
             customerName: string;
+        };
+        productType: {
+            name: string;
+            id: string;
         };
         qualityChecks: ({
             checkedBy: {
                 firstName: string;
                 lastName: string;
                 id: string;
-            };
+            } | null;
         } & {
             status: import(".prisma/client").$Enums.QualityStatus;
             id: string;
@@ -129,6 +137,7 @@ export declare class ProductsService {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     })[]>;
     findOne(id: string): Promise<{
@@ -153,7 +162,7 @@ export declare class ProductsService {
                 firstName: string;
                 lastName: string;
                 id: string;
-            };
+            } | null;
         } & {
             status: import(".prisma/client").$Enums.QualityStatus;
             id: string;
@@ -214,6 +223,7 @@ export declare class ProductsService {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<{
@@ -282,6 +292,7 @@ export declare class ProductsService {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
     remove(id: string): Promise<{
@@ -300,6 +311,7 @@ export declare class ProductsService {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
     moveToStage(productId: string, newStage: ProductionStage, userId: string, notes?: string): Promise<{
@@ -368,21 +380,27 @@ export declare class ProductsService {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
     getProductsByStage(stage: ProductionStage): Promise<({
         order: {
             status: import(".prisma/client").$Enums.OrderStatus;
             id: string;
+            priority: import(".prisma/client").$Enums.OrderPriority;
             orderNumber: string;
             customerName: string;
+        };
+        productType: {
+            name: string;
+            id: string;
         };
         qualityChecks: ({
             checkedBy: {
                 firstName: string;
                 lastName: string;
                 id: string;
-            };
+            } | null;
         } & {
             status: import(".prisma/client").$Enums.QualityStatus;
             id: string;
@@ -443,6 +461,7 @@ export declare class ProductsService {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     })[]>;
     getProductHistory(productId: string): Promise<({

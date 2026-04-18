@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards, Req } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -99,5 +99,15 @@ export class TasksController {
     @Req() req,
   ) {
     return this.tasksService.approveTask(id, req.user.userId, quantity);
+  }
+
+  @Patch(':id/quantity')
+  @ApiOperation({ summary: 'Изменить количество в принятой задаче' })
+  async updateTaskQuantity(
+    @Param('id') id: string,
+    @Body('quantity') quantity: number,
+    @Req() req,
+  ) {
+    return this.tasksService.updateTaskQuantity(id, req.user.userId, quantity);
   }
 }

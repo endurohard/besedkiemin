@@ -55,3 +55,7 @@ backend/uploads/
 # Electron builds
 electron-phone/dist/
 electron-phone/out/
+
+# Backups
+backups/
+*.sql.gz

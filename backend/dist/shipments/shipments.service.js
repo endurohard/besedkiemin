@@ -13,9 +13,11 @@ exports.ShipmentsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
+const notifications_gateway_1 = require("../notifications/notifications.gateway");
 let ShipmentsService = class ShipmentsService {
-    constructor(prisma) {
+    constructor(prisma, notifications) {
         this.prisma = prisma;
+        this.notifications = notifications;
     }
     async createShipment(userId, data) {
         const user = await this.prisma.user.findUnique({
@@ -48,13 +50,16 @@ let ShipmentsService = class ShipmentsService {
                 throw new common_1.BadRequestException(`Недостаточно товара "${inventoryItem.name}". Доступно: ${inventoryItem.quantity}, запрошено: ${itemData.quantity}`);
             }
         }
+        const deliveryDateValue = data.deliveryDate
+            ? (data.deliveryDate instanceof Date ? data.deliveryDate : new Date(data.deliveryDate))
+            : undefined;
         const shipment = await this.prisma.$transaction(async (tx) => {
             const newShipment = await tx.shipment.create({
                 data: {
                     customerName: data.customerName,
                     customerPhone: data.customerPhone,
                     deliveryAddress: data.deliveryAddress,
-                    deliveryDate: data.deliveryDate,
+                    deliveryDate: deliveryDateValue,
                     notes: data.notes,
                     orderNumber: data.orderNumber,
                     shippedById: userId,
@@ -100,6 +105,8 @@ let ShipmentsService = class ShipmentsService {
             }));
             return newShipment;
         });
+        this.notifications.notifyShipmentsChanged();
+        this.notifications.notifyInventoryChanged();
         return shipment;
     }
     async getAllShipments(userId, options) {
@@ -231,7 +238,7 @@ let ShipmentsService = class ShipmentsService {
         if (!shipment) {
             throw new common_1.NotFoundException('Отгрузка не найдена');
         }
-        return this.prisma.shipment.update({
+        const updated = await this.prisma.shipment.update({
             where: { id },
             data: { status },
             include: {
@@ -255,6 +262,8 @@ let ShipmentsService = class ShipmentsService {
                 },
             },
         });
+        this.notifications.notifyShipmentsChanged();
+        return updated;
     }
     async cancelShipment(id, userId) {
         const user = await this.prisma.user.findUnique({
@@ -280,6 +289,9 @@ let ShipmentsService = class ShipmentsService {
         if (shipment.status === client_1.ShipmentStatus.DELIVERED) {
             throw new common_1.BadRequestException('Нельзя отменить доставленную отгрузку');
         }
+        if (shipment.status === client_1.ShipmentStatus.CANCELLED) {
+            throw new common_1.BadRequestException('Отгрузка уже отменена');
+        }
         const updatedShipment = await this.prisma.$transaction(async (tx) => {
             const cancelled = await tx.shipment.update({
                 where: { id },
@@ -301,6 +313,8 @@ let ShipmentsService = class ShipmentsService {
             }
             return cancelled;
         });
+        this.notifications.notifyShipmentsChanged();
+        this.notifications.notifyInventoryChanged();
         return updatedShipment;
     }
     async getWaybillData(id) {
@@ -351,6 +365,7 @@ let ShipmentsService = class ShipmentsService {
 exports.ShipmentsService = ShipmentsService;
 exports.ShipmentsService = ShipmentsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        notifications_gateway_1.NotificationsGateway])
 ], ShipmentsService);
 //# sourceMappingURL=shipments.service.js.map

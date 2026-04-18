@@ -102,7 +102,8 @@ export class OrdersController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Удалить заказ' })
+  @Roles('OWNER')
+  @ApiOperation({ summary: 'Удалить заказ (только OWNER и SUPER_ADMIN)' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.remove(id);
   }

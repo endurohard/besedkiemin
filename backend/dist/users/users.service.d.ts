@@ -18,6 +18,8 @@ export declare class UsersService {
         sipUser: string | null;
         sipPassword: string | null;
         sipPort: number | null;
+        paymentType: import(".prisma/client").$Enums.PaymentType;
+        monthlySalary: number | null;
         isActive: boolean;
         telegramId: string | null;
         id: string;
@@ -26,8 +28,8 @@ export declare class UsersService {
         sipWsPort: number | null;
         isDepartmentAccount: boolean;
         pin: string | null;
-    }>;
-    findByEmailWithRole(email: string): Promise<{
+    } | null>;
+    findByEmailWithRole(email: string): Promise<({
         role: {
             description: string | null;
             order: number;
@@ -51,6 +53,8 @@ export declare class UsersService {
         sipUser: string | null;
         sipPassword: string | null;
         sipPort: number | null;
+        paymentType: import(".prisma/client").$Enums.PaymentType;
+        monthlySalary: number | null;
         isActive: boolean;
         telegramId: string | null;
         id: string;
@@ -59,12 +63,12 @@ export declare class UsersService {
         sipWsPort: number | null;
         isDepartmentAccount: boolean;
         pin: string | null;
-    }>;
+    }) | null>;
     update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity>;
     remove(id: string): Promise<void>;
     toggleActive(id: string): Promise<UserEntity>;
     setPin(id: string, pin: string): Promise<void>;
-    findByPin(pin: string): Promise<{
+    findByPin(pin: string): Promise<({
         role: {
             description: string | null;
             order: number;
@@ -88,6 +92,8 @@ export declare class UsersService {
         sipUser: string | null;
         sipPassword: string | null;
         sipPort: number | null;
+        paymentType: import(".prisma/client").$Enums.PaymentType;
+        monthlySalary: number | null;
         isActive: boolean;
         telegramId: string | null;
         id: string;
@@ -96,5 +102,5 @@ export declare class UsersService {
         sipWsPort: number | null;
         isDepartmentAccount: boolean;
         pin: string | null;
-    }>;
+    }) | null>;
 }

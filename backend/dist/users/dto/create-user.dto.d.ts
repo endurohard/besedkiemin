@@ -1,5 +1,6 @@
+import { PaymentType } from '@prisma/client';
 export declare class CreateUserDto {
-    email: string;
+    email?: string;
     password: string;
     firstName: string;
     lastName: string;
@@ -8,4 +9,6 @@ export declare class CreateUserDto {
     sipUser?: string;
     sipPassword?: string;
     sipPort?: number;
+    paymentType?: PaymentType;
+    monthlySalary?: number;
 }

@@ -41,7 +41,7 @@ async function bootstrap() {
             'http://localhost:8000',
             'http://localhost',
             process.env.CORS_ORIGIN
-        ].filter(Boolean),
+        ].filter((v) => Boolean(v)),
         credentials: true,
     });
     const config = new swagger_1.DocumentBuilder()

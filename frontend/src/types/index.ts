@@ -248,7 +248,7 @@ export type PaymentType = 'PIECE_RATE' | 'SALARY';
 
 export interface User {
   id: string;
-  email: string;
+  email?: string;
   firstName: string;
   lastName: string;
   roleId: string;
@@ -368,7 +368,7 @@ export interface Order {
 
 // Auth DTOs
 export interface LoginRequest {
-  email: string;
+  email?: string;
   password: string;
 }
 
@@ -450,7 +450,7 @@ export interface Statistics {
 
 // User management DTOs (only for OWNER)
 export interface CreateUserDto {
-  email: string;
+  email?: string;
   password: string;
   firstName: string;
   lastName: string;
@@ -756,7 +756,7 @@ export interface CompanySettings {
   id: string;
   companyName: string;
   phone: string;
-  email: string;
+  email?: string;
   address: string;
   website: string;
   supportTelegram: string;
@@ -794,7 +794,7 @@ export interface UpdateCompanySettingsDto {
 
 // Telegram Authorization
 export interface TelegramLoginCodeRequest {
-  email: string;
+  email?: string;
   password: string;
 }
 

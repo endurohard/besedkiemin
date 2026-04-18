@@ -20,6 +20,7 @@ export declare class CatalogOrdersService {
                 updatedAt: Date;
                 dimensions: string | null;
                 slug: string;
+                categoryId: string;
                 shortDesc: string | null;
                 images: string[];
                 material: string | null;
@@ -30,7 +31,6 @@ export declare class CatalogOrdersService {
                 metaDescription: string | null;
                 metaKeywords: string | null;
                 isFeatured: boolean;
-                categoryId: string;
             };
         } & {
             id: string;
@@ -76,6 +76,7 @@ export declare class CatalogOrdersService {
                     updatedAt: Date;
                     dimensions: string | null;
                     slug: string;
+                    categoryId: string;
                     shortDesc: string | null;
                     images: string[];
                     material: string | null;
@@ -86,7 +87,6 @@ export declare class CatalogOrdersService {
                     metaDescription: string | null;
                     metaKeywords: string | null;
                     isFeatured: boolean;
-                    categoryId: string;
                 };
             } & {
                 id: string;
@@ -134,6 +134,7 @@ export declare class CatalogOrdersService {
                 updatedAt: Date;
                 dimensions: string | null;
                 slug: string;
+                categoryId: string;
                 shortDesc: string | null;
                 images: string[];
                 material: string | null;
@@ -144,7 +145,6 @@ export declare class CatalogOrdersService {
                 metaDescription: string | null;
                 metaKeywords: string | null;
                 isFeatured: boolean;
-                categoryId: string;
             };
         } & {
             id: string;
@@ -185,6 +185,7 @@ export declare class CatalogOrdersService {
                 updatedAt: Date;
                 dimensions: string | null;
                 slug: string;
+                categoryId: string;
                 shortDesc: string | null;
                 images: string[];
                 material: string | null;
@@ -195,7 +196,6 @@ export declare class CatalogOrdersService {
                 metaDescription: string | null;
                 metaKeywords: string | null;
                 isFeatured: boolean;
-                categoryId: string;
             };
         } & {
             id: string;
@@ -254,6 +254,7 @@ export declare class CatalogOrdersService {
                 updatedAt: Date;
                 dimensions: string | null;
                 slug: string;
+                categoryId: string;
                 shortDesc: string | null;
                 images: string[];
                 material: string | null;
@@ -264,7 +265,6 @@ export declare class CatalogOrdersService {
                 metaDescription: string | null;
                 metaKeywords: string | null;
                 isFeatured: boolean;
-                categoryId: string;
             };
         } & {
             id: string;
@@ -305,6 +305,7 @@ export declare class CatalogOrdersService {
                 updatedAt: Date;
                 dimensions: string | null;
                 slug: string;
+                categoryId: string;
                 shortDesc: string | null;
                 images: string[];
                 material: string | null;
@@ -315,7 +316,6 @@ export declare class CatalogOrdersService {
                 metaDescription: string | null;
                 metaKeywords: string | null;
                 isFeatured: boolean;
-                categoryId: string;
             };
         } & {
             id: string;
@@ -356,6 +356,7 @@ export declare class CatalogOrdersService {
                 updatedAt: Date;
                 dimensions: string | null;
                 slug: string;
+                categoryId: string;
                 shortDesc: string | null;
                 images: string[];
                 material: string | null;
@@ -366,7 +367,6 @@ export declare class CatalogOrdersService {
                 metaDescription: string | null;
                 metaKeywords: string | null;
                 isFeatured: boolean;
-                categoryId: string;
             };
         } & {
             id: string;

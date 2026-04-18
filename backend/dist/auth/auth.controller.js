@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
+const throttler_1 = require("@nestjs/throttler");
 const swagger_1 = require("@nestjs/swagger");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
@@ -97,7 +98,8 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.UseGuards)(local_auth_guard_1.LocalAuthGuard),
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard, local_auth_guard_1.LocalAuthGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60000 } }),
     (0, common_1.Post)('login'),
     (0, swagger_1.ApiOperation)({ summary: 'Вход в систему' }),
     __param(0, (0, common_1.Body)()),
@@ -117,6 +119,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getProfile", null);
 __decorate([
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60000 } }),
     (0, common_1.Post)('telegram/request-code'),
     (0, swagger_1.ApiOperation)({ summary: 'Запросить код для авторизации через Telegram (публичный)' }),
     __param(0, (0, common_1.Body)()),
@@ -133,6 +137,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "checkTelegramAuth", null);
 __decorate([
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60000 } }),
     (0, common_1.Post)('pin-login'),
     (0, swagger_1.ApiOperation)({ summary: 'Вход по PIN-коду (для производственных работников)' }),
     __param(0, (0, common_1.Body)()),

@@ -15,7 +15,7 @@ export const PAGINATION = {
 // File Upload
 export const FILE_UPLOAD = {
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
-  ALLOWED_EXTENSIONS: /\.(jpg|jpeg|png|gif)$/,
+  ALLOWED_EXTENSIONS: /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i,
   UPLOAD_DIR: './uploads',
 } as const;
 

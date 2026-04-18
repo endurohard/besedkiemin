@@ -48,6 +48,13 @@ let ProductsService = ProductsService_1 = class ProductsService {
                 include: { role: true },
             })
             : [];
+        const assignments = createProductDto.stageAssignments || {};
+        const firstStageKey = firstWorkflowStage.legacyStage;
+        const assignedWorkerId = createProductDto.assignedWorkerId
+            || (firstStageKey ? assignments[firstStageKey] : undefined);
+        const taskWorkers = assignedWorkerId
+            ? workers.filter(w => w.id === assignedWorkerId)
+            : workers;
         const product = await this.prisma.$transaction(async (tx) => {
             const newProduct = await tx.product.create({
                 data: {
@@ -64,14 +71,15 @@ let ProductsService = ProductsService_1 = class ProductsService {
                     upholsteryMaterial: createProductDto.upholsteryMaterial,
                     requiresSewing: createProductDto.requiresSewing,
                     nomenclatureId: createProductDto.nomenclatureId,
+                    stageAssignments: createProductDto.stageAssignments || undefined,
                 },
                 include: {
                     order: true,
                     productType: true,
                 },
             });
-            if (workers.length > 0) {
-                await Promise.all(workers.map((worker) => tx.task.create({
+            if (taskWorkers.length > 0) {
+                await Promise.all(taskWorkers.map((worker) => tx.task.create({
                     data: {
                         title: `${newProduct.name} - ${firstWorkflowStage.name}`,
                         description: `Новый продукт. Заказ: ${order.orderNumber}`,
@@ -89,8 +97,8 @@ let ProductsService = ProductsService_1 = class ProductsService {
             }
             return newProduct;
         });
-        if (workers.length > 0) {
-            Promise.allSettled(workers
+        if (taskWorkers.length > 0) {
+            Promise.allSettled(taskWorkers
                 .filter((worker) => worker.telegramId)
                 .map(async (worker) => {
                 const message = `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
@@ -119,51 +127,68 @@ let ProductsService = ProductsService_1 = class ProductsService {
         if (filters?.stage) {
             where.stage = filters.stage;
         }
-        return this.prisma.product.findMany({
-            where,
-            include: {
-                order: {
-                    select: {
-                        id: true,
-                        orderNumber: true,
-                        customerName: true,
-                        status: true,
-                    },
-                },
-                history: {
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                firstName: true,
-                                lastName: true,
-                                role: true,
-                            },
+        const page = Math.max(1, filters?.page || 1);
+        const limit = Math.min(200, Math.max(1, filters?.limit || 200));
+        const [products, total] = await Promise.all([
+            this.prisma.product.findMany({
+                where,
+                skip: (page - 1) * limit,
+                take: limit,
+                include: {
+                    order: {
+                        select: {
+                            id: true,
+                            orderNumber: true,
+                            customerName: true,
+                            status: true,
+                            priority: true,
                         },
                     },
-                    orderBy: {
-                        startedAt: 'desc',
-                    },
-                },
-                qualityChecks: {
-                    include: {
-                        checkedBy: {
-                            select: {
-                                id: true,
-                                firstName: true,
-                                lastName: true,
-                            },
+                    productType: {
+                        select: {
+                            id: true,
+                            name: true,
                         },
                     },
-                    orderBy: {
-                        createdAt: 'desc',
+                    history: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    role: true,
+                                },
+                            },
+                        },
+                        orderBy: {
+                            startedAt: 'desc',
+                        },
+                        take: 5,
+                    },
+                    qualityChecks: {
+                        include: {
+                            checkedBy: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                },
+                            },
+                        },
+                        orderBy: {
+                            createdAt: 'desc',
+                        },
+                        take: 3,
                     },
                 },
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
-        });
+                orderBy: {
+                    createdAt: 'desc',
+                },
+            }),
+            this.prisma.product.count({ where }),
+        ]);
+        return products;
     }
     async findOne(id) {
         const product = await this.prisma.product.findUnique({
@@ -354,21 +379,28 @@ let ProductsService = ProductsService_1 = class ProductsService {
         const products = await this.prisma.product.findMany({
             where: { orderId },
         });
+        if (products.length === 0)
+            return;
         const allCompleted = products.every((p) => p.stage === client_1.ProductionStage.COMPLETED);
+        const allPending = products.every((p) => p.stage === client_1.ProductionStage.PENDING);
         const hasStarted = products.some((p) => p.stage !== client_1.ProductionStage.PENDING);
-        let newStatus = null;
-        if (allCompleted && products.length > 0) {
+        let newStatus;
+        if (allCompleted) {
             newStatus = client_1.OrderStatus.COMPLETED;
+        }
+        else if (allPending) {
+            newStatus = client_1.OrderStatus.NEW;
         }
         else if (hasStarted) {
             newStatus = client_1.OrderStatus.IN_PRODUCTION;
         }
-        if (newStatus) {
-            await this.prisma.order.update({
-                where: { id: orderId },
-                data: { status: newStatus },
-            });
+        else {
+            return;
         }
+        await this.prisma.order.update({
+            where: { id: orderId },
+            data: { status: newStatus },
+        });
     }
 };
 exports.ProductsService = ProductsService;

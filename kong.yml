@@ -73,8 +73,8 @@ services:
           max_age: 3600
       - name: rate-limiting
         config:
-          minute: 100
-          hour: 1000
+          minute: 500
+          hour: 10000
           policy: local
 
   # Frontend Service

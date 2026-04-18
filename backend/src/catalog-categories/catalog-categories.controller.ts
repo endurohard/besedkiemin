@@ -15,7 +15,9 @@ import { CreateCatalogCategoryDto } from './dto/create-catalog-category.dto';
 import { UpdateCatalogCategoryDto } from './dto/update-catalog-category.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 
 
 @ApiTags('Catalog Categories')
@@ -24,10 +26,10 @@ export class CatalogCategoriesController {
   constructor(private readonly categoriesService: CatalogCategoriesService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('catalog:manage')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Создать категорию (только OWNER/MANAGER)' })
+  @ApiOperation({ summary: 'Создать категорию (нужно право catalog:manage)' })
   create(@Body() createDto: CreateCatalogCategoryDto) {
     return this.categoriesService.create(createDto);
   }
@@ -51,10 +53,10 @@ export class CatalogCategoriesController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('catalog:manage')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Обновить категорию (только OWNER/MANAGER)' })
+  @ApiOperation({ summary: 'Обновить категорию (нужно право catalog:manage)' })
   update(@Param('id') id: string, @Body() updateDto: UpdateCatalogCategoryDto) {
     return this.categoriesService.update(id, updateDto);
   }

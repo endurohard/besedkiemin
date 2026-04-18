@@ -110,7 +110,26 @@ let TasksService = TasksService_1 = class TasksService {
                 { createdAt: 'desc' },
             ],
         });
-        return tasks.filter(task => task.product?.stage === task.stage);
+        const activeTasks = tasks.filter(task => task.product?.stage === task.stage);
+        if (isDeptAccount) {
+            const tasksByProduct = new Map();
+            for (const task of activeTasks) {
+                const productId = task.productId;
+                const existing = tasksByProduct.get(productId);
+                if (!existing) {
+                    tasksByProduct.set(productId, task);
+                }
+                else {
+                    const isOwnTask = task.assignedToId === userId;
+                    const isExistingOwn = existing.assignedToId === userId;
+                    if (isOwnTask && !isExistingOwn) {
+                        tasksByProduct.set(productId, task);
+                    }
+                }
+            }
+            return Array.from(tasksByProduct.values());
+        }
+        return activeTasks;
     }
     async getDepartmentTasks(userId) {
         const user = await this.prisma.user.findUnique({
@@ -1111,6 +1130,50 @@ let TasksService = TasksService_1 = class TasksService {
         const acceptedProductIds = new Set(userActiveTasks.map(t => t.productId));
         const unacceptedCount = rejectedProductIds.filter(id => !acceptedProductIds.has(id)).length;
         return { count: unacceptedCount };
+    }
+    async updateTaskQuantity(taskId, userId, quantity) {
+        const task = await this.prisma.task.findUnique({
+            where: { id: taskId },
+            include: { assignedTo: true, product: true },
+        });
+        if (!task) {
+            throw new common_1.NotFoundException('Задача не найдена');
+        }
+        if (quantity < 1) {
+            throw new common_1.BadRequestException('Количество должно быть не менее 1');
+        }
+        if (quantity > (task.product?.quantity || 0)) {
+            throw new common_1.BadRequestException('Количество не может превышать количество в продукте');
+        }
+        const updated = await this.prisma.task.update({
+            where: { id: taskId },
+            data: { quantity },
+            include: {
+                product: {
+                    include: {
+                        productType: true,
+                        order: {
+                            select: {
+                                id: true,
+                                orderNumber: true,
+                                customerName: true,
+                                priority: true,
+                            },
+                        },
+                    },
+                },
+                assignedTo: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        role: { select: { code: true, name: true } },
+                    },
+                },
+            },
+        });
+        this.logger.log(`Task ${taskId} quantity updated to ${quantity} by user ${userId}`);
+        return updated;
     }
 };
 exports.TasksService = TasksService;

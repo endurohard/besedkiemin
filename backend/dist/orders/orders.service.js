@@ -48,28 +48,22 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
 const ExcelJS = __importStar(require("exceljs"));
 const constants_1 = require("../common/constants");
+const notifications_gateway_1 = require("../notifications/notifications.gateway");
 let OrdersService = class OrdersService {
-    constructor(prisma) {
+    constructor(prisma, notifications) {
         this.prisma = prisma;
+        this.notifications = notifications;
     }
     async create(createOrderDto, userId) {
         let orderNumber = createOrderDto.orderNumber?.trim();
         if (!orderNumber) {
-            const allOrders = await this.prisma.order.findMany({
-                where: { orderNumber: { startsWith: 'ORD-' } },
-                select: { orderNumber: true },
-            });
-            let maxNum = 0;
-            for (const o of allOrders) {
-                const parts = o.orderNumber.split('-');
-                if (parts.length >= 2) {
-                    const num = parseInt(parts[1], 10);
-                    if (!isNaN(num) && num > maxNum) {
-                        maxNum = num;
-                    }
-                }
-            }
-            orderNumber = `ORD-${String(maxNum + 1).padStart(3, '0')}`;
+            const result = await this.prisma.$queryRawUnsafe(`SELECT COALESCE(
+          MAX(CAST(SUBSTRING(order_number FROM $1) AS INTEGER)), 0
+        ) + 1 AS next_num
+        FROM orders
+        WHERE order_number ~ $2`, 'ORD-(\\d+)', '^ORD-\\d+$');
+            const nextNum = Number(result[0]?.next_num || 1);
+            orderNumber = `ORD-${String(nextNum).padStart(3, '0')}`;
         }
         const { orderNumber: _, ...restDto } = createOrderDto;
         return this.prisma.order.create({
@@ -361,6 +355,7 @@ let OrdersService = class OrdersService {
 exports.OrdersService = OrdersService;
 exports.OrdersService = OrdersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        notifications_gateway_1.NotificationsGateway])
 ], OrdersService);
 //# sourceMappingURL=orders.service.js.map

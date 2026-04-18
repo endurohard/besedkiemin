@@ -48,21 +48,27 @@ export declare class ProductsController {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
     findAll(orderId?: string, stage?: ProductionStage): Promise<({
         order: {
             status: import(".prisma/client").$Enums.OrderStatus;
             id: string;
+            priority: import(".prisma/client").$Enums.OrderPriority;
             orderNumber: string;
             customerName: string;
+        };
+        productType: {
+            name: string;
+            id: string;
         };
         qualityChecks: ({
             checkedBy: {
                 firstName: string;
                 lastName: string;
                 id: string;
-            };
+            } | null;
         } & {
             status: import(".prisma/client").$Enums.QualityStatus;
             id: string;
@@ -123,21 +129,27 @@ export declare class ProductsController {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     })[]>;
     getByStage(stage: ProductionStage): Promise<({
         order: {
             status: import(".prisma/client").$Enums.OrderStatus;
             id: string;
+            priority: import(".prisma/client").$Enums.OrderPriority;
             orderNumber: string;
             customerName: string;
+        };
+        productType: {
+            name: string;
+            id: string;
         };
         qualityChecks: ({
             checkedBy: {
                 firstName: string;
                 lastName: string;
                 id: string;
-            };
+            } | null;
         } & {
             status: import(".prisma/client").$Enums.QualityStatus;
             id: string;
@@ -198,6 +210,7 @@ export declare class ProductsController {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     })[]>;
     findOne(id: string): Promise<{
@@ -222,7 +235,7 @@ export declare class ProductsController {
                 firstName: string;
                 lastName: string;
                 id: string;
-            };
+            } | null;
         } & {
             status: import(".prisma/client").$Enums.QualityStatus;
             id: string;
@@ -283,6 +296,7 @@ export declare class ProductsController {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
     getHistory(id: string): Promise<({
@@ -384,6 +398,7 @@ export declare class ProductsController {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
     moveToStage(id: string, body: {
@@ -455,6 +470,7 @@ export declare class ProductsController {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
     remove(id: string): Promise<{
@@ -473,6 +489,7 @@ export declare class ProductsController {
         deadline: Date | null;
         requiresSewing: boolean | null;
         upholsteryMaterial: string | null;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
         nomenclatureId: string | null;
     }>;
 }

@@ -37,7 +37,7 @@ export declare class AnalyticsService {
                 orderNumber: string;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 startedAt: Date;
-            };
+            } | null;
         };
     }[]>;
     getQualityStats(): Promise<{
@@ -51,9 +51,9 @@ export declare class AnalyticsService {
             productName: string;
             orderNumber: string;
             customerName: string;
-            reason: string;
+            reason: string | null;
             checkedBy: string;
-            checkedAt: Date;
+            checkedAt: Date | null;
         }[];
     }>;
     getProductTypeStats(): Promise<{
@@ -122,4 +122,36 @@ export declare class AnalyticsService {
             }[];
         }[];
     }>;
+    getProductivityReport(startDate?: Date, endDate?: Date): Promise<{
+        period: {
+            start: Date;
+            end: Date;
+            workingDays: number;
+        };
+        totalWorkers: number;
+        salaryWorkers: number;
+        pieceRateWorkers: number;
+        workers: {
+            worker: {
+                id: string;
+                name: string;
+                role: {
+                    name: string;
+                    code: string;
+                    color: string | null;
+                };
+                paymentType: import(".prisma/client").$Enums.PaymentType;
+                monthlySalary: number | null;
+            };
+            stats: {
+                itemsMade: number;
+                tasksCompleted: number;
+                earnedAmount: number;
+                coefficient: number;
+                workingDays: number;
+                stageBreakdown: Record<string, number>;
+            };
+        }[];
+    }>;
+    private countWorkingDays;
 }

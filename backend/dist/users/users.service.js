@@ -53,10 +53,14 @@ let UsersService = class UsersService {
         this.prisma = prisma;
     }
     async create(createUserDto) {
+        if (!createUserDto.email) {
+            createUserDto.email = `worker_${Date.now()}@internal`;
+        }
         const hashedPassword = await bcrypt.hash(createUserDto.password, constants_1.AUTH.BCRYPT_SALT_ROUNDS);
         const user = await this.prisma.user.create({
             data: {
                 ...createUserDto,
+                email: createUserDto.email,
                 password: hashedPassword,
             },
         });

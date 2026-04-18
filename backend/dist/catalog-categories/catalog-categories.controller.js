@@ -20,7 +20,9 @@ const create_catalog_category_dto_1 = require("./dto/create-catalog-category.dto
 const update_catalog_category_dto_1 = require("./dto/update-catalog-category.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
+const permissions_guard_1 = require("../auth/guards/permissions.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const permissions_decorator_1 = require("../auth/decorators/permissions.decorator");
 let CatalogCategoriesController = class CatalogCategoriesController {
     constructor(categoriesService) {
         this.categoriesService = categoriesService;
@@ -47,10 +49,10 @@ let CatalogCategoriesController = class CatalogCategoriesController {
 exports.CatalogCategoriesController = CatalogCategoriesController;
 __decorate([
     (0, common_1.Post)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permissions_guard_1.PermissionsGuard),
+    (0, permissions_decorator_1.RequirePermissions)('catalog:manage'),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать категорию (только OWNER/MANAGER)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Создать категорию (нужно право catalog:manage)' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_catalog_category_dto_1.CreateCatalogCategoryDto]),
@@ -82,10 +84,10 @@ __decorate([
 ], CatalogCategoriesController.prototype, "findBySlug", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permissions_guard_1.PermissionsGuard),
+    (0, permissions_decorator_1.RequirePermissions)('catalog:manage'),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Обновить категорию (только OWNER/MANAGER)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Обновить категорию (нужно право catalog:manage)' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),

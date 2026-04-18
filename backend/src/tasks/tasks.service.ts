@@ -114,7 +114,30 @@ export class TasksService {
     });
 
     // Фильтруем только актуальные задачи, где этап задачи совпадает с текущим этапом продукта
-    return tasks.filter(task => task.product?.stage === task.stage);
+    const activeTasks = tasks.filter(task => task.product?.stage === task.stage);
+
+    // Для учёток отдела: группируем по продукту, показываем одну задачу на продукт
+    // Приоритет: задача самого отдела > задача принятая кем-то > задача другого работника
+    if (isDeptAccount) {
+      const tasksByProduct = new Map<string, typeof activeTasks[0]>();
+      for (const task of activeTasks) {
+        const productId = task.productId;
+        const existing = tasksByProduct.get(productId);
+        if (!existing) {
+          tasksByProduct.set(productId, task);
+        } else {
+          // Приоритет: своя задача > чужая
+          const isOwnTask = task.assignedToId === userId;
+          const isExistingOwn = existing.assignedToId === userId;
+          if (isOwnTask && !isExistingOwn) {
+            tasksByProduct.set(productId, task);
+          }
+        }
+      }
+      return Array.from(tasksByProduct.values());
+    }
+
+    return activeTasks;
   }
 
   // Получить задачи всего отдела (для координации работы)
@@ -1375,4 +1398,55 @@ export class TasksService {
 
     return { count: unacceptedCount };
   }
+
+  async updateTaskQuantity(taskId: string, userId: string, quantity: number) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      include: { assignedTo: true, product: true },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Задача не найдена');
+    }
+
+    if (quantity < 1) {
+      throw new BadRequestException('Количество должно быть не менее 1');
+    }
+
+    if (quantity > (task.product?.quantity || 0)) {
+      throw new BadRequestException('Количество не может превышать количество в продукте');
+    }
+
+    const updated = await this.prisma.task.update({
+      where: { id: taskId },
+      data: { quantity },
+      include: {
+        product: {
+          include: {
+            productType: true,
+            order: {
+              select: {
+                id: true,
+                orderNumber: true,
+                customerName: true,
+                priority: true,
+              },
+            },
+          },
+        },
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: { select: { code: true, name: true } },
+          },
+        },
+      },
+    });
+
+    this.logger.log(`Task ${taskId} quantity updated to ${quantity} by user ${userId}`);
+    return updated;
+  }
+
 }

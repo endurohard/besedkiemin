@@ -25,6 +25,7 @@ async function main() {
     'roles:view', 'roles:manage',
     'chat:view', 'chat:manage',
     'catalog:view', 'catalog:manage',
+    'nomenclature:view', 'nomenclature:manage',
   ];
 
   const superAdminRole = await prisma.role.upsert({
@@ -75,6 +76,8 @@ async function main() {
         'tasks:view_own',
         'shipments:view', 'shipments:create',
         'inventory:view',
+        'catalog:view', 'catalog:manage',
+        'nomenclature:view', 'nomenclature:manage',
       ],
     },
   });

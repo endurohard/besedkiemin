@@ -16,15 +16,40 @@ exports.ChatGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
 const chat_service_1 = require("./chat.service");
 let ChatGateway = class ChatGateway {
-    constructor(chatService) {
+    constructor(chatService, jwtService) {
         this.chatService = chatService;
+        this.jwtService = jwtService;
         this.logger = new common_1.Logger('ChatGateway');
         this.connectedUsers = new Map();
     }
     handleConnection(client) {
-        this.logger.log(`Client connected: ${client.id}`);
+        const userType = client.handshake.query?.userType;
+        if (userType === 'customer') {
+            this.logger.log(`Customer connected: ${client.id}`);
+            return;
+        }
+        const token = client.handshake.auth?.token
+            || client.handshake.headers?.authorization?.replace('Bearer ', '');
+        if (!token) {
+            this.logger.warn(`Connection rejected (no token): ${client.id}`);
+            client.emit('error', { message: 'Требуется авторизация' });
+            client.disconnect();
+            return;
+        }
+        try {
+            const payload = this.jwtService.verify(token);
+            client.userId = payload.sub;
+            client.userEmail = payload.email;
+            this.logger.log(`Manager connected: ${client.id} (user: ${payload.email})`);
+        }
+        catch (error) {
+            this.logger.warn(`Connection rejected (invalid token): ${client.id}`);
+            client.emit('error', { message: 'Неверный токен авторизации' });
+            client.disconnect();
+        }
     }
     handleDisconnect(client) {
         this.logger.log(`Client disconnected: ${client.id}`);
@@ -38,6 +63,10 @@ let ChatGateway = class ChatGateway {
     async handleJoinRoom(client, data) {
         try {
             const { roomId, userType, userId } = data;
+            if (userType === 'manager' && !client.userId) {
+                client.emit('error', { message: 'Требуется авторизация для менеджера' });
+                return { success: false, error: 'Unauthorized' };
+            }
             const room = await this.chatService.getRoom(roomId);
             client.join(roomId);
             const userKey = userId || `customer-${roomId}`;
@@ -76,6 +105,10 @@ let ChatGateway = class ChatGateway {
     async handleSendMessage(client, data) {
         try {
             const { roomId, content, senderType, senderId, senderName } = data;
+            if (senderType === 'MANAGER' && !client.userId) {
+                client.emit('error', { message: 'Требуется авторизация' });
+                return { success: false, error: 'Unauthorized' };
+            }
             const message = await this.chatService.sendMessage({
                 roomId,
                 senderType,
@@ -99,10 +132,7 @@ let ChatGateway = class ChatGateway {
     }
     handleTyping(client, data) {
         const { roomId, userType, userName } = data;
-        client.to(roomId).emit('user_typing', {
-            userType,
-            userName,
-        });
+        client.to(roomId).emit('user_typing', { userType, userName });
     }
     handleStopTyping(client, data) {
         const { roomId } = data;
@@ -205,11 +235,17 @@ __decorate([
 exports.ChatGateway = ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: {
-            origin: '*',
+            origin: [
+                'http://176.98.155.17',
+                'http://176.98.155.17:5173',
+                'http://localhost',
+                'http://localhost:5173',
+            ],
             credentials: true,
         },
         namespace: '/chat',
     }),
-    __metadata("design:paramtypes", [chat_service_1.ChatService])
+    __metadata("design:paramtypes", [chat_service_1.ChatService,
+        jwt_1.JwtService])
 ], ChatGateway);
 //# sourceMappingURL=chat.gateway.js.map

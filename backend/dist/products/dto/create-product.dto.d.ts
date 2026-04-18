@@ -11,4 +11,6 @@ export declare class CreateProductDto {
     color?: string;
     upholsteryMaterial?: string;
     nomenclatureId?: string;
+    assignedWorkerId?: string;
+    stageAssignments?: Record<string, string>;
 }

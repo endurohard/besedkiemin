@@ -49,5 +49,14 @@ export declare class FeatureFlagsService {
     bulkUpdate(updates: {
         key: string;
         isEnabled: boolean;
-    }[]): Promise<any[]>;
+    }[]): Promise<{
+        description: string | null;
+        name: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        key: string;
+        category: string;
+        isEnabled: boolean;
+    }[]>;
 }

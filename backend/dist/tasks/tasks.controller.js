@@ -55,6 +55,9 @@ let TasksController = class TasksController {
     async approveTask(id, quantity, req) {
         return this.tasksService.approveTask(id, req.user.userId, quantity);
     }
+    async updateTaskQuantity(id, quantity, req) {
+        return this.tasksService.updateTaskQuantity(id, req.user.userId, quantity);
+    }
 };
 exports.TasksController = TasksController;
 __decorate([
@@ -162,6 +165,16 @@ __decorate([
     __metadata("design:paramtypes", [String, Number, Object]),
     __metadata("design:returntype", Promise)
 ], TasksController.prototype, "approveTask", null);
+__decorate([
+    (0, common_1.Patch)(':id/quantity'),
+    (0, swagger_1.ApiOperation)({ summary: 'Изменить количество в принятой задаче' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('quantity')),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Number, Object]),
+    __metadata("design:returntype", Promise)
+], TasksController.prototype, "updateTaskQuantity", null);
 exports.TasksController = TasksController = __decorate([
     (0, swagger_1.ApiTags)('tasks'),
     (0, swagger_1.ApiBearerAuth)(),

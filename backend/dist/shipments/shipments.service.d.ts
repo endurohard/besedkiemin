@@ -1,8 +1,10 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { ShipmentStatus } from '@prisma/client';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 export declare class ShipmentsService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private notifications;
+    constructor(prisma: PrismaService, notifications: NotificationsGateway);
     createShipment(userId: string, data: {
         items: Array<{
             inventoryItemId: string;
@@ -72,12 +74,12 @@ export declare class ShipmentsService {
         _count: {
             items: number;
         };
-        notes: string;
-        orderNumber: string;
+        notes: string | null;
+        orderNumber: string | null;
         customerName: string;
         customerPhone: string;
         deliveryAddress: string;
-        deliveryDate: Date;
+        deliveryDate: Date | null;
         shippedBy: {
             firstName: string;
             lastName: string;
@@ -102,7 +104,7 @@ export declare class ShipmentsService {
                     sourceId: string | null;
                     totalAmount: number | null;
                     createdById: string;
-                };
+                } | null;
                 productType: {
                     description: string | null;
                     name: string;
@@ -129,8 +131,9 @@ export declare class ShipmentsService {
                     deadline: Date | null;
                     requiresSewing: boolean | null;
                     upholsteryMaterial: string | null;
+                    stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                     nomenclatureId: string | null;
-                };
+                } | null;
             } & {
                 name: string;
                 id: string;
@@ -187,7 +190,7 @@ export declare class ShipmentsService {
                     sourceId: string | null;
                     totalAmount: number | null;
                     createdById: string;
-                };
+                } | null;
                 productType: {
                     description: string | null;
                     name: string;
@@ -214,8 +217,9 @@ export declare class ShipmentsService {
                     deadline: Date | null;
                     requiresSewing: boolean | null;
                     upholsteryMaterial: string | null;
+                    stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                     nomenclatureId: string | null;
-                };
+                } | null;
             } & {
                 name: string;
                 id: string;
@@ -273,7 +277,7 @@ export declare class ShipmentsService {
                     sourceId: string | null;
                     totalAmount: number | null;
                     createdById: string;
-                };
+                } | null;
                 productType: {
                     description: string | null;
                     name: string;
@@ -300,8 +304,9 @@ export declare class ShipmentsService {
                     deadline: Date | null;
                     requiresSewing: boolean | null;
                     upholsteryMaterial: string | null;
+                    stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                     nomenclatureId: string | null;
-                };
+                } | null;
             } & {
                 name: string;
                 id: string;
@@ -359,15 +364,15 @@ export declare class ShipmentsService {
         customerName: string;
         customerPhone: string;
         deliveryAddress: string;
-        deliveryDate: string;
+        deliveryDate: string | undefined;
         orderNumber: string;
         items: {
             name: string;
             quantity: number;
             productType: string;
-            orderNumber: string;
+            orderNumber: string | undefined;
         }[];
         shippedBy: string;
-        notes: string;
+        notes: string | null;
     }>;
 }

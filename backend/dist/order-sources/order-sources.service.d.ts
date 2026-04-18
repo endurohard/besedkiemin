@@ -58,7 +58,7 @@ export declare class OrderSourcesService {
         createdAt: Date;
         updatedAt: Date;
         icon: string | null;
-    }>;
+    } | null>;
     create(dto: CreateOrderSourceDto): Promise<{
         description: string | null;
         order: number;

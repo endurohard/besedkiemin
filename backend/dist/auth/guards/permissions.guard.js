@@ -28,11 +28,11 @@ let PermissionsGuard = class PermissionsGuard {
             return true;
         }
         const { user } = context.switchToHttp().getRequest();
-        if (!user || !user.sub) {
+        if (!user || !user.userId) {
             return false;
         }
         const dbUser = await this.prisma.user.findUnique({
-            where: { id: user.sub },
+            where: { id: user.userId },
             include: {
                 role: true,
             },

@@ -66,13 +66,13 @@ let PayrollController = class PayrollController {
         });
     }
     createPenalty(dto, req) {
-        return this.payrollService.createPenalty(dto, req.user.id);
+        return this.payrollService.createPenalty(dto, req.user.userId);
     }
     updatePenalty(id, dto) {
         return this.payrollService.updatePenalty(id, dto);
     }
     cancelPenalty(id, dto, req) {
-        return this.payrollService.cancelPenalty(id, req.user.id, dto.notes);
+        return this.payrollService.cancelPenalty(id, req.user.userId, dto.notes);
     }
     findAllManagerCommissions() {
         return this.payrollService.findAllManagerCommissions();
@@ -104,10 +104,10 @@ let PayrollController = class PayrollController {
         return this.payrollService.calculatePayrollForAll(dto);
     }
     approvePayrollPeriod(id, body, req) {
-        return this.payrollService.approvePayrollPeriod(id, req.user.id, body.notes);
+        return this.payrollService.approvePayrollPeriod(id, req.user.userId, body.notes);
     }
     markPayrollAsPaid(id, body, req) {
-        return this.payrollService.markPayrollAsPaid(id, req.user.id, body.notes);
+        return this.payrollService.markPayrollAsPaid(id, req.user.userId, body.notes);
     }
     cancelPayrollPeriod(id) {
         return this.payrollService.cancelPayrollPeriod(id);

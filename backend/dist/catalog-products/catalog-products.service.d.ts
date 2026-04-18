@@ -26,6 +26,7 @@ export declare class CatalogProductsService {
         updatedAt: Date;
         dimensions: string | null;
         slug: string;
+        categoryId: string;
         shortDesc: string | null;
         images: string[];
         material: string | null;
@@ -36,7 +37,6 @@ export declare class CatalogProductsService {
         metaDescription: string | null;
         metaKeywords: string | null;
         isFeatured: boolean;
-        categoryId: string;
     }>;
     findAll(filters?: {
         categoryId?: string;
@@ -64,6 +64,7 @@ export declare class CatalogProductsService {
         updatedAt: Date;
         dimensions: string | null;
         slug: string;
+        categoryId: string;
         shortDesc: string | null;
         images: string[];
         material: string | null;
@@ -74,7 +75,6 @@ export declare class CatalogProductsService {
         metaDescription: string | null;
         metaKeywords: string | null;
         isFeatured: boolean;
-        categoryId: string;
     })[]>;
     findOne(id: string): Promise<{
         category: {
@@ -98,6 +98,7 @@ export declare class CatalogProductsService {
         updatedAt: Date;
         dimensions: string | null;
         slug: string;
+        categoryId: string;
         shortDesc: string | null;
         images: string[];
         material: string | null;
@@ -108,7 +109,6 @@ export declare class CatalogProductsService {
         metaDescription: string | null;
         metaKeywords: string | null;
         isFeatured: boolean;
-        categoryId: string;
     }>;
     findBySlug(slug: string): Promise<{
         category: {
@@ -132,6 +132,7 @@ export declare class CatalogProductsService {
         updatedAt: Date;
         dimensions: string | null;
         slug: string;
+        categoryId: string;
         shortDesc: string | null;
         images: string[];
         material: string | null;
@@ -142,7 +143,6 @@ export declare class CatalogProductsService {
         metaDescription: string | null;
         metaKeywords: string | null;
         isFeatured: boolean;
-        categoryId: string;
     }>;
     update(id: string, updateDto: UpdateCatalogProductDto): Promise<{
         category: {
@@ -166,6 +166,7 @@ export declare class CatalogProductsService {
         updatedAt: Date;
         dimensions: string | null;
         slug: string;
+        categoryId: string;
         shortDesc: string | null;
         images: string[];
         material: string | null;
@@ -176,7 +177,6 @@ export declare class CatalogProductsService {
         metaDescription: string | null;
         metaKeywords: string | null;
         isFeatured: boolean;
-        categoryId: string;
     }>;
     remove(id: string): Promise<{
         description: string | null;
@@ -188,6 +188,7 @@ export declare class CatalogProductsService {
         updatedAt: Date;
         dimensions: string | null;
         slug: string;
+        categoryId: string;
         shortDesc: string | null;
         images: string[];
         material: string | null;
@@ -198,7 +199,6 @@ export declare class CatalogProductsService {
         metaDescription: string | null;
         metaKeywords: string | null;
         isFeatured: boolean;
-        categoryId: string;
     }>;
     getFeatured(limit?: number): Promise<({
         category: {
@@ -222,6 +222,7 @@ export declare class CatalogProductsService {
         updatedAt: Date;
         dimensions: string | null;
         slug: string;
+        categoryId: string;
         shortDesc: string | null;
         images: string[];
         material: string | null;
@@ -232,6 +233,5 @@ export declare class CatalogProductsService {
         metaDescription: string | null;
         metaKeywords: string | null;
         isFeatured: boolean;
-        categoryId: string;
     })[]>;
 }

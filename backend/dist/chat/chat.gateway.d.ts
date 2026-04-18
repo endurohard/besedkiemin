@@ -1,12 +1,14 @@
 import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 export declare class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private chatService;
+    private jwtService;
     server: Server;
     private logger;
     private connectedUsers;
-    constructor(chatService: ChatService);
+    constructor(chatService: ChatService, jwtService: JwtService);
     handleConnection(client: Socket): void;
     handleDisconnect(client: Socket): void;
     handleJoinRoom(client: Socket, data: {
@@ -33,7 +35,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
                 contactedBy: string | null;
                 processedAt: Date | null;
                 processedBy: string | null;
-            };
+            } | null;
             messages: {
                 id: string;
                 createdAt: Date;

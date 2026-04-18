@@ -37,7 +37,7 @@ export declare class InventoryService {
             id: string;
             orderNumber: string;
             customerName: string;
-        };
+        } | null;
         productType: {
             name: string;
             id: string;
@@ -46,12 +46,12 @@ export declare class InventoryService {
             name: string;
             id: string;
             stage: import(".prisma/client").$Enums.ProductionStage;
-        };
+        } | null;
         name: string;
         id: string;
         createdAt: Date;
         quantity: number;
-        notes: string;
+        notes: string | null;
         receivedAt: Date;
     }[]>;
     getInventoryByType(productTypeId: string): Promise<({
@@ -70,7 +70,7 @@ export declare class InventoryService {
             sourceId: string | null;
             totalAmount: number | null;
             createdById: string;
-        };
+        } | null;
         productType: {
             description: string | null;
             name: string;
@@ -97,8 +97,9 @@ export declare class InventoryService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
-        };
+        } | null;
     } & {
         name: string;
         id: string;
@@ -127,7 +128,7 @@ export declare class InventoryService {
             sourceId: string | null;
             totalAmount: number | null;
             createdById: string;
-        };
+        } | null;
         productType: {
             description: string | null;
             name: string;
@@ -154,8 +155,9 @@ export declare class InventoryService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
-        };
+        } | null;
     } & {
         name: string;
         id: string;
@@ -168,7 +170,7 @@ export declare class InventoryService {
         orderId: string | null;
         receivedAt: Date;
     })[]>;
-    getInventoryItem(id: string): Promise<{
+    getInventoryItem(id: string): Promise<({
         order: {
             status: import(".prisma/client").$Enums.OrderStatus;
             description: string | null;
@@ -184,7 +186,7 @@ export declare class InventoryService {
             sourceId: string | null;
             totalAmount: number | null;
             createdById: string;
-        };
+        } | null;
         productType: {
             description: string | null;
             name: string;
@@ -211,8 +213,9 @@ export declare class InventoryService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
-        };
+        } | null;
         shipmentItems: ({
             shipment: {
                 shippedBy: {
@@ -252,12 +255,12 @@ export declare class InventoryService {
         productTypeId: string;
         orderId: string | null;
         receivedAt: Date;
-    }>;
+    }) | null>;
     getInventorySummary(): Promise<{
         productType: {
             name: string;
             id: string;
-        };
+        } | undefined;
         totalQuantity: number;
         itemCount: number;
     }[]>;

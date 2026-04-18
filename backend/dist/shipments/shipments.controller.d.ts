@@ -62,12 +62,12 @@ export declare class ShipmentsController {
         _count: {
             items: number;
         };
-        notes: string;
-        orderNumber: string;
+        notes: string | null;
+        orderNumber: string | null;
         customerName: string;
         customerPhone: string;
         deliveryAddress: string;
-        deliveryDate: Date;
+        deliveryDate: Date | null;
         shippedBy: {
             firstName: string;
             lastName: string;
@@ -92,7 +92,7 @@ export declare class ShipmentsController {
                     sourceId: string | null;
                     totalAmount: number | null;
                     createdById: string;
-                };
+                } | null;
                 productType: {
                     description: string | null;
                     name: string;
@@ -119,8 +119,9 @@ export declare class ShipmentsController {
                     deadline: Date | null;
                     requiresSewing: boolean | null;
                     upholsteryMaterial: string | null;
+                    stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                     nomenclatureId: string | null;
-                };
+                } | null;
             } & {
                 name: string;
                 id: string;
@@ -177,7 +178,7 @@ export declare class ShipmentsController {
                     sourceId: string | null;
                     totalAmount: number | null;
                     createdById: string;
-                };
+                } | null;
                 productType: {
                     description: string | null;
                     name: string;
@@ -204,8 +205,9 @@ export declare class ShipmentsController {
                     deadline: Date | null;
                     requiresSewing: boolean | null;
                     upholsteryMaterial: string | null;
+                    stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                     nomenclatureId: string | null;
-                };
+                } | null;
             } & {
                 name: string;
                 id: string;
@@ -263,7 +265,7 @@ export declare class ShipmentsController {
                     sourceId: string | null;
                     totalAmount: number | null;
                     createdById: string;
-                };
+                } | null;
                 productType: {
                     description: string | null;
                     name: string;
@@ -290,8 +292,9 @@ export declare class ShipmentsController {
                     deadline: Date | null;
                     requiresSewing: boolean | null;
                     upholsteryMaterial: string | null;
+                    stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                     nomenclatureId: string | null;
-                };
+                } | null;
             } & {
                 name: string;
                 id: string;
@@ -349,15 +352,15 @@ export declare class ShipmentsController {
         customerName: string;
         customerPhone: string;
         deliveryAddress: string;
-        deliveryDate: string;
+        deliveryDate: string | undefined;
         orderNumber: string;
         items: {
             name: string;
             quantity: number;
             productType: string;
-            orderNumber: string;
+            orderNumber: string | undefined;
         }[];
         shippedBy: string;
-        notes: string;
+        notes: string | null;
     }>;
 }

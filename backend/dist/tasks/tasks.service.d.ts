@@ -506,4 +506,71 @@ export declare class TasksService {
     getUnacceptedDefectsCount(userId: string): Promise<{
         count: number;
     }>;
+    updateTaskQuantity(taskId: string, userId: string, quantity: number): Promise<{
+        product: {
+            order: {
+                id: string;
+                priority: import(".prisma/client").$Enums.OrderPriority;
+                orderNumber: string;
+                customerName: string;
+            };
+            productType: {
+                description: string | null;
+                name: string;
+                isActive: boolean;
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                requiresSewing: boolean;
+                productionTimeHours: number | null;
+            };
+        } & {
+            description: string | null;
+            name: string;
+            id: string;
+            color: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            quantity: number;
+            productTypeId: string;
+            orderId: string;
+            dimensions: string | null;
+            schemaImageUrl: string | null;
+            deadline: Date | null;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+            nomenclatureId: string | null;
+        };
+        assignedTo: {
+            role: {
+                name: string;
+                code: string;
+            };
+            firstName: string;
+            lastName: string;
+            id: string;
+        };
+    } & {
+        status: import(".prisma/client").$Enums.TaskStatus;
+        description: string | null;
+        title: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        stage: import(".prisma/client").$Enums.ProductionStage;
+        quantity: number;
+        priority: import(".prisma/client").$Enums.TaskPriority;
+        acceptedAt: Date | null;
+        completedAt: Date | null;
+        passedAt: Date | null;
+        rejectedAt: Date | null;
+        notes: string | null;
+        defectPhotos: string[];
+        quantityProcessed: number;
+        productId: string;
+        assignedToId: string;
+        workflowStageId: string | null;
+    }>;
 }

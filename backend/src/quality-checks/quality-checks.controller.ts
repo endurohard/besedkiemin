@@ -11,6 +11,7 @@ import {
   UploadedFile,
   Query,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiQuery } from '@nestjs/swagger';
@@ -48,8 +49,8 @@ export class QualityChecksController {
         },
       }),
       fileFilter: (req, file, callback) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-          return callback(new Error('Разрешены только изображения!'), false);
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
+          return callback(new BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
         }
         callback(null, true);
       },
@@ -122,8 +123,8 @@ export class QualityChecksController {
         },
       }),
       fileFilter: (req, file, callback) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-          return callback(new Error('Разрешены только изображения!'), false);
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
+          return callback(new BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
         }
         callback(null, true);
       },

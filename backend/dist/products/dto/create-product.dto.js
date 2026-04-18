@@ -66,7 +66,7 @@ __decorate([
     (0, swagger_1.ApiProperty)({ example: true, required: false, description: 'Требуется ли пошив (null = из типа продукта)' }),
     (0, class_validator_1.IsBoolean)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
+    __metadata("design:type", Object)
 ], CreateProductDto.prototype, "requiresSewing", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'Орех, код 906', required: false, description: 'Цвет/покрытие (для маляра)' }),
@@ -86,4 +86,15 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "nomenclatureId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'uuid-worker-id', required: false, description: 'ID работника для назначения на первый этап' }),
+    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDto.prototype, "assignedWorkerId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, description: 'Назначения работников на этапы: {"PREPARATION": "userId", "PAINTING": "userId", ...}' }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Object)
+], CreateProductDto.prototype, "stageAssignments", void 0);
 //# sourceMappingURL=create-product.dto.js.map

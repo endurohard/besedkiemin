@@ -8,7 +8,8 @@ export declare class CreateNomenclatureDto {
     color?: string;
     upholsteryMaterial?: string;
     weight?: number;
-    basePrice?: number;
+    costPrice?: number;
+    retailPrice?: number;
     productionTimeHours?: number;
     isActive?: boolean;
 }

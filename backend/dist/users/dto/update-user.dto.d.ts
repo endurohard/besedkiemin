@@ -1,3 +1,4 @@
+import { PaymentType } from '@prisma/client';
 export declare class UpdateUserDto {
     email?: string;
     password?: string;
@@ -10,4 +11,6 @@ export declare class UpdateUserDto {
     sipUser?: string;
     sipPassword?: string;
     sipPort?: number;
+    paymentType?: PaymentType;
+    monthlySalary?: number;
 }

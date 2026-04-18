@@ -18,8 +18,8 @@ const nomenclature_service_1 = require("./nomenclature.service");
 const create_nomenclature_dto_1 = require("./dto/create-nomenclature.dto");
 const update_nomenclature_dto_1 = require("./dto/update-nomenclature.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
-const roles_guard_1 = require("../auth/guards/roles.guard");
-const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const permissions_guard_1 = require("../auth/guards/permissions.guard");
+const permissions_decorator_1 = require("../auth/decorators/permissions.decorator");
 let NomenclatureController = class NomenclatureController {
     constructor(nomenclatureService) {
         this.nomenclatureService = nomenclatureService;
@@ -49,7 +49,7 @@ let NomenclatureController = class NomenclatureController {
 exports.NomenclatureController = NomenclatureController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
+    (0, permissions_decorator_1.RequirePermissions)('nomenclature:manage'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_nomenclature_dto_1.CreateNomenclatureDto]),
@@ -57,7 +57,7 @@ __decorate([
 ], NomenclatureController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
+    (0, permissions_decorator_1.RequirePermissions)('nomenclature:view'),
     __param(0, (0, common_1.Query)('includeInactive')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -65,7 +65,7 @@ __decorate([
 ], NomenclatureController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('by-type/:productTypeId'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
+    (0, permissions_decorator_1.RequirePermissions)('nomenclature:view'),
     __param(0, (0, common_1.Param)('productTypeId')),
     __param(1, (0, common_1.Query)('includeInactive')),
     __metadata("design:type", Function),
@@ -74,7 +74,7 @@ __decorate([
 ], NomenclatureController.prototype, "findByProductType", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
+    (0, permissions_decorator_1.RequirePermissions)('nomenclature:view'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -82,7 +82,7 @@ __decorate([
 ], NomenclatureController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
+    (0, permissions_decorator_1.RequirePermissions)('nomenclature:manage'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -91,7 +91,7 @@ __decorate([
 ], NomenclatureController.prototype, "update", null);
 __decorate([
     (0, common_1.Patch)(':id/toggle-active'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
+    (0, permissions_decorator_1.RequirePermissions)('nomenclature:manage'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -99,7 +99,7 @@ __decorate([
 ], NomenclatureController.prototype, "toggleActive", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'SUPER_ADMIN'),
+    (0, permissions_decorator_1.RequirePermissions)('nomenclature:manage'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -107,7 +107,7 @@ __decorate([
 ], NomenclatureController.prototype, "remove", null);
 exports.NomenclatureController = NomenclatureController = __decorate([
     (0, common_1.Controller)('nomenclature'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [nomenclature_service_1.NomenclatureService])
 ], NomenclatureController);
 //# sourceMappingURL=nomenclature.controller.js.map

@@ -129,7 +129,8 @@ export declare class PayrollController {
             sku: string | null;
             materials: string | null;
             weight: number | null;
-            basePrice: number | null;
+            costPrice: number | null;
+            retailPrice: number | null;
             discontinuedAt: Date | null;
         } | null;
         workflowStage: {
@@ -180,7 +181,8 @@ export declare class PayrollController {
             sku: string | null;
             materials: string | null;
             weight: number | null;
-            basePrice: number | null;
+            costPrice: number | null;
+            retailPrice: number | null;
             discontinuedAt: Date | null;
         } | null;
         workflowStage: {
@@ -264,7 +266,8 @@ export declare class PayrollController {
             sku: string | null;
             materials: string | null;
             weight: number | null;
-            basePrice: number | null;
+            costPrice: number | null;
+            retailPrice: number | null;
             discontinuedAt: Date | null;
         } | null;
         workflowStage: {

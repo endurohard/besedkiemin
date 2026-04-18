@@ -26,6 +26,7 @@ export declare class CatalogCategoriesController {
             updatedAt: Date;
             dimensions: string | null;
             slug: string;
+            categoryId: string;
             shortDesc: string | null;
             images: string[];
             material: string | null;
@@ -36,7 +37,6 @@ export declare class CatalogCategoriesController {
             metaDescription: string | null;
             metaKeywords: string | null;
             isFeatured: boolean;
-            categoryId: string;
         }[];
     } & {
         description: string | null;
@@ -60,6 +60,7 @@ export declare class CatalogCategoriesController {
             updatedAt: Date;
             dimensions: string | null;
             slug: string;
+            categoryId: string;
             shortDesc: string | null;
             images: string[];
             material: string | null;
@@ -70,7 +71,6 @@ export declare class CatalogCategoriesController {
             metaDescription: string | null;
             metaKeywords: string | null;
             isFeatured: boolean;
-            categoryId: string;
         }[];
     } & {
         description: string | null;
@@ -94,6 +94,7 @@ export declare class CatalogCategoriesController {
             updatedAt: Date;
             dimensions: string | null;
             slug: string;
+            categoryId: string;
             shortDesc: string | null;
             images: string[];
             material: string | null;
@@ -104,7 +105,6 @@ export declare class CatalogCategoriesController {
             metaDescription: string | null;
             metaKeywords: string | null;
             isFeatured: boolean;
-            categoryId: string;
         }[];
     } & {
         description: string | null;

@@ -45,6 +45,11 @@ let AnalyticsController = class AnalyticsController {
         const end = endDate ? new Date(endDate) : undefined;
         return this.analyticsService.getFullCycleAnalytics(start, end);
     }
+    getProductivityReport(startDate, endDate) {
+        const start = startDate ? new Date(startDate) : undefined;
+        const end = endDate ? new Date(endDate) : undefined;
+        return this.analyticsService.getProductivityReport(start, end);
+    }
 };
 exports.AnalyticsController = AnalyticsController;
 __decorate([
@@ -97,6 +102,17 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "getFullCycleAnalytics", null);
+__decorate([
+    (0, common_1.Get)('productivity'),
+    (0, swagger_1.ApiOperation)({ summary: 'Производительность сотрудников: коэффициент полезности, окладники vs сдельники (только OWNER)' }),
+    (0, swagger_1.ApiQuery)({ name: 'startDate', required: false, type: String, description: 'Дата начала (ISO 8601), по умолчанию начало месяца' }),
+    (0, swagger_1.ApiQuery)({ name: 'endDate', required: false, type: String, description: 'Дата окончания (ISO 8601), по умолчанию сегодня' }),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], AnalyticsController.prototype, "getProductivityReport", null);
 exports.AnalyticsController = AnalyticsController = __decorate([
     (0, swagger_1.ApiTags)('Analytics'),
     (0, common_1.Controller)('analytics'),

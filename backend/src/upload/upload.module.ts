@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, BadRequestException } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -18,8 +18,8 @@ import { UploadController } from './upload.controller';
       }),
       fileFilter: (req, file, callback) => {
         // Разрешаем только изображения
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-          return callback(new Error('Разрешены только изображения!'), false);
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
+          return callback(new BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
         }
         callback(null, true);
       },

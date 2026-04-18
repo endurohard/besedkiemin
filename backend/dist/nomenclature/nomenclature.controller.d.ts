@@ -30,7 +30,8 @@ export declare class NomenclatureController {
         sku: string | null;
         materials: string | null;
         weight: number | null;
-        basePrice: number | null;
+        costPrice: number | null;
+        retailPrice: number | null;
         discontinuedAt: Date | null;
     }>;
     findAll(includeInactive?: string): Promise<({
@@ -59,7 +60,8 @@ export declare class NomenclatureController {
         sku: string | null;
         materials: string | null;
         weight: number | null;
-        basePrice: number | null;
+        costPrice: number | null;
+        retailPrice: number | null;
         discontinuedAt: Date | null;
     })[]>;
     findByProductType(productTypeId: string, includeInactive?: string): Promise<({
@@ -88,7 +90,8 @@ export declare class NomenclatureController {
         sku: string | null;
         materials: string | null;
         weight: number | null;
-        basePrice: number | null;
+        costPrice: number | null;
+        retailPrice: number | null;
         discontinuedAt: Date | null;
     })[]>;
     findOne(id: string): Promise<{
@@ -117,7 +120,8 @@ export declare class NomenclatureController {
         sku: string | null;
         materials: string | null;
         weight: number | null;
-        basePrice: number | null;
+        costPrice: number | null;
+        retailPrice: number | null;
         discontinuedAt: Date | null;
     }>;
     update(id: string, updateDto: UpdateNomenclatureDto): Promise<{
@@ -146,7 +150,8 @@ export declare class NomenclatureController {
         sku: string | null;
         materials: string | null;
         weight: number | null;
-        basePrice: number | null;
+        costPrice: number | null;
+        retailPrice: number | null;
         discontinuedAt: Date | null;
     }>;
     toggleActive(id: string): Promise<{
@@ -175,7 +180,8 @@ export declare class NomenclatureController {
         sku: string | null;
         materials: string | null;
         weight: number | null;
-        basePrice: number | null;
+        costPrice: number | null;
+        retailPrice: number | null;
         discontinuedAt: Date | null;
     }>;
     remove(id: string): Promise<{
@@ -193,7 +199,8 @@ export declare class NomenclatureController {
         sku: string | null;
         materials: string | null;
         weight: number | null;
-        basePrice: number | null;
+        costPrice: number | null;
+        retailPrice: number | null;
         discontinuedAt: Date | null;
     }>;
 }

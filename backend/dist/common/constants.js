@@ -11,7 +11,7 @@ exports.PAGINATION = {
 };
 exports.FILE_UPLOAD = {
     MAX_FILE_SIZE: 5 * 1024 * 1024,
-    ALLOWED_EXTENSIONS: /\.(jpg|jpeg|png|gif)$/,
+    ALLOWED_EXTENSIONS: /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i,
     UPLOAD_DIR: './uploads',
 };
 exports.AUTH = {

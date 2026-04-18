@@ -42,16 +42,16 @@ export declare class AuthService {
                 permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
-            };
-            telegramId: string;
-            sipServer: string;
-            sipUser: string;
-            sipPort: number;
-            sipWsPort: number;
+            } | null | undefined;
+            telegramId: string | null | undefined;
+            sipServer: string | null | undefined;
+            sipUser: string | null | undefined;
+            sipPort: number | null | undefined;
+            sipWsPort: number | null | undefined;
         };
     }>;
     findUserById(userId: string): Promise<import("../users/entities/user.entity").UserEntity>;
-    validatePin(pin: string): Promise<{
+    validatePin(pin: string): Promise<({
         role: {
             description: string | null;
             order: number;
@@ -75,6 +75,8 @@ export declare class AuthService {
         sipUser: string | null;
         sipPassword: string | null;
         sipPort: number | null;
+        paymentType: import(".prisma/client").$Enums.PaymentType;
+        monthlySalary: number | null;
         isActive: boolean;
         telegramId: string | null;
         id: string;
@@ -83,6 +85,6 @@ export declare class AuthService {
         sipWsPort: number | null;
         isDepartmentAccount: boolean;
         pin: string | null;
-    }>;
+    }) | null>;
 }
 export {};

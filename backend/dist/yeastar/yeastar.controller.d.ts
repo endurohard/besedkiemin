@@ -29,7 +29,7 @@ export declare class YeastarController {
         message?: undefined;
     } | {
         success: boolean;
-        calls: any[];
+        calls: never[];
         message: any;
     }>;
 }

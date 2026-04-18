@@ -94,7 +94,7 @@ export declare class WorkflowController {
         createdAt: Date;
         updatedAt: Date;
         legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-    }>;
+    } | null>;
     getPreviousStage(id: string): Promise<{
         description: string | null;
         order: number;
@@ -104,5 +104,5 @@ export declare class WorkflowController {
         createdAt: Date;
         updatedAt: Date;
         legacyStage: import(".prisma/client").$Enums.ProductionStage | null;
-    }>;
+    } | null>;
 }

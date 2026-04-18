@@ -28,12 +28,12 @@ export declare class AuthController {
                 permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
-            };
-            telegramId: string;
-            sipServer: string;
-            sipUser: string;
-            sipPort: number;
-            sipWsPort: number;
+            } | null | undefined;
+            telegramId: string | null | undefined;
+            sipServer: string | null | undefined;
+            sipUser: string | null | undefined;
+            sipPort: number | null | undefined;
+            sipWsPort: number | null | undefined;
         };
     }>;
     getProfile(user: AuthenticatedUser): AuthenticatedUser;
@@ -66,12 +66,12 @@ export declare class AuthController {
                 permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
-            };
-            telegramId: string;
-            sipServer: string;
-            sipUser: string;
-            sipPort: number;
-            sipWsPort: number;
+            } | null | undefined;
+            telegramId: string | null | undefined;
+            sipServer: string | null | undefined;
+            sipUser: string | null | undefined;
+            sipPort: number | null | undefined;
+            sipWsPort: number | null | undefined;
         };
     } | {
         status: string;
@@ -96,12 +96,12 @@ export declare class AuthController {
                 permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
-            };
-            telegramId: string;
-            sipServer: string;
-            sipUser: string;
-            sipPort: number;
-            sipWsPort: number;
+            } | null | undefined;
+            telegramId: string | null | undefined;
+            sipServer: string | null | undefined;
+            sipUser: string | null | undefined;
+            sipPort: number | null | undefined;
+            sipWsPort: number | null | undefined;
         };
     }>;
     setMyPin(user: AuthenticatedUser, body: {

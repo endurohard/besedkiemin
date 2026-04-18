@@ -469,6 +469,11 @@ export const tasksApi = {
     return response.data;
   },
 
+  updateTaskQuantity: async (id: string, quantity: number): Promise<Task> => {
+    const response = await api.patch<Task>(`/tasks/${id}/quantity`, { quantity });
+    return response.data;
+  },
+
   rejectTask: async (id: string, data: RejectTaskDto): Promise<Task> => {
     const response = await api.post<Task>(`/tasks/${id}/reject`, data);
     return response.data;

@@ -227,6 +227,10 @@ export class RolesService {
       // Каталог
       { code: 'catalog:view', name: 'Просмотр каталога', group: 'Каталог' },
       { code: 'catalog:manage', name: 'Управление каталогом', group: 'Каталог' },
+
+      // Номенклатура
+      { code: 'nomenclature:view', name: 'Просмотр номенклатуры', group: 'Номенклатура' },
+      { code: 'nomenclature:manage', name: 'Управление номенклатурой', group: 'Номенклатура' },
     ];
   }
 }

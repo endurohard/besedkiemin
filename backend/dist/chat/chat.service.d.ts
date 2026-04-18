@@ -72,7 +72,7 @@ export declare class ChatService {
             id: string;
             orderNumber: string;
             customerPhone: string;
-            customerEmail: string;
+            customerEmail: string | null;
         } | {
             id: string;
             orderNumber: string;
@@ -122,7 +122,7 @@ export declare class ChatService {
             contactedBy: string | null;
             processedAt: Date | null;
             processedBy: string | null;
-        };
+        } | null;
         messages: {
             id: string;
             createdAt: Date;

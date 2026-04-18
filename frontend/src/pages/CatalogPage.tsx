@@ -153,7 +153,7 @@ const CatalogPage: React.FC = () => {
 
         <div className="relative z-10 text-center px-4 max-w-4xl">
           <div className="mb-6 anim-up">
-            <span className="inline-block px-6 py-2 border border-[#C5A55A]/40 text-[#C5A55A] text-xs tracking-[.3em] uppercase font-light">Премиум-качество с 2020 года</span>
+            <span className="inline-block px-6 py-2 border border-[#C5A55A]/40 text-[#C5A55A] text-xs tracking-[.3em] uppercase font-light">Премиум-качество с 1998 года</span>
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight anim-up d2 font-serif-brand">
             <span className="shimmer">Садовая мебель</span>
@@ -188,7 +188,7 @@ const CatalogPage: React.FC = () => {
         <div className="gold-border rounded-lg p-8 md:p-12 bg-[#1A1A1A] anim-up d2">
           <div className="text-lg text-gray-400 leading-relaxed space-y-4 text-center">
             <p>Компания <span className="text-[#C5A55A]">BESEDKI EMIN</span> специализируется на производстве высококачественной садовой мебели и беседок. Мы используем только натуральные материалы и современные технологии обработки древесины.</p>
-            <p>С 2020 года мы создаем уникальные изделия, которые украшают загородные дома и участки по всей России. Индивидуальный подход к каждому клиенту и гарантия качества на все изделия.</p>
+            <p>С 1998 года мы создаем уникальные изделия, которые украшают загородные дома и участки по всей России. Индивидуальный подход к каждому клиенту и гарантия качества на все изделия.</p>
           </div>
         </div>
       </section>

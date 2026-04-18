@@ -3,10 +3,10 @@ import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional, IsInt, IsNumber, 
 import { PaymentType } from '@prisma/client';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'user@example.com' })
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
+  @ApiProperty({ example: 'user@example.com', required: false })
+  @IsOptional()
+  @IsString()
+  email?: string;
 
   @ApiProperty({ example: 'password123' })
   @IsString()

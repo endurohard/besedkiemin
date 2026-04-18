@@ -85,7 +85,7 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
             if (order.items.length > 0) {
                 message += `\n📦 <b>Товары:</b>\n`;
                 order.items.forEach((item) => {
-                    message += `   • ${item.product.name} x ${item.quantity} = ${(item.price * item.quantity).toLocaleString('ru-RU')} ₽\n`;
+                    message += `   • ${item.product.name} x ${item.quantity} = ${((item.price ?? 0) * item.quantity).toLocaleString('ru-RU')} ₽\n`;
                 });
                 message += `\n💰 <b>Итого: ${totalAmount.toLocaleString('ru-RU')} ₽</b>`;
             }

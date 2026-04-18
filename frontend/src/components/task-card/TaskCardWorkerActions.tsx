@@ -4,7 +4,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { tasksApi } from '@/lib/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle, ArrowRight, Package } from 'lucide-react';
+import { CheckCircle, ArrowRight, Package, Pencil } from 'lucide-react';
 import { TaskCardWorkerSelectModal } from './TaskCardWorkerSelectModal';
 
 interface TaskCardWorkerActionsProps {
@@ -20,12 +20,25 @@ export const TaskCardWorkerActions = ({
   isSimplifiedRole,
   needsWorkerSelection,
 }: TaskCardWorkerActionsProps) => {
+  // Если задача принята другим работником — показываем только статус
+  const isAssignedToOther = task.status !== TaskStatus.NEW && task.assignedTo?.id && task.assignedTo.id !== currentUserId;
+  if (isAssignedToOther) {
+    const statusText = task.status === TaskStatus.ACCEPTED ? 'В работе' : task.status === TaskStatus.COMPLETED ? 'Завершено' : '';
+    const workerName = `${task.assignedTo?.firstName || ''} ${task.assignedTo?.lastName || ''}`.trim();
+    return (
+      <div className="text-center p-1.5 bg-gray-50 border border-gray-200 rounded text-[10px] text-gray-600">
+        {statusText} — {workerName}
+      </div>
+    );
+  }
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState('');
   const [completedQuantity, setCompletedQuantity] = useState(task.quantity || task.product?.quantity || 0);
   const [showNotesInput, setShowNotesInput] = useState(false);
   const [showWorkerSelectModal, setShowWorkerSelectModal] = useState(false);
   const [acceptQuantity, setAcceptQuantity] = useState(task.quantity || task.product?.quantity || 1);
+  const [isEditingQuantity, setIsEditingQuantity] = useState(false);
+  const [editQuantity, setEditQuantity] = useState(task.quantity || task.product?.quantity || 0);
 
   const acceptMutation = useMutation({
     mutationFn: (params?: { workerId?: string; quantity?: number }) =>
@@ -59,6 +72,15 @@ export const TaskCardWorkerActions = ({
     mutationFn: () => tasksApi.passTask(task.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+
+  const updateQuantityMutation = useMutation({
+    mutationFn: (qty: number) => tasksApi.updateTaskQuantity(task.id, qty),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['department-tasks'] });
+      setIsEditingQuantity(false);
     },
   });
 
@@ -99,21 +121,56 @@ export const TaskCardWorkerActions = ({
       )}
 
       {task.status === TaskStatus.ACCEPTED && !showNotesInput && (
-        <Button
-          onClick={() => {
-            if (task.product && task.product.quantity === 1) {
-              completeMutation.mutate();
-            } else {
-              setShowNotesInput(true);
-            }
-          }}
-          disabled={completeMutation.isPending}
-          className="w-full flex items-center justify-center gap-1 text-xs py-1.5"
-          size="sm"
-        >
-          <CheckCircle size={12} />
-          {completeMutation.isPending ? 'Завершение...' : 'Завершить'}
-        </Button>
+        <div className="space-y-1">
+          <Button
+            onClick={() => {
+              if (task.product && task.product.quantity === 1) {
+                completeMutation.mutate();
+              } else {
+                setShowNotesInput(true);
+              }
+            }}
+            disabled={completeMutation.isPending}
+            className="w-full flex items-center justify-center gap-1 text-xs py-1.5"
+            size="sm"
+          >
+            <CheckCircle size={12} />
+            {completeMutation.isPending ? 'Завершение...' : 'Завершить'}
+          </Button>
+          {!isEditingQuantity ? (
+            <button
+              onClick={() => { setEditQuantity(task.quantity || task.product?.quantity || 0); setIsEditingQuantity(true); }}
+              className="w-full flex items-center justify-center gap-1 text-[10px] py-1 text-gray-500 hover:text-blue-600 transition-colors"
+            >
+              <Pencil size={10} />
+              Изменить кол-во
+            </button>
+          ) : (
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                min={1}
+                max={task.product?.quantity || 999}
+                value={editQuantity}
+                onChange={(e) => setEditQuantity(Number(e.target.value))}
+                className="h-7 text-xs flex-1"
+              />
+              <button
+                onClick={() => updateQuantityMutation.mutate(editQuantity)}
+                disabled={updateQuantityMutation.isPending}
+                className="px-2 py-1 bg-blue-500 text-white rounded text-[10px] hover:bg-blue-600"
+              >
+                OK
+              </button>
+              <button
+                onClick={() => setIsEditingQuantity(false)}
+                className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-[10px] hover:bg-gray-300"
+              >
+                X
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {showNotesInput && task.status === TaskStatus.ACCEPTED && (

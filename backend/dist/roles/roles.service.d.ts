@@ -69,7 +69,7 @@ export declare class RolesService {
         createdAt: Date;
         updatedAt: Date;
     }>;
-    findByCode(code: string): Promise<{
+    findByCode(code: string): Promise<({
         workflowStages: ({
             workflowStage: {
                 description: string | null;
@@ -98,7 +98,7 @@ export declare class RolesService {
         permissions: import("@prisma/client/runtime/library").JsonValue;
         createdAt: Date;
         updatedAt: Date;
-    }>;
+    }) | null>;
     create(dto: CreateRoleDto): Promise<{
         _count: {
             users: number;

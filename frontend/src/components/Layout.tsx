@@ -9,7 +9,17 @@ import { TelegramLinkWidget } from './TelegramLinkWidget';
 import { useNotifications } from '@/hooks/useNotifications';
 
 // Роли рабочих которые должны всегда попадать на страницу задач
-const WORKER_ROLES = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'DESIGNER'];
+const WORKER_ROLES = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'DESIGNER', 'SEWER', 'WAREHOUSE'];
+
+// Название отдела по роли (для отображения в header вместо ФИО)
+const ROLE_DEPARTMENT: Record<string, string> = {
+  PREPARER: 'Заготовка',
+  PAINTER: 'Покраска',
+  ASSEMBLER: 'Сборка',
+  DESIGNER: 'Проектирование',
+  SEWER: 'Швейный цех',
+  WAREHOUSE: 'Склад',
+};
 
 // Разрешённые страницы для каждой роли (кроме стандартных /app и /app/defects)
 const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
@@ -64,8 +74,17 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center gap-2 sm:gap-3">
             {/* User info - hidden on very small screens */}
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-muted-foreground">{user?.role?.name}</p>
+              {user?.role?.code && WORKER_ROLES.includes(user.role.code) ? (
+                <>
+                  <p className="text-sm font-medium">{ROLE_DEPARTMENT[user.role.code] || user.role.name}</p>
+                  <p className="text-xs text-muted-foreground">{user?.firstName} {user?.lastName}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
+                  <p className="text-xs text-muted-foreground">{user?.role?.name}</p>
+                </>
+              )}
             </div>
             <TelegramLinkWidget />
             <Button

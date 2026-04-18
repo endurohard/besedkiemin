@@ -13,29 +13,29 @@ import { NomenclatureService } from './nomenclature.service';
 import { CreateNomenclatureDto } from './dto/create-nomenclature.dto';
 import { UpdateNomenclatureDto } from './dto/update-nomenclature.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 
 
 @Controller('nomenclature')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class NomenclatureController {
   constructor(private readonly nomenclatureService: NomenclatureService) {}
 
   @Post()
-  @Roles('OWNER', 'MANAGER', 'SUPER_ADMIN')
+  @RequirePermissions('nomenclature:manage')
   create(@Body() createDto: CreateNomenclatureDto) {
     return this.nomenclatureService.create(createDto);
   }
 
   @Get()
-  @Roles('OWNER', 'MANAGER', 'SUPER_ADMIN')
+  @RequirePermissions('nomenclature:view')
   findAll(@Query('includeInactive') includeInactive?: string) {
     return this.nomenclatureService.findAll(includeInactive === 'true');
   }
 
   @Get('by-type/:productTypeId')
-  @Roles('OWNER', 'MANAGER', 'SUPER_ADMIN')
+  @RequirePermissions('nomenclature:view')
   findByProductType(
     @Param('productTypeId') productTypeId: string,
     @Query('includeInactive') includeInactive?: string,
@@ -47,25 +47,25 @@ export class NomenclatureController {
   }
 
   @Get(':id')
-  @Roles('OWNER', 'MANAGER', 'SUPER_ADMIN')
+  @RequirePermissions('nomenclature:view')
   findOne(@Param('id') id: string) {
     return this.nomenclatureService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles('OWNER', 'MANAGER', 'SUPER_ADMIN')
+  @RequirePermissions('nomenclature:manage')
   update(@Param('id') id: string, @Body() updateDto: UpdateNomenclatureDto) {
     return this.nomenclatureService.update(id, updateDto);
   }
 
   @Patch(':id/toggle-active')
-  @Roles('OWNER', 'MANAGER', 'SUPER_ADMIN')
+  @RequirePermissions('nomenclature:manage')
   toggleActive(@Param('id') id: string) {
     return this.nomenclatureService.toggleActive(id);
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'MANAGER', 'SUPER_ADMIN')
+  @RequirePermissions('nomenclature:manage')
   remove(@Param('id') id: string) {
     return this.nomenclatureService.remove(id);
   }

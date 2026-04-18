@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateUserDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
+const client_1 = require("@prisma/client");
 class UpdateUserDto {
 }
 exports.UpdateUserDto = UpdateUserDto;
@@ -84,4 +85,17 @@ __decorate([
     (0, class_validator_1.Max)(65535),
     __metadata("design:type", Number)
 ], UpdateUserDto.prototype, "sipPort", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: client_1.PaymentType, required: false, description: 'Тип оплаты: PIECE_RATE (сдельная) или SALARY (оклад)' }),
+    (0, class_validator_1.IsEnum)(client_1.PaymentType),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "paymentType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 50000, required: false, description: 'Оклад в рублях/мес (только для SALARY)' }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], UpdateUserDto.prototype, "monthlySalary", void 0);
 //# sourceMappingURL=update-user.dto.js.map

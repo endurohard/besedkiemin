@@ -64,7 +64,7 @@ let UploadService = UploadService_1 = class UploadService {
             }),
             fileFilter: (req, file, callback) => {
                 if (!file.originalname.match(constants_1.FILE_UPLOAD.ALLOWED_EXTENSIONS)) {
-                    return callback(new Error('Разрешены только изображения!'), false);
+                    return callback(new common_1.BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
                 }
                 callback(null, true);
             },

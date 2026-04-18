@@ -53,7 +53,7 @@ export const CompanySettingsPage = () => {
       setFormData({
         companyName: settings.companyName,
         phone: settings.phone,
-        email: settings.email,
+        email: settings.email || '',
         address: settings.address,
         website: settings.website,
         supportTelegram: settings.supportTelegram || '',

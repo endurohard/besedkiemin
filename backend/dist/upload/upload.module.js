@@ -29,8 +29,8 @@ exports.UploadModule = UploadModule = __decorate([
                     },
                 }),
                 fileFilter: (req, file, callback) => {
-                    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-                        return callback(new Error('Разрешены только изображения!'), false);
+                    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
+                        return callback(new common_1.BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
                     }
                     callback(null, true);
                 },

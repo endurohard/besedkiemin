@@ -174,6 +174,8 @@ let RolesService = class RolesService {
             { code: 'chat:manage', name: 'Управление чатами', group: 'Чат' },
             { code: 'catalog:view', name: 'Просмотр каталога', group: 'Каталог' },
             { code: 'catalog:manage', name: 'Управление каталогом', group: 'Каталог' },
+            { code: 'nomenclature:view', name: 'Просмотр номенклатуры', group: 'Номенклатура' },
+            { code: 'nomenclature:manage', name: 'Управление номенклатурой', group: 'Номенклатура' },
         ];
     }
 };
