@@ -21,7 +21,9 @@ __decorate([
 ], CreatePenaltyDto.prototype, "userId", void 0);
 __decorate([
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsIn)(constants_1.PENALTY_AMOUNTS, { message: 'Сумма штрафа должна быть из предопределённого списка' }),
+    (0, class_validator_1.IsIn)(constants_1.PENALTY_AMOUNTS, {
+        message: "Сумма штрафа должна быть из предопределённого списка",
+    }),
     __metadata("design:type", Number)
 ], CreatePenaltyDto.prototype, "amount", void 0);
 __decorate([
@@ -49,7 +51,9 @@ exports.UpdatePenaltyDto = UpdatePenaltyDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsIn)(constants_1.PENALTY_AMOUNTS, { message: 'Сумма штрафа должна быть из предопределённого списка' }),
+    (0, class_validator_1.IsIn)(constants_1.PENALTY_AMOUNTS, {
+        message: "Сумма штрафа должна быть из предопределённого списка",
+    }),
     __metadata("design:type", Number)
 ], UpdatePenaltyDto.prototype, "amount", void 0);
 __decorate([

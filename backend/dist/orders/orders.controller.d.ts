@@ -1,9 +1,9 @@
-import { Response } from 'express';
-import { OrdersService } from './orders.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
-import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
-import { OrderStatus } from '@prisma/client';
+import { Response } from "express";
+import { OrdersService } from "./orders.service";
+import { CreateOrderDto } from "./dto/create-order.dto";
+import { UpdateOrderDto } from "./dto/update-order.dto";
+import { AuthenticatedUser } from "../auth/strategies/jwt.strategy";
+import { OrderStatus } from "@prisma/client";
 export declare class OrdersController {
     private readonly ordersService;
     constructor(ordersService: OrdersService);

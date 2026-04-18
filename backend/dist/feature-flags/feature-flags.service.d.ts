@@ -1,5 +1,5 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { UpdateFeatureFlagDto } from './dto/update-feature-flag.dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { UpdateFeatureFlagDto } from "./dto/update-feature-flag.dto";
 export declare class FeatureFlagsService {
     private prisma;
     constructor(prisma: PrismaService);

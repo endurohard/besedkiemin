@@ -1,6 +1,6 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateCatalogProductDto } from './dto/create-catalog-product.dto';
-import { UpdateCatalogProductDto } from './dto/update-catalog-product.dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateCatalogProductDto } from "./dto/create-catalog-product.dto";
+import { UpdateCatalogProductDto } from "./dto/update-catalog-product.dto";
 export declare class CatalogProductsService {
     private prisma;
     constructor(prisma: PrismaService);

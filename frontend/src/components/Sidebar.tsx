@@ -184,23 +184,23 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
           isSelected
             ? 'bg-primary text-primary-foreground'
             : isCurrentUser
-              ? 'bg-blue-50 hover:bg-blue-100'
-              : 'hover:bg-gray-50'
+              ? 'bg-muted hover:bg-accent'
+              : 'hover:bg-accent'
         }`}
       >
-        <User size={14} className={isSelected ? 'text-white' : isCurrentUser ? 'text-blue-600' : 'text-gray-400'} />
+        <User size={14} className={isSelected ? 'text-primary-foreground' : isCurrentUser ? 'text-primary' : 'text-muted-foreground'} />
         <span className={`flex-1 text-xs font-medium truncate ${
-          isSelected ? 'text-white' : isCurrentUser ? 'text-blue-800' : 'text-gray-700'
+          isSelected ? 'text-primary-foreground' : isCurrentUser ? 'text-primary' : 'text-foreground'
         }`}>
           {worker.lastName} {worker.firstName}
           {isCurrentUser && ' (Я)'}
         </span>
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
           isSelected
-            ? 'bg-white text-primary'
+            ? 'bg-primary-foreground text-primary'
             : isCurrentUser
-              ? 'bg-blue-500 text-white'
-              : 'bg-yellow-500 text-white'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-figma-warning text-figma-bg'
         }`}>
           {taskCount}
         </span>
@@ -210,7 +210,7 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
 
   return (
     <aside className={`
-      border-r bg-card min-h-[calc(100vh-49px)] transition-all duration-200 flex flex-col
+      border-r bg-sidebar text-sidebar-foreground min-h-[calc(100vh-49px)] transition-all duration-200 flex flex-col
       ${isMobile ? 'w-56' : (isCollapsed ? 'w-14' : 'w-48')}
     `}>
       {/* Toggle button - hidden on mobile */}
@@ -338,15 +338,15 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
       {/* Секция "Отдел" - сотрудники с задачами (только для производственных работников) */}
       {isProductionWorker && !isCollapsed && departmentTasks && departmentTasks.length > 0 && (
         <div className="flex-1 border-t mt-2 overflow-hidden flex flex-col">
-          <div className="px-3 py-2 bg-gray-50 border-b flex items-center justify-between">
+          <div className="px-3 py-2 bg-muted border-b flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HardHat size={14} className="text-gray-600" />
-              <span className="text-xs font-semibold text-gray-700 uppercase">Отдел</span>
+              <HardHat size={14} className="text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Отдел</span>
             </div>
             {selectedWorkerId && (
               <button
                 onClick={showAllTasks}
-                className="text-[10px] text-blue-600 hover:text-blue-800 font-medium"
+                className="text-[10px] text-primary hover:text-primary/80 font-medium"
               >
                 Все задачи
               </button>

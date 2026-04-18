@@ -144,9 +144,12 @@ model User {
 
   // PIN-код для быстрого входа производственных работников (хранится в виде хеша bcrypt)
   pin String? @map("pin")
+  // HMAC-SHA256(pin, PIN_PEPPER) — индексируемый ключ для O(1) поиска по PIN.
+  // Заполняется в setPin; legacy строки с NULL ищутся линейным перебором bcrypt.
+  pinLookup String? @map("pin_lookup")
 
   // Telegram для уведомлений
-  telegramId String? @map("telegram_id")
+  telegramId String? @unique @map("telegram_id")
 
   // SIP телефония (для менеджеров)
   sipServer   String? @map("sip_server") // SIP сервер (например, sip.example.com)
@@ -178,6 +181,7 @@ model User {
 
   @@index([roleId])
   @@index([isActive])
+  @@index([pinLookup])
   @@map("users")
 }
 
@@ -471,6 +475,9 @@ model Task {
   // Фото брака (для складиста при браковке) - массив URL для нескольких фото
   defectPhotos String[] @default([]) @map("defect_photos")
 
+  // Явный маркер задачи-доработки брака (ранее определялся по подстроке "БРАК" в title)
+  isDefect Boolean @default(false) @map("is_defect")
+
   // Количество уже обработанное (принято или забраковано)
   quantityProcessed Int @default(0) @map("quantity_processed")
 
@@ -506,9 +513,10 @@ model InventoryItem {
   name     String // Название товара (копия из продукта или введённое вручную)
   quantity Int    @default(0) // Текущее количество на складе
 
-  // Связь с продуктом (из какого продукта поступило) - опционально для ручного добавления
+  // Связь с продуктом (из какого продукта поступило) - опционально для ручного добавления.
+  // SetNull, а не Cascade: удаление продукта не должно ломать историю отгрузок (ShipmentItem → InventoryItem).
   productId String?  @map("product_id")
-  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   // Связь с типом продукта
   productTypeId String      @map("product_type_id")
@@ -577,9 +585,10 @@ model ShipmentItem {
   shipmentId String   @map("shipment_id")
   shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 
-  // Связь со складским остатком
+  // Связь со складским остатком. Restrict явно: ShipmentItem — это исторический документ,
+  // он должен блокировать удаление InventoryItem, а не каскадно затираться.
   inventoryItemId String        @map("inventory_item_id")
-  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

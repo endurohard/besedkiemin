@@ -83,7 +83,7 @@ export const FeatureFlagsPage = () => {
           <Shield className="w-8 h-8" />
           Управление функциями
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-muted-foreground mt-2">
           Включайте и отключайте функции системы. Изменения применяются немедленно.
         </p>
       </div>
@@ -109,13 +109,13 @@ export const FeatureFlagsPage = () => {
                       className="flex items-center justify-between py-4 first:pt-0 last:pb-0"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${flag.isEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        <div className={`p-2 rounded-lg ${flag.isEnabled ? 'bg-green-100 text-green-600' : 'bg-muted text-muted-foreground'}`}>
                           {featureIcons[flag.key] || <Settings2 className="w-5 h-5" />}
                         </div>
                         <div>
                           <h3 className="font-medium text-gray-900">{flag.name}</h3>
                           {flag.description && (
-                            <p className="text-sm text-gray-500">{flag.description}</p>
+                            <p className="text-sm text-muted-foreground">{flag.description}</p>
                           )}
                         </div>
                       </div>
@@ -126,7 +126,7 @@ export const FeatureFlagsPage = () => {
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                           flag.isEnabled
                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            : 'bg-muted text-muted-foreground hover:bg-gray-200'
                         } ${toggleMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
                       >
                         {flag.isEnabled ? (
@@ -151,19 +151,19 @@ export const FeatureFlagsPage = () => {
       </div>
 
       {/* Информационный блок */}
-      <Card className="mt-6 bg-blue-50 border-blue-200">
+      <Card className="mt-6 bg-primary/10 border-blue-200">
         <CardContent className="pt-6">
           <div className="flex gap-3">
             <div className="flex-shrink-0">
-              <Shield className="w-6 h-6 text-blue-600" />
+              <Shield className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h3 className="font-medium text-blue-900">Информация о функциях</h3>
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="text-sm text-primary mt-1">
                 Отключение функции скрывает её из интерфейса для всех пользователей,
                 но не удаляет связанные данные. При повторном включении все данные будут доступны.
               </p>
-              <p className="text-sm text-blue-700 mt-2">
+              <p className="text-sm text-primary mt-2">
                 <strong>Внимание:</strong> Отключение базовых функций (Заказы, Задачи)
                 может ограничить работу системы.
               </p>

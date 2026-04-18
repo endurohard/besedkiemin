@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class AppService {
   getHealth(): object {
     return {
-      status: 'ok',
-      message: 'Besedki EMIN API is running',
+      status: "ok",
+      message: "Besedki EMIN API is running",
       timestamp: new Date().toISOString(),
     };
   }

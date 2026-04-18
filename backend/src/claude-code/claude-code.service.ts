@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { exec, spawn } from 'child_process';
-import { promisify } from 'util';
-import * as path from 'path';
+import { Injectable, Logger } from "@nestjs/common";
+import { exec, spawn } from "child_process";
+import { promisify } from "util";
+import * as path from "path";
 
 const execAsync = promisify(exec);
 
@@ -37,7 +37,7 @@ export class ClaudeCodeService {
 
   constructor() {
     // Путь к корню проекта (на уровень выше backend)
-    this.projectPath = path.resolve(__dirname, '..', '..', '..');
+    this.projectPath = path.resolve(__dirname, "..", "..", "..");
 
     // Очистка старых previews каждые 10 минут
     setInterval(() => this.cleanupOldPreviews(), 10 * 60 * 1000);
@@ -48,7 +48,9 @@ export class ClaudeCodeService {
     for (const [id, preview] of this.pendingPreviews) {
       // Удаляем previews старше 30 минут
       if (now.getTime() - preview.createdAt.getTime() > 30 * 60 * 1000) {
-        this.cancelPreview(id).catch(() => {});
+        this.cancelPreview(id).catch((err) =>
+          this.logger.warn(`Cleanup of preview ${id} failed: ${err?.message ?? err}`),
+        );
       }
     }
   }
@@ -58,7 +60,7 @@ export class ClaudeCodeService {
    */
   async isClaudeInstalled(): Promise<boolean> {
     try {
-      await execAsync('which claude');
+      await execAsync("which claude");
       return true;
     } catch {
       return false;
@@ -78,7 +80,7 @@ export class ClaudeCodeService {
           cwd: this.projectPath,
           timeout: 120000, // 2 минуты
           maxBuffer: 1024 * 1024 * 10, // 10MB
-        }
+        },
       );
 
       return {
@@ -86,11 +88,11 @@ export class ClaudeCodeService {
         output: stdout || stderr,
       };
     } catch (error: any) {
-      this.logger.error('Claude ask failed:', error);
+      this.logger.error("Claude ask failed:", error);
       return {
         success: false,
-        output: '',
-        error: error.message || 'Unknown error',
+        output: "",
+        error: error.message || "Unknown error",
       };
     }
   }
@@ -98,12 +100,15 @@ export class ClaudeCodeService {
   /**
    * Создаёт preview изменений без коммита (для подтверждения)
    */
-  async previewChange(prompt: string, createPR: boolean = true): Promise<ClaudeCodeResult> {
+  async previewChange(
+    prompt: string,
+    createPR: boolean = true,
+  ): Promise<ClaudeCodeResult> {
     if (this.isProcessing) {
       return {
         success: false,
-        output: '',
-        error: 'Другой запрос Claude Code уже выполняется',
+        output: "",
+        error: "Другой запрос Claude Code уже выполняется",
       };
     }
 
@@ -115,12 +120,17 @@ export class ClaudeCodeService {
 
     try {
       // Сохраняем текущую ветку
-      const { stdout: currentBranch } = await execAsync('git branch --show-current', {
-        cwd: this.projectPath,
-      });
+      const { stdout: currentBranch } = await execAsync(
+        "git branch --show-current",
+        {
+          cwd: this.projectPath,
+        },
+      );
 
       // Создаём новую ветку для preview
-      await execAsync(`git checkout -b ${branchName}`, { cwd: this.projectPath });
+      await execAsync(`git checkout -b ${branchName}`, {
+        cwd: this.projectPath,
+      });
 
       // Запускаем Claude Code
       const { stdout, stderr } = await execAsync(
@@ -131,23 +141,29 @@ export class ClaudeCodeService {
           maxBuffer: 1024 * 1024 * 10,
           env: {
             ...process.env,
-            CLAUDE_CODE_ENTRYPOINT: 'cli',
+            CLAUDE_CODE_ENTRYPOINT: "cli",
           },
-        }
+        },
       );
 
       const output = stdout || stderr;
 
       // Проверяем изменения
-      const { stdout: statusOutput } = await execAsync('git status --porcelain', {
-        cwd: this.projectPath,
-      });
+      const { stdout: statusOutput } = await execAsync(
+        "git status --porcelain",
+        {
+          cwd: this.projectPath,
+        },
+      );
 
       if (!statusOutput.trim()) {
         // Нет изменений
-        await execAsync(`git checkout ${currentBranch.trim()} && git branch -D ${branchName}`, {
-          cwd: this.projectPath,
-        });
+        await execAsync(
+          `git checkout ${currentBranch.trim()} && git branch -D ${branchName}`,
+          {
+            cwd: this.projectPath,
+          },
+        );
         return {
           success: true,
           output,
@@ -158,21 +174,21 @@ export class ClaudeCodeService {
 
       // Получаем список файлов и diff
       const filesChanged = statusOutput
-        .split('\n')
+        .split("\n")
         .filter(Boolean)
-        .map(line => line.substring(3).trim());
+        .map((line) => line.substring(3).trim());
 
       // Получаем diff
-      const { stdout: diffOutput } = await execAsync('git diff', {
+      const { stdout: diffOutput } = await execAsync("git diff", {
         cwd: this.projectPath,
         maxBuffer: 1024 * 1024 * 5,
       });
 
       // Stage изменения (но не коммитим)
-      await execAsync('git add .', { cwd: this.projectPath });
+      await execAsync("git add .", { cwd: this.projectPath });
 
       // Также получаем staged diff
-      const { stdout: stagedDiff } = await execAsync('git diff --cached', {
+      const { stdout: stagedDiff } = await execAsync("git diff --cached", {
         cwd: this.projectPath,
         maxBuffer: 1024 * 1024 * 5,
       });
@@ -191,7 +207,9 @@ export class ClaudeCodeService {
       });
 
       // Возвращаемся на исходную ветку (preview остаётся)
-      await execAsync(`git checkout ${currentBranch.trim()}`, { cwd: this.projectPath });
+      await execAsync(`git checkout ${currentBranch.trim()}`, {
+        cwd: this.projectPath,
+      });
 
       return {
         success: true,
@@ -202,20 +220,23 @@ export class ClaudeCodeService {
         branch: branchName,
       };
     } catch (error: any) {
-      this.logger.error('Claude preview failed:', error);
+      this.logger.error("Claude preview failed:", error);
 
       try {
-        await execAsync('git checkout main 2>/dev/null || git checkout master', {
-          cwd: this.projectPath,
-        });
+        await execAsync(
+          "git checkout main 2>/dev/null || git checkout master",
+          {
+            cwd: this.projectPath,
+          },
+        );
       } catch {
         // Ignore
       }
 
       return {
         success: false,
-        output: '',
-        error: error.message || 'Unknown error',
+        output: "",
+        error: error.message || "Unknown error",
       };
     } finally {
       this.isProcessing = false;
@@ -231,16 +252,16 @@ export class ClaudeCodeService {
     if (!preview) {
       return {
         success: false,
-        output: '',
-        error: 'Превью не найдено или истекло',
+        output: "",
+        error: "Превью не найдено или истекло",
       };
     }
 
     if (this.isProcessing) {
       return {
         success: false,
-        output: '',
-        error: 'Другая операция уже выполняется',
+        output: "",
+        error: "Другая операция уже выполняется",
       };
     }
 
@@ -249,10 +270,12 @@ export class ClaudeCodeService {
 
     try {
       // Переключаемся на ветку preview
-      await execAsync(`git checkout ${preview.branch}`, { cwd: this.projectPath });
+      await execAsync(`git checkout ${preview.branch}`, {
+        cwd: this.projectPath,
+      });
 
       // Коммитим изменения
-      const commitMessage = `Auto: ${preview.prompt.substring(0, 50)}${preview.prompt.length > 50 ? '...' : ''}\n\nCo-Authored-By: Claude <noreply@anthropic.com>`;
+      const commitMessage = `Auto: ${preview.prompt.substring(0, 50)}${preview.prompt.length > 50 ? "..." : ""}\n\nCo-Authored-By: Claude <noreply@anthropic.com>`;
       await execAsync(`git commit -m "${this.escapeShellArg(commitMessage)}"`, {
         cwd: this.projectPath,
       });
@@ -261,45 +284,47 @@ export class ClaudeCodeService {
 
       if (preview.createPR) {
         // Пушим и создаём PR
-        await execAsync(`git push -u origin ${preview.branch}`, { cwd: this.projectPath });
+        await execAsync(`git push -u origin ${preview.branch}`, {
+          cwd: this.projectPath,
+        });
 
         const prTitle = `[Claude Auto] ${preview.prompt.substring(0, 60)}`;
-        const prBody = `## Автоматические изменения от Claude Code\n\n**Запрос:** ${preview.prompt}\n\n**Изменённые файлы:**\n${preview.filesChanged.map(f => `- ${f}`).join('\n')}\n\n---\n🤖 Сгенерировано через Telegram`;
+        const prBody = `## Автоматические изменения от Claude Code\n\n**Запрос:** ${preview.prompt}\n\n**Изменённые файлы:**\n${preview.filesChanged.map((f) => `- ${f}`).join("\n")}\n\n---\n🤖 Сгенерировано через Telegram`;
 
         const { stdout: prOutput } = await execAsync(
           `gh pr create --title "${this.escapeShellArg(prTitle)}" --body "${this.escapeShellArg(prBody)}" --base main`,
-          { cwd: this.projectPath }
+          { cwd: this.projectPath },
         );
 
         prUrl = prOutput.trim();
       }
 
       // Возвращаемся на main
-      await execAsync('git checkout main', { cwd: this.projectPath });
+      await execAsync("git checkout main", { cwd: this.projectPath });
 
       // Удаляем preview из хранилища
       this.pendingPreviews.delete(previewId);
 
       return {
         success: true,
-        output: 'Changes applied successfully',
+        output: "Changes applied successfully",
         filesChanged: preview.filesChanged,
         branch: preview.branch,
         prUrl,
       };
     } catch (error: any) {
-      this.logger.error('Apply preview failed:', error);
+      this.logger.error("Apply preview failed:", error);
 
       try {
-        await execAsync('git checkout main', { cwd: this.projectPath });
+        await execAsync("git checkout main", { cwd: this.projectPath });
       } catch {
         // Ignore
       }
 
       return {
         success: false,
-        output: '',
-        error: error.message || 'Unknown error',
+        output: "",
+        error: error.message || "Unknown error",
       };
     } finally {
       this.isProcessing = false;
@@ -315,8 +340,8 @@ export class ClaudeCodeService {
     if (!preview) {
       return {
         success: false,
-        output: '',
-        error: 'Превью не найдено',
+        output: "",
+        error: "Превью не найдено",
       };
     }
 
@@ -324,19 +349,21 @@ export class ClaudeCodeService {
 
     try {
       // Убеждаемся что мы на main
-      await execAsync('git checkout main 2>/dev/null || git checkout master', {
+      await execAsync("git checkout main 2>/dev/null || git checkout master", {
         cwd: this.projectPath,
       });
 
       // Удаляем ветку preview
-      await execAsync(`git branch -D ${preview.branch}`, { cwd: this.projectPath });
+      await execAsync(`git branch -D ${preview.branch}`, {
+        cwd: this.projectPath,
+      });
 
       // Удаляем из хранилища
       this.pendingPreviews.delete(previewId);
 
       return {
         success: true,
-        output: 'Preview cancelled',
+        output: "Preview cancelled",
       };
     } catch (error: any) {
       // Всё равно удаляем из хранилища
@@ -344,7 +371,7 @@ export class ClaudeCodeService {
 
       return {
         success: true,
-        output: 'Preview cancelled (branch may have been already deleted)',
+        output: "Preview cancelled (branch may have been already deleted)",
       };
     }
   }
@@ -357,12 +384,12 @@ export class ClaudeCodeService {
       return diff;
     }
 
-    const lines = diff.split('\n');
-    let result = '';
+    const lines = diff.split("\n");
+    let result = "";
     let fileCount = 0;
 
     for (const line of lines) {
-      if (line.startsWith('diff --git')) {
+      if (line.startsWith("diff --git")) {
         fileCount++;
       }
 
@@ -371,7 +398,7 @@ export class ClaudeCodeService {
         break;
       }
 
-      result += line + '\n';
+      result += line + "\n";
     }
 
     return result;
@@ -380,12 +407,15 @@ export class ClaudeCodeService {
   /**
    * Выполняет изменения через Claude Code с автоматическим применением
    */
-  async executeChange(prompt: string, createPR: boolean = true): Promise<ClaudeCodeResult> {
+  async executeChange(
+    prompt: string,
+    createPR: boolean = true,
+  ): Promise<ClaudeCodeResult> {
     if (this.isProcessing) {
       return {
         success: false,
-        output: '',
-        error: 'Другой запрос Claude Code уже выполняется',
+        output: "",
+        error: "Другой запрос Claude Code уже выполняется",
       };
     }
 
@@ -395,7 +425,9 @@ export class ClaudeCodeService {
     try {
       // Создаём новую ветку для изменений
       const branchName = `claude-auto/${Date.now()}`;
-      await execAsync(`git checkout -b ${branchName}`, { cwd: this.projectPath });
+      await execAsync(`git checkout -b ${branchName}`, {
+        cwd: this.projectPath,
+      });
 
       // Запускаем Claude Code с автоматическим применением изменений
       const { stdout, stderr } = await execAsync(
@@ -406,21 +438,24 @@ export class ClaudeCodeService {
           maxBuffer: 1024 * 1024 * 10,
           env: {
             ...process.env,
-            CLAUDE_CODE_ENTRYPOINT: 'cli',
+            CLAUDE_CODE_ENTRYPOINT: "cli",
           },
-        }
+        },
       );
 
       const output = stdout || stderr;
 
       // Проверяем, есть ли изменения
-      const { stdout: statusOutput } = await execAsync('git status --porcelain', {
-        cwd: this.projectPath,
-      });
+      const { stdout: statusOutput } = await execAsync(
+        "git status --porcelain",
+        {
+          cwd: this.projectPath,
+        },
+      );
 
       if (!statusOutput.trim()) {
         // Нет изменений, возвращаемся на main
-        await execAsync('git checkout main && git branch -D ' + branchName, {
+        await execAsync("git checkout main && git branch -D " + branchName, {
           cwd: this.projectPath,
         });
         return {
@@ -432,14 +467,14 @@ export class ClaudeCodeService {
 
       // Получаем список изменённых файлов
       const filesChanged = statusOutput
-        .split('\n')
+        .split("\n")
         .filter(Boolean)
-        .map(line => line.substring(3).trim());
+        .map((line) => line.substring(3).trim());
 
       // Коммитим изменения
-      await execAsync('git add .', { cwd: this.projectPath });
+      await execAsync("git add .", { cwd: this.projectPath });
 
-      const commitMessage = `Auto: ${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}\n\nCo-Authored-By: Claude <noreply@anthropic.com>`;
+      const commitMessage = `Auto: ${prompt.substring(0, 50)}${prompt.length > 50 ? "..." : ""}\n\nCo-Authored-By: Claude <noreply@anthropic.com>`;
       await execAsync(`git commit -m "${this.escapeShellArg(commitMessage)}"`, {
         cwd: this.projectPath,
       });
@@ -448,21 +483,23 @@ export class ClaudeCodeService {
 
       if (createPR) {
         // Пушим ветку и создаём PR
-        await execAsync(`git push -u origin ${branchName}`, { cwd: this.projectPath });
+        await execAsync(`git push -u origin ${branchName}`, {
+          cwd: this.projectPath,
+        });
 
         const prTitle = `[Claude Auto] ${prompt.substring(0, 60)}`;
-        const prBody = `## Автоматические изменения от Claude Code\n\n**Запрос:** ${prompt}\n\n**Изменённые файлы:**\n${filesChanged.map(f => `- ${f}`).join('\n')}\n\n---\n🤖 Сгенерировано через Telegram`;
+        const prBody = `## Автоматические изменения от Claude Code\n\n**Запрос:** ${prompt}\n\n**Изменённые файлы:**\n${filesChanged.map((f) => `- ${f}`).join("\n")}\n\n---\n🤖 Сгенерировано через Telegram`;
 
         const { stdout: prOutput } = await execAsync(
           `gh pr create --title "${this.escapeShellArg(prTitle)}" --body "${this.escapeShellArg(prBody)}" --base main`,
-          { cwd: this.projectPath }
+          { cwd: this.projectPath },
         );
 
         prUrl = prOutput.trim();
       }
 
       // Возвращаемся на main
-      await execAsync('git checkout main', { cwd: this.projectPath });
+      await execAsync("git checkout main", { cwd: this.projectPath });
 
       return {
         success: true,
@@ -472,19 +509,19 @@ export class ClaudeCodeService {
         prUrl,
       };
     } catch (error: any) {
-      this.logger.error('Claude execute failed:', error);
+      this.logger.error("Claude execute failed:", error);
 
       // Пытаемся вернуться на main в случае ошибки
       try {
-        await execAsync('git checkout main', { cwd: this.projectPath });
+        await execAsync("git checkout main", { cwd: this.projectPath });
       } catch {
         // Игнорируем ошибку checkout
       }
 
       return {
         success: false,
-        output: '',
-        error: error.message || 'Unknown error',
+        output: "",
+        error: error.message || "Unknown error",
       };
     } finally {
       this.isProcessing = false;
@@ -498,13 +535,15 @@ export class ClaudeCodeService {
     if (this.isProcessing) {
       return {
         success: false,
-        output: '',
-        error: 'Другой запрос Claude Code уже выполняется',
+        output: "",
+        error: "Другой запрос Claude Code уже выполняется",
       };
     }
 
     this.isProcessing = true;
-    this.logger.log(`Executing direct Claude change: ${prompt.substring(0, 100)}...`);
+    this.logger.log(
+      `Executing direct Claude change: ${prompt.substring(0, 100)}...`,
+    );
 
     try {
       // Запускаем Claude Code
@@ -516,30 +555,36 @@ export class ClaudeCodeService {
           maxBuffer: 1024 * 1024 * 10,
           env: {
             ...process.env,
-            CLAUDE_CODE_ENTRYPOINT: 'cli',
+            CLAUDE_CODE_ENTRYPOINT: "cli",
           },
-        }
+        },
       );
 
       const output = stdout || stderr;
 
       // Проверяем изменения
-      const { stdout: statusOutput } = await execAsync('git status --porcelain', {
-        cwd: this.projectPath,
-      });
+      const { stdout: statusOutput } = await execAsync(
+        "git status --porcelain",
+        {
+          cwd: this.projectPath,
+        },
+      );
 
       const filesChanged = statusOutput
-        .split('\n')
+        .split("\n")
         .filter(Boolean)
-        .map(line => line.substring(3).trim());
+        .map((line) => line.substring(3).trim());
 
       if (filesChanged.length > 0) {
         // Коммитим
-        await execAsync('git add .', { cwd: this.projectPath });
-        const commitMessage = `Auto: ${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}\n\nCo-Authored-By: Claude <noreply@anthropic.com>`;
-        await execAsync(`git commit -m "${this.escapeShellArg(commitMessage)}"`, {
-          cwd: this.projectPath,
-        });
+        await execAsync("git add .", { cwd: this.projectPath });
+        const commitMessage = `Auto: ${prompt.substring(0, 50)}${prompt.length > 50 ? "..." : ""}\n\nCo-Authored-By: Claude <noreply@anthropic.com>`;
+        await execAsync(
+          `git commit -m "${this.escapeShellArg(commitMessage)}"`,
+          {
+            cwd: this.projectPath,
+          },
+        );
       }
 
       return {
@@ -548,11 +593,11 @@ export class ClaudeCodeService {
         filesChanged,
       };
     } catch (error: any) {
-      this.logger.error('Claude direct execute failed:', error);
+      this.logger.error("Claude direct execute failed:", error);
       return {
         success: false,
-        output: '',
-        error: error.message || 'Unknown error',
+        output: "",
+        error: error.message || "Unknown error",
       };
     } finally {
       this.isProcessing = false;
@@ -563,7 +608,7 @@ export class ClaudeCodeService {
    * Экранирование аргументов для shell
    */
   private escapeShellArg(arg: string): string {
-    return arg.replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
+    return arg.replace(/"/g, '\\"').replace(/\$/g, "\\$").replace(/`/g, "\\`");
   }
 
   /**
@@ -571,8 +616,10 @@ export class ClaudeCodeService {
    */
   async getGitStatus(): Promise<string> {
     try {
-      const { stdout } = await execAsync('git status --short', { cwd: this.projectPath });
-      return stdout || 'No changes';
+      const { stdout } = await execAsync("git status --short", {
+        cwd: this.projectPath,
+      });
+      return stdout || "No changes";
     } catch (error: any) {
       return `Error: ${error.message}`;
     }
@@ -583,10 +630,12 @@ export class ClaudeCodeService {
    */
   async getCurrentBranch(): Promise<string> {
     try {
-      const { stdout } = await execAsync('git branch --show-current', { cwd: this.projectPath });
+      const { stdout } = await execAsync("git branch --show-current", {
+        cwd: this.projectPath,
+      });
       return stdout.trim();
     } catch {
-      return 'unknown';
+      return "unknown";
     }
   }
 }

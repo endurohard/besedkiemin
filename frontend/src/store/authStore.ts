@@ -28,9 +28,25 @@ interface AuthState {
   resetTelegramAuth: () => void;
 }
 
+const readStoredAuth = (): { user: User | null; token: string | null } => {
+  if (typeof window === 'undefined') return { user: null, token: null };
+  try {
+    const token = window.localStorage.getItem('token');
+    const userStr = window.localStorage.getItem('user');
+    if (!token || !userStr) return { user: null, token: null };
+    return { user: JSON.parse(userStr) as User, token };
+  } catch {
+    window.localStorage.removeItem('token');
+    window.localStorage.removeItem('user');
+    return { user: null, token: null };
+  }
+};
+
+const storedAuth = readStoredAuth();
+
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  token: null,
+  user: storedAuth.user,
+  token: storedAuth.token,
   isLoading: false,
   error: null,
   departmentUser: null,

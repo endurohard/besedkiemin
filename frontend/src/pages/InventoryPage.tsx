@@ -242,8 +242,8 @@ export const InventoryPage = () => {
 
       {/* Статистика */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-          <div className="flex items-center gap-2 text-blue-600 text-xs font-medium mb-1">
+        <div className="bg-primary/10 border border-blue-200 p-3 rounded-lg">
+          <div className="flex items-center gap-2 text-primary text-xs font-medium mb-1">
             <Package size={14} />
             Позиций
           </div>
@@ -271,7 +271,7 @@ export const InventoryPage = () => {
       <Card>
         <CardContent className="p-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Поиск по товару, типу, заказу, клиенту..."
               value={searchQuery}
@@ -287,15 +287,15 @@ export const InventoryPage = () => {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Товар</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Тип</th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-600">Кол-во</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Заказ</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Клиент</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Поступило</th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-600">Действия</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Товар</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Тип</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Кол-во</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Заказ</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Клиент</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Поступило</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Действия</th>
                 </tr>
               </thead>
               <tbody>
@@ -313,21 +313,21 @@ export const InventoryPage = () => {
                   </tr>
                 ) : filteredInventory.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                       <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                       <p>{searchQuery ? 'Ничего не найдено' : 'На складе пока нет товаров'}</p>
                     </td>
                   </tr>
                 ) : (
                   filteredInventory.map((item) => (
-                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                    <tr key={item.id} className="border-b hover:bg-muted/50">
                       <td className="px-4 py-3">
                         <div className="max-w-[200px] truncate font-medium" title={item.name}>
                           {item.name}
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                        <span className="px-2 py-1 bg-primary/20 text-primary/90 rounded text-xs">
                           {item.productType?.name}
                         </span>
                       </td>
@@ -346,7 +346,7 @@ export const InventoryPage = () => {
                           {item.order?.customerName}
                         </div>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-500">
+                      <td className="px-4 py-3 whitespace-nowrap text-xs text-muted-foreground">
                         {format(new Date(item.receivedAt), 'dd.MM.yyyy HH:mm', { locale: ru })}
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -370,7 +370,7 @@ export const InventoryPage = () => {
 
           {/* Статистика внизу */}
           {filteredInventory.length > 0 && (
-            <div className="px-4 py-3 bg-gray-50 border-t text-sm text-gray-600">
+            <div className="px-4 py-3 bg-muted/50 border-t text-sm text-muted-foreground">
               Показано товаров: <span className="font-semibold">{filteredInventory.length}</span>
               {searchQuery && inventory && (
                 <span className="ml-2">из {inventory.length}</span>
@@ -404,20 +404,20 @@ export const InventoryPage = () => {
                   <h3 className="text-sm font-semibold mb-2">Выберите товары для отгрузки</h3>
                   <div className="border rounded-lg max-h-64 overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b sticky top-0">
+                      <thead className="bg-muted/50 border-b sticky top-0">
                         <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600 w-12"></th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600">Товар</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600">Тип</th>
-                          <th className="px-3 py-2 text-center font-medium text-gray-600">Доступно</th>
-                          <th className="px-3 py-2 text-center font-medium text-gray-600">Количество</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground w-12"></th>
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Товар</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Тип</th>
+                          <th className="px-3 py-2 text-center font-medium text-muted-foreground">Доступно</th>
+                          <th className="px-3 py-2 text-center font-medium text-muted-foreground">Количество</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredInventory.map((item) => {
                           const selected = selectedItems.find(si => si.item.id === item.id);
                           return (
-                            <tr key={item.id} className="border-b hover:bg-gray-50">
+                            <tr key={item.id} className="border-b hover:bg-muted/50">
                               <td className="px-3 py-2">
                                 <input
                                   type="checkbox"
@@ -433,7 +433,7 @@ export const InventoryPage = () => {
                                 </div>
                               </td>
                               <td className="px-3 py-2">
-                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                                <span className="px-2 py-1 bg-primary/20 text-primary/90 rounded text-xs">
                                   {item.productType?.name}
                                 </span>
                               </td>
@@ -462,7 +462,7 @@ export const InventoryPage = () => {
                     </table>
                   </div>
                   {selectedItems.length > 0 && (
-                    <div className="mt-2 text-xs text-gray-600">
+                    <div className="mt-2 text-xs text-muted-foreground">
                       Выбрано товаров: <span className="font-semibold">{selectedItems.length}</span>
                     </div>
                   )}
@@ -612,17 +612,17 @@ export const InventoryPage = () => {
             <CardContent className="pt-4">
               <form onSubmit={handleSubmitShipment} className="space-y-4">
                 {/* Информация о товаре */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-muted/50 rounded-lg">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Товар</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Товар</label>
                     <div className="text-sm font-medium">{selectedItem.name}</div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Доступно</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Доступно</label>
                     <div className="text-sm font-medium text-green-600">{selectedItem.quantity} шт</div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
                       Количество для отгрузки *
                     </label>
                     <Input

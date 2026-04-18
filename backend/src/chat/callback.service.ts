@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { TelegramService } from '../telegram/telegram.service';
+import { Injectable, NotFoundException, Logger } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { TelegramService } from "../telegram/telegram.service";
 
 @Injectable()
 export class CallbackService {
@@ -29,7 +29,7 @@ export class CallbackService {
         message: data.message || null,
         catalogOrderId: data.catalogOrderId || null,
         preferredTime: data.preferredTime || null,
-        status: 'NEW',
+        status: "NEW",
       },
     });
 
@@ -57,11 +57,11 @@ export class CallbackService {
         }
       }
 
-      telegramMessage += `\n⏰ <b>Время заявки:</b> ${new Date().toLocaleString('ru-RU')}`;
+      telegramMessage += `\n⏰ <b>Время заявки:</b> ${new Date().toLocaleString("ru-RU")}`;
 
       await this.telegramService.notifyAdmins(telegramMessage);
     } catch (error) {
-      this.logger.error('Ошибка отправки уведомления в Telegram:', error);
+      this.logger.error("Ошибка отправки уведомления в Telegram:", error);
       // Не прерываем создание заявки
     }
 
@@ -76,7 +76,7 @@ export class CallbackService {
 
     return this.prisma.callbackRequest.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 
@@ -98,7 +98,12 @@ export class CallbackService {
   /**
    * Обновить статус заявки
    */
-  async updateStatus(id: string, status: string, userId: string, notes?: string) {
+  async updateStatus(
+    id: string,
+    status: string,
+    userId: string,
+    notes?: string,
+  ) {
     await this.findOne(id); // Проверка существования
 
     return this.prisma.callbackRequest.update({
@@ -116,21 +121,21 @@ export class CallbackService {
    * Отметить как связались
    */
   async markContacted(id: string, userId: string, notes?: string) {
-    return this.updateStatus(id, 'CONTACTED', userId, notes);
+    return this.updateStatus(id, "CONTACTED", userId, notes);
   }
 
   /**
    * Отметить как завершено
    */
   async markCompleted(id: string, userId: string, notes?: string) {
-    return this.updateStatus(id, 'COMPLETED', userId, notes);
+    return this.updateStatus(id, "COMPLETED", userId, notes);
   }
 
   /**
    * Отменить заявку
    */
   async cancel(id: string, userId: string, notes?: string) {
-    return this.updateStatus(id, 'CANCELLED', userId, notes);
+    return this.updateStatus(id, "CANCELLED", userId, notes);
   }
 
   /**

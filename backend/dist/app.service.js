@@ -11,8 +11,8 @@ const common_1 = require("@nestjs/common");
 let AppService = class AppService {
     getHealth() {
         return {
-            status: 'ok',
-            message: 'Besedki EMIN API is running',
+            status: "ok",
+            message: "Besedki EMIN API is running",
             timestamp: new Date().toISOString(),
         };
     }

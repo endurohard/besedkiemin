@@ -33,16 +33,22 @@ exports.AuthModule = AuthModule = __decorate([
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: async (configService) => ({
-                    secret: configService.get('JWT_SECRET'),
+                    secret: configService.get("JWT_SECRET"),
                     signOptions: {
-                        expiresIn: configService.get('JWT_EXPIRATION') || '7d',
+                        expiresIn: configService.get("JWT_EXPIRATION") || "7d",
                     },
                 }),
                 inject: [config_1.ConfigService],
             }),
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService, local_strategy_1.LocalStrategy, jwt_strategy_1.JwtStrategy, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard],
+        providers: [
+            auth_service_1.AuthService,
+            local_strategy_1.LocalStrategy,
+            jwt_strategy_1.JwtStrategy,
+            roles_guard_1.RolesGuard,
+            permissions_guard_1.PermissionsGuard,
+        ],
         exports: [auth_service_1.AuthService, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard],
     })
 ], AuthModule);

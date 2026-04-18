@@ -16,28 +16,31 @@ class CreateContactRequestDto {
 }
 exports.CreateContactRequestDto = CreateContactRequestDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Имя клиента' }),
+    (0, swagger_1.ApiProperty)({ description: "Имя клиента" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateContactRequestDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Телефон клиента' }),
+    (0, swagger_1.ApiProperty)({ description: "Телефон клиента" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateContactRequestDto.prototype, "phone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Email клиента', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Email клиента", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], CreateContactRequestDto.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Сообщение' }),
+    (0, swagger_1.ApiProperty)({ description: "Сообщение" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateContactRequestDto.prototype, "message", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'ID товара (если запрос о конкретном товаре)', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "ID товара (если запрос о конкретном товаре)",
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

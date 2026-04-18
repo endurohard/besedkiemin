@@ -38,11 +38,11 @@ let CatalogCategoriesService = class CatalogCategoriesService {
         const where = includeInactive ? {} : { isActive: true };
         return this.prisma.catalogCategory.findMany({
             where,
-            orderBy: { order: 'asc' },
+            orderBy: { order: "asc" },
             include: {
                 products: {
                     where: { isActive: true },
-                    orderBy: { order: 'asc' },
+                    orderBy: { order: "asc" },
                     take: 10,
                 },
             },
@@ -54,7 +54,7 @@ let CatalogCategoriesService = class CatalogCategoriesService {
             include: {
                 products: {
                     where: { isActive: true },
-                    orderBy: { order: 'asc' },
+                    orderBy: { order: "asc" },
                 },
             },
         });
@@ -69,7 +69,7 @@ let CatalogCategoriesService = class CatalogCategoriesService {
             include: {
                 products: {
                     where: { isActive: true },
-                    orderBy: { order: 'asc' },
+                    orderBy: { order: "asc" },
                 },
             },
         });

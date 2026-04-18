@@ -1,8 +1,8 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { TelegramService } from '../telegram/telegram.service';
-import { CreateCatalogOrderDto } from './dto/create-catalog-order.dto';
-import { UpdateCatalogOrderDto } from './dto/update-catalog-order.dto';
-import { Prisma } from '@prisma/client';
+import { PrismaService } from "../prisma/prisma.service";
+import { TelegramService } from "../telegram/telegram.service";
+import { CreateCatalogOrderDto } from "./dto/create-catalog-order.dto";
+import { UpdateCatalogOrderDto } from "./dto/update-catalog-order.dto";
+import { Prisma } from "@prisma/client";
 export declare class CatalogOrdersService {
     private prisma;
     private telegramService;

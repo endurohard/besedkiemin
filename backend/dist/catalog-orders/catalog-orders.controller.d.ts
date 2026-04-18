@@ -1,6 +1,6 @@
-import { CatalogOrdersService } from './catalog-orders.service';
-import { CreateCatalogOrderDto } from './dto/create-catalog-order.dto';
-import { UpdateCatalogOrderDto } from './dto/update-catalog-order.dto';
+import { CatalogOrdersService } from "./catalog-orders.service";
+import { CreateCatalogOrderDto } from "./dto/create-catalog-order.dto";
+import { UpdateCatalogOrderDto } from "./dto/update-catalog-order.dto";
 export declare class CatalogOrdersController {
     private readonly ordersService;
     constructor(ordersService: CatalogOrdersService);

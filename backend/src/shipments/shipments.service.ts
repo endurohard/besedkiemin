@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { ShipmentStatus } from '@prisma/client';
-import { NotificationsGateway } from '../notifications/notifications.gateway';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { ShipmentStatus } from "@prisma/client";
+import { NotificationsGateway } from "../notifications/notifications.gateway";
 
 @Injectable()
 export class ShipmentsService {
@@ -24,7 +29,7 @@ export class ShipmentsService {
       deliveryDate?: Date;
       notes?: string;
       orderNumber?: string;
-    }
+    },
   ) {
     // Проверяем права пользователя
     const user = await this.prisma.user.findUnique({
@@ -32,16 +37,25 @@ export class ShipmentsService {
       include: { role: true },
     });
 
-    if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
-      throw new ForbiddenException('Только складист, менеджер и владелец могут создавать отгрузки');
+    if (
+      !user ||
+      (user.role?.code !== "WAREHOUSE" &&
+        user.role?.code !== "OWNER" &&
+        user.role?.code !== "MANAGER")
+    ) {
+      throw new ForbiddenException(
+        "Только складист, менеджер и владелец могут создавать отгрузки",
+      );
     }
 
     if (!data.items || data.items.length === 0) {
-      throw new BadRequestException('Необходимо указать хотя бы один товар для отгрузки');
+      throw new BadRequestException(
+        "Необходимо указать хотя бы один товар для отгрузки",
+      );
     }
 
     // Проверяем наличие всех товаров на складе
-    const inventoryItemIds = data.items.map(item => item.inventoryItemId);
+    const inventoryItemIds = data.items.map((item) => item.inventoryItemId);
     const inventoryItems = await this.prisma.inventoryItem.findMany({
       where: { id: { in: inventoryItemIds } },
       include: {
@@ -51,18 +65,24 @@ export class ShipmentsService {
     });
 
     if (inventoryItems.length !== data.items.length) {
-      throw new NotFoundException('Один или несколько товаров не найдены на складе');
+      throw new NotFoundException(
+        "Один или несколько товаров не найдены на складе",
+      );
     }
 
     // Проверяем достаточность количества для каждого товара
     for (const itemData of data.items) {
-      const inventoryItem = inventoryItems.find(i => i.id === itemData.inventoryItemId);
+      const inventoryItem = inventoryItems.find(
+        (i) => i.id === itemData.inventoryItemId,
+      );
       if (!inventoryItem) {
-        throw new NotFoundException(`Товар с ID ${itemData.inventoryItemId} не найден`);
+        throw new NotFoundException(
+          `Товар с ID ${itemData.inventoryItemId} не найден`,
+        );
       }
       if (inventoryItem.quantity < itemData.quantity) {
         throw new BadRequestException(
-          `Недостаточно товара "${inventoryItem.name}". Доступно: ${inventoryItem.quantity}, запрошено: ${itemData.quantity}`
+          `Недостаточно товара "${inventoryItem.name}". Доступно: ${inventoryItem.quantity}, запрошено: ${itemData.quantity}`,
         );
       }
     }
@@ -70,7 +90,9 @@ export class ShipmentsService {
     // Используем транзакцию для атомарности операций
     // Convert deliveryDate string to Date object if needed (Prisma requires Date, not string)
     const deliveryDateValue = data.deliveryDate
-      ? (data.deliveryDate instanceof Date ? data.deliveryDate : new Date(data.deliveryDate))
+      ? data.deliveryDate instanceof Date
+        ? data.deliveryDate
+        : new Date(data.deliveryDate)
       : undefined;
 
     const shipment = await this.prisma.$transaction(async (tx) => {
@@ -85,7 +107,7 @@ export class ShipmentsService {
           orderNumber: data.orderNumber,
           shippedById: userId,
           items: {
-            create: data.items.map(item => ({
+            create: data.items.map((item) => ({
               inventoryItemId: item.inventoryItemId,
               quantity: item.quantity,
             })),
@@ -119,14 +141,16 @@ export class ShipmentsService {
       // Уменьшаем количество на складе для каждого товара (в транзакции)
       await Promise.all(
         data.items.map(async (itemData) => {
-          const inventoryItem = inventoryItems.find(i => i.id === itemData.inventoryItemId)!;
+          const inventoryItem = inventoryItems.find(
+            (i) => i.id === itemData.inventoryItemId,
+          )!;
           return tx.inventoryItem.update({
             where: { id: itemData.inventoryItemId },
             data: {
               quantity: inventoryItem.quantity - itemData.quantity,
             },
           });
-        })
+        }),
       );
 
       return newShipment;
@@ -138,9 +162,12 @@ export class ShipmentsService {
   }
 
   // Получить все отгрузки с пагинацией
-  async getAllShipments(userId: string, options?: {
-    status?: ShipmentStatus;
-  }) {
+  async getAllShipments(
+    userId: string,
+    options?: {
+      status?: ShipmentStatus;
+    },
+  ) {
     // Проверяем права пользователя
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -148,7 +175,7 @@ export class ShipmentsService {
     });
 
     if (!user) {
-      throw new ForbiddenException('Пользователь не найден');
+      throw new ForbiddenException("Пользователь не найден");
     }
 
     const where = options?.status ? { status: options.status } : {};
@@ -191,7 +218,7 @@ export class ShipmentsService {
           select: { items: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     return shipments;
@@ -205,7 +232,7 @@ export class ShipmentsService {
     });
 
     if (!user) {
-      throw new ForbiddenException('Пользователь не найден');
+      throw new ForbiddenException("Пользователь не найден");
     }
 
     // Все пользователи (WAREHOUSE, MANAGER, OWNER) видят все отгрузки по статусу
@@ -232,7 +259,7 @@ export class ShipmentsService {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
   }
@@ -265,21 +292,32 @@ export class ShipmentsService {
     });
 
     if (!shipment) {
-      throw new NotFoundException('Отгрузка не найдена');
+      throw new NotFoundException("Отгрузка не найдена");
     }
 
     return shipment;
   }
 
   // Обновить статус отгрузки
-  async updateShipmentStatus(id: string, userId: string, status: ShipmentStatus) {
+  async updateShipmentStatus(
+    id: string,
+    userId: string,
+    status: ShipmentStatus,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { role: true },
     });
 
-    if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
-      throw new ForbiddenException('Только складист, менеджер и владелец могут обновлять статус отгрузки');
+    if (
+      !user ||
+      (user.role?.code !== "WAREHOUSE" &&
+        user.role?.code !== "OWNER" &&
+        user.role?.code !== "MANAGER")
+    ) {
+      throw new ForbiddenException(
+        "Только складист, менеджер и владелец могут обновлять статус отгрузки",
+      );
     }
 
     const shipment = await this.prisma.shipment.findUnique({
@@ -287,7 +325,7 @@ export class ShipmentsService {
     });
 
     if (!shipment) {
-      throw new NotFoundException('Отгрузка не найдена');
+      throw new NotFoundException("Отгрузка не найдена");
     }
 
     const updated = await this.prisma.shipment.update({
@@ -326,8 +364,15 @@ export class ShipmentsService {
       include: { role: true },
     });
 
-    if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
-      throw new ForbiddenException('Только складист, менеджер и владелец могут отменять отгрузки');
+    if (
+      !user ||
+      (user.role?.code !== "WAREHOUSE" &&
+        user.role?.code !== "OWNER" &&
+        user.role?.code !== "MANAGER")
+    ) {
+      throw new ForbiddenException(
+        "Только складист, менеджер и владелец могут отменять отгрузки",
+      );
     }
 
     const shipment = await this.prisma.shipment.findUnique({
@@ -342,15 +387,15 @@ export class ShipmentsService {
     });
 
     if (!shipment) {
-      throw new NotFoundException('Отгрузка не найдена');
+      throw new NotFoundException("Отгрузка не найдена");
     }
 
     if (shipment.status === ShipmentStatus.DELIVERED) {
-      throw new BadRequestException('Нельзя отменить доставленную отгрузку');
+      throw new BadRequestException("Нельзя отменить доставленную отгрузку");
     }
 
     if (shipment.status === ShipmentStatus.CANCELLED) {
-      throw new BadRequestException('Отгрузка уже отменена');
+      throw new BadRequestException("Отгрузка уже отменена");
     }
 
     // Используем транзакцию для атомарности
@@ -415,7 +460,7 @@ export class ShipmentsService {
     });
 
     if (!shipment) {
-      throw new NotFoundException('Отгрузка не найдена');
+      throw new NotFoundException("Отгрузка не найдена");
     }
 
     // Формируем данные для путевого листа
@@ -426,8 +471,11 @@ export class ShipmentsService {
       customerPhone: shipment.customerPhone,
       deliveryAddress: shipment.deliveryAddress,
       deliveryDate: shipment.deliveryDate?.toISOString(),
-      orderNumber: shipment.orderNumber || shipment.items[0]?.inventoryItem?.order?.orderNumber || '—',
-      items: shipment.items.map(item => ({
+      orderNumber:
+        shipment.orderNumber ||
+        shipment.items[0]?.inventoryItem?.order?.orderNumber ||
+        "—",
+      items: shipment.items.map((item) => ({
         name: item.inventoryItem.name,
         quantity: item.quantity,
         productType: item.inventoryItem.productType.name,

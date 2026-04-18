@@ -67,7 +67,7 @@ let CatalogProductsService = class CatalogProductsService {
         }
         return this.prisma.catalogProduct.findMany({
             where,
-            orderBy: { order: 'asc' },
+            orderBy: { order: "asc" },
             include: {
                 category: true,
             },
@@ -135,7 +135,7 @@ let CatalogProductsService = class CatalogProductsService {
                 isActive: true,
                 isFeatured: true,
             },
-            orderBy: { order: 'asc' },
+            orderBy: { order: "asc" },
             take: limit,
             include: {
                 category: true,

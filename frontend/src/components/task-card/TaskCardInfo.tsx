@@ -47,7 +47,7 @@ export const TaskCardInfo = ({ task, isPainter, isSewer }: TaskCardInfoProps) =>
             href={task.product.schemaImageUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[10px] text-blue-600 hover:text-blue-800 underline flex items-center gap-0.5"
+            className="text-[10px] text-primary hover:text-blue-800 underline flex items-center gap-0.5"
           >
             <Package size={10} />
             Схема

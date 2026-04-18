@@ -17,43 +17,47 @@ class UpdateCatalogOrderDto {
 }
 exports.UpdateCatalogOrderDto = UpdateCatalogOrderDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Имя клиента', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Имя клиента", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateCatalogOrderDto.prototype, "customerName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Телефон клиента', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Телефон клиента", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateCatalogOrderDto.prototype, "customerPhone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Email клиента', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Email клиента", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], UpdateCatalogOrderDto.prototype, "customerEmail", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Адрес доставки', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Адрес доставки", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateCatalogOrderDto.prototype, "deliveryAddress", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Комментарий', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Комментарий", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateCatalogOrderDto.prototype, "comment", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Причина отмены заказа', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Причина отмены заказа", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateCatalogOrderDto.prototype, "cancellationReason", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Статус заказа', enum: client_1.CatalogOrderStatus, required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: "Статус заказа",
+        enum: client_1.CatalogOrderStatus,
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(client_1.CatalogOrderStatus),
     __metadata("design:type", String)

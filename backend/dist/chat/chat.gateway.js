@@ -18,24 +18,35 @@ const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const chat_service_1 = require("./chat.service");
+const chatAllowedOrigins = [
+    "http://localhost",
+    "http://localhost:5173",
+    ...(process.env.WS_CORS_ORIGINS ?? "")
+        .split(",")
+        .map((o) => o.trim())
+        .filter(Boolean),
+    ...(process.env.CORS_ORIGIN && process.env.CORS_ORIGIN !== "*"
+        ? [process.env.CORS_ORIGIN]
+        : []),
+];
 let ChatGateway = class ChatGateway {
     constructor(chatService, jwtService) {
         this.chatService = chatService;
         this.jwtService = jwtService;
-        this.logger = new common_1.Logger('ChatGateway');
+        this.logger = new common_1.Logger("ChatGateway");
         this.connectedUsers = new Map();
     }
     handleConnection(client) {
         const userType = client.handshake.query?.userType;
-        if (userType === 'customer') {
+        if (userType === "customer") {
             this.logger.log(`Customer connected: ${client.id}`);
             return;
         }
-        const token = client.handshake.auth?.token
-            || client.handshake.headers?.authorization?.replace('Bearer ', '');
+        const token = client.handshake.auth?.token ||
+            client.handshake.headers?.authorization?.replace("Bearer ", "");
         if (!token) {
             this.logger.warn(`Connection rejected (no token): ${client.id}`);
-            client.emit('error', { message: 'Требуется авторизация' });
+            client.emit("error", { message: "Требуется авторизация" });
             client.disconnect();
             return;
         }
@@ -47,7 +58,7 @@ let ChatGateway = class ChatGateway {
         }
         catch (error) {
             this.logger.warn(`Connection rejected (invalid token): ${client.id}`);
-            client.emit('error', { message: 'Неверный токен авторизации' });
+            client.emit("error", { message: "Неверный токен авторизации" });
             client.disconnect();
         }
     }
@@ -63,9 +74,11 @@ let ChatGateway = class ChatGateway {
     async handleJoinRoom(client, data) {
         try {
             const { roomId, userType, userId } = data;
-            if (userType === 'manager' && !client.userId) {
-                client.emit('error', { message: 'Требуется авторизация для менеджера' });
-                return { success: false, error: 'Unauthorized' };
+            if (userType === "manager" && !client.userId) {
+                client.emit("error", {
+                    message: "Требуется авторизация для менеджера",
+                });
+                return { success: false, error: "Unauthorized" };
             }
             const room = await this.chatService.getRoom(roomId);
             client.join(roomId);
@@ -76,21 +89,21 @@ let ChatGateway = class ChatGateway {
                 userType,
             });
             this.logger.log(`${userType} joined room ${roomId}`);
-            client.emit('room_joined', {
+            client.emit("room_joined", {
                 room,
                 messages: room.messages,
             });
-            if (userType === 'manager') {
+            if (userType === "manager") {
                 const unreadMessages = await this.chatService.getUnreadMessages(roomId);
                 if (unreadMessages.length > 0) {
                     await this.chatService.markMessagesAsRead(roomId, unreadMessages.map((m) => m.id));
-                    this.server.to(roomId).emit('messages_read', {
+                    this.server.to(roomId).emit("messages_read", {
                         roomId,
                         messageIds: unreadMessages.map((m) => m.id),
                     });
                 }
             }
-            client.to(roomId).emit('user_joined', {
+            client.to(roomId).emit("user_joined", {
                 userType,
                 userId,
             });
@@ -98,16 +111,16 @@ let ChatGateway = class ChatGateway {
         }
         catch (error) {
             this.logger.error(`Error joining room: ${error.message}`);
-            client.emit('error', { message: error.message });
+            client.emit("error", { message: error.message });
             return { success: false, error: error.message };
         }
     }
     async handleSendMessage(client, data) {
         try {
             const { roomId, content, senderType, senderId, senderName } = data;
-            if (senderType === 'MANAGER' && !client.userId) {
-                client.emit('error', { message: 'Требуется авторизация' });
-                return { success: false, error: 'Unauthorized' };
+            if (senderType === "MANAGER" && !client.userId) {
+                client.emit("error", { message: "Требуется авторизация" });
+                return { success: false, error: "Unauthorized" };
             }
             const message = await this.chatService.sendMessage({
                 roomId,
@@ -116,33 +129,33 @@ let ChatGateway = class ChatGateway {
                 senderName,
                 content,
             });
-            this.server.to(roomId).emit('new_message', message);
-            if (senderType === 'CUSTOMER') {
+            this.server.to(roomId).emit("new_message", message);
+            if (senderType === "CUSTOMER") {
                 const totalUnread = await this.chatService.getTotalUnreadCount();
-                this.server.emit('unread_count_updated', { total: totalUnread });
+                this.server.emit("unread_count_updated", { total: totalUnread });
             }
             this.logger.log(`Message sent in room ${roomId} by ${senderType}`);
             return { success: true, message };
         }
         catch (error) {
             this.logger.error(`Error sending message: ${error.message}`);
-            client.emit('error', { message: error.message });
+            client.emit("error", { message: error.message });
             return { success: false, error: error.message };
         }
     }
     handleTyping(client, data) {
         const { roomId, userType, userName } = data;
-        client.to(roomId).emit('user_typing', { userType, userName });
+        client.to(roomId).emit("user_typing", { userType, userName });
     }
     handleStopTyping(client, data) {
         const { roomId } = data;
-        client.to(roomId).emit('user_stopped_typing');
+        client.to(roomId).emit("user_stopped_typing");
     }
     async handleMarkAsRead(client, data) {
         try {
             const { roomId, messageIds } = data;
             await this.chatService.markMessagesAsRead(roomId, messageIds);
-            this.server.to(roomId).emit('messages_read', {
+            this.server.to(roomId).emit("messages_read", {
                 roomId,
                 messageIds,
             });
@@ -157,18 +170,18 @@ let ChatGateway = class ChatGateway {
         const { roomId } = data;
         client.leave(roomId);
         this.logger.log(`Client ${client.id} left room ${roomId}`);
-        client.to(roomId).emit('user_left');
+        client.to(roomId).emit("user_left");
         return { success: true };
     }
     async handleCheckOnline(client) {
         try {
             const status = await this.chatService.isOnline();
-            client.emit('online_status', status);
+            client.emit("online_status", status);
             return status;
         }
         catch (error) {
             this.logger.error(`Error checking online status: ${error.message}`);
-            return { online: false, message: 'Ошибка проверки статуса' };
+            return { online: false, message: "Ошибка проверки статуса" };
         }
     }
 };
@@ -178,7 +191,7 @@ __decorate([
     __metadata("design:type", socket_io_1.Server)
 ], ChatGateway.prototype, "server", void 0);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('join_room'),
+    (0, websockets_1.SubscribeMessage)("join_room"),
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
@@ -186,7 +199,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleJoinRoom", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('send_message'),
+    (0, websockets_1.SubscribeMessage)("send_message"),
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
@@ -194,7 +207,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleSendMessage", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('typing'),
+    (0, websockets_1.SubscribeMessage)("typing"),
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
@@ -202,7 +215,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ChatGateway.prototype, "handleTyping", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('stop_typing'),
+    (0, websockets_1.SubscribeMessage)("stop_typing"),
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
@@ -210,7 +223,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ChatGateway.prototype, "handleStopTyping", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('mark_as_read'),
+    (0, websockets_1.SubscribeMessage)("mark_as_read"),
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
@@ -218,7 +231,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleMarkAsRead", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('leave_room'),
+    (0, websockets_1.SubscribeMessage)("leave_room"),
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
@@ -226,7 +239,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ChatGateway.prototype, "handleLeaveRoom", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('check_online'),
+    (0, websockets_1.SubscribeMessage)("check_online"),
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [socket_io_1.Socket]),
@@ -235,15 +248,10 @@ __decorate([
 exports.ChatGateway = ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: {
-            origin: [
-                'http://176.98.155.17',
-                'http://176.98.155.17:5173',
-                'http://localhost',
-                'http://localhost:5173',
-            ],
+            origin: chatAllowedOrigins,
             credentials: true,
         },
-        namespace: '/chat',
+        namespace: "/chat",
     }),
     __metadata("design:paramtypes", [chat_service_1.ChatService,
         jwt_1.JwtService])

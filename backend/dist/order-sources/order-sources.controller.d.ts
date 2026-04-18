@@ -1,5 +1,5 @@
-import { OrderSourcesService } from './order-sources.service';
-import { CreateOrderSourceDto, UpdateOrderSourceDto } from './dto';
+import { OrderSourcesService } from "./order-sources.service";
+import { CreateOrderSourceDto, UpdateOrderSourceDto } from "./dto";
 export declare class OrderSourcesController {
     private readonly orderSourcesService;
     constructor(orderSourcesService: OrderSourcesService);

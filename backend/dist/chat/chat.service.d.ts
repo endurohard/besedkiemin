@@ -1,4 +1,4 @@
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from "../prisma/prisma.service";
 export declare class ChatService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -150,7 +150,7 @@ export declare class ChatService {
     }>;
     sendMessage(data: {
         roomId: string;
-        senderType: 'CUSTOMER' | 'MANAGER';
+        senderType: "CUSTOMER" | "MANAGER";
         senderId?: string;
         senderName: string;
         content: string;

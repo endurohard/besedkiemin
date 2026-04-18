@@ -1,7 +1,7 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
-import { PrismaService } from '../../prisma/prisma.service';
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { PERMISSIONS_KEY } from "../decorators/permissions.decorator";
+import { PrismaService } from "../../prisma/prisma.service";
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -11,10 +11,10 @@ export class PermissionsGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
+      PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // Если permissions не требуются - пропускаем
     if (!requiredPermissions || requiredPermissions.length === 0) {
@@ -43,11 +43,13 @@ export class PermissionsGuard implements CanActivate {
     const userPermissions = (dbUser.role.permissions as string[]) || [];
 
     // SUPER_ADMIN и OWNER имеют полный доступ
-    if (roleCode === 'SUPER_ADMIN' || roleCode === 'OWNER') {
+    if (roleCode === "SUPER_ADMIN" || roleCode === "OWNER") {
       return true;
     }
 
     // Проверяем наличие всех требуемых permissions
-    return requiredPermissions.every((permission) => userPermissions.includes(permission));
+    return requiredPermissions.every((permission) =>
+      userPermissions.includes(permission),
+    );
   }
 }

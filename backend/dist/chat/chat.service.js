@@ -21,16 +21,16 @@ let ChatService = class ChatService {
         if (!settings || !settings.chatEnabled) {
             return {
                 online: false,
-                message: settings?.offlineMessage || 'Чат временно недоступен',
+                message: settings?.offlineMessage || "Чат временно недоступен",
             };
         }
         const now = new Date();
         const currentDay = now.getDay() || 7;
         const workingDays = settings.workingDays
-            .split(',')
+            .split(",")
             .map((d) => {
             const day = parseInt(d.trim(), 10);
-            return (isNaN(day) || day < 1 || day > 7) ? null : day;
+            return isNaN(day) || day < 1 || day > 7 ? null : day;
         })
             .filter((d) => d !== null);
         if (!workingDays.includes(currentDay)) {
@@ -43,8 +43,9 @@ let ChatService = class ChatService {
                 },
             };
         }
-        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        const isWithinHours = currentTime >= settings.workingHoursStart && currentTime <= settings.workingHoursEnd;
+        const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+        const isWithinHours = currentTime >= settings.workingHoursStart &&
+            currentTime <= settings.workingHoursEnd;
         if (!isWithinHours) {
             return {
                 online: false,
@@ -62,13 +63,13 @@ let ChatService = class ChatService {
             where: { id: catalogOrderId },
         });
         if (!order) {
-            throw new common_1.NotFoundException('Заказ не найден');
+            throw new common_1.NotFoundException("Заказ не найден");
         }
         let room = await this.prisma.chatRoom.findUnique({
             where: { catalogOrderId },
             include: {
                 messages: {
-                    orderBy: { createdAt: 'asc' },
+                    orderBy: { createdAt: "asc" },
                     take: 50,
                 },
             },
@@ -91,7 +92,7 @@ let ChatService = class ChatService {
             where: { guestSessionId: data.guestSessionId },
             include: {
                 messages: {
-                    orderBy: { createdAt: 'asc' },
+                    orderBy: { createdAt: "asc" },
                     take: 50,
                 },
             },
@@ -114,9 +115,9 @@ let ChatService = class ChatService {
         const rooms = await this.prisma.chatRoom.findMany({
             where: { isActive: true },
             orderBy: [
-                { unreadCount: 'desc' },
-                { lastMessageAt: 'desc' },
-                { createdAt: 'desc' },
+                { unreadCount: "desc" },
+                { lastMessageAt: "desc" },
+                { createdAt: "desc" },
             ],
             include: {
                 catalogOrder: {
@@ -130,18 +131,20 @@ let ChatService = class ChatService {
                 },
                 messages: {
                     take: 1,
-                    orderBy: { createdAt: 'desc' },
+                    orderBy: { createdAt: "desc" },
                 },
             },
         });
-        return rooms.map(room => ({
+        return rooms.map((room) => ({
             ...room,
             catalogOrder: room.catalogOrder || {
                 id: room.guestSessionId || room.id,
-                orderNumber: room.guestSessionId ? `Гость #${room.guestSessionId.slice(-6)}` : 'Гостевой чат',
-                customerPhone: room.customerPhone || '',
-                customerEmail: room.customerEmail || '',
-                status: 'GUEST',
+                orderNumber: room.guestSessionId
+                    ? `Гость #${room.guestSessionId.slice(-6)}`
+                    : "Гостевой чат",
+                customerPhone: room.customerPhone || "",
+                customerEmail: room.customerEmail || "",
+                status: "GUEST",
             },
         }));
     }
@@ -150,13 +153,13 @@ let ChatService = class ChatService {
             where: { id: roomId },
             include: {
                 messages: {
-                    orderBy: { createdAt: 'asc' },
+                    orderBy: { createdAt: "asc" },
                 },
                 catalogOrder: true,
             },
         });
         if (!room) {
-            throw new common_1.NotFoundException('Комната чата не найдена');
+            throw new common_1.NotFoundException("Комната чата не найдена");
         }
         return room;
     }
@@ -165,7 +168,7 @@ let ChatService = class ChatService {
             where: { id: data.roomId },
         });
         if (!room) {
-            throw new common_1.NotFoundException('Комната чата не найдена');
+            throw new common_1.NotFoundException("Комната чата не найдена");
         }
         const message = await this.prisma.chatMessage.create({
             data: {
@@ -180,7 +183,7 @@ let ChatService = class ChatService {
             lastMessageAt: new Date(),
             lastMessageText: data.content,
         };
-        if (data.senderType === 'CUSTOMER') {
+        if (data.senderType === "CUSTOMER") {
             updateData.unreadCount = { increment: 1 };
         }
         await this.prisma.chatRoom.update({
@@ -205,7 +208,7 @@ let ChatService = class ChatService {
             where: {
                 roomId,
                 isRead: false,
-                senderType: 'CUSTOMER',
+                senderType: "CUSTOMER",
             },
         });
         await this.prisma.chatRoom.update({
@@ -219,9 +222,9 @@ let ChatService = class ChatService {
             where: {
                 roomId,
                 isRead: false,
-                senderType: 'CUSTOMER',
+                senderType: "CUSTOMER",
             },
-            orderBy: { createdAt: 'asc' },
+            orderBy: { createdAt: "asc" },
         });
     }
     async getTotalUnreadCount() {

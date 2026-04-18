@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateQualityCheckDto } from './dto/create-quality-check.dto';
-import { UpdateQualityCheckDto } from './dto/update-quality-check.dto';
-import { QualityStatus, ProductionStage } from '@prisma/client';
-import { UploadService } from '../upload/upload.service';
-import { TelegramService } from '../telegram/telegram.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateQualityCheckDto } from "./dto/create-quality-check.dto";
+import { UpdateQualityCheckDto } from "./dto/update-quality-check.dto";
+import { QualityStatus, ProductionStage } from "@prisma/client";
+import { UploadService } from "../upload/upload.service";
+import { TelegramService } from "../telegram/telegram.service";
 
 @Injectable()
 export class QualityChecksService {
@@ -26,7 +26,7 @@ export class QualityChecksService {
     });
 
     if (!product) {
-      throw new NotFoundException('Продукт не найден');
+      throw new NotFoundException("Продукт не найден");
     }
 
     // Получаем URL фото если есть
@@ -75,11 +75,16 @@ export class QualityChecksService {
         });
         const previousStage = currentWorkflowStage
           ? await this.prisma.workflowStage.findFirst({
-              where: { order: { lt: currentWorkflowStage.order }, isActive: true },
-              orderBy: { order: 'desc' },
+              where: {
+                order: { lt: currentWorkflowStage.order },
+                isActive: true,
+              },
+              orderBy: { order: "desc" },
             })
           : null;
-        returnStage = (previousStage?.legacyStage as ProductionStage) || ProductionStage.PAINTING;
+        returnStage =
+          (previousStage?.legacyStage as ProductionStage) ||
+          ProductionStage.PAINTING;
       }
 
       await this.prisma.product.update({
@@ -93,14 +98,14 @@ export class QualityChecksService {
           productId: createQualityCheckDto.productId,
           stage: returnStage,
           userId,
-          notes: 'Возврат на доработку после браковки',
+          notes: "Возврат на доработку после браковки",
         },
       });
 
       // Отправляем уведомление в Telegram
       await this.telegramService.sendDefectNotification({
         productName: product.name,
-        productType: product.productType?.name || 'Не указан',
+        productType: product.productType?.name || "Не указан",
         orderNumber: qualityCheck.product.order.orderNumber,
         customerName: qualityCheck.product.order.customerName,
         notes: createQualityCheckDto.notes,
@@ -116,7 +121,7 @@ export class QualityChecksService {
             stage: returnStage,
             completedAt: { not: null },
           },
-          orderBy: { completedAt: 'desc' },
+          orderBy: { completedAt: "desc" },
           select: { userId: true },
         });
 
@@ -125,13 +130,14 @@ export class QualityChecksService {
         if (penaltyUserId) {
           const checkerName = qualityCheck.checkedBy
             ? `${qualityCheck.checkedBy.lastName} ${qualityCheck.checkedBy.firstName}`
-            : 'Склад';
+            : "Склад";
 
           await this.prisma.penalty.create({
             data: {
               userId: penaltyUserId,
               amount: createQualityCheckDto.penaltyAmount,
-              reason: createQualityCheckDto.notes || 'Брак на контроле качества',
+              reason:
+                createQualityCheckDto.notes || "Брак на контроле качества",
               productId: createQualityCheckDto.productId,
               createdById: userId,
             },
@@ -141,7 +147,7 @@ export class QualityChecksService {
           await this.telegramService.sendPenaltyNotification({
             userId: penaltyUserId,
             amount: createQualityCheckDto.penaltyAmount,
-            reason: createQualityCheckDto.notes || 'Брак на контроле качества',
+            reason: createQualityCheckDto.notes || "Брак на контроле качества",
             createdByName: checkerName,
           });
         }
@@ -161,7 +167,7 @@ export class QualityChecksService {
           productId: createQualityCheckDto.productId,
           stage: ProductionStage.COMPLETED,
           userId,
-          notes: 'Принято складом',
+          notes: "Принято складом",
         },
       });
     }
@@ -169,10 +175,7 @@ export class QualityChecksService {
     return qualityCheck;
   }
 
-  async findAll(filters?: {
-    productId?: string;
-    status?: QualityStatus;
-  }) {
+  async findAll(filters?: { productId?: string; status?: QualityStatus }) {
     const where: any = {};
 
     if (filters?.productId) {
@@ -204,7 +207,7 @@ export class QualityChecksService {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
   }
@@ -230,7 +233,7 @@ export class QualityChecksService {
     });
 
     if (!qualityCheck) {
-      throw new NotFoundException('Проверка качества не найдена');
+      throw new NotFoundException("Проверка качества не найдена");
     }
 
     return qualityCheck;

@@ -1,9 +1,9 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import * as fs from 'fs';
-import { promisify } from 'util';
-import { FILE_UPLOAD } from '../common/constants';
+import { Injectable, Logger, BadRequestException } from "@nestjs/common";
+import { diskStorage } from "multer";
+import { extname } from "path";
+import * as fs from "fs";
+import { promisify } from "util";
+import { FILE_UPLOAD } from "../common/constants";
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -17,7 +17,8 @@ export class UploadService {
       storage: diskStorage({
         destination: FILE_UPLOAD.UPLOAD_DIR,
         filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + "-" + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
           callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
         },
@@ -25,7 +26,12 @@ export class UploadService {
       fileFilter: (req, file, callback) => {
         // Разрешаем только изображения
         if (!file.originalname.match(FILE_UPLOAD.ALLOWED_EXTENSIONS)) {
-          return callback(new BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
+          return callback(
+            new BadRequestException(
+              "Разрешены только изображения (jpg, png, gif, webp, heic)",
+            ),
+            false,
+          );
         }
         callback(null, true);
       },

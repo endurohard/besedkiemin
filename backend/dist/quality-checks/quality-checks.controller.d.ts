@@ -1,8 +1,8 @@
-import { QualityChecksService } from './quality-checks.service';
-import { CreateQualityCheckDto } from './dto/create-quality-check.dto';
-import { UpdateQualityCheckDto } from './dto/update-quality-check.dto';
-import { QualityStatus } from '@prisma/client';
-import { UploadService } from '../upload/upload.service';
+import { QualityChecksService } from "./quality-checks.service";
+import { CreateQualityCheckDto } from "./dto/create-quality-check.dto";
+import { UpdateQualityCheckDto } from "./dto/update-quality-check.dto";
+import { QualityStatus } from "@prisma/client";
+import { UploadService } from "../upload/upload.service";
 export declare class QualityChecksController {
     private readonly qualityChecksService;
     private readonly uploadService;

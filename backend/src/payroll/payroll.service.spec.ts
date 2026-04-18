@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PayrollService } from './payroll.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { TelegramService } from '../telegram/telegram.service';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { PayrollStatus, ProductionStage } from '@prisma/client';
 
@@ -53,6 +54,11 @@ const mockPrisma = () => ({
   $transaction: jest.fn((fn: any) => fn(mockPrisma())),
 });
 
+const mockTelegram = () => ({
+  sendMessage: jest.fn(),
+  requestDefectPhoto: jest.fn(),
+});
+
 describe('PayrollService', () => {
   let service: PayrollService;
   let prisma: any;
@@ -62,6 +68,7 @@ describe('PayrollService', () => {
       providers: [
         PayrollService,
         { provide: PrismaService, useFactory: mockPrisma },
+        { provide: TelegramService, useFactory: mockTelegram },
       ],
     }).compile();
 

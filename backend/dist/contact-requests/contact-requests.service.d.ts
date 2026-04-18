@@ -1,6 +1,6 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateContactRequestDto } from './dto/create-contact-request.dto';
-import { UpdateContactRequestDto } from './dto/update-contact-request.dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateContactRequestDto } from "./dto/create-contact-request.dto";
+import { UpdateContactRequestDto } from "./dto/update-contact-request.dto";
 export declare class ContactRequestsService {
     private prisma;
     constructor(prisma: PrismaService);

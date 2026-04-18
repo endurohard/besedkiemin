@@ -1,7 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { TelegramService } from '../telegram/telegram.service';
-import { PayrollStatus, ProductionStage } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+  Logger,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { TelegramService } from "../telegram/telegram.service";
+import { PayrollStatus, ProductionStage } from "@prisma/client";
 import {
   CreateWorkRateDto,
   UpdateWorkRateDto,
@@ -12,7 +18,7 @@ import {
   CalculatePayrollDto,
   CreateManagerCommissionDto,
   UpdateManagerCommissionDto,
-} from './dto';
+} from "./dto";
 
 @Injectable()
 export class PayrollService {
@@ -32,10 +38,7 @@ export class PayrollService {
         nomenclature: true,
         workflowStage: true,
       },
-      orderBy: [
-        { productType: { name: 'asc' } },
-        { stage: 'asc' },
-      ],
+      orderBy: [{ productType: { name: "asc" } }, { stage: "asc" }],
     });
   }
 
@@ -47,14 +50,15 @@ export class PayrollService {
         nomenclature: true,
         workflowStage: true,
       },
-      orderBy: [
-        { productType: { name: 'asc' } },
-        { stage: 'asc' },
-      ],
+      orderBy: [{ productType: { name: "asc" } }, { stage: "asc" }],
     });
   }
 
-  async findWorkRate(productTypeId: string, stage: ProductionStage, nomenclatureId?: string) {
+  async findWorkRate(
+    productTypeId: string,
+    stage: ProductionStage,
+    nomenclatureId?: string,
+  ) {
     // Сначала ищем по номенклатуре (если указана)
     if (nomenclatureId) {
       const byNomenclature = await this.prisma.workRate.findUnique({
@@ -182,7 +186,7 @@ export class PayrollService {
           },
         },
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: "desc" },
     });
   }
 
@@ -217,7 +221,7 @@ export class PayrollService {
     try {
       const createdByName = penalty.createdBy
         ? `${penalty.createdBy.lastName} ${penalty.createdBy.firstName}`
-        : 'Система';
+        : "Система";
       await this.telegramService.sendPenaltyNotification({
         userId: dto.userId,
         amount: dto.amount,
@@ -225,7 +229,7 @@ export class PayrollService {
         createdByName,
       });
     } catch (error) {
-      this.logger.error('Failed to send penalty Telegram notification', error);
+      this.logger.error("Failed to send penalty Telegram notification", error);
     }
 
     return penalty;
@@ -250,7 +254,7 @@ export class PayrollService {
     }
 
     if (penalty.isCancelled) {
-      throw new BadRequestException('Штраф уже отменен');
+      throw new BadRequestException("Штраф уже отменен");
     }
 
     // Нельзя отменять штрафы, включённые в выплаченный расчёт
@@ -259,7 +263,9 @@ export class PayrollService {
         where: { id: penalty.payrollPeriodId },
       });
       if (period?.status === PayrollStatus.PAID) {
-        throw new BadRequestException('Нельзя отменить штраф, включённый в выплаченный расчёт');
+        throw new BadRequestException(
+          "Нельзя отменить штраф, включённый в выплаченный расчёт",
+        );
       }
     }
 
@@ -289,7 +295,7 @@ export class PayrollService {
         },
         role: true,
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
   }
 
@@ -321,30 +327,36 @@ export class PayrollService {
   async createManagerCommission(dto: CreateManagerCommissionDto) {
     // Проверяем существование пользователя
     if (dto.userId) {
-      const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+      const user = await this.prisma.user.findUnique({
+        where: { id: dto.userId },
+      });
       if (!user) {
-        throw new NotFoundException('Пользователь не найден');
+        throw new NotFoundException("Пользователь не найден");
       }
 
       const existing = await this.prisma.managerCommission.findUnique({
         where: { userId: dto.userId },
       });
       if (existing) {
-        throw new ConflictException('Настройки комиссии для этого пользователя уже существуют');
+        throw new ConflictException(
+          "Настройки комиссии для этого пользователя уже существуют",
+        );
       }
     }
 
     // Проверяем существование роли
     if (dto.roleId) {
-      const role = await this.prisma.role.findUnique({ where: { id: dto.roleId } });
+      const role = await this.prisma.role.findUnique({
+        where: { id: dto.roleId },
+      });
       if (!role) {
-        throw new NotFoundException('Роль не найдена');
+        throw new NotFoundException("Роль не найдена");
       }
     }
 
     // Должен быть указан хотя бы userId или roleId
     if (!dto.userId && !dto.roleId) {
-      throw new BadRequestException('Необходимо указать userId или roleId');
+      throw new BadRequestException("Необходимо указать userId или roleId");
     }
 
     return this.prisma.managerCommission.create({
@@ -417,10 +429,7 @@ export class PayrollService {
         },
         penalties: true,
       },
-      orderBy: [
-        { periodStart: 'desc' },
-        { user: { lastName: 'asc' } },
-      ],
+      orderBy: [{ periodStart: "desc" }, { user: { lastName: "asc" } }],
     });
   }
 
@@ -470,7 +479,11 @@ export class PayrollService {
   }
 
   // Расчет зарплаты для одного пользователя за период
-  async calculatePayrollForUser(userId: string, periodStart: Date, periodEnd: Date) {
+  async calculatePayrollForUser(
+    userId: string,
+    periodStart: Date,
+    periodEnd: Date,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { role: true },
@@ -492,7 +505,7 @@ export class PayrollService {
     });
 
     if (existingPeriod) {
-      throw new ConflictException('Расчет за этот период уже существует');
+      throw new ConflictException("Расчет за этот период уже существует");
     }
 
     // Получаем записи о выполненной работе за период
@@ -564,14 +577,18 @@ export class PayrollService {
           },
           select: { totalAmount: true },
         });
-        ordersAmount = filteredOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+        ordersAmount = filteredOrders.reduce(
+          (sum, o) => sum + (o.totalAmount || 0),
+          0,
+        );
       }
 
       commissionAmount = ordersAmount * (commission.commissionPercent / 100);
     }
 
     // Итого к выплате
-    const totalAmount = baseSalary + workAmount + commissionAmount - penaltyAmount;
+    const totalAmount =
+      baseSalary + workAmount + commissionAmount - penaltyAmount;
 
     // Создаем расчетный период
     const payrollPeriod = await this.prisma.$transaction(async (tx) => {
@@ -636,7 +653,11 @@ export class PayrollService {
 
     for (const user of users) {
       try {
-        const period = await this.calculatePayrollForUser(user.id, periodStart, periodEnd);
+        const period = await this.calculatePayrollForUser(
+          user.id,
+          periodStart,
+          periodEnd,
+        );
         results.push({ userId: user.id, success: true, period });
       } catch (error) {
         results.push({
@@ -655,7 +676,7 @@ export class PayrollService {
     const period = await this.findPayrollPeriod(id);
 
     if (period.status !== PayrollStatus.DRAFT) {
-      throw new BadRequestException('Можно утвердить только черновик');
+      throw new BadRequestException("Можно утвердить только черновик");
     }
 
     return this.prisma.payrollPeriod.update({
@@ -675,7 +696,9 @@ export class PayrollService {
     const period = await this.findPayrollPeriod(id);
 
     if (period.status !== PayrollStatus.APPROVED) {
-      throw new BadRequestException('Можно выплатить только утвержденный расчет');
+      throw new BadRequestException(
+        "Можно выплатить только утвержденный расчет",
+      );
     }
 
     return this.prisma.payrollPeriod.update({
@@ -695,7 +718,7 @@ export class PayrollService {
     const period = await this.findPayrollPeriod(id);
 
     if (period.status === PayrollStatus.PAID) {
-      throw new BadRequestException('Нельзя отменить уже выплаченный расчет');
+      throw new BadRequestException("Нельзя отменить уже выплаченный расчет");
     }
 
     // Отвязываем workLogs и penalties
@@ -721,8 +744,13 @@ export class PayrollService {
   async deletePayrollPeriod(id: string) {
     const period = await this.findPayrollPeriod(id);
 
-    if (period.status !== PayrollStatus.DRAFT && period.status !== PayrollStatus.CANCELLED) {
-      throw new BadRequestException('Можно удалить только черновик или отмененный расчет');
+    if (
+      period.status !== PayrollStatus.DRAFT &&
+      period.status !== PayrollStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        "Можно удалить только черновик или отмененный расчет",
+      );
     }
 
     // Отвязываем workLogs и penalties
@@ -767,7 +795,7 @@ export class PayrollService {
       if (nomenclature && nomenclature.productTypeId !== data.productTypeId) {
         this.logger.warn(
           `Nomenclature ${data.nomenclatureId} belongs to productType ${nomenclature.productTypeId}, ` +
-          `but workLog has productType ${data.productTypeId}. Ignoring nomenclatureId.`
+            `but workLog has productType ${data.productTypeId}. Ignoring nomenclatureId.`,
         );
         data.nomenclatureId = undefined;
       }
@@ -778,14 +806,18 @@ export class PayrollService {
       where: { id: data.userId },
       select: { paymentType: true },
     });
-    const isSalaryWorker = worker?.paymentType === 'SALARY';
+    const isSalaryWorker = worker?.paymentType === "SALARY";
 
     // Для окладников расценка = 0 (только учёт выработки, зарплата фиксированная)
     let pricePerUnit = 0;
     let totalAmount = 0;
     if (!isSalaryWorker) {
       // Получаем расценку - сначала по номенклатуре, потом по типу
-      const workRate = await this.findWorkRate(data.productTypeId, data.stage, data.nomenclatureId);
+      const workRate = await this.findWorkRate(
+        data.productTypeId,
+        data.stage,
+        data.nomenclatureId,
+      );
       pricePerUnit = workRate?.pricePerUnit || 0;
       totalAmount = data.quantity * pricePerUnit;
     }
@@ -871,19 +903,23 @@ export class PayrollService {
         productType: true,
         task: true,
       },
-      orderBy: { completedAt: 'desc' },
+      orderBy: { completedAt: "desc" },
     });
   }
 
   // Заработок работника (для PIN-входа и просмотра своих данных)
-  async getWorkerEarnings(userId: string, startDate?: string, endDate?: string) {
+  async getWorkerEarnings(
+    userId: string,
+    startDate?: string,
+    endDate?: string,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { role: true },
     });
 
     if (!user) {
-      throw new NotFoundException('Пользователь не найден');
+      throw new NotFoundException("Пользователь не найден");
     }
 
     // Определяем период (по умолчанию — текущий месяц)
@@ -916,7 +952,7 @@ export class PayrollService {
             select: { id: true, name: true },
           },
         },
-        orderBy: { completedAt: 'desc' },
+        orderBy: { completedAt: "desc" },
       }),
       // Работы за сегодня
       this.prisma.workLog.findMany({
@@ -928,7 +964,7 @@ export class PayrollService {
           product: { select: { id: true, name: true } },
           productType: { select: { id: true, name: true } },
         },
-        orderBy: { completedAt: 'desc' },
+        orderBy: { completedAt: "desc" },
       }),
       // Штрафы за период
       this.prisma.penalty.findMany({
@@ -937,7 +973,7 @@ export class PayrollService {
           date: { gte: start, lte: end },
           isCancelled: false,
         },
-        orderBy: { date: 'desc' },
+        orderBy: { date: "desc" },
       }),
       // Штрафы за сегодня
       this.prisma.penalty.findMany({
@@ -952,7 +988,10 @@ export class PayrollService {
     const periodTotal = workLogs.reduce((sum, log) => sum + log.totalAmount, 0);
     const todayTotal = todayLogs.reduce((sum, log) => sum + log.totalAmount, 0);
     const penaltyTotal = penalties.reduce((sum, p) => sum + p.amount, 0);
-    const todayPenaltyTotal = todayPenalties.reduce((sum, p) => sum + p.amount, 0);
+    const todayPenaltyTotal = todayPenalties.reduce(
+      (sum, p) => sum + p.amount,
+      0,
+    );
 
     return {
       user: {
@@ -969,7 +1008,7 @@ export class PayrollService {
         earnings: todayTotal,
         penalties: todayPenaltyTotal,
         net: todayTotal - todayPenaltyTotal,
-        workLogs: todayLogs.map(log => ({
+        workLogs: todayLogs.map((log) => ({
           id: log.id,
           product: log.product?.name,
           productType: log.productType?.name,
@@ -986,7 +1025,7 @@ export class PayrollService {
         net: periodTotal - penaltyTotal,
         workLogsCount: workLogs.length,
       },
-      recentWorkLogs: workLogs.slice(0, 20).map(log => ({
+      recentWorkLogs: workLogs.slice(0, 20).map((log) => ({
         id: log.id,
         product: log.product?.name,
         productType: log.productType?.name,
@@ -996,7 +1035,7 @@ export class PayrollService {
         totalAmount: log.totalAmount,
         completedAt: log.completedAt,
       })),
-      penalties: penalties.map(p => ({
+      penalties: penalties.map((p) => ({
         id: p.id,
         amount: p.amount,
         reason: p.reason,
@@ -1011,12 +1050,12 @@ export class PayrollService {
     const end = new Date(periodEnd);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      throw new BadRequestException('Неверный формат даты периода');
+      throw new BadRequestException("Неверный формат даты периода");
     }
 
     // Получаем все работы за период сгруппированные по пользователям
     const workLogsByUser = await this.prisma.workLog.groupBy({
-      by: ['userId'],
+      by: ["userId"],
       where: {
         completedAt: { gte: start, lte: end },
       },
@@ -1026,7 +1065,7 @@ export class PayrollService {
 
     // Получаем все штрафы за период сгруппированные по пользователям
     const penaltiesByUser = await this.prisma.penalty.groupBy({
-      by: ['userId'],
+      by: ["userId"],
       where: {
         date: { gte: start, lte: end },
         isCancelled: false,
@@ -1053,18 +1092,20 @@ export class PayrollService {
     });
 
     // Batch-load order totals for users with commissions (fix N+1)
-    const usersWithCommissions = usersData.filter(u => {
-      return commissions.some(c => c.userId === u.id || c.roleId === u.roleId);
+    const usersWithCommissions = usersData.filter((u) => {
+      return commissions.some(
+        (c) => c.userId === u.id || c.roleId === u.roleId,
+      );
     });
-    const commissionUserIds = usersWithCommissions.map(u => u.id);
+    const commissionUserIds = usersWithCommissions.map((u) => u.id);
 
     // Single groupBy query instead of N individual aggregates
-    let ordersByUser = new Map<string, number>();
-    let ordersWithMinByUser = new Map<string, number>();
+    const ordersByUser = new Map<string, number>();
+    const ordersWithMinByUser = new Map<string, number>();
 
     if (commissionUserIds.length > 0) {
       const orderGroups = await this.prisma.order.groupBy({
-        by: ['createdById'],
+        by: ["createdById"],
         _sum: { totalAmount: true },
         where: {
           createdById: { in: commissionUserIds },
@@ -1079,22 +1120,29 @@ export class PayrollService {
 
       // For commissions with minOrderAmount, we need filtered totals
       // Collect unique minOrderAmounts
-      const minAmounts = [...new Set(
-        commissions.filter(c => c.minOrderAmount).map(c => c.minOrderAmount)
-      )];
+      const minAmounts = [
+        ...new Set(
+          commissions
+            .filter((c) => c.minOrderAmount)
+            .map((c) => c.minOrderAmount),
+        ),
+      ];
 
       if (minAmounts.length > 0) {
         // For each distinct minOrderAmount, run one query for all relevant users
         for (const minAmount of minAmounts) {
-          const relevantUserIds = commissionUserIds.filter(uid => {
-            const uc = commissions.find(c => c.userId === uid) ||
-              commissions.find(c => c.roleId === usersData.find(u => u.id === uid)?.roleId);
+          const relevantUserIds = commissionUserIds.filter((uid) => {
+            const uc =
+              commissions.find((c) => c.userId === uid) ||
+              commissions.find(
+                (c) => c.roleId === usersData.find((u) => u.id === uid)?.roleId,
+              );
             return uc?.minOrderAmount === minAmount;
           });
 
           if (relevantUserIds.length > 0) {
             const filteredGroups = await this.prisma.order.groupBy({
-              by: ['createdById'],
+              by: ["createdById"],
               _sum: { totalAmount: true },
               where: {
                 createdById: { in: relevantUserIds },
@@ -1103,7 +1151,10 @@ export class PayrollService {
               },
             });
             for (const group of filteredGroups) {
-              ordersWithMinByUser.set(group.createdById, group._sum.totalAmount || 0);
+              ordersWithMinByUser.set(
+                group.createdById,
+                group._sum.totalAmount || 0,
+              );
             }
           }
         }
@@ -1121,23 +1172,26 @@ export class PayrollService {
       // Расчёт комиссии для менеджеров
       let commissionAmount = 0;
       let baseSalary = 0;
-      const userCommission = commissions.find(c => c.userId === user.id)
-        || commissions.find(c => c.roleId === user.roleId);
+      const userCommission =
+        commissions.find((c) => c.userId === user.id) ||
+        commissions.find((c) => c.roleId === user.roleId);
 
       if (userCommission) {
         baseSalary = userCommission.baseSalary || 0;
         const ordersAmount = userCommission.minOrderAmount
-          ? (ordersWithMinByUser.get(user.id) || 0)
-          : (ordersByUser.get(user.id) || 0);
-        commissionAmount = ordersAmount * (userCommission.commissionPercent / 100);
+          ? ordersWithMinByUser.get(user.id) || 0
+          : ordersByUser.get(user.id) || 0;
+        commissionAmount =
+          ordersAmount * (userCommission.commissionPercent / 100);
       }
 
-      const totalAmount = baseSalary + workAmount + commissionAmount - penaltyAmount;
+      const totalAmount =
+        baseSalary + workAmount + commissionAmount - penaltyAmount;
 
       return {
         userId: user.id,
         userName: `${user.firstName} ${user.lastName}`,
-        role: user.role?.name || 'Без роли',
+        role: user.role?.name || "Без роли",
         baseSalary,
         workAmount,
         commissionAmount,
@@ -1168,7 +1222,7 @@ export class PayrollService {
     const end = new Date(endDate);
 
     // Производственные роли
-    const productionRoleCodes = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'SEWER'];
+    const productionRoleCodes = ["PREPARER", "PAINTER", "ASSEMBLER", "SEWER"];
 
     const workers = await this.prisma.user.findMany({
       where: {
@@ -1180,62 +1234,69 @@ export class PayrollService {
       },
     });
 
-    const stats = await Promise.all(
-      workers.map(async (worker) => {
-        const workLogs = await this.prisma.workLog.findMany({
-          where: {
-            userId: worker.id,
-            completedAt: { gte: start, lte: end },
-          },
-          select: {
-            quantity: true,
-            totalAmount: true,
-            pricePerUnit: true,
-            stage: true,
-            completedAt: true,
-          },
-        });
+    const workerIds = workers.map((w) => w.id);
 
-        const penalties = await this.prisma.penalty.aggregate({
-          where: {
-            userId: worker.id,
-            date: { gte: start, lte: end },
-            isCancelled: false,
-          },
-          _sum: { amount: true },
-          _count: true,
-        });
-
-        const itemsCompleted = workLogs.reduce((sum, wl) => sum + wl.quantity, 0);
-        const workAmount = workLogs.reduce((sum, wl) => sum + wl.totalAmount, 0);
-        const penaltyAmount = penalties._sum.amount || 0;
-        const netAmount = workAmount - penaltyAmount;
-
-        // Коэффициент эффективности для зарплатников
-        let efficiencyCoefficient: number | null = null;
-        if (worker.paymentType === 'SALARY' && worker.monthlySalary && worker.monthlySalary > 0) {
-          efficiencyCoefficient = Math.round((workAmount / worker.monthlySalary) * 100) / 100;
-        }
-
-        return {
-          userId: worker.id,
-          firstName: worker.firstName,
-          lastName: worker.lastName,
-          roleCode: worker.role?.code,
-          paymentType: worker.paymentType,
-          monthlySalary: worker.monthlySalary,
-          itemsCompleted,
-          workAmount,
-          penaltyAmount,
-          penaltyCount: penalties._count,
-          netAmount,
-          efficiencyCoefficient,
-          workLogsCount: workLogs.length,
-        };
+    const [workLogsGrouped, penaltiesGrouped] = await Promise.all([
+      this.prisma.workLog.groupBy({
+        by: ["userId"],
+        where: {
+          userId: { in: workerIds },
+          completedAt: { gte: start, lte: end },
+        },
+        _sum: { quantity: true, totalAmount: true },
+        _count: { _all: true },
       }),
-    );
+      this.prisma.penalty.groupBy({
+        by: ["userId"],
+        where: {
+          userId: { in: workerIds },
+          date: { gte: start, lte: end },
+          isCancelled: false,
+        },
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+    ]);
 
-    return stats;
+    const workByUser = new Map(workLogsGrouped.map((w) => [w.userId, w]));
+    const penaltyByUser = new Map(penaltiesGrouped.map((p) => [p.userId, p]));
+
+    return workers.map((worker) => {
+      const work = workByUser.get(worker.id);
+      const penalty = penaltyByUser.get(worker.id);
+
+      const itemsCompleted = work?._sum.quantity ?? 0;
+      const workAmount = work?._sum.totalAmount ?? 0;
+      const workLogsCount = work?._count._all ?? 0;
+      const penaltyAmount = penalty?._sum.amount ?? 0;
+      const penaltyCount = penalty?._count._all ?? 0;
+      const netAmount = workAmount - penaltyAmount;
+
+      let efficiencyCoefficient: number | null = null;
+      if (
+        worker.paymentType === "SALARY" &&
+        worker.monthlySalary &&
+        worker.monthlySalary > 0
+      ) {
+        efficiencyCoefficient =
+          Math.round((workAmount / worker.monthlySalary) * 100) / 100;
+      }
+
+      return {
+        userId: worker.id,
+        firstName: worker.firstName,
+        lastName: worker.lastName,
+        roleCode: worker.role?.code,
+        paymentType: worker.paymentType,
+        monthlySalary: worker.monthlySalary,
+        itemsCompleted,
+        workAmount,
+        penaltyAmount,
+        penaltyCount,
+        netAmount,
+        efficiencyCoefficient,
+        workLogsCount,
+      };
+    });
   }
-
 }

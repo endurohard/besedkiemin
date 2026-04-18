@@ -1,11 +1,18 @@
-import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { YeastarService } from './yeastar.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PrismaService } from '../prisma/prisma.service';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UseGuards,
+  Request,
+} from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
+import { YeastarService } from "./yeastar.service";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PrismaService } from "../prisma/prisma.service";
 
-@ApiTags('yeastar')
-@Controller('yeastar')
+@ApiTags("yeastar")
+@Controller("yeastar")
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class YeastarController {
@@ -14,12 +21,9 @@ export class YeastarController {
     private readonly prisma: PrismaService,
   ) {}
 
-  @Post('call')
-  @ApiOperation({ summary: 'Совершить звонок через Yeastar API' })
-  async makeCall(
-    @Request() req,
-    @Body() body: { phoneNumber: string }
-  ) {
+  @Post("call")
+  @ApiOperation({ summary: "Совершить звонок через Yeastar API" })
+  async makeCall(@Request() req, @Body() body: { phoneNumber: string }) {
     // Получаем SIP настройки пользователя
     const user = await this.prisma.user.findUnique({
       where: { id: req.user.userId },
@@ -28,19 +32,22 @@ export class YeastarController {
     if (!user?.sipServer || !user?.sipUser || !user?.sipPassword) {
       return {
         success: false,
-        message: 'SIP настройки не настроены для пользователя',
+        message: "SIP настройки не настроены для пользователя",
       };
     }
 
     try {
       const config = {
         host: user.sipServer,
-        username: 'admin', // Нужно добавить поле apiUsername в User
-        password: 'admin', // Нужно добавить поле apiPassword в User
+        username: "admin", // Нужно добавить поле apiUsername в User
+        password: "admin", // Нужно добавить поле apiPassword в User
         extension: user.sipUser,
       };
 
-      const result = await this.yeastarService.makeCall(config, body.phoneNumber);
+      const result = await this.yeastarService.makeCall(
+        config,
+        body.phoneNumber,
+      );
 
       return {
         success: true,
@@ -55,12 +62,9 @@ export class YeastarController {
     }
   }
 
-  @Post('hangup')
-  @ApiOperation({ summary: 'Завершить звонок' })
-  async hangupCall(
-    @Request() req,
-    @Body() body: { callid: string }
-  ) {
+  @Post("hangup")
+  @ApiOperation({ summary: "Завершить звонок" })
+  async hangupCall(@Request() req, @Body() body: { callid: string }) {
     const user = await this.prisma.user.findUnique({
       where: { id: req.user.userId },
     });
@@ -68,15 +72,15 @@ export class YeastarController {
     if (!user?.sipServer) {
       return {
         success: false,
-        message: 'SIP настройки не настроены',
+        message: "SIP настройки не настроены",
       };
     }
 
     try {
       const config = {
         host: user.sipServer,
-        username: 'admin',
-        password: 'admin',
+        username: "admin",
+        password: "admin",
         extension: user.sipUser,
       };
 
@@ -84,7 +88,7 @@ export class YeastarController {
 
       return {
         success: true,
-        message: 'Звонок завершён',
+        message: "Звонок завершён",
       };
     } catch (error: any) {
       return {
@@ -94,8 +98,8 @@ export class YeastarController {
     }
   }
 
-  @Get('active-calls')
-  @ApiOperation({ summary: 'Получить активные звонки' })
+  @Get("active-calls")
+  @ApiOperation({ summary: "Получить активные звонки" })
   async getActiveCalls(@Request() req) {
     const user = await this.prisma.user.findUnique({
       where: { id: req.user.userId },
@@ -111,8 +115,8 @@ export class YeastarController {
     try {
       const config = {
         host: user.sipServer,
-        username: 'admin',
-        password: 'admin',
+        username: "admin",
+        password: "admin",
         extension: user.sipUser,
       };
 

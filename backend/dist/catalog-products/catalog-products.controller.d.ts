@@ -1,6 +1,6 @@
-import { CatalogProductsService } from './catalog-products.service';
-import { CreateCatalogProductDto } from './dto/create-catalog-product.dto';
-import { UpdateCatalogProductDto } from './dto/update-catalog-product.dto';
+import { CatalogProductsService } from "./catalog-products.service";
+import { CreateCatalogProductDto } from "./dto/create-catalog-product.dto";
+import { UpdateCatalogProductDto } from "./dto/update-catalog-product.dto";
 export declare class CatalogProductsController {
     private readonly productsService;
     constructor(productsService: CatalogProductsService);

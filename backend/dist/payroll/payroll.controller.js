@@ -62,7 +62,7 @@ let PayrollController = class PayrollController {
             userId,
             startDate,
             endDate,
-            includeCancelled: includeCancelled === 'true',
+            includeCancelled: includeCancelled === "true",
         });
     }
     createPenalty(dto, req) {
@@ -122,7 +122,7 @@ let PayrollController = class PayrollController {
             stage,
             startDate,
             endDate,
-            unassigned: unassigned === 'true',
+            unassigned: unassigned === "true",
         });
     }
     getPayrollSummary(periodStart, periodEnd) {
@@ -134,89 +134,89 @@ let PayrollController = class PayrollController {
 };
 exports.PayrollController = PayrollController;
 __decorate([
-    (0, common_1.Get)('my-earnings'),
+    (0, common_1.Get)("my-earnings"),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Query)('startDate')),
-    __param(2, (0, common_1.Query)('endDate')),
+    __param(1, (0, common_1.Query)("startDate")),
+    __param(2, (0, common_1.Query)("endDate")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
 ], PayrollController.prototype, "getMyEarnings", null);
 __decorate([
-    (0, common_1.Get)('my-earnings/today'),
+    (0, common_1.Get)("my-earnings/today"),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PayrollController.prototype, "getMyEarningsToday", null);
 __decorate([
-    (0, common_1.Get)('work-rates'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, common_1.Get)("work-rates"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "findAllWorkRates", null);
 __decorate([
-    (0, common_1.Get)('work-rates/active'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, common_1.Get)("work-rates/active"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "findActiveWorkRates", null);
 __decorate([
-    (0, common_1.Get)('work-rates/:productTypeId/:stage'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('productTypeId')),
-    __param(1, (0, common_1.Param)('stage')),
+    (0, common_1.Get)("work-rates/:productTypeId/:stage"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("productTypeId")),
+    __param(1, (0, common_1.Param)("stage")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "findWorkRate", null);
 __decorate([
-    (0, common_1.Post)('work-rates'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, common_1.Post)("work-rates"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.CreateWorkRateDto]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "createWorkRate", null);
 __decorate([
-    (0, common_1.Put)('work-rates/:id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Put)("work-rates/:id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, dto_1.UpdateWorkRateDto]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "updateWorkRate", null);
 __decorate([
-    (0, common_1.Delete)('work-rates/:id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)("work-rates/:id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "deleteWorkRate", null);
 __decorate([
-    (0, common_1.Get)('penalties/amounts'),
+    (0, common_1.Get)("penalties/amounts"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "getPenaltyAmounts", null);
 __decorate([
-    (0, common_1.Get)('penalties'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'WAREHOUSE'),
-    __param(0, (0, common_1.Query)('userId')),
-    __param(1, (0, common_1.Query)('startDate')),
-    __param(2, (0, common_1.Query)('endDate')),
-    __param(3, (0, common_1.Query)('includeCancelled')),
+    (0, common_1.Get)("penalties"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "WAREHOUSE"),
+    __param(0, (0, common_1.Query)("userId")),
+    __param(1, (0, common_1.Query)("startDate")),
+    __param(2, (0, common_1.Query)("endDate")),
+    __param(3, (0, common_1.Query)("includeCancelled")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "findAllPenalties", null);
 __decorate([
-    (0, common_1.Post)('penalties'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'WAREHOUSE'),
+    (0, common_1.Post)("penalties"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "WAREHOUSE"),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -224,18 +224,18 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "createPenalty", null);
 __decorate([
-    (0, common_1.Put)('penalties/:id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Put)("penalties/:id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, dto_1.UpdatePenaltyDto]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "updatePenalty", null);
 __decorate([
-    (0, common_1.Post)('penalties/:id/cancel'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)("penalties/:id/cancel"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -243,76 +243,76 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "cancelPenalty", null);
 __decorate([
-    (0, common_1.Get)('commissions'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, common_1.Get)("commissions"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "findAllManagerCommissions", null);
 __decorate([
-    (0, common_1.Get)('commissions/user/:userId'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('userId')),
+    (0, common_1.Get)("commissions/user/:userId"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("userId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "findManagerCommission", null);
 __decorate([
-    (0, common_1.Post)('commissions'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, common_1.Post)("commissions"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.CreateManagerCommissionDto]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "createManagerCommission", null);
 __decorate([
-    (0, common_1.Put)('commissions/:id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Put)("commissions/:id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, dto_1.UpdateManagerCommissionDto]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "updateManagerCommission", null);
 __decorate([
-    (0, common_1.Delete)('commissions/:id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)("commissions/:id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "deleteManagerCommission", null);
 __decorate([
-    (0, common_1.Get)('periods'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Query)('userId')),
-    __param(1, (0, common_1.Query)('status')),
-    __param(2, (0, common_1.Query)('periodStart')),
-    __param(3, (0, common_1.Query)('periodEnd')),
+    (0, common_1.Get)("periods"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Query)("userId")),
+    __param(1, (0, common_1.Query)("status")),
+    __param(2, (0, common_1.Query)("periodStart")),
+    __param(3, (0, common_1.Query)("periodEnd")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "findAllPayrollPeriods", null);
 __decorate([
-    (0, common_1.Get)('periods/:id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)("periods/:id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "findPayrollPeriod", null);
 __decorate([
-    (0, common_1.Post)('calculate'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, common_1.Post)("calculate"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.CalculatePayrollDto]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "calculatePayroll", null);
 __decorate([
-    (0, common_1.Post)('periods/:id/approve'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)("periods/:id/approve"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -320,9 +320,9 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "approvePayrollPeriod", null);
 __decorate([
-    (0, common_1.Post)('periods/:id/pay'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)("periods/:id/pay"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -330,54 +330,54 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "markPayrollAsPaid", null);
 __decorate([
-    (0, common_1.Post)('periods/:id/cancel'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)("periods/:id/cancel"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "cancelPayrollPeriod", null);
 __decorate([
-    (0, common_1.Delete)('periods/:id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)("periods/:id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "deletePayrollPeriod", null);
 __decorate([
-    (0, common_1.Get)('work-logs'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Query)('userId')),
-    __param(1, (0, common_1.Query)('productTypeId')),
-    __param(2, (0, common_1.Query)('stage')),
-    __param(3, (0, common_1.Query)('startDate')),
-    __param(4, (0, common_1.Query)('endDate')),
-    __param(5, (0, common_1.Query)('unassigned')),
+    (0, common_1.Get)("work-logs"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Query)("userId")),
+    __param(1, (0, common_1.Query)("productTypeId")),
+    __param(2, (0, common_1.Query)("stage")),
+    __param(3, (0, common_1.Query)("startDate")),
+    __param(4, (0, common_1.Query)("endDate")),
+    __param(5, (0, common_1.Query)("unassigned")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "findWorkLogs", null);
 __decorate([
-    (0, common_1.Get)('summary'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Query)('periodStart')),
-    __param(1, (0, common_1.Query)('periodEnd')),
+    (0, common_1.Get)("summary"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Query)("periodStart")),
+    __param(1, (0, common_1.Query)("periodEnd")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "getPayrollSummary", null);
 __decorate([
-    (0, common_1.Get)('worker-stats'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Query)('startDate')),
-    __param(1, (0, common_1.Query)('endDate')),
+    (0, common_1.Get)("worker-stats"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Query)("startDate")),
+    __param(1, (0, common_1.Query)("endDate")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "getWorkerStats", null);
 exports.PayrollController = PayrollController = __decorate([
-    (0, common_1.Controller)('payroll'),
+    (0, common_1.Controller)("payroll"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [payroll_service_1.PayrollService])
 ], PayrollController);

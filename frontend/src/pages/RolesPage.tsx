@@ -153,21 +153,21 @@ export default function RolesPage() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-muted/50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Роль</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Код</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Описание</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Пользователей</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Роль</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Код</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Описание</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Пользователей</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Тип</th>
               {canManage && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Действия</th>
               )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {roles.map((role) => (
-              <tr key={role.id} className="hover:bg-gray-50">
+              <tr key={role.id} className="hover:bg-muted/50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div
@@ -177,22 +177,22 @@ export default function RolesPage() {
                     <span className="font-medium">{role.name}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {role.code}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm text-muted-foreground">
                   {role.description || '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {role._count?.users || 0}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {role.isSystem ? (
-                    <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                    <span className="px-2 py-1 text-xs rounded-full bg-muted text-gray-800">
                       Системная
                     </span>
                   ) : (
-                    <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                    <span className="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary/90">
                       Пользовательская
                     </span>
                   )}
@@ -201,7 +201,7 @@ export default function RolesPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => openEditModal(role)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      className="text-primary hover:underline mr-3"
                     >
                       Изменить
                     </button>
@@ -283,8 +283,8 @@ export default function RolesPage() {
                       key={stage.id}
                       className={`px-3 py-1 rounded-full cursor-pointer border ${
                         formData.workflowStageIds.includes(stage.id)
-                          ? 'bg-blue-100 border-blue-500 text-blue-700'
-                          : 'bg-gray-100 border-gray-300'
+                          ? 'bg-primary/20 border-blue-500 text-primary'
+                          : 'bg-muted border-gray-300'
                       }`}
                     >
                       <input
@@ -304,7 +304,7 @@ export default function RolesPage() {
                 <div className="space-y-4 max-h-60 overflow-y-auto border rounded-lg p-3">
                   {Object.entries(permissionGroups).map(([group, perms]) => (
                     <div key={group}>
-                      <h4 className="font-medium text-gray-700 mb-2">{group}</h4>
+                      <h4 className="font-medium text-foreground mb-2">{group}</h4>
                       <div className="grid grid-cols-2 gap-2">
                         {perms.map((perm) => (
                           <label key={perm.code} className="flex items-center">
@@ -327,7 +327,7 @@ export default function RolesPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border rounded-lg hover:bg-muted/50"
                 >
                   Отмена
                 </button>

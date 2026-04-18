@@ -1,9 +1,9 @@
-import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { PinLoginDto } from './dto/pin-login.dto';
-import { TelegramService } from '../telegram/telegram.service';
-import { UsersService } from '../users/users.service';
-import { AuthenticatedUser } from './strategies/jwt.strategy';
+import { AuthService } from "./auth.service";
+import { LoginDto } from "./dto/login.dto";
+import { PinLoginDto } from "./dto/pin-login.dto";
+import { TelegramService } from "../telegram/telegram.service";
+import { UsersService } from "../users/users.service";
+import { AuthenticatedUser } from "./strategies/jwt.strategy";
 export declare class AuthController {
     private readonly authService;
     private readonly telegramService;

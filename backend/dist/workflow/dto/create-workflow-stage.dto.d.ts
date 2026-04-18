@@ -1,4 +1,4 @@
-import { ProductionStage } from '@prisma/client';
+import { ProductionStage } from "@prisma/client";
 export declare class CreateWorkflowStageDto {
     name: string;
     description?: string;

@@ -17,7 +17,7 @@ const roleNames: Record<string, string> = {
 const roleColors: Record<string, string> = {
   PREPARER: 'bg-orange-500',
   PAINTER: 'bg-green-500',
-  ASSEMBLER: 'bg-blue-500',
+  ASSEMBLER: 'bg-primary/100',
   SEWER: 'bg-purple-500',
 };
 
@@ -70,7 +70,7 @@ function EfficiencyBadge({ coeff }: { coeff: number | null }) {
 function PaymentTypeBadge({ type, salary }: { type: PaymentType; salary?: number | null }) {
   if (type === 'SALARY') {
     return (
-      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
         Оклад {salary ? formatCurrency(salary) : ''}
       </span>
     );
@@ -351,12 +351,12 @@ export default function ProductionWorkersPage() {
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeRole === roleCode
                   ? `${roleColors[roleCode]} text-white`
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-muted text-foreground hover:bg-muted'
               }`}
             >
               <span className={`w-2 h-2 rounded-full ${activeRole === roleCode ? 'bg-white' : roleColors[roleCode]}`} />
               {roleNames[roleCode]}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeRole === roleCode ? 'bg-white/20' : 'bg-gray-200'}`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeRole === roleCode ? 'bg-white/20' : 'bg-muted'}`}>
                 {count}
               </span>
             </button>
@@ -366,21 +366,21 @@ export default function ProductionWorkersPage() {
 
       {/* Сводка по отделу */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Изделий за {monthName}</div>
+        <div className="bg-card rounded-lg shadow p-4">
+          <div className="text-sm text-muted-foreground">Изделий за {monthName}</div>
           <div className="text-2xl font-bold">{roleSummary.totalItems}</div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Сдельный фонд</div>
+        <div className="bg-card rounded-lg shadow p-4">
+          <div className="text-sm text-muted-foreground">Сдельный фонд</div>
           <div className="text-2xl font-bold text-green-600">{formatCurrency(roleSummary.totalWork)}</div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Штрафы</div>
+        <div className="bg-card rounded-lg shadow p-4">
+          <div className="text-sm text-muted-foreground">Штрафы</div>
           <div className="text-2xl font-bold text-red-500">{formatCurrency(roleSummary.totalPenalties)}</div>
         </div>
         {roleSummary.avgEfficiency !== null && (
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-500 flex items-center gap-1">
+          <div className="bg-card rounded-lg shadow p-4">
+            <div className="text-sm text-muted-foreground flex items-center gap-1">
               <TrendingUp size={14} /> Ср. эффективность
             </div>
             <div className="text-2xl font-bold">
@@ -392,7 +392,7 @@ export default function ProductionWorkersPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Список сотрудников */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-card rounded-lg shadow">
           <div className="p-4 border-b flex justify-between items-center">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <Users size={20} />
@@ -410,12 +410,12 @@ export default function ProductionWorkersPage() {
 
           <div className="divide-y">
             {currentWorkers.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">Нет сотрудников в этом отделе</div>
+              <div className="p-8 text-center text-muted-foreground">Нет сотрудников в этом отделе</div>
             ) : (
               currentWorkers.map((worker) => {
                 const stat = getStatForWorker(worker.id);
                 return (
-                  <div key={worker.id} className="p-4 hover:bg-gray-50">
+                  <div key={worker.id} className="p-4 hover:bg-muted/50">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -425,12 +425,12 @@ export default function ProductionWorkersPage() {
                             <EfficiencyBadge coeff={stat.efficiencyCoefficient} />
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">{worker.email?.includes("@internal") ? "" : worker.email}</div>
+                        <div className="text-sm text-muted-foreground">{worker.email?.includes("@internal") ? "" : worker.email}</div>
 
                         {/* Статистика за месяц */}
                         {stat && stat.itemsCompleted > 0 && (
                           <div className="flex items-center gap-4 mt-2 text-sm">
-                            <span className="flex items-center gap-1 text-gray-600">
+                            <span className="flex items-center gap-1 text-muted-foreground">
                               <BarChart3 size={14} />
                               {stat.itemsCompleted} изд.
                             </span>
@@ -446,7 +446,7 @@ export default function ProductionWorkersPage() {
                           </div>
                         )}
                         {stat && stat.itemsCompleted === 0 && (
-                          <div className="text-xs text-gray-400 mt-1">Нет выполненных работ за {monthName}</div>
+                          <div className="text-xs text-muted-foreground mt-1">Нет выполненных работ за {monthName}</div>
                         )}
                       </div>
 
@@ -455,7 +455,7 @@ export default function ProductionWorkersPage() {
                           <button onClick={() => { setPinModal({ userId: worker.id, name: `${worker.lastName} ${worker.firstName}` }); setPinValue(''); }} className="p-2 text-violet-600 hover:bg-violet-50 rounded" title="Задать PIN-код">
                             <Key size={16} />
                           </button>
-                          <button onClick={() => openEditWorker(worker)} className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="Редактировать">
+                          <button onClick={() => openEditWorker(worker)} className="p-2 text-primary hover:bg-primary/10 rounded" title="Редактировать">
                             <Edit2 size={16} />
                           </button>
                           <button onClick={() => handleResetPassword(worker.id)} className="p-2 text-amber-600 hover:bg-amber-50 rounded text-xs" title="Сбросить пароль">
@@ -475,7 +475,7 @@ export default function ProductionWorkersPage() {
         </div>
 
         {/* Расценки */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-card rounded-lg shadow">
           <div className="p-4 border-b flex justify-between items-center">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <DollarSign size={20} />
@@ -493,13 +493,13 @@ export default function ProductionWorkersPage() {
 
           <div className="divide-y">
             {currentRates.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">Расценки не настроены</div>
+              <div className="p-8 text-center text-muted-foreground">Расценки не настроены</div>
             ) : (
               currentRates.map((rate) => (
-                <div key={rate.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                <div key={rate.id} className="p-4 flex items-center justify-between hover:bg-muted/50">
                   <div>
                     <div className="font-medium">{rate.productType?.name || 'Все типы'}</div>
-                    {rate.description && <div className="text-sm text-gray-500">{rate.description}</div>}
+                    {rate.description && <div className="text-sm text-muted-foreground">{rate.description}</div>}
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-lg font-bold text-green-600">{formatCurrency(rate.pricePerUnit)}</span>
@@ -514,7 +514,7 @@ export default function ProductionWorkersPage() {
             )}
           </div>
 
-          <div className="p-4 bg-blue-50 border-t text-sm text-blue-800">
+          <div className="p-4 bg-primary/10 border-t text-sm text-primary/90">
             <strong>Как работает:</strong> За каждое изделие, обработанное сотрудником отдела &laquo;{roleNames[activeRole]}&raquo;,
             ему начисляется указанная сумма. Для сотрудников на окладе работы учитываются для расчёта коэффициента эффективности.
           </div>
@@ -524,33 +524,33 @@ export default function ProductionWorkersPage() {
       {/* Модальное окно добавления сотрудника */}
       {showAddWorkerModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Новый сотрудник - {roleNames[activeRole]}</h2>
             <form onSubmit={handleAddWorker}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Фамилия</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Фамилия</label>
                   <input type="text" value={workerForm.lastName} onChange={(e) => setWorkerForm({ ...workerForm, lastName: e.target.value })} className="w-full border rounded-lg px-3 py-2" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Имя</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Имя</label>
                   <input type="text" value={workerForm.firstName} onChange={(e) => setWorkerForm({ ...workerForm, firstName: e.target.value })} className="w-full border rounded-lg px-3 py-2" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (необязательно)</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Email (необязательно)</label>
                   <input type="email" value={workerForm.email} onChange={(e) => setWorkerForm({ ...workerForm, email: e.target.value })} className="w-full border rounded-lg px-3 py-2" placeholder="Необязательно" />
                 </div>
 
                 {/* Тип оплаты */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Тип оплаты</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Тип оплаты</label>
                   <div className="flex gap-2">
                     <button type="button"
                       onClick={() => setWorkerForm({ ...workerForm, paymentType: 'PIECE_RATE' })}
                       className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                         workerForm.paymentType === 'PIECE_RATE'
                           ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          : 'border-border text-muted-foreground hover:border-border'
                       }`}
                     >
                       Сдельная
@@ -559,8 +559,8 @@ export default function ProductionWorkersPage() {
                       onClick={() => setWorkerForm({ ...workerForm, paymentType: 'SALARY' })}
                       className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                         workerForm.paymentType === 'SALARY'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          ? 'border-blue-500 bg-primary/10 text-primary'
+                          : 'border-border text-muted-foreground hover:border-border'
                       }`}
                     >
                       Оклад
@@ -570,23 +570,23 @@ export default function ProductionWorkersPage() {
 
                 {workerForm.paymentType === 'SALARY' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Оклад (руб./мес)</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">Оклад (руб./мес)</label>
                     <input type="number" value={workerForm.monthlySalary || ''} onChange={(e) => setWorkerForm({ ...workerForm, monthlySalary: Number(e.target.value) })} className="w-full border rounded-lg px-3 py-2" min="0" step="1000" placeholder="50000" required />
-                    <p className="text-xs text-gray-500 mt-1">Изделия будут учитываться для расчёта коэффициента эффективности</p>
+                    <p className="text-xs text-muted-foreground mt-1">Изделия будут учитываться для расчёта коэффициента эффективности</p>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">PIN-код <span className="text-gray-400 text-xs">— необязательно</span></label>
+                  <label className="block text-sm font-medium text-foreground mb-1">PIN-код <span className="text-muted-foreground text-xs">— необязательно</span></label>
                   <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={6} value={workerForm.pin} onChange={(e) => setWorkerForm({ ...workerForm, pin: e.target.value.replace(/\D/g, '') })} className="w-full border rounded-lg px-3 py-2 font-mono tracking-widest" placeholder="4-6 цифр для входа через окно отдела" />
                 </div>
 
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm text-gray-600">Пароль по умолчанию: <strong>123456</strong></p>
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Пароль по умолчанию: <strong>123456</strong></p>
                 </div>
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" onClick={() => setShowAddWorkerModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Отмена</button>
+                <button type="button" onClick={() => setShowAddWorkerModal(false)} className="px-4 py-2 border rounded-lg hover:bg-muted/50">Отмена</button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Добавить</button>
               </div>
             </form>
@@ -597,33 +597,33 @@ export default function ProductionWorkersPage() {
       {/* Модальное окно редактирования */}
       {editingWorker && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Редактирование сотрудника</h2>
             <form onSubmit={handleUpdateWorker}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Фамилия</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Фамилия</label>
                   <input type="text" value={workerForm.lastName} onChange={(e) => setWorkerForm({ ...workerForm, lastName: e.target.value })} className="w-full border rounded-lg px-3 py-2" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Имя</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Имя</label>
                   <input type="text" value={workerForm.firstName} onChange={(e) => setWorkerForm({ ...workerForm, firstName: e.target.value })} className="w-full border rounded-lg px-3 py-2" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (необязательно)</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Email (необязательно)</label>
                   <input type="email" value={workerForm.email} onChange={(e) => setWorkerForm({ ...workerForm, email: e.target.value })} className="w-full border rounded-lg px-3 py-2" />
                 </div>
 
                 {/* Тип оплаты */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Тип оплаты</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Тип оплаты</label>
                   <div className="flex gap-2">
                     <button type="button"
                       onClick={() => setWorkerForm({ ...workerForm, paymentType: 'PIECE_RATE' })}
                       className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                         workerForm.paymentType === 'PIECE_RATE'
                           ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          : 'border-border text-muted-foreground hover:border-border'
                       }`}
                     >
                       Сдельная
@@ -632,8 +632,8 @@ export default function ProductionWorkersPage() {
                       onClick={() => setWorkerForm({ ...workerForm, paymentType: 'SALARY' })}
                       className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                         workerForm.paymentType === 'SALARY'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          ? 'border-blue-500 bg-primary/10 text-primary'
+                          : 'border-border text-muted-foreground hover:border-border'
                       }`}
                     >
                       Оклад
@@ -643,14 +643,14 @@ export default function ProductionWorkersPage() {
 
                 {workerForm.paymentType === 'SALARY' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Оклад (руб./мес)</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">Оклад (руб./мес)</label>
                     <input type="number" value={workerForm.monthlySalary || ''} onChange={(e) => setWorkerForm({ ...workerForm, monthlySalary: Number(e.target.value) })} className="w-full border rounded-lg px-3 py-2" min="0" step="1000" placeholder="50000" required />
-                    <p className="text-xs text-gray-500 mt-1">Коэффициент = стоимость выполненных работ / оклад</p>
+                    <p className="text-xs text-muted-foreground mt-1">Коэффициент = стоимость выполненных работ / оклад</p>
                   </div>
                 )}
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" onClick={() => setEditingWorker(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Отмена</button>
+                <button type="button" onClick={() => setEditingWorker(null)} className="px-4 py-2 border rounded-lg hover:bg-muted/50">Отмена</button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
                   <Save size={16} /> Сохранить
                 </button>
@@ -664,11 +664,11 @@ export default function ProductionWorkersPage() {
       {/* Модальное окно установки PIN */}
       {pinModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+          <div className="bg-card rounded-lg p-6 w-full max-w-sm">
             <h2 className="text-xl font-bold mb-2">Установить PIN-код</h2>
-            <p className="text-sm text-gray-500 mb-4">{pinModal.name}</p>
+            <p className="text-sm text-muted-foreground mb-4">{pinModal.name}</p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">PIN (4-6 цифр)</label>
+              <label className="block text-sm font-medium text-foreground mb-1">PIN (4-6 цифр)</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -680,10 +680,10 @@ export default function ProductionWorkersPage() {
                 placeholder="****"
                 autoFocus
               />
-              <p className="text-xs text-gray-500 mt-2">Сотрудник сможет войти в личный кабинет через окно отдела, используя этот PIN</p>
+              <p className="text-xs text-muted-foreground mt-2">Сотрудник сможет войти в личный кабинет через окно отдела, используя этот PIN</p>
             </div>
             <div className="flex justify-end space-x-3 mt-6">
-              <button onClick={() => setPinModal(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Отмена</button>
+              <button onClick={() => setPinModal(null)} className="px-4 py-2 border rounded-lg hover:bg-muted/50">Отмена</button>
               <button onClick={handleSetPin} disabled={pinValue.length < 4} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                 <Key size={16} /> Установить
               </button>
@@ -695,12 +695,12 @@ export default function ProductionWorkersPage() {
       {/* Модальное окно расценки */}
       {showWorkRateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Новая расценка - {roleNames[activeRole]}</h2>
             <form onSubmit={handleAddWorkRate}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Тип продукта</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Тип продукта</label>
                   <select value={workRateForm.productTypeId} onChange={(e) => setWorkRateForm({ ...workRateForm, productTypeId: e.target.value, nomenclatureId: '' })} className="w-full border rounded-lg px-3 py-2" required>
                     <option value="">Выберите тип</option>
                     {productTypes.map((pt) => (<option key={pt.id} value={pt.id}>{pt.name}</option>))}
@@ -708,14 +708,14 @@ export default function ProductionWorkersPage() {
                 </div>
                 {workRateForm.productTypeId && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Изделие (номенклатура) <span className="text-gray-400 text-xs">— необязательно</span></label>
+                    <label className="block text-sm font-medium text-foreground mb-1">Изделие (номенклатура) <span className="text-muted-foreground text-xs">— необязательно</span></label>
                     {nomenclatures.length > 0 ? (
                       <>
                         <select value={workRateForm.nomenclatureId} onChange={(e) => setWorkRateForm({ ...workRateForm, nomenclatureId: e.target.value })} className="w-full border rounded-lg px-3 py-2">
                           <option value="">Все изделия этого типа</option>
                           {nomenclatures.map((nom) => (<option key={nom.id} value={nom.id}>{nom.name} {nom.color ? `(${nom.color})` : ''} {nom.sku ? `[${nom.sku}]` : ''}</option>))}
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">Выберите конкретное изделие для индивидуальной расценки</p>
+                        <p className="text-xs text-muted-foreground mt-1">Выберите конкретное изделие для индивидуальной расценки</p>
                       </>
                     ) : (
                       <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
@@ -725,16 +725,16 @@ export default function ProductionWorkersPage() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Цена за изделие (руб.)</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Цена за изделие (руб.)</label>
                   <input type="number" value={workRateForm.pricePerUnit} onChange={(e) => setWorkRateForm({ ...workRateForm, pricePerUnit: Number(e.target.value) })} className="w-full border rounded-lg px-3 py-2" min="0" step="1" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Описание (необязательно)</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Описание (необязательно)</label>
                   <input type="text" value={workRateForm.description} onChange={(e) => setWorkRateForm({ ...workRateForm, description: e.target.value })} className="w-full border rounded-lg px-3 py-2" placeholder="Например: стандартная ставка" />
                 </div>
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" onClick={() => setShowWorkRateModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Отмена</button>
+                <button type="button" onClick={() => setShowWorkRateModal(false)} className="px-4 py-2 border rounded-lg hover:bg-muted/50">Отмена</button>
                 <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Добавить</button>
               </div>
             </form>

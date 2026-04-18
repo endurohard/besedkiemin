@@ -22,7 +22,7 @@ let PublicController = class PublicController {
     }
     async getOrderStatus(orderNumber) {
         if (!orderNumber) {
-            throw new common_1.NotFoundException('Номер заказа не указан');
+            throw new common_1.NotFoundException("Номер заказа не указан");
         }
         const order = await this.prisma.order.findFirst({
             where: { orderNumber },
@@ -35,24 +35,25 @@ let PublicController = class PublicController {
             },
         });
         if (!order) {
-            throw new common_1.NotFoundException('Заказ не найден');
+            throw new common_1.NotFoundException("Заказ не найден");
         }
-        let statusText = '';
-        let statusEmoji = '';
-        let detailedStatus = '';
-        if (order.status === 'NEW') {
-            statusText = 'Новый заказ';
-            statusEmoji = '📝';
-            detailedStatus = 'Ваш заказ принят и ожидает начала производства';
+        let statusText = "";
+        let statusEmoji = "";
+        let detailedStatus = "";
+        if (order.status === "NEW") {
+            statusText = "Новый заказ";
+            statusEmoji = "📝";
+            detailedStatus = "Ваш заказ принят и ожидает начала производства";
         }
-        else if (order.status === 'IN_PRODUCTION') {
-            statusText = 'В производстве';
-            statusEmoji = '⚙️';
+        else if (order.status === "IN_PRODUCTION") {
+            statusText = "В производстве";
+            statusEmoji = "⚙️";
             const totalProducts = order.products.length;
-            const completedProducts = order.products.filter(p => p.stage === client_1.ProductionStage.COMPLETED || p.stage === client_1.ProductionStage.QUALITY_CHECK).length;
+            const completedProducts = order.products.filter((p) => p.stage === client_1.ProductionStage.COMPLETED ||
+                p.stage === client_1.ProductionStage.QUALITY_CHECK).length;
             detailedStatus = `Изготовление: ${completedProducts} из ${totalProducts} изделий готово`;
         }
-        else if (order.status === 'COMPLETED') {
+        else if (order.status === "COMPLETED") {
             const shipment = await this.prisma.shipment.findFirst({
                 where: {
                     items: {
@@ -63,37 +64,37 @@ let PublicController = class PublicController {
                         },
                     },
                 },
-                orderBy: { createdAt: 'desc' },
+                orderBy: { createdAt: "desc" },
             });
             if (shipment) {
-                if (shipment.status === 'PENDING') {
-                    statusText = 'Готов к отгрузке';
-                    statusEmoji = '📦';
-                    detailedStatus = 'Заказ готов и ожидает отправки';
+                if (shipment.status === "PENDING") {
+                    statusText = "Готов к отгрузке";
+                    statusEmoji = "📦";
+                    detailedStatus = "Заказ готов и ожидает отправки";
                 }
-                else if (shipment.status === 'IN_TRANSIT') {
-                    statusText = 'В пути';
-                    statusEmoji = '🚚';
+                else if (shipment.status === "IN_TRANSIT") {
+                    statusText = "В пути";
+                    statusEmoji = "🚚";
                     detailedStatus = shipment.deliveryDate
-                        ? `Заказ в пути, ожидаемая дата доставки: ${new Date(shipment.deliveryDate).toLocaleDateString('ru-RU')}`
-                        : 'Заказ в пути к вам';
+                        ? `Заказ в пути, ожидаемая дата доставки: ${new Date(shipment.deliveryDate).toLocaleDateString("ru-RU")}`
+                        : "Заказ в пути к вам";
                 }
-                else if (shipment.status === 'DELIVERED') {
-                    statusText = 'Доставлен';
-                    statusEmoji = '✅';
-                    detailedStatus = 'Заказ успешно доставлен';
+                else if (shipment.status === "DELIVERED") {
+                    statusText = "Доставлен";
+                    statusEmoji = "✅";
+                    detailedStatus = "Заказ успешно доставлен";
                 }
             }
             else {
-                statusText = 'Готов';
-                statusEmoji = '✅';
-                detailedStatus = 'Заказ изготовлен и находится на складе';
+                statusText = "Готов";
+                statusEmoji = "✅";
+                detailedStatus = "Заказ изготовлен и находится на складе";
             }
         }
-        else if (order.status === 'CANCELLED') {
-            statusText = 'Отменен';
-            statusEmoji = '❌';
-            detailedStatus = 'Заказ отменен';
+        else if (order.status === "CANCELLED") {
+            statusText = "Отменен";
+            statusEmoji = "❌";
+            detailedStatus = "Заказ отменен";
         }
         return {
             orderNumber: order.orderNumber,
@@ -103,7 +104,7 @@ let PublicController = class PublicController {
             statusEmoji,
             detailedStatus,
             createdAt: order.createdAt,
-            products: order.products.map(p => ({
+            products: order.products.map((p) => ({
                 name: p.name,
                 typeName: p.productType.name,
                 quantity: p.quantity,
@@ -114,14 +115,14 @@ let PublicController = class PublicController {
 };
 exports.PublicController = PublicController;
 __decorate([
-    (0, common_1.Get)('order-status'),
-    __param(0, (0, common_1.Query)('orderNumber')),
+    (0, common_1.Get)("order-status"),
+    __param(0, (0, common_1.Query)("orderNumber")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PublicController.prototype, "getOrderStatus", null);
 exports.PublicController = PublicController = __decorate([
-    (0, common_1.Controller)('public'),
+    (0, common_1.Controller)("public"),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], PublicController);
 //# sourceMappingURL=public.controller.js.map

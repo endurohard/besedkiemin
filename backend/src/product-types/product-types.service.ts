@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateProductTypeDto } from './dto/create-product-type.dto';
-import { UpdateProductTypeDto } from './dto/update-product-type.dto';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateProductTypeDto } from "./dto/create-product-type.dto";
+import { UpdateProductTypeDto } from "./dto/update-product-type.dto";
 
 @Injectable()
 export class ProductTypesService {
@@ -14,7 +18,9 @@ export class ProductTypesService {
     });
 
     if (existing) {
-      throw new ConflictException('Тип продукта с таким названием уже существует');
+      throw new ConflictException(
+        "Тип продукта с таким названием уже существует",
+      );
     }
 
     return this.prisma.productType.create({
@@ -25,7 +31,7 @@ export class ProductTypesService {
   async findAll(includeInactive = false) {
     return this.prisma.productType.findMany({
       where: includeInactive ? {} : { isActive: true },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
   }
 
@@ -40,7 +46,7 @@ export class ProductTypesService {
     });
 
     if (!productType) {
-      throw new NotFoundException('Тип продукта не найден');
+      throw new NotFoundException("Тип продукта не найден");
     }
 
     return productType;
@@ -57,7 +63,9 @@ export class ProductTypesService {
       });
 
       if (existing && existing.id !== id) {
-        throw new ConflictException('Тип продукта с таким названием уже существует');
+        throw new ConflictException(
+          "Тип продукта с таким названием уже существует",
+        );
       }
     }
 

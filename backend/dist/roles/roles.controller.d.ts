@@ -1,5 +1,5 @@
-import { RolesService } from './roles.service';
-import { CreateRoleDto, UpdateRoleDto } from './dto';
+import { RolesService } from "./roles.service";
+import { CreateRoleDto, UpdateRoleDto } from "./dto";
 export declare class RolesController {
     private readonly rolesService;
     constructor(rolesService: RolesService);

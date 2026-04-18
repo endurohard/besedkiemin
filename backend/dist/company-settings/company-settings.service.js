@@ -21,11 +21,11 @@ let CompanySettingsService = class CompanySettingsService {
         if (!settings) {
             settings = await this.prisma.companySettings.create({
                 data: {
-                    companyName: 'Моя компания',
-                    phone: '',
-                    email: '',
-                    address: '',
-                    inn: '',
+                    companyName: "Моя компания",
+                    phone: "",
+                    email: "",
+                    address: "",
+                    inn: "",
                     logoUrl: null,
                 },
             });

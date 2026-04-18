@@ -231,12 +231,12 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
+      <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold">Создать новый заказ</h2>
           <button
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-muted-foreground hover:text-gray-700 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -244,13 +244,13 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Тип заказа */}
-          <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex items-center gap-3 p-3 bg-primary/10 border border-blue-200 rounded-md">
             <input
               type="checkbox"
               id="internalOrder"
               checked={isInternalOrder}
               onChange={(e) => setIsInternalOrder(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              className="w-4 h-4 text-primary rounded focus:ring-2 focus:ring-ring"
             />
             <label htmlFor="internalOrder" className="text-sm font-medium text-blue-900 cursor-pointer">
               Внутренний заказ (для собственного производства)
@@ -265,7 +265,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                 id="autoGenerateOrderNumber"
                 checked={autoGenerateOrderNumber}
                 onChange={(e) => setAutoGenerateOrderNumber(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                className="w-4 h-4 text-primary rounded focus:ring-2 focus:ring-ring"
               />
               <label htmlFor="autoGenerateOrderNumber" className="text-sm font-medium text-gray-700 cursor-pointer">
                 Сгенерировать номер заказа автоматически
@@ -341,7 +341,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Дополнительная информация о заказе"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               rows={3}
             />
           </div>
@@ -355,7 +355,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as OrderPriority)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value={OrderPriority.LOW}>Низкий</option>
                 <option value={OrderPriority.NORMAL}>Обычный</option>
@@ -371,7 +371,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
               <select
                 value={sourceId}
                 onChange={(e) => setSourceId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">Не указан</option>
                 {orderSources.map((source) => (
@@ -396,7 +396,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
               onChange={(e) => setTotalAmount(e.target.value)}
               placeholder="Например: 50000"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Используется для расчета комиссии менеджера
             </p>
           </div>
@@ -406,7 +406,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Продукты</h3>
-                <p className="text-xs text-gray-500 mt-1">Можно добавить позже через раздел "Заказы"</p>
+                <p className="text-xs text-muted-foreground mt-1">Можно добавить позже через раздел "Заказы"</p>
               </div>
               <Button type="button" onClick={addProduct} className="text-sm">
                 + Добавить продукт
@@ -414,14 +414,14 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             </div>
 
             {products.length === 0 && (
-              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                <p className="text-sm text-gray-500">Продукты не добавлены</p>
-                <p className="text-xs text-gray-400 mt-1">Нажмите "+ Добавить продукт" чтобы добавить</p>
+              <div className="text-center py-8 border-2 border-dashed border-border rounded-lg">
+                <p className="text-sm text-muted-foreground">Продукты не добавлены</p>
+                <p className="text-xs text-muted-foreground mt-1">Нажмите "+ Добавить продукт" чтобы добавить</p>
               </div>
             )}
 
             {products.map((product, index) => (
-              <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-3">
+              <div key={index} className="p-4 border border-border rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">
                     Продукт {index + 1}
@@ -443,7 +443,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                   <select
                     value={product.nomenclatureId || ''}
                     onChange={(e) => handleNomenclatureSelect(index, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-sm"
                   >
                     <option value="">-- Ввести вручную --</option>
                     {nomenclature.map((item: Nomenclature) => (
@@ -493,7 +493,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     onChange={(e) =>
                       updateProduct(index, 'productTypeId', e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-muted"
                     required
                     disabled={!!product.nomenclatureId}
                   >
@@ -530,7 +530,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     placeholder="Например: Экокожа черная, Велюр бежевый, код 1140"
                     className="text-sm"
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Если указан материал - этап пошива включается автоматически
                   </p>
                 </div>
@@ -546,7 +546,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                       if (workers.length === 0) return null;
                       return (
                         <div key={stage}>
-                          <label className="block text-xs text-gray-600 mb-0.5">{icon} {label}</label>
+                          <label className="block text-xs text-muted-foreground mb-0.5">{icon} {label}</label>
                           <select
                             value={product.stageAssignments?.[stage] || ''}
                             onChange={(e) => {
@@ -558,7 +558,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                               }
                               updateProduct(index, 'stageAssignments', newAssignments);
                             }}
-                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            className="w-full px-2 py-1.5 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                           >
                             <option value="">Все</option>
                             {workers.map((w: User) => (
@@ -569,7 +569,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                       );
                     })}
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Не выбрано — задача пойдёт всем работникам этапа
                   </p>
                 </div>
@@ -590,7 +590,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     Фото схемы
                   </label>
                   <div className="flex items-center gap-2">
-                    <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                    <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
                       <Upload size={16} />
                       <span className="text-sm">
                         {product.schemaFile ? product.schemaFile.name : 'Выбрать файл'}
@@ -611,7 +611,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Загрузите фото схемы для производственников (макс. 5MB)
                   </p>
                 </div>

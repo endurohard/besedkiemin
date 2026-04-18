@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateCatalogProductDto } from './dto/create-catalog-product.dto';
-import { UpdateCatalogProductDto } from './dto/update-catalog-product.dto';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateCatalogProductDto } from "./dto/create-catalog-product.dto";
+import { UpdateCatalogProductDto } from "./dto/update-catalog-product.dto";
 
 @Injectable()
 export class CatalogProductsService {
@@ -14,7 +18,9 @@ export class CatalogProductsService {
     });
 
     if (existing) {
-      throw new ConflictException(`Товар с slug "${createDto.slug}" уже существует`);
+      throw new ConflictException(
+        `Товар с slug "${createDto.slug}" уже существует`,
+      );
     }
 
     // Проверка существования категории
@@ -23,7 +29,9 @@ export class CatalogProductsService {
     });
 
     if (!category) {
-      throw new NotFoundException(`Категория с ID ${createDto.categoryId} не найдена`);
+      throw new NotFoundException(
+        `Категория с ID ${createDto.categoryId} не найдена`,
+      );
     }
 
     return this.prisma.catalogProduct.create({
@@ -73,7 +81,7 @@ export class CatalogProductsService {
 
     return this.prisma.catalogProduct.findMany({
       where,
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
       include: {
         category: true,
       },
@@ -120,7 +128,9 @@ export class CatalogProductsService {
       });
 
       if (existing && existing.id !== id) {
-        throw new ConflictException(`Товар с slug "${updateDto.slug}" уже существует`);
+        throw new ConflictException(
+          `Товар с slug "${updateDto.slug}" уже существует`,
+        );
       }
     }
 
@@ -131,7 +141,9 @@ export class CatalogProductsService {
       });
 
       if (!category) {
-        throw new NotFoundException(`Категория с ID ${updateDto.categoryId} не найдена`);
+        throw new NotFoundException(
+          `Категория с ID ${updateDto.categoryId} не найдена`,
+        );
       }
     }
 
@@ -158,7 +170,7 @@ export class CatalogProductsService {
         isActive: true,
         isFeatured: true,
       },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
       take: limit,
       include: {
         category: true,

@@ -16,13 +16,13 @@ class CreateProductTypeDto {
 }
 exports.CreateProductTypeDto = CreateProductTypeDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Стол' }),
+    (0, swagger_1.ApiProperty)({ example: "Стол" }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateProductTypeDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Столы различных типов', required: false }),
+    (0, swagger_1.ApiProperty)({ example: "Столы различных типов", required: false }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)

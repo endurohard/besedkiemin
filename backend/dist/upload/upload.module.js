@@ -21,16 +21,16 @@ exports.UploadModule = UploadModule = __decorate([
         imports: [
             platform_express_1.MulterModule.register({
                 storage: (0, multer_1.diskStorage)({
-                    destination: './uploads',
+                    destination: "./uploads",
                     filename: (req, file, callback) => {
-                        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
                         const ext = (0, path_1.extname)(file.originalname);
                         callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
                     },
                 }),
                 fileFilter: (req, file, callback) => {
                     if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
-                        return callback(new common_1.BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
+                        return callback(new common_1.BadRequestException("Разрешены только изображения (jpg, png, gif, webp, heic)"), false);
                     }
                     callback(null, true);
                 },

@@ -26,7 +26,7 @@ let TelegramController = class TelegramController {
         const userId = req.user.userId;
         return {
             link: this.telegramService.generateTelegramLink(userId),
-            botUsername: 'besedkiemin_bot',
+            botUsername: "besedkiemin_bot",
         };
     }
     async unlinkTelegram(req) {
@@ -35,12 +35,12 @@ let TelegramController = class TelegramController {
             where: { id: userId },
             data: { telegramId: null },
         });
-        return { success: true, message: 'Telegram отвязан' };
+        return { success: true, message: "Telegram отвязан" };
     }
 };
 exports.TelegramController = TelegramController;
 __decorate([
-    (0, common_1.Get)('link'),
+    (0, common_1.Get)("link"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -48,7 +48,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], TelegramController.prototype, "getTelegramLink", null);
 __decorate([
-    (0, common_1.Post)('unlink'),
+    (0, common_1.Post)("unlink"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -56,7 +56,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TelegramController.prototype, "unlinkTelegram", null);
 exports.TelegramController = TelegramController = __decorate([
-    (0, common_1.Controller)('telegram'),
+    (0, common_1.Controller)("telegram"),
     __metadata("design:paramtypes", [telegram_service_1.TelegramService,
         prisma_service_1.PrismaService])
 ], TelegramController);

@@ -1,4 +1,4 @@
-import { InventoryService } from './inventory.service';
+import { InventoryService } from "./inventory.service";
 export declare class InventoryController {
     private readonly inventoryService;
     constructor(inventoryService: InventoryService);

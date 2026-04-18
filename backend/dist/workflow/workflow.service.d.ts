@@ -1,7 +1,7 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateWorkflowStageDto } from './dto/create-workflow-stage.dto';
-import { UpdateWorkflowStageDto } from './dto/update-workflow-stage.dto';
-import { ReorderWorkflowStagesDto } from './dto/reorder-workflow-stages.dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateWorkflowStageDto } from "./dto/create-workflow-stage.dto";
+import { UpdateWorkflowStageDto } from "./dto/update-workflow-stage.dto";
+import { ReorderWorkflowStagesDto } from "./dto/reorder-workflow-stages.dto";
 export declare class WorkflowService {
     private prisma;
     constructor(prisma: PrismaService);

@@ -1,9 +1,9 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
-import { OrderStatus, Prisma } from '@prisma/client';
-import { Response } from 'express';
-import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateOrderDto } from "./dto/create-order.dto";
+import { UpdateOrderDto } from "./dto/update-order.dto";
+import { OrderStatus, Prisma } from "@prisma/client";
+import { Response } from "express";
+import { NotificationsGateway } from "../notifications/notifications.gateway";
 export declare class OrdersService {
     private prisma;
     private notifications;

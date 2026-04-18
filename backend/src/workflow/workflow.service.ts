@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateWorkflowStageDto } from './dto/create-workflow-stage.dto';
-import { UpdateWorkflowStageDto } from './dto/update-workflow-stage.dto';
-import { ReorderWorkflowStagesDto } from './dto/reorder-workflow-stages.dto';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateWorkflowStageDto } from "./dto/create-workflow-stage.dto";
+import { UpdateWorkflowStageDto } from "./dto/update-workflow-stage.dto";
+import { ReorderWorkflowStagesDto } from "./dto/reorder-workflow-stages.dto";
 
 @Injectable()
 export class WorkflowService {
@@ -12,7 +17,7 @@ export class WorkflowService {
   async findAll() {
     return this.prisma.workflowStage.findMany({
       orderBy: {
-        order: 'asc',
+        order: "asc",
       },
     });
   }
@@ -24,7 +29,7 @@ export class WorkflowService {
         isActive: true,
       },
       orderBy: {
-        order: 'asc',
+        order: "asc",
       },
     });
   }
@@ -36,7 +41,7 @@ export class WorkflowService {
     });
 
     if (!stage) {
-      throw new NotFoundException('Этап workflow не найден');
+      throw new NotFoundException("Этап workflow не найден");
     }
 
     return stage;
@@ -50,7 +55,9 @@ export class WorkflowService {
     });
 
     if (existingStage) {
-      throw new ConflictException(`Порядковый номер ${createWorkflowStageDto.order} уже занят`);
+      throw new ConflictException(
+        `Порядковый номер ${createWorkflowStageDto.order} уже занят`,
+      );
     }
 
     return this.prisma.workflowStage.create({
@@ -72,7 +79,9 @@ export class WorkflowService {
       });
 
       if (existingStage) {
-        throw new ConflictException(`Порядковый номер ${updateWorkflowStageDto.order} уже занят`);
+        throw new ConflictException(
+          `Порядковый номер ${updateWorkflowStageDto.order} уже занят`,
+        );
       }
     }
 
@@ -97,7 +106,7 @@ export class WorkflowService {
 
     if (relatedTasks > 0 || relatedHistory > 0) {
       throw new BadRequestException(
-        'Нельзя удалить этап, так как с ним связаны задачи или история продуктов. Деактивируйте его вместо удаления.',
+        "Нельзя удалить этап, так как с ним связаны задачи или история продуктов. Деактивируйте его вместо удаления.",
       );
     }
 
@@ -118,7 +127,7 @@ export class WorkflowService {
     });
 
     if (stages.length !== stageIds.length) {
-      throw new BadRequestException('Некоторые этапы не найдены');
+      throw new BadRequestException("Некоторые этапы не найдены");
     }
 
     // Используем транзакцию с временными отрицательными значениями
@@ -149,39 +158,39 @@ export class WorkflowService {
     const existingStages = await this.prisma.workflowStage.count();
 
     if (existingStages > 0) {
-      throw new BadRequestException('Workflow уже настроен');
+      throw new BadRequestException("Workflow уже настроен");
     }
 
     const defaultStages = [
       {
-        name: 'Заготовка',
-        description: 'Подготовка материалов и заготовок',
+        name: "Заготовка",
+        description: "Подготовка материалов и заготовок",
         order: 1,
-        legacyStage: 'PREPARATION' as any,
+        legacyStage: "PREPARATION" as any,
       },
       {
-        name: 'Сборка',
-        description: 'Сборка изделий',
+        name: "Сборка",
+        description: "Сборка изделий",
         order: 2,
-        legacyStage: 'ASSEMBLY' as any,
+        legacyStage: "ASSEMBLY" as any,
       },
       {
-        name: 'Покраска',
-        description: 'Покраска и финишная обработка',
+        name: "Покраска",
+        description: "Покраска и финишная обработка",
         order: 3,
-        legacyStage: 'PAINTING' as any,
+        legacyStage: "PAINTING" as any,
       },
       {
-        name: 'Пошив',
-        description: 'Пошив и обивка изделий',
+        name: "Пошив",
+        description: "Пошив и обивка изделий",
         order: 4,
-        legacyStage: 'SEWING' as any,
+        legacyStage: "SEWING" as any,
       },
       {
-        name: 'Склад',
-        description: 'Проверка качества, упаковка и отгрузка',
+        name: "Склад",
+        description: "Проверка качества, упаковка и отгрузка",
         order: 5,
-        legacyStage: 'QUALITY_CHECK' as any,
+        legacyStage: "QUALITY_CHECK" as any,
       },
     ];
 
@@ -202,7 +211,7 @@ export class WorkflowService {
         isActive: true,
       },
       orderBy: {
-        order: 'asc',
+        order: "asc",
       },
     });
   }
@@ -217,7 +226,7 @@ export class WorkflowService {
         isActive: true,
       },
       orderBy: {
-        order: 'desc',
+        order: "desc",
       },
     });
   }

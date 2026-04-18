@@ -64,74 +64,74 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)('active'),
+    (0, common_1.Get)("active"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "findActive", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('OWNER'),
+    (0, roles_decorator_1.Roles)("OWNER"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_workflow_stage_dto_1.CreateWorkflowStageDto]),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "create", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)('OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Patch)(":id"),
+    (0, roles_decorator_1.Roles)("OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_workflow_stage_dto_1.UpdateWorkflowStageDto]),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "update", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)('OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)(":id"),
+    (0, roles_decorator_1.Roles)("OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "remove", null);
 __decorate([
-    (0, common_1.Post)('reorder'),
-    (0, roles_decorator_1.Roles)('OWNER'),
+    (0, common_1.Post)("reorder"),
+    (0, roles_decorator_1.Roles)("OWNER"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [reorder_workflow_stages_dto_1.ReorderWorkflowStagesDto]),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "reorder", null);
 __decorate([
-    (0, common_1.Post)('initialize'),
-    (0, roles_decorator_1.Roles)('OWNER'),
+    (0, common_1.Post)("initialize"),
+    (0, roles_decorator_1.Roles)("OWNER"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "initializeDefaultWorkflow", null);
 __decorate([
-    (0, common_1.Get)(':id/next'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id/next"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "getNextStage", null);
 __decorate([
-    (0, common_1.Get)(':id/previous'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id/previous"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "getPreviousStage", null);
 exports.WorkflowController = WorkflowController = __decorate([
-    (0, common_1.Controller)('workflow'),
+    (0, common_1.Controller)("workflow"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [workflow_service_1.WorkflowService])
 ], WorkflowController);

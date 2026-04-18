@@ -55,7 +55,7 @@ export const TaskTimer = ({ createdAt, acceptedAt, productionTimeHours, priority
         }
       } else {
         // Без нормы времени - показываем просто серый цвет
-        setColorClass('bg-gray-100 text-gray-800 border-gray-300');
+        setColorClass('bg-muted text-gray-800 border-gray-300');
       }
     };
 

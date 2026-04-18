@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class ChatService {
@@ -18,17 +22,17 @@ export class ChatService {
     if (!settings || !settings.chatEnabled) {
       return {
         online: false,
-        message: settings?.offlineMessage || 'Чат временно недоступен',
+        message: settings?.offlineMessage || "Чат временно недоступен",
       };
     }
 
     const now = new Date();
     const currentDay = now.getDay() || 7; // 0 (воскресенье) -> 7, 1-6 остаются как есть
     const workingDays = settings.workingDays
-      .split(',')
+      .split(",")
       .map((d) => {
         const day = parseInt(d.trim(), 10);
-        return (isNaN(day) || day < 1 || day > 7) ? null : day;
+        return isNaN(day) || day < 1 || day > 7 ? null : day;
       })
       .filter((d): d is number => d !== null);
 
@@ -45,9 +49,10 @@ export class ChatService {
     }
 
     // Проверяем рабочие часы
-    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
     const isWithinHours =
-      currentTime >= settings.workingHoursStart && currentTime <= settings.workingHoursEnd;
+      currentTime >= settings.workingHoursStart &&
+      currentTime <= settings.workingHoursEnd;
 
     if (!isWithinHours) {
       return {
@@ -73,7 +78,7 @@ export class ChatService {
     });
 
     if (!order) {
-      throw new NotFoundException('Заказ не найден');
+      throw new NotFoundException("Заказ не найден");
     }
 
     // Найти или создать комнату
@@ -81,7 +86,7 @@ export class ChatService {
       where: { catalogOrderId },
       include: {
         messages: {
-          orderBy: { createdAt: 'asc' },
+          orderBy: { createdAt: "asc" },
           take: 50, // Последние 50 сообщений
         },
       },
@@ -115,7 +120,7 @@ export class ChatService {
       where: { guestSessionId: data.guestSessionId },
       include: {
         messages: {
-          orderBy: { createdAt: 'asc' },
+          orderBy: { createdAt: "asc" },
           take: 50,
         },
       },
@@ -144,9 +149,9 @@ export class ChatService {
     const rooms = await this.prisma.chatRoom.findMany({
       where: { isActive: true },
       orderBy: [
-        { unreadCount: 'desc' }, // Сначала с непрочитанными
-        { lastMessageAt: 'desc' }, // Потом по времени последнего сообщения
-        { createdAt: 'desc' },
+        { unreadCount: "desc" }, // Сначала с непрочитанными
+        { lastMessageAt: "desc" }, // Потом по времени последнего сообщения
+        { createdAt: "desc" },
       ],
       include: {
         catalogOrder: {
@@ -160,20 +165,22 @@ export class ChatService {
         },
         messages: {
           take: 1,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         },
       },
     });
 
     // Для гостевых комнат (без заказа) создаём виртуальный объект catalogOrder
-    return rooms.map(room => ({
+    return rooms.map((room) => ({
       ...room,
       catalogOrder: room.catalogOrder || {
         id: room.guestSessionId || room.id,
-        orderNumber: room.guestSessionId ? `Гость #${room.guestSessionId.slice(-6)}` : 'Гостевой чат',
-        customerPhone: room.customerPhone || '',
-        customerEmail: room.customerEmail || '',
-        status: 'GUEST',
+        orderNumber: room.guestSessionId
+          ? `Гость #${room.guestSessionId.slice(-6)}`
+          : "Гостевой чат",
+        customerPhone: room.customerPhone || "",
+        customerEmail: room.customerEmail || "",
+        status: "GUEST",
       },
     }));
   }
@@ -186,14 +193,14 @@ export class ChatService {
       where: { id: roomId },
       include: {
         messages: {
-          orderBy: { createdAt: 'asc' },
+          orderBy: { createdAt: "asc" },
         },
         catalogOrder: true,
       },
     });
 
     if (!room) {
-      throw new NotFoundException('Комната чата не найдена');
+      throw new NotFoundException("Комната чата не найдена");
     }
 
     return room;
@@ -204,7 +211,7 @@ export class ChatService {
    */
   async sendMessage(data: {
     roomId: string;
-    senderType: 'CUSTOMER' | 'MANAGER';
+    senderType: "CUSTOMER" | "MANAGER";
     senderId?: string;
     senderName: string;
     content: string;
@@ -215,7 +222,7 @@ export class ChatService {
     });
 
     if (!room) {
-      throw new NotFoundException('Комната чата не найдена');
+      throw new NotFoundException("Комната чата не найдена");
     }
 
     // Создать сообщение
@@ -236,7 +243,7 @@ export class ChatService {
     };
 
     // Если сообщение от клиента, увеличить счетчик непрочитанных для менеджера
-    if (data.senderType === 'CUSTOMER') {
+    if (data.senderType === "CUSTOMER") {
       updateData.unreadCount = { increment: 1 };
     }
 
@@ -272,7 +279,7 @@ export class ChatService {
       where: {
         roomId,
         isRead: false,
-        senderType: 'CUSTOMER', // Считаем только непрочитанные от клиента
+        senderType: "CUSTOMER", // Считаем только непрочитанные от клиента
       },
     });
 
@@ -292,9 +299,9 @@ export class ChatService {
       where: {
         roomId,
         isRead: false,
-        senderType: 'CUSTOMER',
+        senderType: "CUSTOMER",
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
   }
 

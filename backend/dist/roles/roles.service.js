@@ -19,9 +19,9 @@ let RolesService = class RolesService {
     async findAll() {
         return this.prisma.role.findMany({
             where: {
-                code: { not: 'SUPER_ADMIN' },
+                code: { not: "SUPER_ADMIN" },
             },
-            orderBy: { order: 'asc' },
+            orderBy: { order: "asc" },
             include: {
                 workflowStages: {
                     include: {
@@ -66,11 +66,15 @@ let RolesService = class RolesService {
         });
     }
     async create(dto) {
-        const existingByName = await this.prisma.role.findUnique({ where: { name: dto.name } });
+        const existingByName = await this.prisma.role.findUnique({
+            where: { name: dto.name },
+        });
         if (existingByName) {
             throw new common_1.ConflictException(`Роль с названием "${dto.name}" уже существует`);
         }
-        const existingByCode = await this.prisma.role.findUnique({ where: { code: dto.code } });
+        const existingByCode = await this.prisma.role.findUnique({
+            where: { code: dto.code },
+        });
         if (existingByCode) {
             throw new common_1.ConflictException(`Роль с кодом "${dto.code}" уже существует`);
         }
@@ -97,19 +101,23 @@ let RolesService = class RolesService {
     async update(id, dto) {
         const role = await this.findOne(id);
         if (dto.name && dto.name !== role.name) {
-            const existingByName = await this.prisma.role.findUnique({ where: { name: dto.name } });
+            const existingByName = await this.prisma.role.findUnique({
+                where: { name: dto.name },
+            });
             if (existingByName) {
                 throw new common_1.ConflictException(`Роль с названием "${dto.name}" уже существует`);
             }
         }
         if (dto.code && dto.code !== role.code) {
-            const existingByCode = await this.prisma.role.findUnique({ where: { code: dto.code } });
+            const existingByCode = await this.prisma.role.findUnique({
+                where: { code: dto.code },
+            });
             if (existingByCode) {
                 throw new common_1.ConflictException(`Роль с кодом "${dto.code}" уже существует`);
             }
         }
         if (role.isSystem && (dto.name || dto.code)) {
-            throw new common_1.BadRequestException('Нельзя изменять name и code системной роли');
+            throw new common_1.BadRequestException("Нельзя изменять name и code системной роли");
         }
         const { workflowStageIds, ...roleData } = dto;
         return this.prisma.$transaction(async (tx) => {
@@ -136,7 +144,7 @@ let RolesService = class RolesService {
     async remove(id) {
         const role = await this.findOne(id);
         if (role.isSystem) {
-            throw new common_1.BadRequestException('Нельзя удалить системную роль');
+            throw new common_1.BadRequestException("Нельзя удалить системную роль");
         }
         if (role._count.users > 0) {
             throw new common_1.BadRequestException(`Нельзя удалить роль, к которой привязаны пользователи (${role._count.users} чел.)`);
@@ -146,36 +154,84 @@ let RolesService = class RolesService {
     }
     getAllPermissions() {
         return [
-            { code: 'users:view', name: 'Просмотр пользователей', group: 'Пользователи' },
-            { code: 'users:create', name: 'Создание пользователей', group: 'Пользователи' },
-            { code: 'users:edit', name: 'Редактирование пользователей', group: 'Пользователи' },
-            { code: 'users:delete', name: 'Удаление пользователей', group: 'Пользователи' },
-            { code: 'orders:view', name: 'Просмотр заказов', group: 'Заказы' },
-            { code: 'orders:create', name: 'Создание заказов', group: 'Заказы' },
-            { code: 'orders:edit', name: 'Редактирование заказов', group: 'Заказы' },
-            { code: 'orders:delete', name: 'Удаление заказов', group: 'Заказы' },
-            { code: 'kanban:view', name: 'Просмотр канбан-доски', group: 'Канбан' },
-            { code: 'analytics:view', name: 'Просмотр аналитики', group: 'Аналитика' },
-            { code: 'inventory:view', name: 'Просмотр склада', group: 'Склад' },
-            { code: 'inventory:manage', name: 'Управление складом', group: 'Склад' },
-            { code: 'shipments:view', name: 'Просмотр отгрузок', group: 'Отгрузки' },
-            { code: 'shipments:create', name: 'Создание отгрузок', group: 'Отгрузки' },
-            { code: 'tasks:view_own', name: 'Просмотр своих задач', group: 'Задачи' },
-            { code: 'tasks:manage', name: 'Управление задачами', group: 'Задачи' },
-            { code: 'defects:view', name: 'Просмотр дефектов', group: 'Дефекты' },
-            { code: 'defects:manage', name: 'Управление дефектами', group: 'Дефекты' },
-            { code: 'quality:manage', name: 'Контроль качества', group: 'Качество' },
-            { code: 'settings:view', name: 'Просмотр настроек', group: 'Настройки' },
-            { code: 'settings:manage', name: 'Управление настройками', group: 'Настройки' },
-            { code: 'workflow:manage', name: 'Управление workflow', group: 'Workflow' },
-            { code: 'roles:view', name: 'Просмотр ролей', group: 'Роли' },
-            { code: 'roles:manage', name: 'Управление ролями', group: 'Роли' },
-            { code: 'chat:view', name: 'Просмотр чатов', group: 'Чат' },
-            { code: 'chat:manage', name: 'Управление чатами', group: 'Чат' },
-            { code: 'catalog:view', name: 'Просмотр каталога', group: 'Каталог' },
-            { code: 'catalog:manage', name: 'Управление каталогом', group: 'Каталог' },
-            { code: 'nomenclature:view', name: 'Просмотр номенклатуры', group: 'Номенклатура' },
-            { code: 'nomenclature:manage', name: 'Управление номенклатурой', group: 'Номенклатура' },
+            {
+                code: "users:view",
+                name: "Просмотр пользователей",
+                group: "Пользователи",
+            },
+            {
+                code: "users:create",
+                name: "Создание пользователей",
+                group: "Пользователи",
+            },
+            {
+                code: "users:edit",
+                name: "Редактирование пользователей",
+                group: "Пользователи",
+            },
+            {
+                code: "users:delete",
+                name: "Удаление пользователей",
+                group: "Пользователи",
+            },
+            { code: "orders:view", name: "Просмотр заказов", group: "Заказы" },
+            { code: "orders:create", name: "Создание заказов", group: "Заказы" },
+            { code: "orders:edit", name: "Редактирование заказов", group: "Заказы" },
+            { code: "orders:delete", name: "Удаление заказов", group: "Заказы" },
+            { code: "kanban:view", name: "Просмотр канбан-доски", group: "Канбан" },
+            {
+                code: "analytics:view",
+                name: "Просмотр аналитики",
+                group: "Аналитика",
+            },
+            { code: "inventory:view", name: "Просмотр склада", group: "Склад" },
+            { code: "inventory:manage", name: "Управление складом", group: "Склад" },
+            { code: "shipments:view", name: "Просмотр отгрузок", group: "Отгрузки" },
+            {
+                code: "shipments:create",
+                name: "Создание отгрузок",
+                group: "Отгрузки",
+            },
+            { code: "tasks:view_own", name: "Просмотр своих задач", group: "Задачи" },
+            { code: "tasks:manage", name: "Управление задачами", group: "Задачи" },
+            { code: "defects:view", name: "Просмотр дефектов", group: "Дефекты" },
+            {
+                code: "defects:manage",
+                name: "Управление дефектами",
+                group: "Дефекты",
+            },
+            { code: "quality:manage", name: "Контроль качества", group: "Качество" },
+            { code: "settings:view", name: "Просмотр настроек", group: "Настройки" },
+            {
+                code: "settings:manage",
+                name: "Управление настройками",
+                group: "Настройки",
+            },
+            {
+                code: "workflow:manage",
+                name: "Управление workflow",
+                group: "Workflow",
+            },
+            { code: "roles:view", name: "Просмотр ролей", group: "Роли" },
+            { code: "roles:manage", name: "Управление ролями", group: "Роли" },
+            { code: "chat:view", name: "Просмотр чатов", group: "Чат" },
+            { code: "chat:manage", name: "Управление чатами", group: "Чат" },
+            { code: "catalog:view", name: "Просмотр каталога", group: "Каталог" },
+            {
+                code: "catalog:manage",
+                name: "Управление каталогом",
+                group: "Каталог",
+            },
+            {
+                code: "nomenclature:view",
+                name: "Просмотр номенклатуры",
+                group: "Номенклатура",
+            },
+            {
+                code: "nomenclature:manage",
+                name: "Управление номенклатурой",
+                group: "Номенклатура",
+            },
         ];
     }
 };

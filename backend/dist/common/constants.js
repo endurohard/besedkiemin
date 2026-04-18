@@ -12,7 +12,7 @@ exports.PAGINATION = {
 exports.FILE_UPLOAD = {
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     ALLOWED_EXTENSIONS: /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i,
-    UPLOAD_DIR: './uploads',
+    UPLOAD_DIR: "./uploads",
 };
 exports.AUTH = {
     BCRYPT_SALT_ROUNDS: 10,
@@ -20,7 +20,7 @@ exports.AUTH = {
     LOGIN_CODE_LENGTH: 6,
 };
 exports.TELEGRAM = {
-    PARSE_MODE: 'HTML',
+    PARSE_MODE: "HTML",
     PHOTO_REQUEST_TIMEOUT_MS: 30 * 60 * 1000,
 };
 exports.RATE_LIMIT = {
@@ -28,21 +28,21 @@ exports.RATE_LIMIT = {
     REQUESTS_PER_HOUR: 1000,
 };
 exports.ORDER = {
-    PREFIX: 'ORD',
-    WEB_PREFIX: 'WEB',
+    PREFIX: "ORD",
+    WEB_PREFIX: "WEB",
     NUMBER_PADDING: 3,
     WEB_NUMBER_PADDING: 6,
 };
 exports.SYSTEM_ROLES = {
-    SUPER_ADMIN: 'SUPER_ADMIN',
-    OWNER: 'OWNER',
-    MANAGER: 'MANAGER',
-    DESIGNER: 'DESIGNER',
-    PREPARER: 'PREPARER',
-    PAINTER: 'PAINTER',
-    SEWER: 'SEWER',
-    ASSEMBLER: 'ASSEMBLER',
-    WAREHOUSE: 'WAREHOUSE',
+    SUPER_ADMIN: "SUPER_ADMIN",
+    OWNER: "OWNER",
+    MANAGER: "MANAGER",
+    DESIGNER: "DESIGNER",
+    PREPARER: "PREPARER",
+    PAINTER: "PAINTER",
+    SEWER: "SEWER",
+    ASSEMBLER: "ASSEMBLER",
+    WAREHOUSE: "WAREHOUSE",
 };
 exports.ROLE_TO_STAGE = {
     DESIGNER: client_1.ProductionStage.DESIGN,
@@ -53,17 +53,19 @@ exports.ROLE_TO_STAGE = {
     WAREHOUSE: client_1.ProductionStage.QUALITY_CHECK,
 };
 exports.STAGE_TO_NAME = {
-    [client_1.ProductionStage.PENDING]: 'Ожидание',
-    [client_1.ProductionStage.DESIGN]: 'Проектирование',
-    [client_1.ProductionStage.PREPARATION]: 'Заготовка',
-    [client_1.ProductionStage.ASSEMBLY]: 'Сборка',
-    [client_1.ProductionStage.PAINTING]: 'Покраска',
-    [client_1.ProductionStage.SEWING]: 'Пошив',
-    [client_1.ProductionStage.QUALITY_CHECK]: 'Склад',
-    [client_1.ProductionStage.COMPLETED]: 'Завершено',
+    [client_1.ProductionStage.PENDING]: "Ожидание",
+    [client_1.ProductionStage.DESIGN]: "Проектирование",
+    [client_1.ProductionStage.PREPARATION]: "Заготовка",
+    [client_1.ProductionStage.ASSEMBLY]: "Сборка",
+    [client_1.ProductionStage.PAINTING]: "Покраска",
+    [client_1.ProductionStage.SEWING]: "Пошив",
+    [client_1.ProductionStage.QUALITY_CHECK]: "Склад",
+    [client_1.ProductionStage.COMPLETED]: "Завершено",
 };
 function isDepartmentAccount(user) {
     return user.isDepartmentAccount === true;
 }
-exports.PENALTY_AMOUNTS = [200, 400, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000];
+exports.PENALTY_AMOUNTS = [
+    200, 400, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000,
+];
 //# sourceMappingURL=constants.js.map

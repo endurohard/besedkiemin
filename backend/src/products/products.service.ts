@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { TelegramService } from '../telegram/telegram.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductionStage, OrderStatus } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { TelegramService } from "../telegram/telegram.service";
+import { CreateProductDto } from "./dto/create-product.dto";
+import { UpdateProductDto } from "./dto/update-product.dto";
+import { ProductionStage, OrderStatus } from "@prisma/client";
 
 @Injectable()
 export class ProductsService {
@@ -21,41 +26,43 @@ export class ProductsService {
     });
 
     if (!order) {
-      throw new NotFoundException('Заказ не найден');
+      throw new NotFoundException("Заказ не найден");
     }
 
     // Получаем первую активную стадию workflow
     const firstWorkflowStage = await this.prisma.workflowStage.findFirst({
       where: { isActive: true },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
       include: {
         roles: { include: { role: true } },
       },
     });
 
     if (!firstWorkflowStage) {
-      throw new NotFoundException('Не найдены активные стадии workflow');
+      throw new NotFoundException("Не найдены активные стадии workflow");
     }
 
     // Получаем работников первой стадии
-    const roleIds = firstWorkflowStage.roles.map(r => r.roleId) || [];
-    const workers = roleIds.length > 0
-      ? await this.prisma.user.findMany({
-          where: {
-            roleId: { in: roleIds },
-            isActive: true,
-          },
-          include: { role: true },
-        })
-      : [];
+    const roleIds = firstWorkflowStage.roles.map((r) => r.roleId) || [];
+    const workers =
+      roleIds.length > 0
+        ? await this.prisma.user.findMany({
+            where: {
+              roleId: { in: roleIds },
+              isActive: true,
+            },
+            include: { role: true },
+          })
+        : [];
 
     // Определяем работников для назначения
     const assignments = createProductDto.stageAssignments || {};
     const firstStageKey = firstWorkflowStage.legacyStage;
-    const assignedWorkerId = createProductDto.assignedWorkerId
-      || (firstStageKey ? assignments[firstStageKey] : undefined);
+    const assignedWorkerId =
+      createProductDto.assignedWorkerId ||
+      (firstStageKey ? assignments[firstStageKey] : undefined);
     const taskWorkers = assignedWorkerId
-      ? workers.filter(w => w.id === assignedWorkerId)
+      ? workers.filter((w) => w.id === assignedWorkerId)
       : workers;
 
     // Используем транзакцию для атомарности
@@ -98,8 +105,8 @@ export class ProductsService {
                 quantity: newProduct.quantity,
                 workflowStageId: firstWorkflowStage.id,
               },
-            })
-          )
+            }),
+          ),
         );
 
         // Обновляем статус заказа на IN_PRODUCTION
@@ -121,19 +128,27 @@ export class ProductsService {
             const message =
               `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
               `*Продукт:* ${product.name}\n` +
-              `*Тип:* ${(product as any).productType?.name || 'Н/Д'}\n` +
+              `*Тип:* ${(product as any).productType?.name || "Н/Д"}\n` +
               `*Количество:* ${product.quantity} шт.\n` +
               `*Стадия:* ${firstWorkflowStage.name}\n` +
               `*Заказ:* ${order.orderNumber}\n\n` +
               `✅ Откройте раздел "Мои задачи" для выполнения`;
 
             try {
-              await this.telegramService.sendMessage(worker.telegramId!, message);
-              this.logger.log(`Уведомление отправлено работнику ${worker.email}`);
+              await this.telegramService.sendMessage(
+                worker.telegramId!,
+                message,
+              );
+              this.logger.log(
+                `Уведомление отправлено работнику ${worker.email}`,
+              );
             } catch (error) {
-              this.logger.error(`Ошибка отправки уведомления работнику ${worker.email}:`, error);
+              this.logger.error(
+                `Ошибка отправки уведомления работнику ${worker.email}:`,
+                error,
+              );
             }
-          })
+          }),
       );
     }
 
@@ -192,7 +207,7 @@ export class ProductsService {
               },
             },
             orderBy: {
-              startedAt: 'desc',
+              startedAt: "desc",
             },
             take: 5, // Только последние 5 записей истории для списка
           },
@@ -207,13 +222,13 @@ export class ProductsService {
               },
             },
             orderBy: {
-              createdAt: 'desc',
+              createdAt: "desc",
             },
             take: 3, // Только последние 3 проверки для списка
           },
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
       }),
       this.prisma.product.count({ where }),
@@ -239,7 +254,7 @@ export class ProductsService {
             },
           },
           orderBy: {
-            startedAt: 'asc',
+            startedAt: "asc",
           },
         },
         qualityChecks: {
@@ -253,14 +268,14 @@ export class ProductsService {
             },
           },
           orderBy: {
-            createdAt: 'desc',
+            createdAt: "desc",
           },
         },
       },
     });
 
     if (!product) {
-      throw new NotFoundException('Продукт не найден');
+      throw new NotFoundException("Продукт не найден");
     }
 
     return product;
@@ -356,7 +371,7 @@ export class ProductsService {
             },
           },
           orderBy: {
-            startedAt: 'desc',
+            startedAt: "desc",
           },
         },
       },
@@ -390,7 +405,7 @@ export class ProductsService {
         },
       },
       orderBy: {
-        startedAt: 'asc',
+        startedAt: "asc",
       },
     });
   }
@@ -413,7 +428,7 @@ export class ProductsService {
         where: { isActive: true },
         select: { legacyStage: true },
       });
-      const activeStageValues = activeStages.map(s => s.legacyStage);
+      const activeStageValues = activeStages.map((s) => s.legacyStage);
       if (!activeStageValues.includes(newStage)) {
         throw new BadRequestException(
           `Невозможен переход с этапа ${currentStage} на ${newStage}`,
@@ -425,16 +440,23 @@ export class ProductsService {
     // Получаем все активные этапы workflow по порядку
     const workflowStages = await this.prisma.workflowStage.findMany({
       where: { isActive: true },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
     });
 
-    const currentIndex = workflowStages.findIndex(s => s.legacyStage === currentStage);
-    const newIndex = workflowStages.findIndex(s => s.legacyStage === newStage);
+    const currentIndex = workflowStages.findIndex(
+      (s) => s.legacyStage === currentStage,
+    );
+    const newIndex = workflowStages.findIndex(
+      (s) => s.legacyStage === newStage,
+    );
     const lastStage = workflowStages[workflowStages.length - 1];
 
     // С последнего этапа workflow можно перейти в COMPLETED, REJECTED или любой предыдущий
     if (lastStage && currentStage === lastStage.legacyStage) {
-      if (newStage === ProductionStage.COMPLETED || newStage === ProductionStage.REJECTED) {
+      if (
+        newStage === ProductionStage.COMPLETED ||
+        newStage === ProductionStage.REJECTED
+      ) {
         return;
       }
       if (newIndex >= 0) {

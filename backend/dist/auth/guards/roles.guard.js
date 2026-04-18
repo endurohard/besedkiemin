@@ -20,16 +20,13 @@ let RolesGuard = RolesGuard_1 = class RolesGuard {
         this.logger = new common_1.Logger(RolesGuard_1.name);
     }
     canActivate(context) {
-        const requiredRoles = this.reflector.getAllAndOverride(roles_decorator_1.ROLES_KEY, [
-            context.getHandler(),
-            context.getClass(),
-        ]);
+        const requiredRoles = this.reflector.getAllAndOverride(roles_decorator_1.ROLES_KEY, [context.getHandler(), context.getClass()]);
         if (!requiredRoles || requiredRoles.length === 0) {
             return true;
         }
         const { user } = context.switchToHttp().getRequest();
         if (!user) {
-            this.logger.warn('RolesGuard: No user found in request');
+            this.logger.warn("RolesGuard: No user found in request");
             return false;
         }
         const userRoleCode = user.roleCode;
@@ -37,16 +34,16 @@ let RolesGuard = RolesGuard_1 = class RolesGuard {
             this.logger.warn(`RolesGuard: User ${user.userId} has no role assigned`);
             return false;
         }
-        if (userRoleCode === 'SUPER_ADMIN') {
+        if (userRoleCode === "SUPER_ADMIN") {
             return true;
         }
-        const isSuperAdminOnly = requiredRoles.length === 1 && requiredRoles[0] === 'SUPER_ADMIN';
-        if (userRoleCode === 'OWNER' && !isSuperAdminOnly) {
+        const isSuperAdminOnly = requiredRoles.length === 1 && requiredRoles[0] === "SUPER_ADMIN";
+        if (userRoleCode === "OWNER" && !isSuperAdminOnly) {
             return true;
         }
         const hasAccess = requiredRoles.includes(userRoleCode);
         if (!hasAccess) {
-            this.logger.debug(`RolesGuard: Access denied for user ${user.userId} with role ${userRoleCode}. Required: ${requiredRoles.join(', ')}`);
+            this.logger.debug(`RolesGuard: Access denied for user ${user.userId} with role ${userRoleCode}. Required: ${requiredRoles.join(", ")}`);
         }
         return hasAccess;
     }

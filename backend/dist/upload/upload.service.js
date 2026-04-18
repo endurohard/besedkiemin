@@ -57,14 +57,14 @@ let UploadService = UploadService_1 = class UploadService {
             storage: (0, multer_1.diskStorage)({
                 destination: constants_1.FILE_UPLOAD.UPLOAD_DIR,
                 filename: (req, file, callback) => {
-                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
                     const ext = (0, path_1.extname)(file.originalname);
                     callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
                 },
             }),
             fileFilter: (req, file, callback) => {
                 if (!file.originalname.match(constants_1.FILE_UPLOAD.ALLOWED_EXTENSIONS)) {
-                    return callback(new common_1.BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
+                    return callback(new common_1.BadRequestException("Разрешены только изображения (jpg, png, gif, webp, heic)"), false);
                 }
                 callback(null, true);
             },

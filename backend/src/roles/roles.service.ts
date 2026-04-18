@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateRoleDto, UpdateRoleDto } from './dto';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateRoleDto, UpdateRoleDto } from "./dto";
 
 @Injectable()
 export class RolesService {
@@ -9,9 +14,9 @@ export class RolesService {
   async findAll() {
     return this.prisma.role.findMany({
       where: {
-        code: { not: 'SUPER_ADMIN' }, // Скрываем SUPER_ADMIN из списка
+        code: { not: "SUPER_ADMIN" }, // Скрываем SUPER_ADMIN из списка
       },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
       include: {
         workflowStages: {
           include: {
@@ -62,12 +67,18 @@ export class RolesService {
 
   async create(dto: CreateRoleDto) {
     // Проверяем уникальность name и code
-    const existingByName = await this.prisma.role.findUnique({ where: { name: dto.name } });
+    const existingByName = await this.prisma.role.findUnique({
+      where: { name: dto.name },
+    });
     if (existingByName) {
-      throw new ConflictException(`Роль с названием "${dto.name}" уже существует`);
+      throw new ConflictException(
+        `Роль с названием "${dto.name}" уже существует`,
+      );
     }
 
-    const existingByCode = await this.prisma.role.findUnique({ where: { code: dto.code } });
+    const existingByCode = await this.prisma.role.findUnique({
+      where: { code: dto.code },
+    });
     if (existingByCode) {
       throw new ConflictException(`Роль с кодом "${dto.code}" уже существует`);
     }
@@ -102,23 +113,33 @@ export class RolesService {
 
     // Проверяем уникальность name
     if (dto.name && dto.name !== role.name) {
-      const existingByName = await this.prisma.role.findUnique({ where: { name: dto.name } });
+      const existingByName = await this.prisma.role.findUnique({
+        where: { name: dto.name },
+      });
       if (existingByName) {
-        throw new ConflictException(`Роль с названием "${dto.name}" уже существует`);
+        throw new ConflictException(
+          `Роль с названием "${dto.name}" уже существует`,
+        );
       }
     }
 
     // Проверяем уникальность code
     if (dto.code && dto.code !== role.code) {
-      const existingByCode = await this.prisma.role.findUnique({ where: { code: dto.code } });
+      const existingByCode = await this.prisma.role.findUnique({
+        where: { code: dto.code },
+      });
       if (existingByCode) {
-        throw new ConflictException(`Роль с кодом "${dto.code}" уже существует`);
+        throw new ConflictException(
+          `Роль с кодом "${dto.code}" уже существует`,
+        );
       }
     }
 
     // Системные роли нельзя изменять (кроме permissions и workflowStages)
     if (role.isSystem && (dto.name || dto.code)) {
-      throw new BadRequestException('Нельзя изменять name и code системной роли');
+      throw new BadRequestException(
+        "Нельзя изменять name и code системной роли",
+      );
     }
 
     const { workflowStageIds, ...roleData } = dto;
@@ -155,7 +176,7 @@ export class RolesService {
     const role = await this.findOne(id);
 
     if (role.isSystem) {
-      throw new BadRequestException('Нельзя удалить системную роль');
+      throw new BadRequestException("Нельзя удалить системную роль");
     }
 
     if (role._count.users > 0) {
@@ -173,64 +194,112 @@ export class RolesService {
   getAllPermissions() {
     return [
       // Пользователи
-      { code: 'users:view', name: 'Просмотр пользователей', group: 'Пользователи' },
-      { code: 'users:create', name: 'Создание пользователей', group: 'Пользователи' },
-      { code: 'users:edit', name: 'Редактирование пользователей', group: 'Пользователи' },
-      { code: 'users:delete', name: 'Удаление пользователей', group: 'Пользователи' },
+      {
+        code: "users:view",
+        name: "Просмотр пользователей",
+        group: "Пользователи",
+      },
+      {
+        code: "users:create",
+        name: "Создание пользователей",
+        group: "Пользователи",
+      },
+      {
+        code: "users:edit",
+        name: "Редактирование пользователей",
+        group: "Пользователи",
+      },
+      {
+        code: "users:delete",
+        name: "Удаление пользователей",
+        group: "Пользователи",
+      },
 
       // Заказы
-      { code: 'orders:view', name: 'Просмотр заказов', group: 'Заказы' },
-      { code: 'orders:create', name: 'Создание заказов', group: 'Заказы' },
-      { code: 'orders:edit', name: 'Редактирование заказов', group: 'Заказы' },
-      { code: 'orders:delete', name: 'Удаление заказов', group: 'Заказы' },
+      { code: "orders:view", name: "Просмотр заказов", group: "Заказы" },
+      { code: "orders:create", name: "Создание заказов", group: "Заказы" },
+      { code: "orders:edit", name: "Редактирование заказов", group: "Заказы" },
+      { code: "orders:delete", name: "Удаление заказов", group: "Заказы" },
 
       // Канбан
-      { code: 'kanban:view', name: 'Просмотр канбан-доски', group: 'Канбан' },
+      { code: "kanban:view", name: "Просмотр канбан-доски", group: "Канбан" },
 
       // Аналитика
-      { code: 'analytics:view', name: 'Просмотр аналитики', group: 'Аналитика' },
+      {
+        code: "analytics:view",
+        name: "Просмотр аналитики",
+        group: "Аналитика",
+      },
 
       // Склад
-      { code: 'inventory:view', name: 'Просмотр склада', group: 'Склад' },
-      { code: 'inventory:manage', name: 'Управление складом', group: 'Склад' },
+      { code: "inventory:view", name: "Просмотр склада", group: "Склад" },
+      { code: "inventory:manage", name: "Управление складом", group: "Склад" },
 
       // Отгрузки
-      { code: 'shipments:view', name: 'Просмотр отгрузок', group: 'Отгрузки' },
-      { code: 'shipments:create', name: 'Создание отгрузок', group: 'Отгрузки' },
+      { code: "shipments:view", name: "Просмотр отгрузок", group: "Отгрузки" },
+      {
+        code: "shipments:create",
+        name: "Создание отгрузок",
+        group: "Отгрузки",
+      },
 
       // Задачи
-      { code: 'tasks:view_own', name: 'Просмотр своих задач', group: 'Задачи' },
-      { code: 'tasks:manage', name: 'Управление задачами', group: 'Задачи' },
+      { code: "tasks:view_own", name: "Просмотр своих задач", group: "Задачи" },
+      { code: "tasks:manage", name: "Управление задачами", group: "Задачи" },
 
       // Дефекты
-      { code: 'defects:view', name: 'Просмотр дефектов', group: 'Дефекты' },
-      { code: 'defects:manage', name: 'Управление дефектами', group: 'Дефекты' },
+      { code: "defects:view", name: "Просмотр дефектов", group: "Дефекты" },
+      {
+        code: "defects:manage",
+        name: "Управление дефектами",
+        group: "Дефекты",
+      },
 
       // Качество
-      { code: 'quality:manage', name: 'Контроль качества', group: 'Качество' },
+      { code: "quality:manage", name: "Контроль качества", group: "Качество" },
 
       // Настройки
-      { code: 'settings:view', name: 'Просмотр настроек', group: 'Настройки' },
-      { code: 'settings:manage', name: 'Управление настройками', group: 'Настройки' },
+      { code: "settings:view", name: "Просмотр настроек", group: "Настройки" },
+      {
+        code: "settings:manage",
+        name: "Управление настройками",
+        group: "Настройки",
+      },
 
       // Workflow
-      { code: 'workflow:manage', name: 'Управление workflow', group: 'Workflow' },
+      {
+        code: "workflow:manage",
+        name: "Управление workflow",
+        group: "Workflow",
+      },
 
       // Роли
-      { code: 'roles:view', name: 'Просмотр ролей', group: 'Роли' },
-      { code: 'roles:manage', name: 'Управление ролями', group: 'Роли' },
+      { code: "roles:view", name: "Просмотр ролей", group: "Роли" },
+      { code: "roles:manage", name: "Управление ролями", group: "Роли" },
 
       // Чат
-      { code: 'chat:view', name: 'Просмотр чатов', group: 'Чат' },
-      { code: 'chat:manage', name: 'Управление чатами', group: 'Чат' },
+      { code: "chat:view", name: "Просмотр чатов", group: "Чат" },
+      { code: "chat:manage", name: "Управление чатами", group: "Чат" },
 
       // Каталог
-      { code: 'catalog:view', name: 'Просмотр каталога', group: 'Каталог' },
-      { code: 'catalog:manage', name: 'Управление каталогом', group: 'Каталог' },
+      { code: "catalog:view", name: "Просмотр каталога", group: "Каталог" },
+      {
+        code: "catalog:manage",
+        name: "Управление каталогом",
+        group: "Каталог",
+      },
 
       // Номенклатура
-      { code: 'nomenclature:view', name: 'Просмотр номенклатуры', group: 'Номенклатура' },
-      { code: 'nomenclature:manage', name: 'Управление номенклатурой', group: 'Номенклатура' },
+      {
+        code: "nomenclature:view",
+        name: "Просмотр номенклатуры",
+        group: "Номенклатура",
+      },
+      {
+        code: "nomenclature:manage",
+        name: "Управление номенклатурой",
+        group: "Номенклатура",
+      },
     ];
   }
 }

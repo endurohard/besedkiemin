@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsNumber, IsBoolean, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsBoolean,
+  Min,
+  Max,
+} from "class-validator";
 
 export class CreateManagerCommissionDto {
   @IsOptional()

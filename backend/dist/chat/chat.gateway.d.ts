@@ -1,7 +1,7 @@
-import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { JwtService } from '@nestjs/jwt';
-import { ChatService } from './chat.service';
+import { OnGatewayConnection, OnGatewayDisconnect } from "@nestjs/websockets";
+import { Server, Socket } from "socket.io";
+import { JwtService } from "@nestjs/jwt";
+import { ChatService } from "./chat.service";
 export declare class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private chatService;
     private jwtService;
@@ -13,7 +13,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     handleDisconnect(client: Socket): void;
     handleJoinRoom(client: Socket, data: {
         roomId: string;
-        userType: 'customer' | 'manager';
+        userType: "customer" | "manager";
         userId?: string;
     }): Promise<{
         success: boolean;
@@ -70,7 +70,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     handleSendMessage(client: Socket, data: {
         roomId: string;
         content: string;
-        senderType: 'CUSTOMER' | 'MANAGER';
+        senderType: "CUSTOMER" | "MANAGER";
         senderId?: string;
         senderName: string;
     }): Promise<{

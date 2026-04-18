@@ -61,9 +61,9 @@ let OrdersService = class OrdersService {
           MAX(CAST(SUBSTRING(order_number FROM $1) AS INTEGER)), 0
         ) + 1 AS next_num
         FROM orders
-        WHERE order_number ~ $2`, 'ORD-(\\d+)', '^ORD-\\d+$');
+        WHERE order_number ~ $2`, "ORD-(\\d+)", "^ORD-\\d+$");
             const nextNum = Number(result[0]?.next_num || 1);
-            orderNumber = `ORD-${String(nextNum).padStart(3, '0')}`;
+            orderNumber = `ORD-${String(nextNum).padStart(3, "0")}`;
         }
         const { orderNumber: _, ...restDto } = createOrderDto;
         return this.prisma.order.create({
@@ -177,7 +177,7 @@ let OrdersService = class OrdersService {
                         },
                     },
                 },
-                orderBy: { createdAt: 'desc' },
+                orderBy: { createdAt: "desc" },
             }),
             this.prisma.order.count({ where }),
         ]);
@@ -209,7 +209,7 @@ let OrdersService = class OrdersService {
                                 },
                             },
                             orderBy: {
-                                startedAt: 'asc',
+                                startedAt: "asc",
                             },
                         },
                         qualityChecks: {
@@ -223,7 +223,7 @@ let OrdersService = class OrdersService {
                                 },
                             },
                             orderBy: {
-                                createdAt: 'desc',
+                                createdAt: "desc",
                             },
                         },
                     },
@@ -288,10 +288,18 @@ let OrdersService = class OrdersService {
         }
         const [total, newOrders, inProduction, completed, cancelled] = await Promise.all([
             this.prisma.order.count({ where }),
-            this.prisma.order.count({ where: { ...where, status: client_1.OrderStatus.NEW } }),
-            this.prisma.order.count({ where: { ...where, status: client_1.OrderStatus.IN_PRODUCTION } }),
-            this.prisma.order.count({ where: { ...where, status: client_1.OrderStatus.COMPLETED } }),
-            this.prisma.order.count({ where: { ...where, status: client_1.OrderStatus.CANCELLED } }),
+            this.prisma.order.count({
+                where: { ...where, status: client_1.OrderStatus.NEW },
+            }),
+            this.prisma.order.count({
+                where: { ...where, status: client_1.OrderStatus.IN_PRODUCTION },
+            }),
+            this.prisma.order.count({
+                where: { ...where, status: client_1.OrderStatus.COMPLETED },
+            }),
+            this.prisma.order.count({
+                where: { ...where, status: client_1.OrderStatus.CANCELLED },
+            }),
         ]);
         return {
             total,
@@ -302,52 +310,60 @@ let OrdersService = class OrdersService {
         };
     }
     async exportToExcel(res, filters) {
-        const result = await this.findAll({ ...filters, limit: constants_1.PAGINATION.EXPORT_MAX_SIZE });
+        const result = await this.findAll({
+            ...filters,
+            limit: constants_1.PAGINATION.EXPORT_MAX_SIZE,
+        });
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Заказы');
+        const worksheet = workbook.addWorksheet("Заказы");
         worksheet.columns = [
-            { header: '№ Заказа', key: 'orderNumber', width: 15 },
-            { header: 'Клиент', key: 'customerName', width: 25 },
-            { header: 'Телефон', key: 'customerPhone', width: 20 },
-            { header: 'Адрес', key: 'customerAddress', width: 35 },
-            { header: 'Статус', key: 'status', width: 20 },
-            { header: 'Источник', key: 'source', width: 15 },
-            { header: 'Сумма', key: 'totalAmount', width: 15 },
-            { header: 'Описание', key: 'description', width: 35 },
-            { header: 'Кол-во продуктов', key: 'productCount', width: 20 },
-            { header: 'Дата создания', key: 'createdAt', width: 20 },
+            { header: "№ Заказа", key: "orderNumber", width: 15 },
+            { header: "Клиент", key: "customerName", width: 25 },
+            { header: "Телефон", key: "customerPhone", width: 20 },
+            { header: "Адрес", key: "customerAddress", width: 35 },
+            { header: "Статус", key: "status", width: 20 },
+            { header: "Источник", key: "source", width: 15 },
+            {
+                header: "Сумма",
+                key: "totalAmount",
+                width: 15,
+                style: { numFmt: '#,##0.00" ₽";-#,##0.00" ₽"' },
+            },
+            { header: "Описание", key: "description", width: 35 },
+            { header: "Кол-во продуктов", key: "productCount", width: 20 },
+            { header: "Дата создания", key: "createdAt", width: 20 },
         ];
         worksheet.getRow(1).font = { bold: true };
         worksheet.getRow(1).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFE0E0E0' },
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFE0E0E0" },
         };
         result.data.forEach((order) => {
             worksheet.addRow({
                 orderNumber: order.orderNumber,
                 customerName: order.customerName,
                 customerPhone: order.customerPhone,
-                customerAddress: order.customerAddress || '-',
+                customerAddress: order.customerAddress || "-",
                 status: this.translateStatus(order.status),
-                source: order.source?.name || '-',
-                totalAmount: order.totalAmount ? `${order.totalAmount.toLocaleString('ru-RU')} ₽` : '-',
-                description: order.description || '-',
+                source: order.source?.name || "-",
+                totalAmount: order.totalAmount ?? null,
+                description: order.description || "-",
                 productCount: order.products?.length || 0,
-                createdAt: order.createdAt.toLocaleDateString('ru-RU'),
+                createdAt: order.createdAt.toLocaleDateString("ru-RU"),
             });
         });
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", `attachment; filename=orders_${new Date().toISOString().split("T")[0]}.xlsx`);
         await workbook.xlsx.write(res);
         res.end();
     }
     translateStatus(status) {
         const translations = {
-            [client_1.OrderStatus.NEW]: 'Новый',
-            [client_1.OrderStatus.IN_PRODUCTION]: 'В производстве',
-            [client_1.OrderStatus.COMPLETED]: 'Завершен',
-            [client_1.OrderStatus.CANCELLED]: 'Отменен',
+            [client_1.OrderStatus.NEW]: "Новый",
+            [client_1.OrderStatus.IN_PRODUCTION]: "В производстве",
+            [client_1.OrderStatus.COMPLETED]: "Завершен",
+            [client_1.OrderStatus.CANCELLED]: "Отменен",
         };
         return translations[status] || status;
     }

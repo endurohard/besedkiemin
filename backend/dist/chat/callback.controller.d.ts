@@ -1,4 +1,4 @@
-import { CallbackService } from './callback.service';
+import { CallbackService } from "./callback.service";
 export declare class CallbackController {
     private readonly callbackService;
     constructor(callbackService: CallbackService);

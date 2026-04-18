@@ -4,10 +4,10 @@ import {
   ExecutionContext,
   ForbiddenException,
   Logger,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { FEATURE_FLAG_KEY } from '../decorators/feature-flag.decorator';
-import { FeatureFlagsService } from '../feature-flags.service';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { FEATURE_FLAG_KEY } from "../decorators/feature-flag.decorator";
+import { FeatureFlagsService } from "../feature-flags.service";
 
 @Injectable()
 export class FeatureFlagGuard implements CanActivate {
@@ -19,10 +19,10 @@ export class FeatureFlagGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredFlag = this.reflector.getAllAndOverride<string>(FEATURE_FLAG_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredFlag = this.reflector.getAllAndOverride<string>(
+      FEATURE_FLAG_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // Если декоратор не указан, разрешаем доступ
     if (!requiredFlag) {
@@ -33,7 +33,7 @@ export class FeatureFlagGuard implements CanActivate {
     const user = request.user;
 
     // SUPER_ADMIN всегда имеет доступ, даже если функция отключена
-    if (user?.roleCode === 'SUPER_ADMIN') {
+    if (user?.roleCode === "SUPER_ADMIN") {
       return true;
     }
 
@@ -42,9 +42,11 @@ export class FeatureFlagGuard implements CanActivate {
 
     if (!isEnabled) {
       this.logger.warn(
-        `Feature "${requiredFlag}" is disabled. Access denied for user ${user?.userId || 'anonymous'}`,
+        `Feature "${requiredFlag}" is disabled. Access denied for user ${user?.userId || "anonymous"}`,
       );
-      throw new ForbiddenException(`Функция "${requiredFlag}" временно отключена`);
+      throw new ForbiddenException(
+        `Функция "${requiredFlag}" временно отключена`,
+      );
     }
 
     return true;

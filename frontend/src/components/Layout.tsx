@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { useThemeStore } from '@/store/themeStore';
 import { Button } from './ui/Button';
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X, Moon, Sun } from 'lucide-react';
 import { PhoneWidget } from './PhoneWidget';
 import { Sidebar } from './Sidebar';
 import { TelegramLinkWidget } from './TelegramLinkWidget';
@@ -28,6 +29,7 @@ const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuthStore();
+  const { mode, toggle } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -57,9 +59,9 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="admin-theme min-h-screen bg-background text-foreground" data-theme={mode}>
       {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-40">
+      <header className="border-b bg-sidebar text-sidebar-foreground sticky top-0 z-40">
         <div className="px-3 py-2 flex items-center justify-between">
           {/* Mobile menu button */}
           <button
@@ -69,7 +71,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          <h1 className="text-lg font-bold">Besedki EMIN</h1>
+          <h1 className="text-lg font-bold text-primary">Besedki EMIN</h1>
 
           <div className="flex items-center gap-2 sm:gap-3">
             {/* User info - hidden on very small screens */}
@@ -86,6 +88,14 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 </>
               )}
             </div>
+            <button
+              onClick={toggle}
+              aria-label={mode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+              title={mode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            >
+              {mode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <TelegramLinkWidget />
             <Button
               variant="outline"

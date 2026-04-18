@@ -6,32 +6,42 @@ import {
   OnGatewayDisconnect,
   MessageBody,
   ConnectedSocket,
-} from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ChatService } from './chat.service';
+} from "@nestjs/websockets";
+import { Server, Socket } from "socket.io";
+import { Logger } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ChatService } from "./chat.service";
+
+const chatAllowedOrigins = [
+  "http://localhost",
+  "http://localhost:5173",
+  ...(process.env.WS_CORS_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean),
+  ...(process.env.CORS_ORIGIN && process.env.CORS_ORIGIN !== "*"
+    ? [process.env.CORS_ORIGIN]
+    : []),
+];
 
 @WebSocketGateway({
   cors: {
-    origin: [
-      'http://176.98.155.17',
-      'http://176.98.155.17:5173',
-      'http://localhost',
-      'http://localhost:5173',
-    ],
+    origin: chatAllowedOrigins,
     credentials: true,
   },
-  namespace: '/chat',
+  namespace: "/chat",
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  private logger = new Logger('ChatGateway');
+  private logger = new Logger("ChatGateway");
 
   // Отслеживание подключенных пользователей
-  private connectedUsers = new Map<string, { socketId: string; roomId: string; userType: string }>();
+  private connectedUsers = new Map<
+    string,
+    { socketId: string; roomId: string; userType: string }
+  >();
 
   constructor(
     private chatService: ChatService,
@@ -41,18 +51,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleConnection(client: Socket) {
     // Для customer-типа (публичный чат) — пропускаем JWT
     const userType = client.handshake.query?.userType as string;
-    if (userType === 'customer') {
+    if (userType === "customer") {
       this.logger.log(`Customer connected: ${client.id}`);
       return;
     }
 
     // Для manager-типа — требуем JWT
-    const token = client.handshake.auth?.token
-      || client.handshake.headers?.authorization?.replace('Bearer ', '');
+    const token =
+      client.handshake.auth?.token ||
+      client.handshake.headers?.authorization?.replace("Bearer ", "");
 
     if (!token) {
       this.logger.warn(`Connection rejected (no token): ${client.id}`);
-      client.emit('error', { message: 'Требуется авторизация' });
+      client.emit("error", { message: "Требуется авторизация" });
       client.disconnect();
       return;
     }
@@ -61,10 +72,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const payload = this.jwtService.verify(token);
       (client as any).userId = payload.sub;
       (client as any).userEmail = payload.email;
-      this.logger.log(`Manager connected: ${client.id} (user: ${payload.email})`);
+      this.logger.log(
+        `Manager connected: ${client.id} (user: ${payload.email})`,
+      );
     } catch (error) {
       this.logger.warn(`Connection rejected (invalid token): ${client.id}`);
-      client.emit('error', { message: 'Неверный токен авторизации' });
+      client.emit("error", { message: "Неверный токен авторизации" });
       client.disconnect();
     }
   }
@@ -84,18 +97,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Клиент присоединяется к комнате
    */
-  @SubscribeMessage('join_room')
+  @SubscribeMessage("join_room")
   async handleJoinRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string; userType: 'customer' | 'manager'; userId?: string },
+    @MessageBody()
+    data: { roomId: string; userType: "customer" | "manager"; userId?: string },
   ) {
     try {
       const { roomId, userType, userId } = data;
 
       // Менеджер должен быть аутентифицирован
-      if (userType === 'manager' && !(client as any).userId) {
-        client.emit('error', { message: 'Требуется авторизация для менеджера' });
-        return { success: false, error: 'Unauthorized' };
+      if (userType === "manager" && !(client as any).userId) {
+        client.emit("error", {
+          message: "Требуется авторизация для менеджера",
+        });
+        return { success: false, error: "Unauthorized" };
       }
 
       // Проверить существование комнаты
@@ -115,13 +131,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logger.log(`${userType} joined room ${roomId}`);
 
       // Отправить историю сообщений
-      client.emit('room_joined', {
+      client.emit("room_joined", {
         room,
         messages: room.messages,
       });
 
       // Если это менеджер, отметить сообщения как прочитанные
-      if (userType === 'manager') {
+      if (userType === "manager") {
         const unreadMessages = await this.chatService.getUnreadMessages(roomId);
         if (unreadMessages.length > 0) {
           await this.chatService.markMessagesAsRead(
@@ -130,7 +146,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           );
 
           // Уведомить всех в комнате об обновлении статуса
-          this.server.to(roomId).emit('messages_read', {
+          this.server.to(roomId).emit("messages_read", {
             roomId,
             messageIds: unreadMessages.map((m) => m.id),
           });
@@ -138,7 +154,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       // Уведомить других участников комнаты о новом подключении
-      client.to(roomId).emit('user_joined', {
+      client.to(roomId).emit("user_joined", {
         userType,
         userId,
       });
@@ -146,7 +162,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return { success: true, room };
     } catch (error) {
       this.logger.error(`Error joining room: ${error.message}`);
-      client.emit('error', { message: error.message });
+      client.emit("error", { message: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -154,14 +170,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Отправка сообщения
    */
-  @SubscribeMessage('send_message')
+  @SubscribeMessage("send_message")
   async handleSendMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody()
     data: {
       roomId: string;
       content: string;
-      senderType: 'CUSTOMER' | 'MANAGER';
+      senderType: "CUSTOMER" | "MANAGER";
       senderId?: string;
       senderName: string;
     },
@@ -170,9 +186,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { roomId, content, senderType, senderId, senderName } = data;
 
       // Менеджер должен быть аутентифицирован
-      if (senderType === 'MANAGER' && !(client as any).userId) {
-        client.emit('error', { message: 'Требуется авторизация' });
-        return { success: false, error: 'Unauthorized' };
+      if (senderType === "MANAGER" && !(client as any).userId) {
+        client.emit("error", { message: "Требуется авторизация" });
+        return { success: false, error: "Unauthorized" };
       }
 
       // Сохранить сообщение в БД
@@ -185,12 +201,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
 
       // Отправить сообщение всем в комнате
-      this.server.to(roomId).emit('new_message', message);
+      this.server.to(roomId).emit("new_message", message);
 
       // Если сообщение от клиента, уведомить менеджеров о новом непрочитанном сообщении
-      if (senderType === 'CUSTOMER') {
+      if (senderType === "CUSTOMER") {
         const totalUnread = await this.chatService.getTotalUnreadCount();
-        this.server.emit('unread_count_updated', { total: totalUnread });
+        this.server.emit("unread_count_updated", { total: totalUnread });
       }
 
       this.logger.log(`Message sent in room ${roomId} by ${senderType}`);
@@ -198,7 +214,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return { success: true, message };
     } catch (error) {
       this.logger.error(`Error sending message: ${error.message}`);
-      client.emit('error', { message: error.message });
+      client.emit("error", { message: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -206,28 +222,31 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Индикатор набора текста
    */
-  @SubscribeMessage('typing')
+  @SubscribeMessage("typing")
   handleTyping(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string; userType: string; userName: string },
   ) {
     const { roomId, userType, userName } = data;
-    client.to(roomId).emit('user_typing', { userType, userName });
+    client.to(roomId).emit("user_typing", { userType, userName });
   }
 
   /**
    * Остановка набора текста
    */
-  @SubscribeMessage('stop_typing')
-  handleStopTyping(@ConnectedSocket() client: Socket, @MessageBody() data: { roomId: string }) {
+  @SubscribeMessage("stop_typing")
+  handleStopTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string },
+  ) {
     const { roomId } = data;
-    client.to(roomId).emit('user_stopped_typing');
+    client.to(roomId).emit("user_stopped_typing");
   }
 
   /**
    * Отметить сообщения как прочитанные
    */
-  @SubscribeMessage('mark_as_read')
+  @SubscribeMessage("mark_as_read")
   async handleMarkAsRead(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string; messageIds?: string[] },
@@ -237,7 +256,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       await this.chatService.markMessagesAsRead(roomId, messageIds);
 
-      this.server.to(roomId).emit('messages_read', {
+      this.server.to(roomId).emit("messages_read", {
         roomId,
         messageIds,
       });
@@ -252,27 +271,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Покинуть комнату
    */
-  @SubscribeMessage('leave_room')
-  handleLeaveRoom(@ConnectedSocket() client: Socket, @MessageBody() data: { roomId: string }) {
+  @SubscribeMessage("leave_room")
+  handleLeaveRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string },
+  ) {
     const { roomId } = data;
     client.leave(roomId);
     this.logger.log(`Client ${client.id} left room ${roomId}`);
-    client.to(roomId).emit('user_left');
+    client.to(roomId).emit("user_left");
     return { success: true };
   }
 
   /**
    * Проверить, онлайн ли чат (рабочие часы)
    */
-  @SubscribeMessage('check_online')
+  @SubscribeMessage("check_online")
   async handleCheckOnline(@ConnectedSocket() client: Socket) {
     try {
       const status = await this.chatService.isOnline();
-      client.emit('online_status', status);
+      client.emit("online_status", status);
       return status;
     } catch (error) {
       this.logger.error(`Error checking online status: ${error.message}`);
-      return { online: false, message: 'Ошибка проверки статуса' };
+      return { online: false, message: "Ошибка проверки статуса" };
     }
   }
 }

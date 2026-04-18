@@ -1,93 +1,93 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { UpdateFeatureFlagDto } from './dto/update-feature-flag.dto';
-import { FeatureFlag } from '@prisma/client';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { UpdateFeatureFlagDto } from "./dto/update-feature-flag.dto";
+import { FeatureFlag } from "@prisma/client";
 
 // Дефолтные feature flags для системы
 const DEFAULT_FEATURE_FLAGS = [
   {
-    key: 'chat',
-    name: 'Онлайн-чат',
-    description: 'Чат с клиентами на сайте',
-    category: 'sales',
+    key: "chat",
+    name: "Онлайн-чат",
+    description: "Чат с клиентами на сайте",
+    category: "sales",
   },
   {
-    key: 'catalog',
-    name: 'Публичный каталог',
-    description: 'Витрина товаров на сайте для клиентов',
-    category: 'sales',
+    key: "catalog",
+    name: "Публичный каталог",
+    description: "Витрина товаров на сайте для клиентов",
+    category: "sales",
   },
   {
-    key: 'catalog_orders',
-    name: 'Заказы с сайта',
-    description: 'Страница заказов из публичного каталога',
-    category: 'sales',
+    key: "catalog_orders",
+    name: "Заказы с сайта",
+    description: "Страница заказов из публичного каталога",
+    category: "sales",
   },
   {
-    key: 'product_types',
-    name: 'Каталог',
-    description: 'Производственный каталог типов товаров',
-    category: 'production',
+    key: "product_types",
+    name: "Каталог",
+    description: "Производственный каталог типов товаров",
+    category: "production",
   },
   {
-    key: 'analytics',
-    name: 'Аналитика',
-    description: 'Аналитика и отчеты',
-    category: 'general',
+    key: "analytics",
+    name: "Аналитика",
+    description: "Аналитика и отчеты",
+    category: "general",
   },
   {
-    key: 'orders',
-    name: 'Заказы',
-    description: 'Управление заказами',
-    category: 'production',
+    key: "orders",
+    name: "Заказы",
+    description: "Управление заказами",
+    category: "production",
   },
   {
-    key: 'inventory',
-    name: 'Склад',
-    description: 'Складской учет',
-    category: 'production',
+    key: "inventory",
+    name: "Склад",
+    description: "Складской учет",
+    category: "production",
   },
   {
-    key: 'shipments',
-    name: 'Отгрузки',
-    description: 'Управление отгрузками',
-    category: 'production',
+    key: "shipments",
+    name: "Отгрузки",
+    description: "Управление отгрузками",
+    category: "production",
   },
   {
-    key: 'tasks',
-    name: 'Задачи',
-    description: 'Канбан-доска задач',
-    category: 'production',
+    key: "tasks",
+    name: "Задачи",
+    description: "Канбан-доска задач",
+    category: "production",
   },
   {
-    key: 'quality_checks',
-    name: 'Контроль качества',
-    description: 'Проверка качества продукции',
-    category: 'production',
+    key: "quality_checks",
+    name: "Контроль качества",
+    description: "Проверка качества продукции",
+    category: "production",
   },
   {
-    key: 'telegram_notifications',
-    name: 'Telegram уведомления',
-    description: 'Отправка уведомлений в Telegram',
-    category: 'notifications',
+    key: "telegram_notifications",
+    name: "Telegram уведомления",
+    description: "Отправка уведомлений в Telegram",
+    category: "notifications",
   },
   {
-    key: 'sip_telephony',
-    name: 'SIP телефония',
-    description: 'Интеграция с IP-телефонией',
-    category: 'communications',
+    key: "sip_telephony",
+    name: "SIP телефония",
+    description: "Интеграция с IP-телефонией",
+    category: "communications",
   },
   {
-    key: 'contact_requests',
-    name: 'Заявки с сайта',
-    description: 'Обработка заявок обратной связи',
-    category: 'sales',
+    key: "contact_requests",
+    name: "Заявки с сайта",
+    description: "Обработка заявок обратной связи",
+    category: "sales",
   },
   {
-    key: 'callback_requests',
-    name: 'Обратный звонок',
-    description: 'Заявки на обратный звонок',
-    category: 'sales',
+    key: "callback_requests",
+    name: "Обратный звонок",
+    description: "Заявки на обратный звонок",
+    category: "sales",
   },
 ];
 
@@ -119,7 +119,7 @@ export class FeatureFlagsService {
     await this.initializeDefaults();
 
     return this.prisma.featureFlag.findMany({
-      orderBy: [{ category: 'asc' }, { name: 'asc' }],
+      orderBy: [{ category: "asc" }, { name: "asc" }],
     });
   }
 

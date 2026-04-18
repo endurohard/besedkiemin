@@ -1,6 +1,11 @@
-import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  Logger,
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { ROLES_KEY } from "../decorators/roles.decorator";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -9,10 +14,10 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
@@ -21,7 +26,7 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
 
     if (!user) {
-      this.logger.warn('RolesGuard: No user found in request');
+      this.logger.warn("RolesGuard: No user found in request");
       return false;
     }
 
@@ -34,14 +39,15 @@ export class RolesGuard implements CanActivate {
     }
 
     // SUPER_ADMIN has full access to everything
-    if (userRoleCode === 'SUPER_ADMIN') {
+    if (userRoleCode === "SUPER_ADMIN") {
       return true;
     }
 
     // OWNER has full access to everything EXCEPT routes that are ONLY for SUPER_ADMIN
     // (i.e., routes where SUPER_ADMIN is the only allowed role)
-    const isSuperAdminOnly = requiredRoles.length === 1 && requiredRoles[0] === 'SUPER_ADMIN';
-    if (userRoleCode === 'OWNER' && !isSuperAdminOnly) {
+    const isSuperAdminOnly =
+      requiredRoles.length === 1 && requiredRoles[0] === "SUPER_ADMIN";
+    if (userRoleCode === "OWNER" && !isSuperAdminOnly) {
       return true;
     }
 
@@ -50,7 +56,7 @@ export class RolesGuard implements CanActivate {
 
     if (!hasAccess) {
       this.logger.debug(
-        `RolesGuard: Access denied for user ${user.userId} with role ${userRoleCode}. Required: ${requiredRoles.join(', ')}`
+        `RolesGuard: Access denied for user ${user.userId} with role ${userRoleCode}. Required: ${requiredRoles.join(", ")}`,
       );
     }
 

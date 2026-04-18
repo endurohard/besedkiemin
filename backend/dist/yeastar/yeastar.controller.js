@@ -30,14 +30,14 @@ let YeastarController = class YeastarController {
         if (!user?.sipServer || !user?.sipUser || !user?.sipPassword) {
             return {
                 success: false,
-                message: 'SIP настройки не настроены для пользователя',
+                message: "SIP настройки не настроены для пользователя",
             };
         }
         try {
             const config = {
                 host: user.sipServer,
-                username: 'admin',
-                password: 'admin',
+                username: "admin",
+                password: "admin",
                 extension: user.sipUser,
             };
             const result = await this.yeastarService.makeCall(config, body.phoneNumber);
@@ -61,20 +61,20 @@ let YeastarController = class YeastarController {
         if (!user?.sipServer) {
             return {
                 success: false,
-                message: 'SIP настройки не настроены',
+                message: "SIP настройки не настроены",
             };
         }
         try {
             const config = {
                 host: user.sipServer,
-                username: 'admin',
-                password: 'admin',
+                username: "admin",
+                password: "admin",
                 extension: user.sipUser,
             };
             await this.yeastarService.hangupCall(config, body.callid);
             return {
                 success: true,
-                message: 'Звонок завершён',
+                message: "Звонок завершён",
             };
         }
         catch (error) {
@@ -97,8 +97,8 @@ let YeastarController = class YeastarController {
         try {
             const config = {
                 host: user.sipServer,
-                username: 'admin',
-                password: 'admin',
+                username: "admin",
+                password: "admin",
                 extension: user.sipUser,
             };
             const calls = await this.yeastarService.getActiveCalls(config);
@@ -118,8 +118,8 @@ let YeastarController = class YeastarController {
 };
 exports.YeastarController = YeastarController;
 __decorate([
-    (0, common_1.Post)('call'),
-    (0, swagger_1.ApiOperation)({ summary: 'Совершить звонок через Yeastar API' }),
+    (0, common_1.Post)("call"),
+    (0, swagger_1.ApiOperation)({ summary: "Совершить звонок через Yeastar API" }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -127,8 +127,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], YeastarController.prototype, "makeCall", null);
 __decorate([
-    (0, common_1.Post)('hangup'),
-    (0, swagger_1.ApiOperation)({ summary: 'Завершить звонок' }),
+    (0, common_1.Post)("hangup"),
+    (0, swagger_1.ApiOperation)({ summary: "Завершить звонок" }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -136,16 +136,16 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], YeastarController.prototype, "hangupCall", null);
 __decorate([
-    (0, common_1.Get)('active-calls'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить активные звонки' }),
+    (0, common_1.Get)("active-calls"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить активные звонки" }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], YeastarController.prototype, "getActiveCalls", null);
 exports.YeastarController = YeastarController = __decorate([
-    (0, swagger_1.ApiTags)('yeastar'),
-    (0, common_1.Controller)('yeastar'),
+    (0, swagger_1.ApiTags)("yeastar"),
+    (0, common_1.Controller)("yeastar"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [yeastar_service_1.YeastarService,

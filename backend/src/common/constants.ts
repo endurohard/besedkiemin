@@ -2,7 +2,7 @@
  * Application-wide constants
  */
 
-import { ProductionStage } from '@prisma/client';
+import { ProductionStage } from "@prisma/client";
 
 // Pagination
 export const PAGINATION = {
@@ -16,7 +16,7 @@ export const PAGINATION = {
 export const FILE_UPLOAD = {
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
   ALLOWED_EXTENSIONS: /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i,
-  UPLOAD_DIR: './uploads',
+  UPLOAD_DIR: "./uploads",
 } as const;
 
 // Authentication
@@ -28,7 +28,7 @@ export const AUTH = {
 
 // Telegram
 export const TELEGRAM = {
-  PARSE_MODE: 'HTML' as const,
+  PARSE_MODE: "HTML" as const,
   PHOTO_REQUEST_TIMEOUT_MS: 30 * 60 * 1000, // 30 minutes
 } as const;
 
@@ -40,23 +40,23 @@ export const RATE_LIMIT = {
 
 // Order Number Generation
 export const ORDER = {
-  PREFIX: 'ORD',
-  WEB_PREFIX: 'WEB',
+  PREFIX: "ORD",
+  WEB_PREFIX: "WEB",
   NUMBER_PADDING: 3,
   WEB_NUMBER_PADDING: 6,
 } as const;
 
 // System Role Codes
 export const SYSTEM_ROLES = {
-  SUPER_ADMIN: 'SUPER_ADMIN',
-  OWNER: 'OWNER',
-  MANAGER: 'MANAGER',
-  DESIGNER: 'DESIGNER',
-  PREPARER: 'PREPARER',
-  PAINTER: 'PAINTER',
-  SEWER: 'SEWER',
-  ASSEMBLER: 'ASSEMBLER',
-  WAREHOUSE: 'WAREHOUSE',
+  SUPER_ADMIN: "SUPER_ADMIN",
+  OWNER: "OWNER",
+  MANAGER: "MANAGER",
+  DESIGNER: "DESIGNER",
+  PREPARER: "PREPARER",
+  PAINTER: "PAINTER",
+  SEWER: "SEWER",
+  ASSEMBLER: "ASSEMBLER",
+  WAREHOUSE: "WAREHOUSE",
 } as const;
 
 // Role code -> Production stage mapping
@@ -71,20 +71,24 @@ export const ROLE_TO_STAGE: Record<string, ProductionStage> = {
 
 // Production stage -> display name mapping (fallback; prefer WorkflowStage.name from DB)
 export const STAGE_TO_NAME: Record<string, string> = {
-  [ProductionStage.PENDING]: 'Ожидание',
-  [ProductionStage.DESIGN]: 'Проектирование',
-  [ProductionStage.PREPARATION]: 'Заготовка',
-  [ProductionStage.ASSEMBLY]: 'Сборка',
-  [ProductionStage.PAINTING]: 'Покраска',
-  [ProductionStage.SEWING]: 'Пошив',
-  [ProductionStage.QUALITY_CHECK]: 'Склад',
-  [ProductionStage.COMPLETED]: 'Завершено',
+  [ProductionStage.PENDING]: "Ожидание",
+  [ProductionStage.DESIGN]: "Проектирование",
+  [ProductionStage.PREPARATION]: "Заготовка",
+  [ProductionStage.ASSEMBLY]: "Сборка",
+  [ProductionStage.PAINTING]: "Покраска",
+  [ProductionStage.SEWING]: "Пошив",
+  [ProductionStage.QUALITY_CHECK]: "Склад",
+  [ProductionStage.COMPLETED]: "Завершено",
 };
 
 // Check if a user is a department account (sees all department tasks)
-export function isDepartmentAccount(user: { isDepartmentAccount?: boolean }): boolean {
+export function isDepartmentAccount(user: {
+  isDepartmentAccount?: boolean;
+}): boolean {
   return user.isDepartmentAccount === true;
 }
 
 // Predefined penalty amounts (in rubles)
-export const PENALTY_AMOUNTS = [200, 400, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000];
+export const PENALTY_AMOUNTS = [
+  200, 400, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000,
+];

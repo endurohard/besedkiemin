@@ -42,7 +42,7 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  NEW: 'bg-blue-500 text-white',
+  NEW: 'bg-primary/100 text-white',
   CONTACTED: 'bg-yellow-500 text-white',
   IN_WORK: 'bg-purple-500 text-white',
   COMPLETED: 'bg-green-500 text-white',
@@ -201,7 +201,7 @@ const CatalogOrdersPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Заказы с сайта</h1>
-        <div className="text-lg px-4 py-2 bg-gray-100 rounded">
+        <div className="text-lg px-4 py-2 bg-muted rounded">
           Всего: {orders.length}
         </div>
       </div>
@@ -236,7 +236,7 @@ const CatalogOrdersPage: React.FC = () => {
       {filteredOrders.length === 0 ? (
         <Card>
           <CardContent className="py-12">
-            <p className="text-center text-gray-500">
+            <p className="text-center text-muted-foreground">
               {searchQuery || statusFilter !== 'all'
                 ? 'Заказы не найдены'
                 : 'Заказов с сайта пока нет'}
@@ -253,7 +253,7 @@ const CatalogOrdersPage: React.FC = () => {
                     <CardTitle className="text-xl">
                       {order.orderNumber} - {order.customerName}
                     </CardTitle>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       <div>📞 {order.customerPhone}</div>
                       {order.customerEmail && <div>✉️ {order.customerEmail}</div>}
                       {order.deliveryAddress && <div>📍 {order.deliveryAddress}</div>}
@@ -307,7 +307,7 @@ const CatalogOrdersPage: React.FC = () => {
                   {order.status === 'CONTACTED' && (
                     <>
                       {editingOrderId === order.id ? (
-                        <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                        <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                           <h3 className="font-medium mb-2">Редактирование данных клиента</h3>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -353,7 +353,7 @@ const CatalogOrdersPage: React.FC = () => {
                             </Button>
                             <Button
                               onClick={cancelEdit}
-                              className="bg-gray-500 hover:bg-gray-600 text-white"
+                              className="bg-muted/500 hover:bg-gray-600 text-white"
                             >
                               Отмена
                             </Button>
@@ -363,7 +363,7 @@ const CatalogOrdersPage: React.FC = () => {
                         <div className="flex gap-2">
                           <Button
                             onClick={() => startEditOrder(order)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white"
+                            className="bg-primary/100 hover:bg-primary/80 text-white"
                           >
                             ✏️ Редактировать данные
                           </Button>
@@ -386,7 +386,7 @@ const CatalogOrdersPage: React.FC = () => {
 
                   {/* Статистика действий */}
                   {(order.contactedAt || order.processedAt) && (
-                    <div className="bg-blue-50 p-3 rounded text-sm space-y-1">
+                    <div className="bg-primary/10 p-3 rounded text-sm space-y-1">
                       {order.contactedAt && (
                         <div>
                           ✓ Связались: {formatDate(order.contactedAt)}
@@ -403,7 +403,7 @@ const CatalogOrdersPage: React.FC = () => {
                   {/* Товары */}
                   <div className="border rounded-lg overflow-hidden">
                     <table className="w-full">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-muted/50">
                         <tr>
                           <th className="px-4 py-2 text-left">Товар</th>
                           <th className="px-4 py-2 text-center">Количество</th>
@@ -426,7 +426,7 @@ const CatalogOrdersPage: React.FC = () => {
                             </td>
                           </tr>
                         ))}
-                        <tr className="border-t bg-gray-50 font-bold">
+                        <tr className="border-t bg-muted/50 font-bold">
                           <td colSpan={3} className="px-4 py-2 text-right">
                             Итого:
                           </td>
@@ -440,9 +440,9 @@ const CatalogOrdersPage: React.FC = () => {
 
                   {/* Комментарий */}
                   {order.comment && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-muted/50 p-4 rounded-lg">
                       <p className="text-sm font-medium mb-1">Комментарий клиента:</p>
-                      <p className="text-sm text-gray-700">{order.comment}</p>
+                      <p className="text-sm text-foreground">{order.comment}</p>
                     </div>
                   )}
 

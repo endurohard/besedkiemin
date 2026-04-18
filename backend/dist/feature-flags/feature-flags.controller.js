@@ -44,7 +44,7 @@ let FeatureFlagsController = class FeatureFlagsController {
 };
 exports.FeatureFlagsController = FeatureFlagsController;
 __decorate([
-    (0, common_1.Get)('public'),
+    (0, common_1.Get)("public"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -52,50 +52,50 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], FeatureFlagsController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':key'),
+    (0, common_1.Get)(":key"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
-    __param(0, (0, common_1.Param)('key')),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN"),
+    __param(0, (0, common_1.Param)("key")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], FeatureFlagsController.prototype, "findByKey", null);
 __decorate([
-    (0, common_1.Patch)(':key'),
+    (0, common_1.Patch)(":key"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
-    __param(0, (0, common_1.Param)('key')),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN"),
+    __param(0, (0, common_1.Param)("key")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_feature_flag_dto_1.UpdateFeatureFlagDto]),
     __metadata("design:returntype", Promise)
 ], FeatureFlagsController.prototype, "update", null);
 __decorate([
-    (0, common_1.Post)(':key/toggle'),
+    (0, common_1.Post)(":key/toggle"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
-    __param(0, (0, common_1.Param)('key')),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN"),
+    __param(0, (0, common_1.Param)("key")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], FeatureFlagsController.prototype, "toggle", null);
 __decorate([
-    (0, common_1.Post)('bulk-update'),
+    (0, common_1.Post)("bulk-update"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Array]),
     __metadata("design:returntype", Promise)
 ], FeatureFlagsController.prototype, "bulkUpdate", null);
 exports.FeatureFlagsController = FeatureFlagsController = __decorate([
-    (0, common_1.Controller)('feature-flags'),
+    (0, common_1.Controller)("feature-flags"),
     __metadata("design:paramtypes", [feature_flags_service_1.FeatureFlagsService])
 ], FeatureFlagsController);
 //# sourceMappingURL=feature-flags.controller.js.map

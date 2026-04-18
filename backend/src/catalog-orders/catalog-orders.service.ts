@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { TelegramService } from '../telegram/telegram.service';
-import { CreateCatalogOrderDto } from './dto/create-catalog-order.dto';
-import { UpdateCatalogOrderDto } from './dto/update-catalog-order.dto';
-import { Prisma } from '@prisma/client';
-import { PAGINATION, ORDER } from '../common/constants';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { TelegramService } from "../telegram/telegram.service";
+import { CreateCatalogOrderDto } from "./dto/create-catalog-order.dto";
+import { UpdateCatalogOrderDto } from "./dto/update-catalog-order.dto";
+import { Prisma } from "@prisma/client";
+import { PAGINATION, ORDER } from "../common/constants";
 
 @Injectable()
 export class CatalogOrdersService {
@@ -26,12 +31,14 @@ export class CatalogOrdersService {
     });
 
     if (products.length !== productIds.length) {
-      throw new BadRequestException('Некоторые товары не найдены или неактивны');
+      throw new BadRequestException(
+        "Некоторые товары не найдены или неактивны",
+      );
     }
 
     // Генерировать номер заказа
     const orderCount = await this.prisma.catalogOrder.count();
-    const orderNumber = `WEB-${String(orderCount + 1).padStart(6, '0')}`;
+    const orderNumber = `WEB-${String(orderCount + 1).padStart(6, "0")}`;
 
     // Подсчитать общую сумму
     let totalAmount = 0;
@@ -94,16 +101,16 @@ export class CatalogOrdersService {
       if (order.items.length > 0) {
         message += `\n📦 <b>Товары:</b>\n`;
         order.items.forEach((item) => {
-          message += `   • ${item.product.name} x ${item.quantity} = ${((item.price ?? 0) * item.quantity).toLocaleString('ru-RU')} ₽\n`;
+          message += `   • ${item.product.name} x ${item.quantity} = ${((item.price ?? 0) * item.quantity).toLocaleString("ru-RU")} ₽\n`;
         });
-        message += `\n💰 <b>Итого: ${totalAmount.toLocaleString('ru-RU')} ₽</b>`;
+        message += `\n💰 <b>Итого: ${totalAmount.toLocaleString("ru-RU")} ₽</b>`;
       } else {
         message += `\n<i>Товары не указаны (быстрая заявка)</i>`;
       }
 
       await this.telegramService.notifyAdmins(message);
     } catch (error) {
-      this.logger.error('Ошибка отправки уведомления в Telegram:', error);
+      this.logger.error("Ошибка отправки уведомления в Telegram:", error);
       // Не прерываем создание заказа, если не удалось отправить уведомление
     }
 
@@ -111,16 +118,21 @@ export class CatalogOrdersService {
   }
 
   async findAll(filters?: { status?: string; page?: number; limit?: number }) {
-    const where: Prisma.CatalogOrderWhereInput = filters?.status ? { status: filters.status as any } : {};
+    const where: Prisma.CatalogOrderWhereInput = filters?.status
+      ? { status: filters.status as any }
+      : {};
     const page = Math.max(1, filters?.page || PAGINATION.DEFAULT_PAGE);
-    const limit = Math.min(PAGINATION.MAX_PAGE_SIZE, Math.max(1, filters?.limit || PAGINATION.DEFAULT_PAGE_SIZE));
+    const limit = Math.min(
+      PAGINATION.MAX_PAGE_SIZE,
+      Math.max(1, filters?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
+    );
 
     const [orders, total] = await Promise.all([
       this.prisma.catalogOrder.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           items: {
             include: {
@@ -194,7 +206,7 @@ export class CatalogOrdersService {
       data: {
         contactedAt: new Date(),
         contactedBy: userId,
-        status: 'CONTACTED',
+        status: "CONTACTED",
       },
       include: {
         items: {
@@ -210,12 +222,15 @@ export class CatalogOrdersService {
     const catalogOrder = await this.findOne(id);
 
     // Проверяем, не обрабатывается ли уже этот заказ
-    if (catalogOrder.status === 'IN_WORK') {
+    if (catalogOrder.status === "IN_WORK") {
       return catalogOrder;
     }
 
     // Проверить, не был ли уже создан производственный заказ для этого заказа
-    const productionOrderNumber = catalogOrder.orderNumber.replace('WEB-', 'ORD-');
+    const productionOrderNumber = catalogOrder.orderNumber.replace(
+      "WEB-",
+      "ORD-",
+    );
     const existingProductionOrder = await this.prisma.order.findFirst({
       where: { orderNumber: productionOrderNumber },
     });
@@ -227,7 +242,7 @@ export class CatalogOrdersService {
         data: {
           processedAt: new Date(),
           processedBy: userId,
-          status: 'IN_WORK',
+          status: "IN_WORK",
         },
         include: {
           items: {
@@ -247,21 +262,21 @@ export class CatalogOrdersService {
       }),
       this.prisma.workflowStage.findFirst({
         where: { isActive: true },
-        orderBy: { order: 'asc' },
+        orderBy: { order: "asc" },
         include: { roles: { include: { role: true } } },
       }),
     ]);
 
     if (!defaultProductType) {
-      throw new BadRequestException('Не найдено активных типов продукции');
+      throw new BadRequestException("Не найдено активных типов продукции");
     }
 
     if (!firstStage) {
-      throw new BadRequestException('Не найдено активных стадий производства');
+      throw new BadRequestException("Не найдено активных стадий производства");
     }
 
     // Получаем работников для первой стадии (через many-to-many связь ролей)
-    const firstStageRoleIds = firstStage.roles.map(r => r.roleId);
+    const firstStageRoleIds = firstStage.roles.map((r) => r.roleId);
     const workers = await this.prisma.user.findMany({
       where: {
         roleId: { in: firstStageRoleIds },
@@ -276,13 +291,16 @@ export class CatalogOrdersService {
     });
 
     // Подготавливаем данные для обработки
-    const itemsToProcess = catalogOrder.items.length > 0
-      ? catalogOrder.items
-      : [{
-          product: { name: 'Заказ с сайта (уточнить состав)' },
-          quantity: 1,
-          price: 0
-        }];
+    const itemsToProcess =
+      catalogOrder.items.length > 0
+        ? catalogOrder.items
+        : [
+            {
+              product: { name: "Заказ с сайта (уточнить состав)" },
+              quantity: 1,
+              price: 0,
+            },
+          ];
 
     // Используем транзакцию для атомарности с оптимистичной блокировкой
     const result = await this.prisma.$transaction(async (tx) => {
@@ -293,8 +311,8 @@ export class CatalogOrdersService {
       });
 
       // Повторная проверка статуса внутри транзакции
-      if (lockedOrder?.status === 'IN_WORK') {
-        throw new BadRequestException('Заказ уже обрабатывается');
+      if (lockedOrder?.status === "IN_WORK") {
+        throw new BadRequestException("Заказ уже обрабатывается");
       }
 
       // Создать производственный заказ
@@ -303,8 +321,8 @@ export class CatalogOrdersService {
           orderNumber: productionOrderNumber,
           customerName: catalogOrder.customerName,
           customerPhone: catalogOrder.customerPhone,
-          customerAddress: catalogOrder.deliveryAddress || '',
-          status: 'NEW',
+          customerAddress: catalogOrder.deliveryAddress || "",
+          status: "NEW",
           createdById: userId,
         },
       });
@@ -320,8 +338,8 @@ export class CatalogOrdersService {
               productTypeId: defaultProductType.id,
               stage: firstStage.legacyStage!,
             },
-          })
-        )
+          }),
+        ),
       );
 
       // Создаём задачи для всех работников и продуктов параллельно
@@ -335,8 +353,8 @@ export class CatalogOrdersService {
               productId: product.id,
               assignedToId: worker.id,
             },
-          })
-        )
+          }),
+        ),
       );
       await Promise.all(taskPromises);
 
@@ -346,7 +364,7 @@ export class CatalogOrdersService {
         data: {
           processedAt: new Date(),
           processedBy: userId,
-          status: 'IN_WORK',
+          status: "IN_WORK",
         },
         include: {
           items: {
@@ -369,7 +387,7 @@ export class CatalogOrdersService {
             const message =
               `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
               `*Продукт:* ${product.name}\n` +
-              `*Тип:* ${defaultProductType.name || 'Н/Д'}\n` +
+              `*Тип:* ${defaultProductType.name || "Н/Д"}\n` +
               `*Количество:* ${product.quantity} шт.\n` +
               `*Стадия:* ${firstStage.name}\n` +
               `*Заказ:* ${result.productionOrder.orderNumber}\n` +
@@ -377,13 +395,21 @@ export class CatalogOrdersService {
               `✅ Откройте раздел "Мои задачи" для выполнения`;
 
             try {
-              await this.telegramService.sendMessage(worker.telegramId!, message);
-              this.logger.log(`Уведомление отправлено работнику ${worker.email}`);
+              await this.telegramService.sendMessage(
+                worker.telegramId!,
+                message,
+              );
+              this.logger.log(
+                `Уведомление отправлено работнику ${worker.email}`,
+              );
             } catch (error) {
-              this.logger.error(`Ошибка отправки уведомления работнику ${worker.email}:`, error);
+              this.logger.error(
+                `Ошибка отправки уведомления работнику ${worker.email}:`,
+                error,
+              );
             }
-          })
-      )
+          }),
+      ),
     );
 
     return result.updatedOrder;
@@ -395,7 +421,7 @@ export class CatalogOrdersService {
     return this.prisma.catalogOrder.update({
       where: { id },
       data: {
-        status: 'CANCELLED',
+        status: "CANCELLED",
         cancellationReason,
         processedAt: new Date(),
         processedBy: userId,

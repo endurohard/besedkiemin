@@ -30,16 +30,7 @@ export const TelegramLinkWidget = () => {
   });
 
   const unlinkMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch('/api/telegram/unlink', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to unlink');
-      return response.json();
-    },
+    mutationFn: telegramApi.unlink,
     onSuccess: async () => {
       await refreshUser(); // Обновляем данные пользователя
       queryClient.invalidateQueries({ queryKey: ['auth'] });

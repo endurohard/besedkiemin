@@ -1,6 +1,6 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateNomenclatureDto } from './dto/create-nomenclature.dto';
-import { UpdateNomenclatureDto } from './dto/update-nomenclature.dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateNomenclatureDto } from "./dto/create-nomenclature.dto";
+import { UpdateNomenclatureDto } from "./dto/update-nomenclature.dto";
 export declare class NomenclatureService {
     private prisma;
     constructor(prisma: PrismaService);

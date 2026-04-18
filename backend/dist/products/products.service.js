@@ -26,19 +26,19 @@ let ProductsService = ProductsService_1 = class ProductsService {
             where: { id: createProductDto.orderId },
         });
         if (!order) {
-            throw new common_1.NotFoundException('Заказ не найден');
+            throw new common_1.NotFoundException("Заказ не найден");
         }
         const firstWorkflowStage = await this.prisma.workflowStage.findFirst({
             where: { isActive: true },
-            orderBy: { order: 'asc' },
+            orderBy: { order: "asc" },
             include: {
                 roles: { include: { role: true } },
             },
         });
         if (!firstWorkflowStage) {
-            throw new common_1.NotFoundException('Не найдены активные стадии workflow');
+            throw new common_1.NotFoundException("Не найдены активные стадии workflow");
         }
-        const roleIds = firstWorkflowStage.roles.map(r => r.roleId) || [];
+        const roleIds = firstWorkflowStage.roles.map((r) => r.roleId) || [];
         const workers = roleIds.length > 0
             ? await this.prisma.user.findMany({
                 where: {
@@ -50,10 +50,10 @@ let ProductsService = ProductsService_1 = class ProductsService {
             : [];
         const assignments = createProductDto.stageAssignments || {};
         const firstStageKey = firstWorkflowStage.legacyStage;
-        const assignedWorkerId = createProductDto.assignedWorkerId
-            || (firstStageKey ? assignments[firstStageKey] : undefined);
+        const assignedWorkerId = createProductDto.assignedWorkerId ||
+            (firstStageKey ? assignments[firstStageKey] : undefined);
         const taskWorkers = assignedWorkerId
-            ? workers.filter(w => w.id === assignedWorkerId)
+            ? workers.filter((w) => w.id === assignedWorkerId)
             : workers;
         const product = await this.prisma.$transaction(async (tx) => {
             const newProduct = await tx.product.create({
@@ -103,7 +103,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                 .map(async (worker) => {
                 const message = `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
                     `*Продукт:* ${product.name}\n` +
-                    `*Тип:* ${product.productType?.name || 'Н/Д'}\n` +
+                    `*Тип:* ${product.productType?.name || "Н/Д"}\n` +
                     `*Количество:* ${product.quantity} шт.\n` +
                     `*Стадия:* ${firstWorkflowStage.name}\n` +
                     `*Заказ:* ${order.orderNumber}\n\n` +
@@ -162,7 +162,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                             },
                         },
                         orderBy: {
-                            startedAt: 'desc',
+                            startedAt: "desc",
                         },
                         take: 5,
                     },
@@ -177,13 +177,13 @@ let ProductsService = ProductsService_1 = class ProductsService {
                             },
                         },
                         orderBy: {
-                            createdAt: 'desc',
+                            createdAt: "desc",
                         },
                         take: 3,
                     },
                 },
                 orderBy: {
-                    createdAt: 'desc',
+                    createdAt: "desc",
                 },
             }),
             this.prisma.product.count({ where }),
@@ -207,7 +207,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                         },
                     },
                     orderBy: {
-                        startedAt: 'asc',
+                        startedAt: "asc",
                     },
                 },
                 qualityChecks: {
@@ -221,13 +221,13 @@ let ProductsService = ProductsService_1 = class ProductsService {
                         },
                     },
                     orderBy: {
-                        createdAt: 'desc',
+                        createdAt: "desc",
                     },
                 },
             },
         });
         if (!product) {
-            throw new common_1.NotFoundException('Продукт не найден');
+            throw new common_1.NotFoundException("Продукт не найден");
         }
         return product;
     }
@@ -302,7 +302,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                         },
                     },
                     orderBy: {
-                        startedAt: 'desc',
+                        startedAt: "desc",
                     },
                 },
             },
@@ -328,7 +328,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                 },
             },
             orderBy: {
-                startedAt: 'asc',
+                startedAt: "asc",
             },
         });
     }
@@ -341,7 +341,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                 where: { isActive: true },
                 select: { legacyStage: true },
             });
-            const activeStageValues = activeStages.map(s => s.legacyStage);
+            const activeStageValues = activeStages.map((s) => s.legacyStage);
             if (!activeStageValues.includes(newStage)) {
                 throw new common_1.BadRequestException(`Невозможен переход с этапа ${currentStage} на ${newStage}`);
             }
@@ -349,13 +349,14 @@ let ProductsService = ProductsService_1 = class ProductsService {
         }
         const workflowStages = await this.prisma.workflowStage.findMany({
             where: { isActive: true },
-            orderBy: { order: 'asc' },
+            orderBy: { order: "asc" },
         });
-        const currentIndex = workflowStages.findIndex(s => s.legacyStage === currentStage);
-        const newIndex = workflowStages.findIndex(s => s.legacyStage === newStage);
+        const currentIndex = workflowStages.findIndex((s) => s.legacyStage === currentStage);
+        const newIndex = workflowStages.findIndex((s) => s.legacyStage === newStage);
         const lastStage = workflowStages[workflowStages.length - 1];
         if (lastStage && currentStage === lastStage.legacyStage) {
-            if (newStage === client_1.ProductionStage.COMPLETED || newStage === client_1.ProductionStage.REJECTED) {
+            if (newStage === client_1.ProductionStage.COMPLETED ||
+                newStage === client_1.ProductionStage.REJECTED) {
                 return;
             }
             if (newIndex >= 0) {

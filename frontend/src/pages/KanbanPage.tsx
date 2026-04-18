@@ -468,11 +468,11 @@ export const KanbanPage = () => {
   const getStageColor = (stage: ProductionStage) => {
     switch (stage) {
       case ProductionStage.PENDING:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-muted text-foreground';
       case ProductionStage.DESIGN:
         return 'bg-purple-100 text-purple-700';
       case ProductionStage.PREPARATION:
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-primary/20 text-primary';
       case ProductionStage.PAINTING:
         return 'bg-yellow-100 text-yellow-700';
       case ProductionStage.ASSEMBLY:
@@ -484,7 +484,7 @@ export const KanbanPage = () => {
       case ProductionStage.REJECTED:
         return 'bg-red-100 text-red-700';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -581,12 +581,12 @@ export const KanbanPage = () => {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-49px)] bg-gray-50">
+      <div className="flex h-[calc(100vh-49px)] bg-muted/50">
         {/* Основная область с продуктами */}
         <div className="flex-1 overflow-auto p-4">
           <div className="mb-4">
             <h1 className="text-xl font-bold text-gray-900">Управление производством</h1>
-            <p className="text-gray-600 text-sm">
+            <p className="text-muted-foreground text-sm">
               Роль: <span className="font-medium">{getRoleName()}</span> |{' '}
               {user?.firstName} {user?.lastName}
             </p>
@@ -643,7 +643,7 @@ export const KanbanPage = () => {
                       )}
                     </CardHeader>
                     <CardContent className="px-3 pb-3">
-                      <div className="space-y-1 text-xs text-gray-600">
+                      <div className="space-y-1 text-xs text-muted-foreground">
                         <p>
                           <span className="font-medium">Тип:</span> {product.productType?.name || 'Не указан'}
                         </p>
@@ -665,7 +665,7 @@ export const KanbanPage = () => {
                   </Card>
                 ))}
                 {myProducts.length === 0 && (
-                  <div className="col-span-full text-center py-12 text-gray-400">
+                  <div className="col-span-full text-center py-12 text-muted-foreground">
                     Нет продуктов для обработки
                   </div>
                 )}
@@ -680,7 +680,7 @@ export const KanbanPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Заказы</h2>
-                  <p className="text-xs text-gray-600">Нажмите на заказ для просмотра позиций и редактирования</p>
+                  <p className="text-xs text-muted-foreground">Нажмите на заказ для просмотра позиций и редактирования</p>
                 </div>
                 <Button
                   onClick={() => setIsCreateOrderModalOpen(true)}
@@ -695,7 +695,7 @@ export const KanbanPage = () => {
               {/* Поиск и фильтры */}
               <div className="flex flex-wrap gap-2">
                 <div className="flex-1 min-w-[200px] relative">
-                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     placeholder="Поиск по заказу, клиенту..."
                     value={searchQuery}
@@ -742,8 +742,8 @@ export const KanbanPage = () => {
               {/* Фильтр по датам */}
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-gray-500" />
-                  <span className="text-xs text-gray-600">Период:</span>
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Период:</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Input
@@ -753,7 +753,7 @@ export const KanbanPage = () => {
                     className="h-8 text-xs w-36"
                     placeholder="От"
                   />
-                  <span className="text-gray-400">—</span>
+                  <span className="text-muted-foreground">—</span>
                   <Input
                     type="date"
                     value={dateTo}
@@ -766,14 +766,14 @@ export const KanbanPage = () => {
                       variant="ghost"
                       size="sm"
                       onClick={clearDateFilters}
-                      className="h-8 px-2 text-gray-500 hover:text-gray-700"
+                      className="h-8 px-2 text-muted-foreground hover:text-foreground"
                     >
                       <X className="w-4 h-4" />
                     </Button>
                   )}
                 </div>
                 {(dateFrom || dateTo) && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     Найдено: {filteredOrders.length}
                   </span>
                 )}
@@ -783,8 +783,8 @@ export const KanbanPage = () => {
               <div className="space-y-2">
                 {filteredOrders.length === 0 ? (
                   <Card className="p-12 text-center">
-                    <Package className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-gray-600">
+                    <Package className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                    <p className="text-muted-foreground">
                       {searchQuery || statusFilter !== 'ALL' ? 'Ничего не найдено' : 'Нет заказов'}
                     </p>
                   </Card>
@@ -792,8 +792,8 @@ export const KanbanPage = () => {
                   filteredOrders.map((order) => {
                     const progress = getOrderProgress(order);
                     const statusConfig: Record<OrderStatus, { label: string; color: string; icon: typeof Clock }> = {
-                      [OrderStatus.NEW]: { label: 'Новый', color: 'bg-gray-500', icon: Clock },
-                      [OrderStatus.IN_PRODUCTION]: { label: 'В производстве', color: 'bg-blue-500', icon: Package },
+                      [OrderStatus.NEW]: { label: 'Новый', color: 'bg-muted/500', icon: Clock },
+                      [OrderStatus.IN_PRODUCTION]: { label: 'В производстве', color: 'bg-primary/100', icon: Package },
                       [OrderStatus.COMPLETED]: { label: 'Завершён', color: 'bg-green-500', icon: CheckCircle },
                       [OrderStatus.CANCELLED]: { label: 'Отменён', color: 'bg-red-500', icon: Clock },
                     };
@@ -820,14 +820,14 @@ export const KanbanPage = () => {
                                     {getPriorityLabel(order.priority)}
                                   </span>
                                 )}
-                                <span className="text-xs text-gray-400 ml-auto">
+                                <span className="text-xs text-muted-foreground ml-auto">
                                   <Eye className="w-3 h-3 inline mr-1" />
                                   {order.products?.length || 0} позиций
                                 </span>
                               </div>
                               {/* Информация о клиенте - только для MANAGER и LOGIST */}
                               {(user?.role?.code === 'MANAGER' || user?.role?.code === 'LOGIST') && (
-                                <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-600">
+                                <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
                                   <div>
                                     <span className="font-medium">Клиент:</span> {order.customerName}
                                   </div>
@@ -843,7 +843,7 @@ export const KanbanPage = () => {
                               <div className="flex items-center ml-2" onClick={(e) => e.stopPropagation()}>
                                 <button
                                   onClick={async (e) => { e.stopPropagation(); await handleOpenOrder(order); }}
-                                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
                                   title="Просмотреть / Редактировать заказ"
                                 >
                                   <Pencil className="w-4 h-4" />
@@ -852,7 +852,7 @@ export const KanbanPage = () => {
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order); }}
                                     disabled={deleteOrderMutation.isPending}
-                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                    className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                                     title="Удалить заказ"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -867,13 +867,13 @@ export const KanbanPage = () => {
                           {order.products && order.products.length > 0 && (
                             <div className="mb-2">
                               <div className="flex items-center justify-between mb-1 text-xs">
-                                <span className="font-medium text-gray-700">Прогресс</span>
-                                <span className="text-gray-600">{progress}%</span>
+                                <span className="font-medium text-foreground">Прогресс</span>
+                                <span className="text-muted-foreground">{progress}%</span>
                               </div>
                               <div className="w-full bg-gray-200 rounded-full h-1.5">
                                 <div
                                   className={`h-1.5 rounded-full transition-all ${
-                                    progress === 100 ? 'bg-green-500' : 'bg-blue-500'
+                                    progress === 100 ? 'bg-green-500' : 'bg-primary/100'
                                   }`}
                                   style={{ width: `${progress}%` }}
                                 />
@@ -884,7 +884,7 @@ export const KanbanPage = () => {
                           {/* Продукты (компактный вид) */}
                           {order.products && order.products.length > 0 && (
                             <div>
-                              <div className="text-xs font-medium text-gray-700 mb-1">
+                              <div className="text-xs font-medium text-foreground mb-1">
                                 Продукты ({order.products.length}):
                               </div>
                               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5">
@@ -911,7 +911,7 @@ export const KanbanPage = () => {
         </div>
 
         {/* Правая панель с этапами производства */}
-        <div className="w-56 bg-white border-l border-gray-200 p-3 overflow-auto">
+        <div className="w-56 bg-card border-l border-border p-3 overflow-auto">
           <h3 className="text-sm font-semibold text-gray-900 mb-3">
             Этапы
           </h3>
@@ -954,14 +954,14 @@ export const KanbanPage = () => {
       {/* Модалка просмотра/редактирования заказа */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={handleCloseModal}>
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
             {/* Заголовок */}
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
               <div>
                 <h2 className="text-lg font-bold">
                   {isEditing ? 'Редактировать' : 'Заказ'} {selectedOrder.orderNumber}
                 </h2>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Создан: {new Date(selectedOrder.createdAt).toLocaleDateString('ru-RU')}
                 </p>
               </div>
@@ -975,7 +975,7 @@ export const KanbanPage = () => {
                     Редактировать
                   </button>
                 )}
-                <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700">
+                <button onClick={handleCloseModal} className="text-muted-foreground hover:text-foreground">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -989,36 +989,36 @@ export const KanbanPage = () => {
                   {/* Информация о заказе */}
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="font-medium text-gray-500">Клиент:</span>
+                      <span className="font-medium text-muted-foreground">Клиент:</span>
                       <p className="font-semibold">{selectedOrder.customerName}</p>
                     </div>
                     {selectedOrder.customerPhone && (
                       <div>
-                        <span className="font-medium text-gray-500">Телефон:</span>
+                        <span className="font-medium text-muted-foreground">Телефон:</span>
                         <p>{selectedOrder.customerPhone}</p>
                       </div>
                     )}
                     {selectedOrder.customerAddress && (
                       <div className="col-span-2">
-                        <span className="font-medium text-gray-500">Адрес:</span>
+                        <span className="font-medium text-muted-foreground">Адрес:</span>
                         <p>{selectedOrder.customerAddress}</p>
                       </div>
                     )}
                     {selectedOrder.description && (
                       <div className="col-span-2">
-                        <span className="font-medium text-gray-500">Описание:</span>
+                        <span className="font-medium text-muted-foreground">Описание:</span>
                         <p>{selectedOrder.description}</p>
                       </div>
                     )}
                     {selectedOrder.totalAmount && (
                       <div>
-                        <span className="font-medium text-gray-500">Сумма:</span>
+                        <span className="font-medium text-muted-foreground">Сумма:</span>
                         <p className="font-semibold">{selectedOrder.totalAmount.toLocaleString('ru-RU')} руб.</p>
                       </div>
                     )}
                     {selectedOrder.source && (
                       <div>
-                        <span className="font-medium text-gray-500">Источник:</span>
+                        <span className="font-medium text-muted-foreground">Источник:</span>
                         <p>{selectedOrder.source.name}</p>
                       </div>
                     )}
@@ -1028,18 +1028,18 @@ export const KanbanPage = () => {
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
                       Позиции заказа
-                      <span className="text-xs font-normal text-gray-500">
+                      <span className="text-xs font-normal text-muted-foreground">
                         ({selectedOrder.products?.length || 0} шт.)
                       </span>
                     </h3>
 
                     {(!selectedOrder.products || selectedOrder.products.length === 0) ? (
-                      <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
-                        <p className="text-sm text-gray-500">Позиции не добавлены</p>
+                      <div className="text-center py-6 border-2 border-dashed border-border rounded-lg">
+                        <p className="text-sm text-muted-foreground">Позиции не добавлены</p>
                         {canEdit && (
                           <button
                             onClick={handleStartEdit}
-                            className="mt-2 text-sm text-blue-600 hover:underline"
+                            className="mt-2 text-sm text-primary hover:underline"
                           >
                             Добавить позиции
                           </button>
@@ -1048,27 +1048,27 @@ export const KanbanPage = () => {
                     ) : (
                       <div className="border rounded-lg overflow-hidden">
                         <table className="w-full text-sm">
-                          <thead className="bg-gray-50">
+                          <thead className="bg-muted/50">
                             <tr>
-                              <th className="px-3 py-2 text-left font-medium text-gray-600">Название</th>
-                              <th className="px-3 py-2 text-left font-medium text-gray-600">Тип</th>
-                              <th className="px-3 py-2 text-center font-medium text-gray-600">Кол-во</th>
-                              <th className="px-3 py-2 text-left font-medium text-gray-600">Этап</th>
-                              <th className="px-3 py-2 text-left font-medium text-gray-600">Доп. инфо</th>
+                              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Название</th>
+                              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Тип</th>
+                              <th className="px-3 py-2 text-center font-medium text-muted-foreground">Кол-во</th>
+                              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Этап</th>
+                              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Доп. инфо</th>
                             </tr>
                           </thead>
                           <tbody>
                             {selectedOrder.products.map((product) => (
-                              <tr key={product.id} className="border-t hover:bg-gray-50">
+                              <tr key={product.id} className="border-t hover:bg-muted/50">
                                 <td className="px-3 py-2 font-medium">{product.name}</td>
-                                <td className="px-3 py-2 text-gray-600">{product.productType?.name || '—'}</td>
+                                <td className="px-3 py-2 text-muted-foreground">{product.productType?.name || '—'}</td>
                                 <td className="px-3 py-2 text-center">{product.quantity}</td>
                                 <td className="px-3 py-2">
                                   <span className={`inline-block px-2 py-0.5 rounded text-xs ${getStageColor(product.stage)}`}>
                                     {getStageName(product.stage)}
                                   </span>
                                 </td>
-                                <td className="px-3 py-2 text-xs text-gray-500">
+                                <td className="px-3 py-2 text-xs text-muted-foreground">
                                   {product.dimensions && <div>Размеры: {product.dimensions}</div>}
                                   {product.color && <div>Цвет: {product.color}</div>}
                                   {product.upholsteryMaterial && <div>Обшивка: {product.upholsteryMaterial}</div>}
@@ -1089,55 +1089,55 @@ export const KanbanPage = () => {
                     <h3 className="text-sm font-semibold text-gray-900">Данные заказа</h3>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Имя клиента</label>
+                        <label className="block text-xs font-medium text-foreground mb-1">Имя клиента</label>
                         <input
                           value={editOrderForm.customerName}
                           onChange={(e) => setEditOrderForm({ ...editOrderForm, customerName: e.target.value })}
-                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Телефон</label>
+                        <label className="block text-xs font-medium text-foreground mb-1">Телефон</label>
                         <input
                           value={editOrderForm.customerPhone}
                           onChange={(e) => setEditOrderForm({ ...editOrderForm, customerPhone: e.target.value })}
-                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Адрес</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">Адрес</label>
                       <input
                         value={editOrderForm.customerAddress}
                         onChange={(e) => setEditOrderForm({ ...editOrderForm, customerAddress: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Описание</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">Описание</label>
                       <textarea
                         value={editOrderForm.description}
                         onChange={(e) => setEditOrderForm({ ...editOrderForm, description: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         rows={2}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Сумма заказа (руб.)</label>
+                        <label className="block text-xs font-medium text-foreground mb-1">Сумма заказа (руб.)</label>
                         <input
                           type="number"
                           value={editOrderForm.totalAmount}
                           onChange={(e) => setEditOrderForm({ ...editOrderForm, totalAmount: e.target.value })}
-                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Приоритет</label>
+                        <label className="block text-xs font-medium text-foreground mb-1">Приоритет</label>
                         <select
                           value={editOrderForm.priority}
                           onChange={(e) => setEditOrderForm({ ...editOrderForm, priority: e.target.value })}
-                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         >
                           <option value="LOW">Низкий</option>
                           <option value="NORMAL">Обычный</option>
@@ -1165,17 +1165,17 @@ export const KanbanPage = () => {
                     </div>
 
                     {editProducts.length === 0 && (
-                      <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
-                        <p className="text-sm text-gray-500">Позиции не добавлены</p>
-                        <p className="text-xs text-gray-400 mt-1">Нажмите "Добавить позицию"</p>
+                      <div className="text-center py-6 border-2 border-dashed border-border rounded-lg">
+                        <p className="text-sm text-muted-foreground">Позиции не добавлены</p>
+                        <p className="text-xs text-muted-foreground mt-1">Нажмите "Добавить позицию"</p>
                       </div>
                     )}
 
                     {editProducts.map((product, index) => (
-                      <div key={product.id || `new-${index}`} className={`p-3 border rounded-lg space-y-2 ${product.stage && product.stage !== ProductionStage.PENDING && !product.isNew ? 'border-amber-300 bg-amber-50/30' : 'border-gray-200'}`}>
+                      <div key={product.id || `new-${index}`} className={`p-3 border rounded-lg space-y-2 ${product.stage && product.stage !== ProductionStage.PENDING && !product.isNew ? 'border-amber-300 bg-amber-50/30' : 'border-border'}`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-gray-700">
+                            <span className="text-xs font-medium text-foreground">
                               {product.isNew ? 'Новая позиция' : product.name}
                             </span>
                             {product.stage && !product.isNew && (
@@ -1197,11 +1197,11 @@ export const KanbanPage = () => {
                         {/* Nomenclature selector for new products */}
                         {product.isNew && (
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Выберите из каталога</label>
+                            <label className="block text-xs font-medium text-foreground mb-1">Выберите из каталога</label>
                             <select
                               value={product.nomenclatureId || ''}
                               onChange={(e) => handleNomenclatureSelect(index, e.target.value)}
-                              className="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-1.5 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                             >
                               <option value="">-- Ввести вручную --</option>
                               {nomenclature.map((item: Nomenclature) => (
@@ -1215,34 +1215,34 @@ export const KanbanPage = () => {
 
                         <div className="grid grid-cols-3 gap-2">
                           <div className="col-span-2">
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Название</label>
+                            <label className="block text-xs font-medium text-foreground mb-1">Название</label>
                             <input
                               value={product.name}
                               onChange={(e) => handleUpdateProductField(index, 'name', e.target.value)}
-                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                               placeholder="Название продукта"
                               disabled={!!product.nomenclatureId}
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Кол-во</label>
+                            <label className="block text-xs font-medium text-foreground mb-1">Кол-во</label>
                             <input
                               type="number"
                               min="1"
                               value={product.quantity}
                               onChange={(e) => handleUpdateProductField(index, 'quantity', parseInt(e.target.value) || 1)}
-                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Тип продукта</label>
+                            <label className="block text-xs font-medium text-foreground mb-1">Тип продукта</label>
                             <select
                               value={product.productTypeId}
                               onChange={(e) => handleUpdateProductField(index, 'productTypeId', e.target.value)}
-                              className="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-1.5 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                               disabled={!!product.nomenclatureId}
                             >
                               <option value="">Выберите тип</option>
@@ -1254,11 +1254,11 @@ export const KanbanPage = () => {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Размеры</label>
+                            <label className="block text-xs font-medium text-foreground mb-1">Размеры</label>
                             <input
                               value={product.dimensions || ''}
                               onChange={(e) => handleUpdateProductField(index, 'dimensions', e.target.value)}
-                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                               placeholder="ДxШxВ"
                             />
                           </div>
@@ -1266,20 +1266,20 @@ export const KanbanPage = () => {
 
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Цвет/покрытие</label>
+                            <label className="block text-xs font-medium text-foreground mb-1">Цвет/покрытие</label>
                             <input
                               value={product.color || ''}
                               onChange={(e) => handleUpdateProductField(index, 'color', e.target.value)}
-                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                               placeholder="Например: Орех, код 906"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Материал обшивки</label>
+                            <label className="block text-xs font-medium text-foreground mb-1">Материал обшивки</label>
                             <input
                               value={product.upholsteryMaterial || ''}
                               onChange={(e) => handleUpdateProductField(index, 'upholsteryMaterial', e.target.value)}
-                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                               placeholder="Экокожа, Велюр..."
                             />
                           </div>
@@ -1295,7 +1295,7 @@ export const KanbanPage = () => {
                                 if (workers.length === 0) return null;
                                 return (
                                   <div key={stage}>
-                                    <label className="block text-xs text-gray-600 mb-0.5">{icon} {label}</label>
+                                    <label className="block text-xs text-muted-foreground mb-0.5">{icon} {label}</label>
                                     <select
                                       value={product.stageAssignments?.[stage] || ''}
                                       onChange={(e) => {
@@ -1307,7 +1307,7 @@ export const KanbanPage = () => {
                                         }
                                         handleUpdateProductField(index, 'stageAssignments', newAssignments);
                                       }}
-                                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                      className="w-full px-2 py-1.5 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                                     >
                                       <option value="">Все</option>
                                       {workers.map((w: User) => (

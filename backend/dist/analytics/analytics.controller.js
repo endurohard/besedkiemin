@@ -53,71 +53,107 @@ let AnalyticsController = class AnalyticsController {
 };
 exports.AnalyticsController = AnalyticsController;
 __decorate([
-    (0, common_1.Get)('production/overview'),
-    (0, swagger_1.ApiOperation)({ summary: 'Общая статистика производства (только OWNER)' }),
+    (0, common_1.Get)("production/overview"),
+    (0, swagger_1.ApiOperation)({ summary: "Общая статистика производства (только OWNER)" }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "getProductionOverview", null);
 __decorate([
-    (0, common_1.Get)('users/performance'),
-    (0, swagger_1.ApiOperation)({ summary: 'Производительность сотрудников (только OWNER)' }),
+    (0, common_1.Get)("users/performance"),
+    (0, swagger_1.ApiOperation)({ summary: "Производительность сотрудников (только OWNER)" }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "getUserPerformance", null);
 __decorate([
-    (0, common_1.Get)('quality/stats'),
-    (0, swagger_1.ApiOperation)({ summary: 'Статистика проверки качества (только OWNER)' }),
+    (0, common_1.Get)("quality/stats"),
+    (0, swagger_1.ApiOperation)({ summary: "Статистика проверки качества (только OWNER)" }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "getQualityStats", null);
 __decorate([
-    (0, common_1.Get)('products/types'),
-    (0, swagger_1.ApiOperation)({ summary: 'Статистика по типам продуктов (только OWNER)' }),
+    (0, common_1.Get)("products/types"),
+    (0, swagger_1.ApiOperation)({ summary: "Статистика по типам продуктов (только OWNER)" }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "getProductTypeStats", null);
 __decorate([
-    (0, common_1.Get)('performance/summary'),
-    (0, swagger_1.ApiOperation)({ summary: 'Сводка производительности за период (только OWNER)' }),
-    (0, swagger_1.ApiQuery)({ name: 'startDate', required: false, type: String, description: 'Дата начала периода (ISO 8601)' }),
-    (0, swagger_1.ApiQuery)({ name: 'endDate', required: false, type: String, description: 'Дата окончания периода (ISO 8601)' }),
-    __param(0, (0, common_1.Query)('startDate')),
-    __param(1, (0, common_1.Query)('endDate')),
+    (0, common_1.Get)("performance/summary"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Сводка производительности за период (только OWNER)",
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: "startDate",
+        required: false,
+        type: String,
+        description: "Дата начала периода (ISO 8601)",
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: "endDate",
+        required: false,
+        type: String,
+        description: "Дата окончания периода (ISO 8601)",
+    }),
+    __param(0, (0, common_1.Query)("startDate")),
+    __param(1, (0, common_1.Query)("endDate")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "getPerformanceSummary", null);
 __decorate([
-    (0, common_1.Get)('full-cycle'),
-    (0, swagger_1.ApiOperation)({ summary: 'Полная аналитика цикла: от заказа до доставки (только OWNER)' }),
-    (0, swagger_1.ApiQuery)({ name: 'startDate', required: false, type: String, description: 'Дата начала периода (ISO 8601)' }),
-    (0, swagger_1.ApiQuery)({ name: 'endDate', required: false, type: String, description: 'Дата окончания периода (ISO 8601)' }),
-    __param(0, (0, common_1.Query)('startDate')),
-    __param(1, (0, common_1.Query)('endDate')),
+    (0, common_1.Get)("full-cycle"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Полная аналитика цикла: от заказа до доставки (только OWNER)",
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: "startDate",
+        required: false,
+        type: String,
+        description: "Дата начала периода (ISO 8601)",
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: "endDate",
+        required: false,
+        type: String,
+        description: "Дата окончания периода (ISO 8601)",
+    }),
+    __param(0, (0, common_1.Query)("startDate")),
+    __param(1, (0, common_1.Query)("endDate")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "getFullCycleAnalytics", null);
 __decorate([
-    (0, common_1.Get)('productivity'),
-    (0, swagger_1.ApiOperation)({ summary: 'Производительность сотрудников: коэффициент полезности, окладники vs сдельники (только OWNER)' }),
-    (0, swagger_1.ApiQuery)({ name: 'startDate', required: false, type: String, description: 'Дата начала (ISO 8601), по умолчанию начало месяца' }),
-    (0, swagger_1.ApiQuery)({ name: 'endDate', required: false, type: String, description: 'Дата окончания (ISO 8601), по умолчанию сегодня' }),
-    __param(0, (0, common_1.Query)('startDate')),
-    __param(1, (0, common_1.Query)('endDate')),
+    (0, common_1.Get)("productivity"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Производительность сотрудников: коэффициент полезности, окладники vs сдельники (только OWNER)",
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: "startDate",
+        required: false,
+        type: String,
+        description: "Дата начала (ISO 8601), по умолчанию начало месяца",
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: "endDate",
+        required: false,
+        type: String,
+        description: "Дата окончания (ISO 8601), по умолчанию сегодня",
+    }),
+    __param(0, (0, common_1.Query)("startDate")),
+    __param(1, (0, common_1.Query)("endDate")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "getProductivityReport", null);
 exports.AnalyticsController = AnalyticsController = __decorate([
-    (0, swagger_1.ApiTags)('Analytics'),
-    (0, common_1.Controller)('analytics'),
+    (0, swagger_1.ApiTags)("Analytics"),
+    (0, common_1.Controller)("analytics"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER'),
+    (0, roles_decorator_1.Roles)("OWNER"),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [analytics_service_1.AnalyticsService])
 ], AnalyticsController);

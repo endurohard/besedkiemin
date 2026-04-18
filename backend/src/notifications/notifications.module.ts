@@ -1,7 +1,7 @@
-import { Module, Global } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { NotificationsGateway } from './notifications.gateway';
+import { Module, Global } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { NotificationsGateway } from "./notifications.gateway";
 
 @Global()
 @Module({
@@ -9,7 +9,7 @@ import { NotificationsGateway } from './notifications.gateway';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
+        secret: configService.get("JWT_SECRET"),
       }),
       inject: [ConfigService],
     }),

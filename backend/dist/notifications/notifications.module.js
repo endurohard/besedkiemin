@@ -21,7 +21,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: (configService) => ({
-                    secret: configService.get('JWT_SECRET'),
+                    secret: configService.get("JWT_SECRET"),
                 }),
                 inject: [config_1.ConfigService],
             }),

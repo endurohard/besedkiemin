@@ -1,4 +1,4 @@
-import { Role, PaymentType } from '@prisma/client';
+import { Role, PaymentType } from "@prisma/client";
 export declare class UserEntity {
     id: string;
     email: string;

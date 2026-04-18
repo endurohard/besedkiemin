@@ -1,9 +1,9 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateQualityCheckDto } from './dto/create-quality-check.dto';
-import { UpdateQualityCheckDto } from './dto/update-quality-check.dto';
-import { QualityStatus } from '@prisma/client';
-import { UploadService } from '../upload/upload.service';
-import { TelegramService } from '../telegram/telegram.service';
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateQualityCheckDto } from "./dto/create-quality-check.dto";
+import { UpdateQualityCheckDto } from "./dto/update-quality-check.dto";
+import { QualityStatus } from "@prisma/client";
+import { UploadService } from "../upload/upload.service";
+import { TelegramService } from "../telegram/telegram.service";
 export declare class QualityChecksService {
     private prisma;
     private uploadService;

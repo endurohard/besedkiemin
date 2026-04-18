@@ -1,5 +1,5 @@
-import { FeatureFlagsService } from './feature-flags.service';
-import { UpdateFeatureFlagDto } from './dto/update-feature-flag.dto';
+import { FeatureFlagsService } from "./feature-flags.service";
+import { UpdateFeatureFlagDto } from "./dto/update-feature-flag.dto";
 export declare class FeatureFlagsController {
     private readonly featureFlagsService;
     constructor(featureFlagsService: FeatureFlagsService);

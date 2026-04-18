@@ -16,7 +16,7 @@ class PinLoginDto {
 }
 exports.PinLoginDto = PinLoginDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '1234', description: '4-значный PIN-код работника' }),
+    (0, swagger_1.ApiProperty)({ example: "1234", description: "4-значный PIN-код работника" }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.Length)(4, 6),

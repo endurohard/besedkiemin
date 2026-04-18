@@ -1,5 +1,5 @@
-import { CompanySettingsService } from './company-settings.service';
-import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
+import { CompanySettingsService } from "./company-settings.service";
+import { UpdateCompanySettingsDto } from "./dto/update-company-settings.dto";
 export declare class CompanySettingsController {
     private readonly companySettingsService;
     constructor(companySettingsService: CompanySettingsService);

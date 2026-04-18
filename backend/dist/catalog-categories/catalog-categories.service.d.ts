@@ -1,6 +1,6 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateCatalogCategoryDto } from './dto/create-catalog-category.dto';
-import { UpdateCatalogCategoryDto } from './dto/update-catalog-category.dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateCatalogCategoryDto } from "./dto/create-catalog-category.dto";
+import { UpdateCatalogCategoryDto } from "./dto/update-catalog-category.dto";
 export declare class CatalogCategoriesService {
     private prisma;
     constructor(prisma: PrismaService);

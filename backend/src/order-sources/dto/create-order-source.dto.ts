@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsBoolean, IsInt, MinLength, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  MinLength,
+  MaxLength,
+} from "class-validator";
 
 export class CreateOrderSourceDto {
   @IsString()

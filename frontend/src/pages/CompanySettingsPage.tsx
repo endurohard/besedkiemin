@@ -122,7 +122,7 @@ export const CompanySettingsPage = () => {
           <Building2 className="w-8 h-8" />
           Настройки компании
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-muted-foreground mt-2">
           Укажите информацию о вашем предприятии для использования в документах и путевых листах
         </p>
       </div>
@@ -136,7 +136,7 @@ export const CompanySettingsPage = () => {
           <CardContent>
             <div className="flex items-center gap-6">
               {formData.logoUrl ? (
-                <div className="w-32 h-32 border-2 border-gray-200 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50">
+                <div className="w-32 h-32 border-2 border-border rounded-lg overflow-hidden flex items-center justify-center bg-muted/50">
                   <img
                     src={formData.logoUrl}
                     alt="Логотип"
@@ -144,8 +144,8 @@ export const CompanySettingsPage = () => {
                   />
                 </div>
               ) : (
-                <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-                  <Building2 className="w-12 h-12 text-gray-400" />
+                <div className="w-32 h-32 border-2 border-dashed border-border rounded-lg flex items-center justify-center bg-muted/50">
+                  <Building2 className="w-12 h-12 text-muted-foreground" />
                 </div>
               )}
 
@@ -158,21 +158,21 @@ export const CompanySettingsPage = () => {
                       accept="image/*"
                       onChange={handleLogoUpload}
                       disabled={uploadingLogo}
-                      className="block w-full text-sm text-gray-500
+                      className="block w-full text-sm text-muted-foreground
                         file:mr-4 file:py-2 file:px-4
                         file:rounded-lg file:border-0
                         file:text-sm file:font-semibold
-                        file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100
+                        file:bg-primary/10 file:text-primary
+                        hover:file:bg-primary/20
                         disabled:opacity-50"
                     />
                   </div>
                 </label>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-muted-foreground mt-2">
                   PNG, JPG или GIF. Максимум 2MB.
                 </p>
                 {uploadingLogo && (
-                  <div className="flex items-center gap-2 mt-2 text-blue-600">
+                  <div className="flex items-center gap-2 mt-2 text-primary">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Загрузка...</span>
                   </div>
@@ -201,7 +201,7 @@ export const CompanySettingsPage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Привяжите свой Telegram аккаунт для получения уведомлений о заказах и задачах
                 </p>
                 <Button
@@ -214,9 +214,9 @@ export const CompanySettingsPage = () => {
                   {showQR ? 'Скрыть QR код' : 'Показать QR код'}
                 </Button>
                 {showQR && telegramLink?.link && (
-                  <div className="flex flex-col items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex flex-col items-center gap-3 p-4 bg-muted/50 rounded-lg">
                     <QRCodeSVG value={telegramLink.link} size={200} level="H" />
-                    <p className="text-sm text-gray-600 text-center max-w-md">
+                    <p className="text-sm text-muted-foreground text-center max-w-md">
                       Отсканируйте QR код камерой телефона, чтобы открыть бота{' '}
                       <span className="font-mono font-semibold">@{telegramLink.botUsername}</span>
                     </p>
@@ -224,7 +224,7 @@ export const CompanySettingsPage = () => {
                       href={telegramLink.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-800 underline"
+                      className="text-sm text-primary hover:text-primary/90 underline"
                     >
                       Или откройте ссылку вручную
                     </a>
@@ -275,7 +275,7 @@ export const CompanySettingsPage = () => {
             <div>
               <label className="block text-sm font-medium mb-1">Адрес</label>
               <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={2}
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -299,7 +299,7 @@ export const CompanySettingsPage = () => {
                 onChange={(e) => setFormData({ ...formData, supportTelegram: e.target.value })}
                 placeholder="@username или t.me/username"
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Укажите ссылку на Telegram или username для связи с поддержкой
               </p>
             </div>
@@ -432,7 +432,7 @@ export const CompanySettingsPage = () => {
                           className={`flex items-center justify-center w-12 h-10 border rounded cursor-pointer transition ${
                             isChecked
                               ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                              : 'bg-card text-foreground border-border hover:border-blue-400'
                           }`}
                         >
                           <input
@@ -464,7 +464,7 @@ export const CompanySettingsPage = () => {
                     className="w-full border rounded p-2 text-sm"
                     rows={3}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     В нерабочее время клиенты смогут оставить заявку на обратный звонок
                   </p>
                 </div>

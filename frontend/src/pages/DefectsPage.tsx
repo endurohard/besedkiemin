@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { AlertTriangle, X, Eye, Calendar, User, Package, FileText, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { tasksApi } from '@/lib/api';
 
 interface DefectWithPhotos extends QualityCheck {
   defectPhotos?: string[];
@@ -20,33 +21,12 @@ export const DefectsPage = () => {
   // Fetch all defects with photos using dedicated endpoint
   const { data: defects, isLoading } = useQuery({
     queryKey: ['defects'],
-    queryFn: async () => {
-      const response = await fetch('/api/tasks/defects', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch defects');
-      return response.json();
-    },
+    queryFn: () => tasksApi.getDefects<DefectWithPhotos[]>(),
   });
 
   // Mutation for accepting defect rework
   const acceptReworkMutation = useMutation({
-    mutationFn: async (productId: string) => {
-      const response = await fetch(`/api/tasks/defects/${productId}/accept`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to accept rework');
-      }
-      return response.json();
-    },
+    mutationFn: (productId: string) => tasksApi.acceptDefect(productId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['defects'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -262,7 +242,7 @@ export const DefectsPage = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
+                  <div className="p-4 bg-muted/50 border border-gray-200 rounded-md text-sm text-muted-foreground">
                     Фото брака не прикреплены
                   </div>
                 )}

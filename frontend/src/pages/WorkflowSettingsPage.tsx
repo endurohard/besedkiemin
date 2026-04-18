@@ -65,7 +65,7 @@ function SortableStageItem({ stage, onEdit, onToggle, onDelete }: SortableStageI
             className="cursor-grab active:cursor-grabbing"
           >
             <svg
-              className="w-6 h-6 text-gray-400"
+              className="w-6 h-6 text-muted-foreground"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -82,17 +82,17 @@ function SortableStageItem({ stage, onEdit, onToggle, onDelete }: SortableStageI
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">{stage.order}. {stage.name}</span>
-              <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+              <span className="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary/90">
                 {roleLabels[stage.role]}
               </span>
               {!stage.isActive && (
-                <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                <span className="px-2 py-1 text-xs rounded-full bg-muted text-gray-800">
                   Неактивен
                 </span>
               )}
             </div>
             {stage.description && (
-              <p className="text-sm text-gray-600 mt-1">{stage.description}</p>
+              <p className="text-sm text-muted-foreground mt-1">{stage.description}</p>
             )}
           </div>
 
@@ -389,7 +389,7 @@ export default function WorkflowSettingsPage() {
 
       {stages.length === 0 ? (
         <Card className="p-8 text-center">
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             Производственный цикл пока не настроен
           </p>
           <Button onClick={handleInitialize}>

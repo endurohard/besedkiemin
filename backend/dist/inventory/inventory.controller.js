@@ -52,64 +52,71 @@ let InventoryController = class InventoryController {
 exports.InventoryController = InventoryController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
-    (0, swagger_1.ApiOperation)({ summary: 'Добавить товар на склад вручную' }),
-    __param(0, (0, common_1.Body)('name')),
-    __param(1, (0, common_1.Body)('productTypeId')),
-    __param(2, (0, common_1.Body)('quantity')),
-    __param(3, (0, common_1.Body)('notes')),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
+    (0, swagger_1.ApiOperation)({ summary: "Добавить товар на склад вручную" }),
+    __param(0, (0, common_1.Body)("name")),
+    __param(1, (0, common_1.Body)("productTypeId")),
+    __param(2, (0, common_1.Body)("quantity")),
+    __param(3, (0, common_1.Body)("notes")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, Number, String]),
     __metadata("design:returntype", void 0)
 ], InventoryController.prototype, "createInventoryItem", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все складские остатки' }),
-    (0, swagger_1.ApiQuery)({ name: 'productTypeId', required: false, type: String, description: 'Фильтр по типу продукта' }),
-    __param(0, (0, common_1.Query)('productTypeId')),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить все складские остатки" }),
+    (0, swagger_1.ApiQuery)({
+        name: "productTypeId",
+        required: false,
+        type: String,
+        description: "Фильтр по типу продукта",
+    }),
+    __param(0, (0, common_1.Query)("productTypeId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], InventoryController.prototype, "getAllInventory", null);
 __decorate([
-    (0, common_1.Get)('summary'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить сводку по остаткам (группировка по типам)' }),
+    (0, common_1.Get)("summary"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Получить сводку по остаткам (группировка по типам)",
+    }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], InventoryController.prototype, "getInventorySummary", null);
 __decorate([
-    (0, common_1.Get)('type/:productTypeId'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить остатки по типу продукта' }),
-    __param(0, (0, common_1.Param)('productTypeId')),
+    (0, common_1.Get)("type/:productTypeId"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить остатки по типу продукта" }),
+    __param(0, (0, common_1.Param)("productTypeId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], InventoryController.prototype, "getInventoryByType", null);
 __decorate([
-    (0, common_1.Get)('order/:orderId'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить остатки по заказу' }),
-    __param(0, (0, common_1.Param)('orderId')),
+    (0, common_1.Get)("order/:orderId"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить остатки по заказу" }),
+    __param(0, (0, common_1.Param)("orderId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], InventoryController.prototype, "getInventoryByOrder", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить детали складского остатка' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить детали складского остатка" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], InventoryController.prototype, "getInventoryItem", null);
 exports.InventoryController = InventoryController = __decorate([
-    (0, swagger_1.ApiTags)('Inventory'),
-    (0, common_1.Controller)('inventory'),
+    (0, swagger_1.ApiTags)("Inventory"),
+    (0, common_1.Controller)("inventory"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [inventory_service_1.InventoryService])

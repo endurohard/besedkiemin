@@ -1,4 +1,4 @@
-import { QualityStatus, ProductionStage } from '@prisma/client';
+import { QualityStatus, ProductionStage } from "@prisma/client";
 export declare class CreateQualityCheckDto {
     productId: string;
     status: QualityStatus;

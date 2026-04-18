@@ -1,7 +1,7 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { TelegramService } from '../telegram/telegram.service';
-import { PayrollService } from '../payroll/payroll.service';
-import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { PrismaService } from "../prisma/prisma.service";
+import { TelegramService } from "../telegram/telegram.service";
+import { PayrollService } from "../payroll/payroll.service";
+import { NotificationsGateway } from "../notifications/notifications.gateway";
 export declare class TasksService {
     private prisma;
     private telegramService;
@@ -71,6 +71,7 @@ export declare class TasksService {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -140,6 +141,7 @@ export declare class TasksService {
             rejectedAt: Date | null;
             notes: string | null;
             defectPhotos: string[];
+            isDefect: boolean;
             quantityProcessed: number;
             productId: string;
             assignedToId: string;
@@ -219,6 +221,7 @@ export declare class TasksService {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -287,6 +290,7 @@ export declare class TasksService {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -308,6 +312,7 @@ export declare class TasksService {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -329,6 +334,7 @@ export declare class TasksService {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -350,6 +356,7 @@ export declare class TasksService {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -424,6 +431,7 @@ export declare class TasksService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         } | null;
         status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
@@ -498,6 +506,7 @@ export declare class TasksService {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -568,6 +577,7 @@ export declare class TasksService {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;

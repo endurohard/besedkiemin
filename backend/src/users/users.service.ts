@@ -1,10 +1,23 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UserEntity } from './entities/user.entity';
-import { AUTH, SYSTEM_ROLES } from '../common/constants';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import * as bcrypt from "bcrypt";
+import * as crypto from "crypto";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { UserEntity } from "./entities/user.entity";
+import { AUTH, SYSTEM_ROLES } from "../common/constants";
+
+// Deterministic lookup hash for PIN. HMAC (not plain hash) so that leaking the column
+// without PIN_PEPPER still forces 10k^keyspace-scale bruteforce rather than a rainbow lookup.
+// Falls back to JWT_SECRET if PIN_PEPPER unset — main.ts already requires one of them in prod.
+function computePinLookup(pin: string): string {
+  const pepper = process.env.PIN_PEPPER ?? process.env.JWT_SECRET ?? "";
+  return crypto.createHmac("sha256", pepper).update(pin).digest("hex");
+}
 
 @Injectable()
 export class UsersService {
@@ -16,7 +29,10 @@ export class UsersService {
       createUserDto.email = `worker_${Date.now()}@internal`;
     }
 
-    const hashedPassword = await bcrypt.hash(createUserDto.password, AUTH.BCRYPT_SALT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      AUTH.BCRYPT_SALT_ROUNDS,
+    );
 
     const user = await this.prisma.user.create({
       data: {
@@ -77,7 +93,9 @@ export class UsersService {
       });
 
       if (existingUser && existingUser.id !== id) {
-        throw new ConflictException('Пользователь с таким email уже существует');
+        throw new ConflictException(
+          "Пользователь с таким email уже существует",
+        );
       }
     }
 
@@ -85,7 +103,10 @@ export class UsersService {
 
     // Если есть пароль, хешируем его
     if (updateUserDto.password) {
-      updateData.password = await bcrypt.hash(updateUserDto.password, AUTH.BCRYPT_SALT_ROUNDS);
+      updateData.password = await bcrypt.hash(
+        updateUserDto.password,
+        AUTH.BCRYPT_SALT_ROUNDS,
+      );
     }
 
     const user = await this.prisma.user.update({
@@ -120,25 +141,44 @@ export class UsersService {
   async setPin(id: string, pin: string): Promise<void> {
     await this.findOne(id);
     const hashedPin = await bcrypt.hash(pin, AUTH.BCRYPT_SALT_ROUNDS);
+    const pinLookup = computePinLookup(pin);
     await this.prisma.user.update({
       where: { id },
-      data: { pin: hashedPin },
+      data: { pin: hashedPin, pinLookup },
     });
   }
 
   async findByPin(pin: string) {
-    // Получаем всех активных работников с PIN
-    const users = await this.prisma.user.findMany({
+    // Fast path: индекс по pin_lookup сужает выборку до нескольких кандидатов.
+    const pinLookup = computePinLookup(pin);
+    const candidates = await this.prisma.user.findMany({
       where: {
         isActive: true,
+        pinLookup,
         pin: { not: null },
       },
       include: { role: true },
     });
 
-    // Проверяем PIN по хешу
-    for (const user of users) {
-      if (user.pin && await bcrypt.compare(pin, user.pin)) {
+    for (const user of candidates) {
+      if (user.pin && (await bcrypt.compare(pin, user.pin))) {
+        return user;
+      }
+    }
+
+    // Legacy fallback: pin_lookup ещё не заполнен (PIN задан до миграции).
+    // По мере того как работники переустанавливают PIN, таких строк не остаётся.
+    const legacy = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        pinLookup: null,
+        pin: { not: null },
+      },
+      include: { role: true },
+    });
+
+    for (const user of legacy) {
+      if (user.pin && (await bcrypt.compare(pin, user.pin))) {
         return user;
       }
     }

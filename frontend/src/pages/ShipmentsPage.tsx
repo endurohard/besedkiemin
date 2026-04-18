@@ -70,7 +70,7 @@ export const ShipmentsPage = () => {
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       PENDING: { label: 'Ожидает', color: 'bg-yellow-100 text-yellow-800', icon: Package },
-      IN_TRANSIT: { label: 'В пути', color: 'bg-blue-100 text-blue-800', icon: TruckIcon },
+      IN_TRANSIT: { label: 'В пути', color: 'bg-primary/20 text-primary/90', icon: TruckIcon },
       DELIVERED: { label: 'Доставлено', color: 'bg-green-100 text-green-800', icon: CheckCircle },
       CANCELLED: { label: 'Отменено', color: 'bg-red-100 text-red-800', icon: XCircle },
     };
@@ -117,7 +117,7 @@ export const ShipmentsPage = () => {
           <div className="flex flex-wrap gap-3">
             <div className="flex-1 min-w-[250px]">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Поиск по клиенту, адресу, товару..."
                   value={searchQuery}
@@ -166,16 +166,16 @@ export const ShipmentsPage = () => {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Дата</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Заказ</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Статус</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Клиент</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Телефон</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Адрес</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Товары</th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-600">Действия</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Дата</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Заказ</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Статус</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Клиент</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Телефон</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Адрес</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Товары</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Действия</th>
                 </tr>
               </thead>
               <tbody>
@@ -193,30 +193,30 @@ export const ShipmentsPage = () => {
                   </tr>
                 ) : filteredShipments.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
                       <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                       <p>{searchQuery || statusFilter !== 'ALL' ? 'Ничего не найдено' : 'Отгрузок пока нет'}</p>
                     </td>
                   </tr>
                 ) : (
                   filteredShipments.map((shipment: Shipment) => (
-                    <tr key={shipment.id} className="border-b hover:bg-gray-50">
+                    <tr key={shipment.id} className="border-b hover:bg-muted/50">
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="text-xs">
                           {format(new Date(shipment.createdAt), 'dd.MM.yyyy', { locale: ru })}
                           <br />
-                          <span className="text-gray-500">
+                          <span className="text-muted-foreground">
                             {format(new Date(shipment.createdAt), 'HH:mm', { locale: ru })}
                           </span>
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {shipment.orderNumber ? (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                          <span className="px-2 py-1 bg-primary/20 text-primary/90 rounded text-xs font-medium">
                             {shipment.orderNumber}
                           </span>
                         ) : (
-                          <span className="text-gray-400 text-xs">—</span>
+                          <span className="text-muted-foreground text-xs">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -240,7 +240,7 @@ export const ShipmentsPage = () => {
                           {shipment.items.map((item) => (
                             <div key={item.id} className="text-xs">
                               <span className="font-medium">{item.inventoryItem?.name || '—'}</span>
-                              <span className="text-gray-500"> × {item.quantity}</span>
+                              <span className="text-muted-foreground"> × {item.quantity}</span>
                             </div>
                           ))}
                         </div>
@@ -302,7 +302,7 @@ export const ShipmentsPage = () => {
 
           {/* Статистика внизу */}
           {filteredShipments.length > 0 && (
-            <div className="px-4 py-3 bg-gray-50 border-t text-sm text-gray-600">
+            <div className="px-4 py-3 bg-muted/50 border-t text-sm text-muted-foreground">
               Показано отгрузок: <span className="font-semibold">{filteredShipments.length}</span>
               {(searchQuery || statusFilter !== 'ALL') && shipments && (
                 <span className="ml-2">из {shipments.length}</span>

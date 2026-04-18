@@ -1,4 +1,4 @@
-import { OrderPriority } from '@prisma/client';
+import { OrderPriority } from "@prisma/client";
 export declare class CreateOrderDto {
     orderNumber?: string;
     customerName: string;

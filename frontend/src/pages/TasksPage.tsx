@@ -118,9 +118,9 @@ export const TasksPage = () => {
         return {
           border: 'border-gray-200',
           header: 'bg-gradient-to-r from-blue-50 to-blue-100 border-gray-200',
-          icon: <Package className="w-4 h-4 text-blue-600" />,
+          icon: <Package className="w-4 h-4 text-primary" />,
           text: 'text-gray-900',
-          badge: 'bg-blue-500 text-white',
+          badge: 'bg-primary/100 text-white',
         };
     }
   };
@@ -160,9 +160,9 @@ export const TasksPage = () => {
     return (
       <div className="space-y-4">
         {/* Заголовок с именем сотрудника */}
-        <div className={`p-4 rounded-lg ${isCurrentUser ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}>
+        <div className={`p-4 rounded-lg ${isCurrentUser ? 'bg-primary/10 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}>
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCurrentUser ? 'bg-blue-500' : 'bg-gray-400'}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCurrentUser ? 'bg-primary/100' : 'bg-gray-400'}`}>
               <User className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -247,8 +247,8 @@ export const TasksPage = () => {
                   {newOrderTasks.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-blue-200">
-                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                        <h3 className="text-[10px] font-semibold text-blue-700 uppercase">
+                        <span className="w-1.5 h-1.5 bg-primary/100 rounded-full"></span>
+                        <h3 className="text-[10px] font-semibold text-primary uppercase">
                           Новые ({newOrderTasks.length})
                         </h3>
                       </div>
@@ -322,7 +322,7 @@ const WorkerTaskCard = ({
   isCompleting: boolean;
 }) => {
   return (
-    <div className={`p-4 rounded-lg border ${isCurrentUser ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
+    <div className={`p-4 rounded-lg border ${isCurrentUser ? 'bg-primary/10 border-blue-200' : 'bg-white border-gray-200'}`}>
       <div className="flex items-start justify-between gap-2 mb-2">
         <h3 className="font-semibold text-gray-800">{task.title}</h3>
         <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">

@@ -1,4 +1,4 @@
-import { PaymentType } from '@prisma/client';
+import { PaymentType } from "@prisma/client";
 export declare class CreateUserDto {
     email?: string;
     password: string;

@@ -16,36 +16,36 @@ class CreateCatalogCategoryDto {
 }
 exports.CreateCatalogCategoryDto = CreateCatalogCategoryDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Название категории' }),
+    (0, swagger_1.ApiProperty)({ description: "Название категории" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateCatalogCategoryDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'URL-slug для SEO' }),
+    (0, swagger_1.ApiProperty)({ description: "URL-slug для SEO" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateCatalogCategoryDto.prototype, "slug", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Описание категории', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Описание категории", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateCatalogCategoryDto.prototype, "description", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'URL изображения категории', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "URL изображения категории", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateCatalogCategoryDto.prototype, "imageUrl", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Порядок отображения', default: 0 }),
+    (0, swagger_1.ApiProperty)({ description: "Порядок отображения", default: 0 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateCatalogCategoryDto.prototype, "order", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Активна ли категория', default: true }),
+    (0, swagger_1.ApiProperty)({ description: "Активна ли категория", default: true }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)

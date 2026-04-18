@@ -1,5 +1,12 @@
-import { IsString, IsInt, IsOptional, IsBoolean, Min, IsArray } from 'class-validator';
-import { ProductionStage } from '@prisma/client';
+import {
+  IsString,
+  IsInt,
+  IsOptional,
+  IsBoolean,
+  Min,
+  IsArray,
+} from "class-validator";
+import { ProductionStage } from "@prisma/client";
 
 export class CreateWorkflowStageDto {
   @IsString()

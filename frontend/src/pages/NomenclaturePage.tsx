@@ -247,7 +247,7 @@ export const NomenclaturePage = () => {
                           className={`px-2 py-1 rounded text-xs font-medium ${
                             item.isActive
                               ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
+                              : 'bg-muted text-gray-800'
                           }`}
                         >
                           {item.isActive ? 'Активен' : 'Неактивен'}
@@ -411,7 +411,7 @@ export const NomenclaturePage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Розница (₽)</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Розница (₽)</label>
                   <input
                     type="number"
                     className="w-full border rounded-lg px-3 py-2"

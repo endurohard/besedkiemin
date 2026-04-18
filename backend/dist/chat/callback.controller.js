@@ -48,7 +48,9 @@ let CallbackController = class CallbackController {
 exports.CallbackController = CallbackController;
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать заявку на обратный звонок (публичный доступ)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: "Создать заявку на обратный звонок (публичный доступ)",
+    }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -57,32 +59,32 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все заявки на звонок (OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Query)('status')),
+    (0, swagger_1.ApiOperation)({ summary: "Получить все заявки на звонок (OWNER/MANAGER)" }),
+    __param(0, (0, common_1.Query)("status")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CallbackController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':id'),
+    (0, common_1.Get)(":id"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить заявку по ID (OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiOperation)({ summary: "Получить заявку по ID (OWNER/MANAGER)" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CallbackController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Post)(':id/contacted'),
+    (0, common_1.Post)(":id/contacted"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Отметить "Связались с клиентом" (OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -90,12 +92,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CallbackController.prototype, "markContacted", null);
 __decorate([
-    (0, common_1.Post)(':id/completed'),
+    (0, common_1.Post)(":id/completed"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Отметить "Завершено" (OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -103,12 +105,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CallbackController.prototype, "markCompleted", null);
 __decorate([
-    (0, common_1.Post)(':id/cancel'),
+    (0, common_1.Post)(":id/cancel"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Отменить заявку (OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiOperation)({ summary: "Отменить заявку (OWNER/MANAGER)" }),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -116,19 +118,19 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CallbackController.prototype, "cancel", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
+    (0, common_1.Delete)(":id"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER'),
+    (0, roles_decorator_1.Roles)("OWNER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Удалить заявку (OWNER)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiOperation)({ summary: "Удалить заявку (OWNER)" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CallbackController.prototype, "remove", null);
 exports.CallbackController = CallbackController = __decorate([
-    (0, swagger_1.ApiTags)('Callback Requests'),
-    (0, common_1.Controller)('callback-requests'),
+    (0, swagger_1.ApiTags)("Callback Requests"),
+    (0, common_1.Controller)("callback-requests"),
     __metadata("design:paramtypes", [callback_service_1.CallbackService])
 ], CallbackController);
 //# sourceMappingURL=callback.controller.js.map

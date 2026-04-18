@@ -46,8 +46,13 @@ exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const bcrypt = __importStar(require("bcrypt"));
+const crypto = __importStar(require("crypto"));
 const user_entity_1 = require("./entities/user.entity");
 const constants_1 = require("../common/constants");
+function computePinLookup(pin) {
+    const pepper = process.env.PIN_PEPPER ?? process.env.JWT_SECRET ?? "";
+    return crypto.createHmac("sha256", pepper).update(pin).digest("hex");
+}
 let UsersService = class UsersService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -104,7 +109,7 @@ let UsersService = class UsersService {
                 where: { email: updateUserDto.email },
             });
             if (existingUser && existingUser.id !== id) {
-                throw new common_1.ConflictException('Пользователь с таким email уже существует');
+                throw new common_1.ConflictException("Пользователь с таким email уже существует");
             }
         }
         const updateData = { ...updateUserDto };
@@ -134,21 +139,37 @@ let UsersService = class UsersService {
     async setPin(id, pin) {
         await this.findOne(id);
         const hashedPin = await bcrypt.hash(pin, constants_1.AUTH.BCRYPT_SALT_ROUNDS);
+        const pinLookup = computePinLookup(pin);
         await this.prisma.user.update({
             where: { id },
-            data: { pin: hashedPin },
+            data: { pin: hashedPin, pinLookup },
         });
     }
     async findByPin(pin) {
-        const users = await this.prisma.user.findMany({
+        const pinLookup = computePinLookup(pin);
+        const candidates = await this.prisma.user.findMany({
             where: {
                 isActive: true,
+                pinLookup,
                 pin: { not: null },
             },
             include: { role: true },
         });
-        for (const user of users) {
-            if (user.pin && await bcrypt.compare(pin, user.pin)) {
+        for (const user of candidates) {
+            if (user.pin && (await bcrypt.compare(pin, user.pin))) {
+                return user;
+            }
+        }
+        const legacy = await this.prisma.user.findMany({
+            where: {
+                isActive: true,
+                pinLookup: null,
+                pin: { not: null },
+            },
+            include: { role: true },
+        });
+        for (const user of legacy) {
+            if (user.pin && (await bcrypt.compare(pin, user.pin))) {
                 return user;
             }
         }

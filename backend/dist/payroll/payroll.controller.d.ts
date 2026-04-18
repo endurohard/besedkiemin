@@ -1,7 +1,7 @@
-import { PayrollService } from './payroll.service';
-import { CreateWorkRateDto, UpdateWorkRateDto, CreatePenaltyDto, UpdatePenaltyDto, CancelPenaltyDto, CalculatePayrollDto, CreateManagerCommissionDto, UpdateManagerCommissionDto } from './dto';
-import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
-import { PayrollStatus, ProductionStage } from '@prisma/client';
+import { PayrollService } from "./payroll.service";
+import { CreateWorkRateDto, UpdateWorkRateDto, CreatePenaltyDto, UpdatePenaltyDto, CancelPenaltyDto, CalculatePayrollDto, CreateManagerCommissionDto, UpdateManagerCommissionDto } from "./dto";
+import { AuthenticatedUser } from "../auth/strategies/jwt.strategy";
+import { PayrollStatus, ProductionStage } from "@prisma/client";
 export declare class PayrollController {
     private readonly payrollService;
     constructor(payrollService: PayrollService);
@@ -465,6 +465,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         };
         product: {
             description: string | null;
@@ -505,6 +506,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         };
     } & {
         id: string;
@@ -615,6 +617,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         } | null;
     } & {
         roleId: string | null;
@@ -661,6 +664,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         } | null;
     } & {
         roleId: string | null;
@@ -707,6 +711,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         } | null;
     } & {
         roleId: string | null;
@@ -906,6 +911,7 @@ export declare class PayrollController {
                 rejectedAt: Date | null;
                 notes: string | null;
                 defectPhotos: string[];
+                isDefect: boolean;
                 quantityProcessed: number;
                 productId: string;
                 assignedToId: string;
@@ -1013,6 +1019,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.PayrollStatus;
@@ -1057,6 +1064,7 @@ export declare class PayrollController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.PayrollStatus;
@@ -1154,6 +1162,7 @@ export declare class PayrollController {
             rejectedAt: Date | null;
             notes: string | null;
             defectPhotos: string[];
+            isDefect: boolean;
             quantityProcessed: number;
             productId: string;
             assignedToId: string;

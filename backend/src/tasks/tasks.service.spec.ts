@@ -3,6 +3,7 @@ import { TasksService } from './tasks.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { PayrollService } from '../payroll/payroll.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { TaskStatus, ProductionStage } from '@prisma/client';
 
@@ -28,6 +29,12 @@ const mockPayroll = () => ({
   createWorkLog: jest.fn(),
 });
 
+const mockNotifications = () => ({
+  sendToUser: jest.fn(),
+  sendToRole: jest.fn(),
+  broadcast: jest.fn(),
+});
+
 describe('TasksService', () => {
   let service: TasksService;
   let prisma: any;
@@ -40,6 +47,7 @@ describe('TasksService', () => {
         { provide: PrismaService, useFactory: mockPrisma },
         { provide: TelegramService, useFactory: mockTelegram },
         { provide: PayrollService, useFactory: mockPayroll },
+        { provide: NotificationsGateway, useFactory: mockNotifications },
       ],
     }).compile();
 

@@ -56,19 +56,19 @@ let QualityChecksController = class QualityChecksController {
 exports.QualityChecksController = QualityChecksController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('WAREHOUSE'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('photo', {
+    (0, roles_decorator_1.Roles)("WAREHOUSE"),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)("photo", {
         storage: (0, multer_1.diskStorage)({
-            destination: './uploads',
+            destination: "./uploads",
             filename: (req, file, callback) => {
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
                 const ext = (0, path_1.extname)(file.originalname);
                 callback(null, `defect-${uniqueSuffix}${ext}`);
             },
         }),
         fileFilter: (req, file, callback) => {
             if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
-                return callback(new common_1.BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
+                return callback(new common_1.BadRequestException("Разрешены только изображения (jpg, png, gif, webp, heic)"), false);
             }
             callback(null, true);
         },
@@ -76,18 +76,18 @@ __decorate([
             fileSize: 5 * 1024 * 1024,
         },
     })),
-    (0, swagger_1.ApiConsumes)('multipart/form-data'),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать проверку качества (только складист)' }),
+    (0, swagger_1.ApiConsumes)("multipart/form-data"),
+    (0, swagger_1.ApiOperation)({ summary: "Создать проверку качества (только складист)" }),
     (0, swagger_1.ApiBody)({
         schema: {
-            type: 'object',
+            type: "object",
             properties: {
-                productId: { type: 'string', format: 'uuid' },
-                status: { type: 'string', enum: ['PENDING', 'APPROVED', 'REJECTED'] },
-                notes: { type: 'string' },
-                photo: { type: 'string', format: 'binary' },
+                productId: { type: "string", format: "uuid" },
+                status: { type: "string", enum: ["PENDING", "APPROVED", "REJECTED"] },
+                notes: { type: "string" },
+                photo: { type: "string", format: "binary" },
             },
-            required: ['productId', 'status'],
+            required: ["productId", "status"],
         },
     }),
     __param(0, (0, common_1.Body)()),
@@ -99,70 +99,70 @@ __decorate([
 ], QualityChecksController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все проверки качества' }),
-    (0, swagger_1.ApiQuery)({ name: 'productId', required: false }),
-    (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: client_1.QualityStatus }),
-    __param(0, (0, common_1.Query)('productId')),
-    __param(1, (0, common_1.Query)('status')),
+    (0, swagger_1.ApiOperation)({ summary: "Получить все проверки качества" }),
+    (0, swagger_1.ApiQuery)({ name: "productId", required: false }),
+    (0, swagger_1.ApiQuery)({ name: "status", required: false, enum: client_1.QualityStatus }),
+    __param(0, (0, common_1.Query)("productId")),
+    __param(1, (0, common_1.Query)("status")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], QualityChecksController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)('rejected'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все забракованные продукты' }),
+    (0, common_1.Get)("rejected"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить все забракованные продукты" }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], QualityChecksController.prototype, "getRejected", null);
 __decorate([
-    (0, common_1.Get)('product/:productId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить проверки качества для продукта' }),
-    __param(0, (0, common_1.Param)('productId')),
+    (0, common_1.Get)("product/:productId"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить проверки качества для продукта" }),
+    __param(0, (0, common_1.Param)("productId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], QualityChecksController.prototype, "getByProduct", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить проверку качества по ID' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить проверку качества по ID" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], QualityChecksController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)('WAREHOUSE'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('photo', {
+    (0, common_1.Patch)(":id"),
+    (0, roles_decorator_1.Roles)("WAREHOUSE"),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)("photo", {
         storage: (0, multer_1.diskStorage)({
-            destination: './uploads',
+            destination: "./uploads",
             filename: (req, file, callback) => {
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
                 const ext = (0, path_1.extname)(file.originalname);
                 callback(null, `defect-${uniqueSuffix}${ext}`);
             },
         }),
         fileFilter: (req, file, callback) => {
             if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
-                return callback(new common_1.BadRequestException('Разрешены только изображения (jpg, png, gif, webp, heic)'), false);
+                return callback(new common_1.BadRequestException("Разрешены только изображения (jpg, png, gif, webp, heic)"), false);
             }
             callback(null, true);
         },
     })),
-    (0, swagger_1.ApiConsumes)('multipart/form-data'),
-    (0, swagger_1.ApiOperation)({ summary: 'Обновить проверку качества (только складист)' }),
+    (0, swagger_1.ApiConsumes)("multipart/form-data"),
+    (0, swagger_1.ApiOperation)({ summary: "Обновить проверку качества (только складист)" }),
     (0, swagger_1.ApiBody)({
         schema: {
-            type: 'object',
+            type: "object",
             properties: {
-                status: { type: 'string', enum: ['PENDING', 'APPROVED', 'REJECTED'] },
-                notes: { type: 'string' },
-                photo: { type: 'string', format: 'binary' },
+                status: { type: "string", enum: ["PENDING", "APPROVED", "REJECTED"] },
+                notes: { type: "string" },
+                photo: { type: "string", format: "binary" },
             },
         },
     }),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
@@ -170,18 +170,20 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], QualityChecksController.prototype, "update", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)('WAREHOUSE', 'MANAGER'),
-    (0, swagger_1.ApiOperation)({ summary: 'Удалить проверку качества (складист или менеджер)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)(":id"),
+    (0, roles_decorator_1.Roles)("WAREHOUSE", "MANAGER"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Удалить проверку качества (складист или менеджер)",
+    }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], QualityChecksController.prototype, "remove", null);
 exports.QualityChecksController = QualityChecksController = __decorate([
-    (0, swagger_1.ApiTags)('quality-checks'),
+    (0, swagger_1.ApiTags)("quality-checks"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.Controller)('quality-checks'),
+    (0, common_1.Controller)("quality-checks"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [quality_checks_service_1.QualityChecksService,
         upload_service_1.UploadService])

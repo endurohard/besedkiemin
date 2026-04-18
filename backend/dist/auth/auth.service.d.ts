@@ -1,10 +1,10 @@
-import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { User, Role } from '@prisma/client';
+import { JwtService } from "@nestjs/jwt";
+import { UsersService } from "../users/users.service";
+import { User, Role } from "@prisma/client";
 type UserWithRole = User & {
     role: Role | null;
 };
-type UserWithoutPassword = Omit<UserWithRole, 'password'>;
+type UserWithoutPassword = Omit<UserWithRole, "password">;
 interface LoginUser {
     id: string;
     email: string;
@@ -85,6 +85,7 @@ export declare class AuthService {
         sipWsPort: number | null;
         isDepartmentAccount: boolean;
         pin: string | null;
+        pinLookup: string | null;
     }) | null>;
 }
 export {};

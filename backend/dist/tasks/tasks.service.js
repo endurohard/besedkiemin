@@ -28,15 +28,16 @@ let TasksService = TasksService_1 = class TasksService {
     }
     async getMyTasks(userId) {
         const user = await this.prisma.user.findUnique({
-            where: { id: userId }, include: { role: true },
+            where: { id: userId },
+            include: { role: true },
         });
         if (!user) {
-            throw new common_1.NotFoundException('Пользователь не найден');
+            throw new common_1.NotFoundException("Пользователь не найден");
         }
         const roleCode = user.role?.code;
         const stage = roleCode ? constants_1.ROLE_TO_STAGE[roleCode] : undefined;
         if (!stage) {
-            if (roleCode === 'MANAGER') {
+            if (roleCode === "MANAGER") {
                 return [];
             }
             return this.prisma.task.findMany({
@@ -64,8 +65,8 @@ let TasksService = TasksService_1 = class TasksService {
                     },
                 },
                 orderBy: [
-                    { priority: 'desc' },
-                    { createdAt: 'desc' },
+                    { priority: "desc" },
+                    { createdAt: "desc" },
                 ],
             });
         }
@@ -106,11 +107,11 @@ let TasksService = TasksService_1 = class TasksService {
                 },
             },
             orderBy: [
-                { priority: 'desc' },
-                { createdAt: 'desc' },
+                { priority: "desc" },
+                { createdAt: "desc" },
             ],
         });
-        const activeTasks = tasks.filter(task => task.product?.stage === task.stage);
+        const activeTasks = tasks.filter((task) => task.product?.stage === task.stage);
         if (isDeptAccount) {
             const tasksByProduct = new Map();
             for (const task of activeTasks) {
@@ -137,7 +138,7 @@ let TasksService = TasksService_1 = class TasksService {
             include: { role: true },
         });
         if (!user) {
-            throw new common_1.NotFoundException('Пользователь не найден');
+            throw new common_1.NotFoundException("Пользователь не найден");
         }
         const roleCode = user.role?.code;
         const stage = roleCode ? constants_1.ROLE_TO_STAGE[roleCode] : undefined;
@@ -157,7 +158,7 @@ let TasksService = TasksService_1 = class TasksService {
         });
         const tasks = await this.prisma.task.findMany({
             where: {
-                assignedToId: { in: departmentWorkers.map(w => w.id) },
+                assignedToId: { in: departmentWorkers.map((w) => w.id) },
                 stage: stage,
                 status: client_1.TaskStatus.ACCEPTED,
             },
@@ -182,12 +183,9 @@ let TasksService = TasksService_1 = class TasksService {
                     },
                 },
             },
-            orderBy: [
-                { priority: 'desc' },
-                { acceptedAt: 'desc' },
-            ],
+            orderBy: [{ priority: "desc" }, { acceptedAt: "desc" }],
         });
-        const filteredTasks = tasks.filter(task => task.product?.stage === task.stage);
+        const filteredTasks = tasks.filter((task) => task.product?.stage === task.stage);
         const tasksByWorker = new Map();
         for (const task of filteredTasks) {
             const workerId = task.assignedToId;
@@ -196,7 +194,8 @@ let TasksService = TasksService_1 = class TasksService {
             }
             tasksByWorker.get(workerId).push(task);
         }
-        const result = departmentWorkers.map(worker => ({
+        const result = departmentWorkers
+            .map((worker) => ({
             worker: {
                 id: worker.id,
                 firstName: worker.firstName,
@@ -204,7 +203,8 @@ let TasksService = TasksService_1 = class TasksService {
                 isCurrentUser: worker.id === userId,
             },
             tasks: tasksByWorker.get(worker.id) || [],
-        })).filter(item => item.tasks.length > 0);
+        }))
+            .filter((item) => item.tasks.length > 0);
         return result;
     }
     async getDepartmentWorkers(userId) {
@@ -213,7 +213,7 @@ let TasksService = TasksService_1 = class TasksService {
             include: { role: true },
         });
         if (!user) {
-            throw new common_1.NotFoundException('Пользователь не найден');
+            throw new common_1.NotFoundException("Пользователь не найден");
         }
         return this.prisma.user.findMany({
             where: {
@@ -232,16 +232,13 @@ let TasksService = TasksService_1 = class TasksService {
                     },
                 },
             },
-            orderBy: [
-                { lastName: 'asc' },
-                { firstName: 'asc' },
-            ],
+            orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
         });
     }
     async acceptTask(taskId, workerId, requesterId, acceptQuantity) {
         if (acceptQuantity !== undefined && acceptQuantity !== null) {
             if (!Number.isFinite(acceptQuantity) || acceptQuantity <= 0) {
-                throw new common_1.BadRequestException('Количество должно быть положительным числом');
+                throw new common_1.BadRequestException("Количество должно быть положительным числом");
             }
         }
         const worker = await this.prisma.user.findUnique({
@@ -249,7 +246,7 @@ let TasksService = TasksService_1 = class TasksService {
             include: { role: true },
         });
         if (!worker) {
-            throw new common_1.NotFoundException('Работник не найден');
+            throw new common_1.NotFoundException("Работник не найден");
         }
         if (requesterId && requesterId !== workerId) {
             const requester = await this.prisma.user.findUnique({
@@ -257,7 +254,7 @@ let TasksService = TasksService_1 = class TasksService {
                 include: { role: true },
             });
             if (!requester || requester.roleId !== worker.roleId) {
-                throw new common_1.ForbiddenException('Вы не можете назначить задачу работнику из другого отдела');
+                throw new common_1.ForbiddenException("Вы не можете назначить задачу работнику из другого отдела");
             }
         }
         return this.prisma.$transaction(async (tx) => {
@@ -269,17 +266,17 @@ let TasksService = TasksService_1 = class TasksService {
                 },
             });
             if (!task) {
-                throw new common_1.NotFoundException('Задача не найдена');
+                throw new common_1.NotFoundException("Задача не найдена");
             }
             if (task.status !== client_1.TaskStatus.NEW) {
-                throw new common_1.BadRequestException('Задача уже принята или завершена');
+                throw new common_1.BadRequestException("Задача уже принята или завершена");
             }
             if (task.assignedTo?.roleId !== worker.roleId) {
-                throw new common_1.ForbiddenException('Работник не из этого отдела');
+                throw new common_1.ForbiddenException("Работник не из этого отдела");
             }
-            const isDefectTask = task.title?.includes('БРАК');
+            const isDefectTask = task.isDefect || !!task.title?.includes("БРАК");
             if (isDefectTask && task.assignedToId !== workerId) {
-                throw new common_1.ForbiddenException('Задача брака может быть принята только назначенным работником');
+                throw new common_1.ForbiddenException("Задача брака может быть принята только назначенным работником");
             }
             const taskQuantity = task.quantity || task.product?.quantity || 1;
             if (acceptQuantity && acceptQuantity > taskQuantity) {
@@ -345,7 +342,7 @@ let TasksService = TasksService_1 = class TasksService {
                 },
             });
             if (!task) {
-                throw new common_1.NotFoundException('Задача не найдена');
+                throw new common_1.NotFoundException("Задача не найдена");
             }
             if (task.assignedToId !== userId) {
                 const currentUser = await tx.user.findUnique({
@@ -353,15 +350,15 @@ let TasksService = TasksService_1 = class TasksService {
                     include: { role: true },
                 });
                 if (!currentUser || currentUser.roleId !== task.assignedTo?.roleId) {
-                    throw new common_1.ForbiddenException('Вы не можете завершить эту задачу - вы не из этого отдела');
+                    throw new common_1.ForbiddenException("Вы не можете завершить эту задачу - вы не из этого отдела");
                 }
             }
             if (task.status !== client_1.TaskStatus.ACCEPTED) {
-                throw new common_1.BadRequestException('Задача должна быть сначала принята в работу');
+                throw new common_1.BadRequestException("Задача должна быть сначала принята в работу");
             }
             if (quantity !== undefined && quantity !== null) {
                 if (!Number.isFinite(quantity) || quantity <= 0) {
-                    throw new common_1.BadRequestException('Количество должно быть положительным числом');
+                    throw new common_1.BadRequestException("Количество должно быть положительным числом");
                 }
                 if (quantity > task.quantity) {
                     throw new common_1.BadRequestException(`Нельзя завершить ${quantity} шт. В задаче только ${task.quantity} шт.`);
@@ -411,7 +408,7 @@ let TasksService = TasksService_1 = class TasksService {
             },
         });
         if (!task) {
-            throw new common_1.NotFoundException('Задача не найдена');
+            throw new common_1.NotFoundException("Задача не найдена");
         }
         if (task.assignedToId !== userId) {
             const currentUser = await this.prisma.user.findUnique({
@@ -419,11 +416,11 @@ let TasksService = TasksService_1 = class TasksService {
                 include: { role: true },
             });
             if (!currentUser || currentUser.roleId !== task.assignedTo?.roleId) {
-                throw new common_1.ForbiddenException('Вы не можете передать эту задачу - вы не из этого отдела');
+                throw new common_1.ForbiddenException("Вы не можете передать эту задачу - вы не из этого отдела");
             }
         }
         if (task.status !== client_1.TaskStatus.COMPLETED) {
-            throw new common_1.BadRequestException('Задача должна быть сначала завершена');
+            throw new common_1.BadRequestException("Задача должна быть сначала завершена");
         }
         const currentWorkflowStage = await this.prisma.workflowStage.findFirst({
             where: {
@@ -432,7 +429,7 @@ let TasksService = TasksService_1 = class TasksService {
             },
         });
         if (!currentWorkflowStage) {
-            throw new common_1.BadRequestException('Текущая стадия workflow не найдена');
+            throw new common_1.BadRequestException("Текущая стадия workflow не найдена");
         }
         let nextWorkflowStage = await this.prisma.workflowStage.findFirst({
             where: {
@@ -442,16 +439,17 @@ let TasksService = TasksService_1 = class TasksService {
             include: { roles: { include: { role: true } } },
         });
         if (!nextWorkflowStage) {
-            throw new common_1.BadRequestException('Следующая стадия workflow не найдена');
+            throw new common_1.BadRequestException("Следующая стадия workflow не найдена");
         }
         const product = task.product;
         const productType = product.productType;
         const needsSewing = product.upholsteryMaterial
             ? true
-            : (product.requiresSewing !== null
+            : product.requiresSewing !== null
                 ? product.requiresSewing
-                : productType?.requiresSewing ?? false);
-        if (nextWorkflowStage.legacyStage === client_1.ProductionStage.SEWING && !needsSewing) {
+                : (productType?.requiresSewing ?? false);
+        if (nextWorkflowStage.legacyStage === client_1.ProductionStage.SEWING &&
+            !needsSewing) {
             this.logger.log(`Skipping SEWING stage for product ${product.name} - requiresSewing is false`);
             const afterSewingStage = await this.prisma.workflowStage.findFirst({
                 where: {
@@ -492,7 +490,7 @@ let TasksService = TasksService_1 = class TasksService {
             return updated;
         });
         await this.updateOrderStatus(task.product.orderId);
-        const nextStageRoleIds = nextWorkflowStage.roles?.map(r => r.roleId) || [];
+        const nextStageRoleIds = nextWorkflowStage.roles?.map((r) => r.roleId) || [];
         if (nextStageRoleIds.length === 0) {
             this.logger.warn(`No roles assigned to workflow stage ${nextWorkflowStage.name}`);
         }
@@ -511,7 +509,7 @@ let TasksService = TasksService_1 = class TasksService {
             ? stageAssignments[nextWorkflowStage.legacyStage]
             : undefined;
         const filteredWorkers = assignedId
-            ? nextWorkers.filter(w => w.id === assignedId)
+            ? nextWorkers.filter((w) => w.id === assignedId)
             : nextWorkers;
         for (const worker of filteredWorkers) {
             const newTask = await this.prisma.task.create({
@@ -534,11 +532,11 @@ let TasksService = TasksService_1 = class TasksService {
             });
             if (worker.telegramId) {
                 const message = `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
-                    `*Продукт:* ${newTask.product?.name || 'Н/Д'}\n` +
-                    `*Тип:* ${newTask.product?.productType?.name || 'Н/Д'}\n` +
+                    `*Продукт:* ${newTask.product?.name || "Н/Д"}\n` +
+                    `*Тип:* ${newTask.product?.productType?.name || "Н/Д"}\n` +
                     `*Количество:* ${completedQuantity} шт.\n` +
                     `*Стадия:* ${nextWorkflowStage.name}\n` +
-                    `*Заказ:* ${newTask.product?.order?.orderNumber || 'Н/Д'}\n\n` +
+                    `*Заказ:* ${newTask.product?.order?.orderNumber || "Н/Д"}\n\n` +
                     `✅ Откройте раздел "Мои задачи" для выполнения`;
                 try {
                     await this.telegramService.sendMessage(worker.telegramId, message);
@@ -552,14 +550,26 @@ let TasksService = TasksService_1 = class TasksService {
         return updatedTask;
     }
     async rejectTask(taskId, userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage, penaltyAmount) {
-        this.logger.debug('rejectTask called', { taskId, userId, notes, quantity, defectPhotoUrl, requestPhoto, returnToStage });
-        const user = await this.prisma.user.findUnique({
-            where: { id: userId }, include: { role: true },
+        this.logger.debug("rejectTask called", {
+            taskId,
+            userId,
+            notes,
+            quantity,
+            defectPhotoUrl,
+            requestPhoto,
+            returnToStage,
         });
-        this.logger.debug('User found', { email: user?.email, role: user?.role?.code });
-        if (!user || user.role?.code !== 'WAREHOUSE') {
-            this.logger.warn('Attempted reject by non-warehouse user', { userId });
-            throw new common_1.ForbiddenException('Только складист может браковать товар');
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            include: { role: true },
+        });
+        this.logger.debug("User found", {
+            email: user?.email,
+            role: user?.role?.code,
+        });
+        if (!user || user.role?.code !== "WAREHOUSE") {
+            this.logger.warn("Attempted reject by non-warehouse user", { userId });
+            throw new common_1.ForbiddenException("Только складист может браковать товар");
         }
         const task = await this.prisma.task.findUnique({
             where: { id: taskId },
@@ -568,27 +578,34 @@ let TasksService = TasksService_1 = class TasksService {
                     include: {
                         productType: true,
                         order: true,
-                    }
-                }
+                    },
+                },
             },
         });
-        this.logger.debug('Task found', { title: task?.title, status: task?.status, stage: task?.stage });
+        this.logger.debug("Task found", {
+            title: task?.title,
+            status: task?.status,
+            stage: task?.stage,
+        });
         if (!task) {
-            this.logger.warn('Task not found', { taskId });
-            throw new common_1.NotFoundException('Задача не найдена');
+            this.logger.warn("Task not found", { taskId });
+            throw new common_1.NotFoundException("Задача не найдена");
         }
         if (task.assignedToId !== userId && !(0, constants_1.isDepartmentAccount)(user)) {
-            this.logger.warn('Task not assigned to user', { taskId, userId });
-            throw new common_1.ForbiddenException('Вы не можете забраковать эту задачу');
+            this.logger.warn("Task not assigned to user", { taskId, userId });
+            throw new common_1.ForbiddenException("Вы не можете забраковать эту задачу");
         }
         if (task.stage !== client_1.ProductionStage.QUALITY_CHECK) {
-            this.logger.warn('Task not at QUALITY_CHECK stage', { taskId, stage: task.stage });
-            throw new common_1.BadRequestException('Браковать можно только на стадии проверки качества');
+            this.logger.warn("Task not at QUALITY_CHECK stage", {
+                taskId,
+                stage: task.stage,
+            });
+            throw new common_1.BadRequestException("Браковать можно только на стадии проверки качества");
         }
-        this.logger.debug('All validations passed, proceeding with rejection');
+        this.logger.debug("All validations passed, proceeding with rejection");
         if (quantity !== undefined && quantity !== null) {
             if (!Number.isFinite(quantity) || quantity <= 0) {
-                throw new common_1.BadRequestException('Количество должно быть положительным числом');
+                throw new common_1.BadRequestException("Количество должно быть положительным числом");
             }
         }
         const availableQuantity = task.quantity - task.quantityProcessed;
@@ -609,7 +626,8 @@ let TasksService = TasksService_1 = class TasksService {
             },
         });
         let returnStage;
-        if (returnToStage && Object.values(client_1.ProductionStage).includes(returnToStage)) {
+        if (returnToStage &&
+            Object.values(client_1.ProductionStage).includes(returnToStage)) {
             returnStage = returnToStage;
         }
         else {
@@ -620,35 +638,42 @@ let TasksService = TasksService_1 = class TasksService {
             const productTypeForSewing = productForSewing.productType;
             const needsSewing = productForSewing.upholsteryMaterial
                 ? true
-                : (productForSewing.requiresSewing !== null
+                : productForSewing.requiresSewing !== null
                     ? productForSewing.requiresSewing
-                    : productTypeForSewing?.requiresSewing ?? false);
+                    : (productTypeForSewing?.requiresSewing ?? false);
             let previousStage = currentWorkflowStage
                 ? await this.prisma.workflowStage.findFirst({
-                    where: { order: { lt: currentWorkflowStage.order }, isActive: true },
-                    orderBy: { order: 'desc' },
+                    where: {
+                        order: { lt: currentWorkflowStage.order },
+                        isActive: true,
+                    },
+                    orderBy: { order: "desc" },
                 })
                 : null;
-            if (previousStage?.legacyStage === client_1.ProductionStage.SEWING && !needsSewing) {
+            if (previousStage?.legacyStage === client_1.ProductionStage.SEWING &&
+                !needsSewing) {
                 this.logger.log(`Skipping SEWING stage for return (product does not require sewing)`);
                 previousStage = await this.prisma.workflowStage.findFirst({
                     where: { order: { lt: previousStage.order }, isActive: true },
-                    orderBy: { order: 'desc' },
+                    orderBy: { order: "desc" },
                 });
             }
-            returnStage = previousStage?.legacyStage || client_1.ProductionStage.PAINTING;
+            returnStage =
+                previousStage?.legacyStage ||
+                    client_1.ProductionStage.PAINTING;
         }
         const currentProduct = await this.prisma.product.findUnique({
             where: { id: task.productId },
             select: { stage: true },
         });
-        if (!currentProduct || currentProduct.stage !== client_1.ProductionStage.QUALITY_CHECK) {
-            this.logger.warn('Product stage changed during reject processing', {
+        if (!currentProduct ||
+            currentProduct.stage !== client_1.ProductionStage.QUALITY_CHECK) {
+            this.logger.warn("Product stage changed during reject processing", {
                 taskId,
                 expectedStage: client_1.ProductionStage.QUALITY_CHECK,
                 actualStage: currentProduct?.stage,
             });
-            throw new common_1.BadRequestException('Продукт уже перемещён на другую стадию. Повторите операцию.');
+            throw new common_1.BadRequestException("Продукт уже перемещён на другую стадию. Повторите операцию.");
         }
         let rejectedProductId = task.productId;
         if (rejectQuantity < task.product.quantity) {
@@ -681,7 +706,7 @@ let TasksService = TasksService_1 = class TasksService {
             data: {
                 productId: rejectedProductId,
                 checkedById: userId,
-                status: 'REJECTED',
+                status: "REJECTED",
                 notes,
                 checkedAt: new Date(),
             },
@@ -696,7 +721,7 @@ let TasksService = TasksService_1 = class TasksService {
                 this.logger.warn(`Failed to request photo from warehouse ${user.email}`);
             }
         }
-        const targetStageName = constants_1.STAGE_TO_NAME[returnStage] || 'Покраска';
+        const targetStageName = constants_1.STAGE_TO_NAME[returnStage] || "Покраска";
         const originalTask = await this.prisma.task.findFirst({
             where: {
                 productId: task.productId,
@@ -707,7 +732,7 @@ let TasksService = TasksService_1 = class TasksService {
                 assignedTo: true,
             },
             orderBy: {
-                passedAt: 'desc',
+                passedAt: "desc",
             },
         });
         if (originalTask && originalTask.assignedTo) {
@@ -721,14 +746,15 @@ let TasksService = TasksService_1 = class TasksService {
                     assignedToId: originalWorker.id,
                     quantity: rejectQuantity,
                     status: client_1.TaskStatus.NEW,
+                    isDefect: true,
                 },
             });
             this.logger.log(`Defect task ${defectTask.id} created for original worker ${originalWorker.email} (${originalWorker.firstName} ${originalWorker.lastName})`);
             if (originalWorker.telegramId) {
                 const message = `🚨 *БРАК - ТРЕБУЕТСЯ ДОРАБОТКА*\n\n` +
                     `*Продукт:* ${task.product.name}\n` +
-                    `*Тип:* ${task.product.productType?.name || 'Н/Д'}\n` +
-                    `*Заказ:* ${task.product.order?.orderNumber || 'Н/Д'}\n\n` +
+                    `*Тип:* ${task.product.productType?.name || "Н/Д"}\n` +
+                    `*Заказ:* ${task.product.order?.orderNumber || "Н/Д"}\n\n` +
                     `*Причина брака:*\n${notes}\n\n` +
                     `*Забраковал:* ${user.firstName} ${user.lastName}\n` +
                     `*Количество:* ${rejectQuantity} шт.\n` +
@@ -758,6 +784,7 @@ let TasksService = TasksService_1 = class TasksService {
                                 assignedToId: worker.id,
                                 quantity: rejectQuantity,
                                 status: client_1.TaskStatus.NEW,
+                                isDefect: true,
                             },
                         });
                     }
@@ -778,7 +805,7 @@ let TasksService = TasksService_1 = class TasksService {
                         productId: task.productId,
                         completedAt: { not: null },
                     },
-                    orderBy: { completedAt: 'desc' },
+                    orderBy: { completedAt: "desc" },
                     select: { userId: true },
                 });
                 const penaltyUserId = lastHistory?.userId;
@@ -787,34 +814,40 @@ let TasksService = TasksService_1 = class TasksService {
                         data: {
                             userId: penaltyUserId,
                             amount: penaltyAmount,
-                            reason: notes || 'Брак на контроле качества',
+                            reason: notes || "Брак на контроле качества",
                             productId: task.productId,
                             createdById: userId,
                         },
                     });
-                    const checkerName = user ? `${user.lastName || ''} ${user.firstName || ''}`.trim() : 'Склад';
+                    const checkerName = user
+                        ? `${user.lastName || ""} ${user.firstName || ""}`.trim()
+                        : "Склад";
                     await this.telegramService.sendPenaltyNotification({
                         userId: penaltyUserId,
                         amount: penaltyAmount,
-                        reason: notes || 'Брак на контроле качества',
+                        reason: notes || "Брак на контроле качества",
                         createdByName: checkerName,
                     });
-                    this.logger.log('Penalty created during task rejection', { penaltyUserId, penaltyAmount });
+                    this.logger.log("Penalty created during task rejection", {
+                        penaltyUserId,
+                        penaltyAmount,
+                    });
                 }
             }
             catch (error) {
-                this.logger.error('Failed to create penalty during rejection', error);
+                this.logger.error("Failed to create penalty during rejection", error);
             }
         }
-        this.logger.log('Task rejected successfully', { taskId });
+        this.logger.log("Task rejected successfully", { taskId });
         return updatedTask;
     }
     async approveTask(taskId, userId, quantity) {
         const user = await this.prisma.user.findUnique({
-            where: { id: userId }, include: { role: true },
+            where: { id: userId },
+            include: { role: true },
         });
-        if (!user || user.role?.code !== 'WAREHOUSE') {
-            throw new common_1.ForbiddenException('Только складист может принять товар');
+        if (!user || user.role?.code !== "WAREHOUSE") {
+            throw new common_1.ForbiddenException("Только складист может принять товар");
         }
         const task = await this.prisma.task.findUnique({
             where: { id: taskId },
@@ -823,26 +856,26 @@ let TasksService = TasksService_1 = class TasksService {
                     include: {
                         productType: true,
                         order: true,
-                    }
-                }
+                    },
+                },
             },
         });
         if (!task) {
-            throw new common_1.NotFoundException('Задача не найдена');
+            throw new common_1.NotFoundException("Задача не найдена");
         }
         if (task.status !== client_1.TaskStatus.NEW && task.status !== client_1.TaskStatus.PASSED) {
             throw new common_1.BadRequestException(`Нельзя принять задачу в статусе "${task.status}"`);
         }
         if (task.assignedToId !== userId && !(0, constants_1.isDepartmentAccount)(user)) {
-            throw new common_1.ForbiddenException('Вы не можете принять эту задачу');
+            throw new common_1.ForbiddenException("Вы не можете принять эту задачу");
         }
         if (task.stage !== client_1.ProductionStage.QUALITY_CHECK) {
-            throw new common_1.BadRequestException('Принять можно только на стадии проверки качества');
+            throw new common_1.BadRequestException("Принять можно только на стадии проверки качества");
         }
         const workflowStages = await this.prisma.workflowStage.findMany({
             where: { isActive: true, legacyStage: { not: null } },
         });
-        const workflowStageMap = new Map(workflowStages.map(ws => [ws.legacyStage, ws]));
+        const workflowStageMap = new Map(workflowStages.map((ws) => [ws.legacyStage, ws]));
         const updatedTask = await this.prisma.$transaction(async (tx) => {
             const updated = await tx.task.update({
                 where: { id: taskId },
@@ -864,7 +897,7 @@ let TasksService = TasksService_1 = class TasksService {
                 data: {
                     productId: task.productId,
                     checkedById: userId,
-                    status: 'APPROVED',
+                    status: "APPROVED",
                     checkedAt: new Date(),
                 },
             });
@@ -878,10 +911,10 @@ let TasksService = TasksService_1 = class TasksService {
                 include: { assignedTo: true },
             });
             const existingLogs = await tx.workLog.findMany({
-                where: { taskId: { in: passedTasks.map(t => t.id) } },
+                where: { taskId: { in: passedTasks.map((t) => t.id) } },
                 select: { taskId: true },
             });
-            const existingLogTaskIds = new Set(existingLogs.map(l => l.taskId));
+            const existingLogTaskIds = new Set(existingLogs.map((l) => l.taskId));
             for (const passedTask of passedTasks) {
                 if (!existingLogTaskIds.has(passedTask.id)) {
                     const ws = workflowStageMap.get(passedTask.stage);
@@ -935,10 +968,10 @@ let TasksService = TasksService_1 = class TasksService {
         const hasStarted = products.some((p) => p.stage !== client_1.ProductionStage.PENDING);
         let newStatus = null;
         if (allCompleted && products.length > 0) {
-            newStatus = 'COMPLETED';
+            newStatus = "COMPLETED";
         }
         else if (hasStarted) {
-            newStatus = 'IN_PRODUCTION';
+            newStatus = "IN_PRODUCTION";
         }
         if (newStatus) {
             await db.order.update({
@@ -950,7 +983,10 @@ let TasksService = TasksService_1 = class TasksService {
     async getDefectsWithPhotos(userId) {
         let user = null;
         if (userId) {
-            user = await this.prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
+            user = (await this.prisma.user.findUnique({
+                where: { id: userId },
+                include: { role: true },
+            }));
         }
         const rejectedTasks = await this.prisma.task.findMany({
             where: {
@@ -963,13 +999,13 @@ let TasksService = TasksService_1 = class TasksService {
                         order: true,
                         qualityChecks: {
                             where: {
-                                status: 'REJECTED',
+                                status: "REJECTED",
                             },
                             include: {
                                 checkedBy: true,
                             },
                             orderBy: {
-                                checkedAt: 'desc',
+                                checkedAt: "desc",
                             },
                             take: 1,
                         },
@@ -978,12 +1014,12 @@ let TasksService = TasksService_1 = class TasksService {
                 assignedTo: true,
             },
             orderBy: {
-                rejectedAt: 'desc',
+                rejectedAt: "desc",
             },
         });
         const defects = rejectedTasks
-            .filter(task => task.product.qualityChecks.length > 0)
-            .map(task => {
+            .filter((task) => task.product.qualityChecks.length > 0)
+            .map((task) => {
             const qualityCheck = task.product.qualityChecks[0];
             return {
                 ...qualityCheck,
@@ -995,32 +1031,37 @@ let TasksService = TasksService_1 = class TasksService {
             };
         });
         let filteredDefects = defects.filter((d) => d.id);
-        if (user && (user.role?.code === 'OWNER' || user.role?.code === 'SUPER_ADMIN' || user.role?.code === 'MANAGER')) {
+        if (user &&
+            (user.role?.code === "OWNER" ||
+                user.role?.code === "SUPER_ADMIN" ||
+                user.role?.code === "MANAGER")) {
             return filteredDefects;
         }
         if (user) {
-            const userStage = (user.role?.code ? constants_1.ROLE_TO_STAGE[user.role.code] : null) || client_1.ProductionStage.PENDING;
+            const userStage = (user.role?.code ? constants_1.ROLE_TO_STAGE[user.role.code] : null) ||
+                client_1.ProductionStage.PENDING;
             filteredDefects = filteredDefects.filter((d) => d.product?.stage === userStage);
         }
         return filteredDefects;
     }
     async acceptDefectRework(productId, userId) {
         const user = await this.prisma.user.findUnique({
-            where: { id: userId }, include: { role: true },
+            where: { id: userId },
+            include: { role: true },
         });
         if (!user) {
-            throw new common_1.ForbiddenException('Пользователь не найден');
+            throw new common_1.ForbiddenException("Пользователь не найден");
         }
         const roleCode = user.role?.code;
         let userStage;
-        if (roleCode === 'MANAGER') {
+        if (roleCode === "MANAGER") {
             userStage = client_1.ProductionStage.PENDING;
         }
         else if (roleCode && constants_1.ROLE_TO_STAGE[roleCode]) {
             userStage = constants_1.ROLE_TO_STAGE[roleCode];
         }
         else {
-            throw new common_1.ForbiddenException('Ваша роль не может принимать браки на доработку');
+            throw new common_1.ForbiddenException("Ваша роль не может принимать браки на доработку");
         }
         const stageName = (constants_1.STAGE_TO_NAME[userStage] || userStage).toUpperCase();
         const existingTask = await this.prisma.task.findFirst({
@@ -1034,7 +1075,7 @@ let TasksService = TasksService_1 = class TasksService {
             },
         });
         if (existingTask) {
-            throw new common_1.BadRequestException('Вы уже приняли этот брак на доработку');
+            throw new common_1.BadRequestException("Вы уже приняли этот брак на доработку");
         }
         const rejectedTask = await this.prisma.task.findFirst({
             where: {
@@ -1050,11 +1091,11 @@ let TasksService = TasksService_1 = class TasksService {
                 },
             },
             orderBy: {
-                rejectedAt: 'desc',
+                rejectedAt: "desc",
             },
         });
         if (!rejectedTask) {
-            throw new common_1.NotFoundException('Забракованная задача не найдена');
+            throw new common_1.NotFoundException("Забракованная задача не найдена");
         }
         const newTask = await this.prisma.task.create({
             data: {
@@ -1066,6 +1107,7 @@ let TasksService = TasksService_1 = class TasksService {
                 quantity: rejectedTask.quantity,
                 status: client_1.TaskStatus.ACCEPTED,
                 acceptedAt: new Date(),
+                isDefect: true,
             },
             include: {
                 product: {
@@ -1081,17 +1123,20 @@ let TasksService = TasksService_1 = class TasksService {
     }
     async getUnacceptedDefectsCount(userId) {
         const user = await this.prisma.user.findUnique({
-            where: { id: userId }, include: { role: true },
+            where: { id: userId },
+            include: { role: true },
         });
         if (!user) {
             return { count: 0 };
         }
         const userRoleCode = user.role?.code;
         let userStage = null;
-        if (userRoleCode === 'MANAGER') {
+        if (userRoleCode === "MANAGER") {
             userStage = client_1.ProductionStage.PENDING;
         }
-        else if (userRoleCode && constants_1.ROLE_TO_STAGE[userRoleCode] && userRoleCode !== 'WAREHOUSE') {
+        else if (userRoleCode &&
+            constants_1.ROLE_TO_STAGE[userRoleCode] &&
+            userRoleCode !== "WAREHOUSE") {
             userStage = constants_1.ROLE_TO_STAGE[userRoleCode];
         }
         else {
@@ -1110,12 +1155,12 @@ let TasksService = TasksService_1 = class TasksService {
             select: {
                 productId: true,
             },
-            distinct: ['productId'],
+            distinct: ["productId"],
         });
         if (rejectedTasks.length === 0) {
             return { count: 0 };
         }
-        const rejectedProductIds = rejectedTasks.map(t => t.productId);
+        const rejectedProductIds = rejectedTasks.map((t) => t.productId);
         const userActiveTasks = await this.prisma.task.findMany({
             where: {
                 productId: { in: rejectedProductIds },
@@ -1127,8 +1172,8 @@ let TasksService = TasksService_1 = class TasksService {
                 productId: true,
             },
         });
-        const acceptedProductIds = new Set(userActiveTasks.map(t => t.productId));
-        const unacceptedCount = rejectedProductIds.filter(id => !acceptedProductIds.has(id)).length;
+        const acceptedProductIds = new Set(userActiveTasks.map((t) => t.productId));
+        const unacceptedCount = rejectedProductIds.filter((id) => !acceptedProductIds.has(id)).length;
         return { count: unacceptedCount };
     }
     async updateTaskQuantity(taskId, userId, quantity) {
@@ -1137,13 +1182,13 @@ let TasksService = TasksService_1 = class TasksService {
             include: { assignedTo: true, product: true },
         });
         if (!task) {
-            throw new common_1.NotFoundException('Задача не найдена');
+            throw new common_1.NotFoundException("Задача не найдена");
         }
         if (quantity < 1) {
-            throw new common_1.BadRequestException('Количество должно быть не менее 1');
+            throw new common_1.BadRequestException("Количество должно быть не менее 1");
         }
         if (quantity > (task.product?.quantity || 0)) {
-            throw new common_1.BadRequestException('Количество не может превышать количество в продукте');
+            throw new common_1.BadRequestException("Количество не может превышать количество в продукте");
         }
         const updated = await this.prisma.task.update({
             where: { id: taskId },

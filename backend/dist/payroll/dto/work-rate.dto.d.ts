@@ -1,4 +1,4 @@
-import { ProductionStage } from '@prisma/client';
+import { ProductionStage } from "@prisma/client";
 export declare class CreateWorkRateDto {
     productTypeId: string;
     nomenclatureId?: string;

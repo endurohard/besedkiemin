@@ -17,32 +17,36 @@ class UpdateUserDto {
 }
 exports.UpdateUserDto = UpdateUserDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'user@example.com', required: false }),
+    (0, swagger_1.ApiProperty)({ example: "user@example.com", required: false }),
     (0, class_validator_1.IsEmail)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'newpassword123', required: false }),
+    (0, swagger_1.ApiProperty)({ example: "newpassword123", required: false }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.MinLength)(6),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "password", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Иван', required: false }),
+    (0, swagger_1.ApiProperty)({ example: "Иван", required: false }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "firstName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Иванов', required: false }),
+    (0, swagger_1.ApiProperty)({ example: "Иванов", required: false }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "lastName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'role-manager', required: false, description: 'ID роли' }),
+    (0, swagger_1.ApiProperty)({
+        example: "role-manager",
+        required: false,
+        description: "ID роли",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
@@ -54,31 +58,47 @@ __decorate([
     __metadata("design:type", Boolean)
 ], UpdateUserDto.prototype, "isActive", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '123456789', required: false }),
+    (0, swagger_1.ApiProperty)({ example: "123456789", required: false }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "telegramId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'sip.example.com', required: false, description: 'SIP сервер (для менеджеров)' }),
+    (0, swagger_1.ApiProperty)({
+        example: "sip.example.com",
+        required: false,
+        description: "SIP сервер (для менеджеров)",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "sipServer", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'user123', required: false, description: 'Логин SIP (для менеджеров)' }),
+    (0, swagger_1.ApiProperty)({
+        example: "user123",
+        required: false,
+        description: "Логин SIP (для менеджеров)",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "sipUser", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'sippassword', required: false, description: 'Пароль SIP (для менеджеров)' }),
+    (0, swagger_1.ApiProperty)({
+        example: "sippassword",
+        required: false,
+        description: "Пароль SIP (для менеджеров)",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "sipPassword", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 5060, required: false, description: 'Порт SIP (по умолчанию 5060)' }),
+    (0, swagger_1.ApiProperty)({
+        example: 5060,
+        required: false,
+        description: "Порт SIP (по умолчанию 5060)",
+    }),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.Min)(1),
@@ -86,13 +106,21 @@ __decorate([
     __metadata("design:type", Number)
 ], UpdateUserDto.prototype, "sipPort", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ enum: client_1.PaymentType, required: false, description: 'Тип оплаты: PIECE_RATE (сдельная) или SALARY (оклад)' }),
+    (0, swagger_1.ApiProperty)({
+        enum: client_1.PaymentType,
+        required: false,
+        description: "Тип оплаты: PIECE_RATE (сдельная) или SALARY (оклад)",
+    }),
     (0, class_validator_1.IsEnum)(client_1.PaymentType),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "paymentType", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 50000, required: false, description: 'Оклад в рублях/мес (только для SALARY)' }),
+    (0, swagger_1.ApiProperty)({
+        example: 50000,
+        required: false,
+        description: "Оклад в рублях/мес (только для SALARY)",
+    }),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.Min)(0),

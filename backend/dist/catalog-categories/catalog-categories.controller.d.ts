@@ -1,6 +1,6 @@
-import { CatalogCategoriesService } from './catalog-categories.service';
-import { CreateCatalogCategoryDto } from './dto/create-catalog-category.dto';
-import { UpdateCatalogCategoryDto } from './dto/update-catalog-category.dto';
+import { CatalogCategoriesService } from "./catalog-categories.service";
+import { CreateCatalogCategoryDto } from "./dto/create-catalog-category.dto";
+import { UpdateCatalogCategoryDto } from "./dto/update-catalog-category.dto";
 export declare class CatalogCategoriesController {
     private readonly categoriesService;
     constructor(categoriesService: CatalogCategoriesService);

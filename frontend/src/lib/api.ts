@@ -488,6 +488,16 @@ export const tasksApi = {
     const response = await api.get<{ count: number }>('/tasks/defects/unaccepted/count');
     return response.data;
   },
+
+  getDefects: async <T = unknown>(): Promise<T> => {
+    const response = await api.get<T>('/tasks/defects');
+    return response.data;
+  },
+
+  acceptDefect: async <T = unknown>(productId: string): Promise<T> => {
+    const response = await api.post<T>(`/tasks/defects/${productId}/accept`);
+    return response.data;
+  },
 };
 
 // Analytics API (только для OWNER)
@@ -693,6 +703,11 @@ export const companySettingsApi = {
 export const telegramApi = {
   getLink: async (): Promise<{ link: string; botUsername: string }> => {
     const response = await api.get('/telegram/link');
+    return response.data;
+  },
+
+  unlink: async (): Promise<{ success: boolean }> => {
+    const response = await api.post<{ success: boolean }>('/telegram/unlink');
     return response.data;
   },
 };

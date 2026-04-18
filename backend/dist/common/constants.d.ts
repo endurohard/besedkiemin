@@ -1,4 +1,4 @@
-import { ProductionStage } from '@prisma/client';
+import { ProductionStage } from "@prisma/client";
 export declare const PAGINATION: {
     readonly DEFAULT_PAGE: 1;
     readonly DEFAULT_PAGE_SIZE: 50;

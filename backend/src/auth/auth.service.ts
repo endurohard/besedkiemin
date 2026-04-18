@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { User, Role } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import { Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { UsersService } from "../users/users.service";
+import { User, Role } from "@prisma/client";
+import * as bcrypt from "bcrypt";
 
 type UserWithRole = User & { role: Role | null };
-type UserWithoutPassword = Omit<UserWithRole, 'password'>;
+type UserWithoutPassword = Omit<UserWithRole, "password">;
 
 // Минимальный интерфейс для login
 interface LoginUser {
@@ -29,10 +29,13 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<UserWithoutPassword | null> {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<UserWithoutPassword | null> {
     const user = await this.usersService.findByEmailWithRole(email);
 
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && (await bcrypt.compare(password, user.password))) {
       const { password: _, ...result } = user;
       return result;
     }

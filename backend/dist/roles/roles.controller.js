@@ -45,53 +45,53 @@ let RolesController = class RolesController {
 exports.RolesController = RolesController;
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], RolesController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)('permissions'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, common_1.Get)("permissions"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], RolesController.prototype, "getAllPermissions", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], RolesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.CreateRoleDto]),
     __metadata("design:returntype", void 0)
 ], RolesController.prototype, "create", null);
 __decorate([
-    (0, common_1.Put)(':id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Put)(":id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, dto_1.UpdateRoleDto]),
     __metadata("design:returntype", void 0)
 ], RolesController.prototype, "update", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)(":id"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], RolesController.prototype, "remove", null);
 exports.RolesController = RolesController = __decorate([
-    (0, common_1.Controller)('roles'),
+    (0, common_1.Controller)("roles"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [roles_service_1.RolesService])
 ], RolesController);

@@ -21,11 +21,11 @@ const getStatusLabel = (status: OrderStatus): string => {
 
 const getStatusColor = (status: OrderStatus): string => {
   switch (status) {
-    case OrderStatus.NEW: return 'bg-blue-100 text-blue-800';
+    case OrderStatus.NEW: return 'bg-primary/20 text-blue-800';
     case OrderStatus.IN_PRODUCTION: return 'bg-yellow-100 text-yellow-800';
     case OrderStatus.COMPLETED: return 'bg-green-100 text-green-800';
     case OrderStatus.CANCELLED: return 'bg-red-100 text-red-800';
-    default: return 'bg-gray-100 text-gray-800';
+    default: return 'bg-muted text-gray-800';
   }
 };
 
@@ -82,12 +82,12 @@ export const CustomerCallCard = ({ phoneNumber }: CustomerCallCardProps) => {
         {/* Информация о клиенте */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
-            <Phone size={16} className="text-gray-500" />
+            <Phone size={16} className="text-muted-foreground" />
             <span className="font-mono">{phoneNumber}</span>
           </div>
           {isExistingCustomer && orders[0]?.customerAddress && (
             <div className="flex items-center gap-2 text-sm">
-              <MapPin size={16} className="text-gray-500" />
+              <MapPin size={16} className="text-muted-foreground" />
               <span>{orders[0].customerAddress}</span>
             </div>
           )}
@@ -95,11 +95,11 @@ export const CustomerCallCard = ({ phoneNumber }: CustomerCallCardProps) => {
 
         {/* Новый клиент */}
         {isNewCustomer && (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="p-3 bg-primary/10 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-900 font-medium">
               Это первый звонок от этого номера
             </p>
-            <p className="text-xs text-blue-700 mt-1">
+            <p className="text-xs text-primary mt-1">
               Создайте заказ после завершения разговора
             </p>
           </div>
@@ -116,7 +116,7 @@ export const CustomerCallCard = ({ phoneNumber }: CustomerCallCardProps) => {
               {currentOrders.map((order: Order) => (
                 <div
                   key={order.id}
-                  className="p-3 border rounded-md bg-white hover:bg-gray-50 transition-colors"
+                  className="p-3 border rounded-md bg-white hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-mono text-sm font-semibold">
@@ -134,9 +134,9 @@ export const CustomerCallCard = ({ phoneNumber }: CustomerCallCardProps) => {
                     </div>
                   )}
                   {order.description && (
-                    <p className="text-xs text-gray-600 line-clamp-2">{order.description}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{order.description}</p>
                   )}
-                  <div className="flex items-center gap-1 text-xs text-gray-500 mt-2">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
                     <Clock size={12} />
                     {new Date(order.createdAt).toLocaleDateString('ru-RU')}
                   </div>
@@ -157,7 +157,7 @@ export const CustomerCallCard = ({ phoneNumber }: CustomerCallCardProps) => {
               {completedOrders.slice(0, 5).map((order: Order) => (
                 <div
                   key={order.id}
-                  className="p-2 border rounded-md bg-gray-50 text-xs"
+                  className="p-2 border rounded-md bg-muted/50 text-xs"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-semibold">#{order.orderNumber}</span>
@@ -166,9 +166,9 @@ export const CustomerCallCard = ({ phoneNumber }: CustomerCallCardProps) => {
                     </span>
                   </div>
                   {order.description && (
-                    <p className="text-gray-600 mt-1 line-clamp-1">{order.description}</p>
+                    <p className="text-muted-foreground mt-1 line-clamp-1">{order.description}</p>
                   )}
-                  <div className="text-gray-500 mt-1">
+                  <div className="text-muted-foreground mt-1">
                     {new Date(order.createdAt).toLocaleDateString('ru-RU')}
                   </div>
                 </div>
@@ -181,13 +181,13 @@ export const CustomerCallCard = ({ phoneNumber }: CustomerCallCardProps) => {
         {isExistingCustomer && (
           <div className="pt-3 border-t">
             <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="p-2 bg-blue-50 rounded">
-                <div className="text-2xl font-bold text-blue-600">{orders.length}</div>
-                <div className="text-xs text-gray-600">Всего заказов</div>
+              <div className="p-2 bg-primary/10 rounded">
+                <div className="text-2xl font-bold text-primary">{orders.length}</div>
+                <div className="text-xs text-muted-foreground">Всего заказов</div>
               </div>
               <div className="p-2 bg-green-50 rounded">
                 <div className="text-2xl font-bold text-green-600">{completedOrders.length}</div>
-                <div className="text-xs text-gray-600">Завершено</div>
+                <div className="text-xs text-muted-foreground">Завершено</div>
               </div>
             </div>
           </div>

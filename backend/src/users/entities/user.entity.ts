@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Role, PaymentType } from '@prisma/client';
+import { ApiProperty } from "@nestjs/swagger";
+import { Role, PaymentType } from "@prisma/client";
 
 export class UserEntity {
   @ApiProperty()
@@ -51,7 +51,7 @@ export class UserEntity {
   @ApiProperty({ enum: PaymentType, default: PaymentType.PIECE_RATE })
   paymentType: PaymentType;
 
-  @ApiProperty({ required: false, description: 'Оклад руб/мес (для SALARY)' })
+  @ApiProperty({ required: false, description: "Оклад руб/мес (для SALARY)" })
   monthlySalary?: number | null;
 
   constructor(partial: Partial<UserEntity>) {

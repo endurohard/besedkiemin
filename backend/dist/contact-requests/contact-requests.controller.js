@@ -29,7 +29,7 @@ let ContactRequestsController = class ContactRequestsController {
         return this.contactRequestsService.create(createDto);
     }
     findAll(onlyUnprocessed) {
-        return this.contactRequestsService.findAll(onlyUnprocessed === 'true');
+        return this.contactRequestsService.findAll(onlyUnprocessed === "true");
     }
     findOne(id) {
         return this.contactRequestsService.findOne(id);
@@ -44,7 +44,7 @@ let ContactRequestsController = class ContactRequestsController {
 exports.ContactRequestsController = ContactRequestsController;
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать запрос обратной связи (публичный доступ)' }),
+    (0, swagger_1.ApiOperation)({ summary: "Создать запрос обратной связи (публичный доступ)" }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_contact_request_dto_1.CreateContactRequestDto]),
@@ -53,51 +53,51 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все запросы (только OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Query)('onlyUnprocessed')),
+    (0, swagger_1.ApiOperation)({ summary: "Получить все запросы (только OWNER/MANAGER)" }),
+    __param(0, (0, common_1.Query)("onlyUnprocessed")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ContactRequestsController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':id'),
+    (0, common_1.Get)(":id"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить запрос по ID (только OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiOperation)({ summary: "Получить запрос по ID (только OWNER/MANAGER)" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ContactRequestsController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
+    (0, common_1.Patch)(":id"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Обновить запрос (только OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiOperation)({ summary: "Обновить запрос (только OWNER/MANAGER)" }),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_contact_request_dto_1.UpdateContactRequestDto]),
     __metadata("design:returntype", void 0)
 ], ContactRequestsController.prototype, "update", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
+    (0, common_1.Delete)(":id"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER'),
+    (0, roles_decorator_1.Roles)("OWNER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Удалить запрос (только OWNER)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiOperation)({ summary: "Удалить запрос (только OWNER)" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ContactRequestsController.prototype, "remove", null);
 exports.ContactRequestsController = ContactRequestsController = __decorate([
-    (0, swagger_1.ApiTags)('Contact Requests'),
-    (0, common_1.Controller)('contact-requests'),
+    (0, swagger_1.ApiTags)("Contact Requests"),
+    (0, common_1.Controller)("contact-requests"),
     __metadata("design:paramtypes", [contact_requests_service_1.ContactRequestsService])
 ], ContactRequestsController);
 //# sourceMappingURL=contact-requests.controller.js.map

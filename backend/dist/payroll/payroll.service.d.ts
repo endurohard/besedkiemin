@@ -1,7 +1,7 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { TelegramService } from '../telegram/telegram.service';
-import { PayrollStatus, ProductionStage } from '@prisma/client';
-import { CreateWorkRateDto, UpdateWorkRateDto, CreatePenaltyDto, UpdatePenaltyDto, CalculatePayrollDto, CreateManagerCommissionDto, UpdateManagerCommissionDto } from './dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { TelegramService } from "../telegram/telegram.service";
+import { PayrollStatus, ProductionStage } from "@prisma/client";
+import { CreateWorkRateDto, UpdateWorkRateDto, CreatePenaltyDto, UpdatePenaltyDto, CalculatePayrollDto, CreateManagerCommissionDto, UpdateManagerCommissionDto } from "./dto";
 export declare class PayrollService {
     private prisma;
     private telegramService;
@@ -371,6 +371,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         };
         product: {
             description: string | null;
@@ -411,6 +412,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         };
     } & {
         id: string;
@@ -521,6 +523,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         } | null;
     } & {
         roleId: string | null;
@@ -567,6 +570,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         } | null;
     } & {
         roleId: string | null;
@@ -613,6 +617,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         } | null;
     } & {
         roleId: string | null;
@@ -817,6 +822,7 @@ export declare class PayrollService {
                 rejectedAt: Date | null;
                 notes: string | null;
                 defectPhotos: string[];
+                isDefect: boolean;
                 quantityProcessed: number;
                 productId: string;
                 assignedToId: string;
@@ -982,6 +988,7 @@ export declare class PayrollService {
                 rejectedAt: Date | null;
                 notes: string | null;
                 defectPhotos: string[];
+                isDefect: boolean;
                 quantityProcessed: number;
                 productId: string;
                 assignedToId: string;
@@ -1087,6 +1094,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.PayrollStatus;
@@ -1129,6 +1137,7 @@ export declare class PayrollService {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         };
     } & {
         status: import(".prisma/client").$Enums.PayrollStatus;
@@ -1261,6 +1270,7 @@ export declare class PayrollService {
             rejectedAt: Date | null;
             notes: string | null;
             defectPhotos: string[];
+            isDefect: boolean;
             quantityProcessed: number;
             productId: string;
             assignedToId: string;

@@ -1,6 +1,6 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { ShipmentStatus } from '@prisma/client';
-import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { PrismaService } from "../prisma/prisma.service";
+import { ShipmentStatus } from "@prisma/client";
+import { NotificationsGateway } from "../notifications/notifications.gateway";
 export declare class ShipmentsService {
     private prisma;
     private notifications;

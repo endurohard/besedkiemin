@@ -1,4 +1,4 @@
-import { CatalogOrderStatus } from '@prisma/client';
+import { CatalogOrderStatus } from "@prisma/client";
 export declare class UpdateCatalogOrderDto {
     customerName?: string;
     customerPhone?: string;

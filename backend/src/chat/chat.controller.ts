@@ -6,24 +6,23 @@ import {
   Body,
   UseGuards,
   Request,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { ChatService } from './chat.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+} from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
+import { ChatService } from "./chat.service";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { Roles } from "../auth/decorators/roles.decorator";
 
-
-@ApiTags('Chat')
-@Controller('chat')
+@ApiTags("Chat")
+@Controller("chat")
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   /**
    * Проверить, работает ли чат сейчас (публичный эндпоинт)
    */
-  @Get('status')
-  @ApiOperation({ summary: 'Проверить статус чата (онлайн/оффлайн)' })
+  @Get("status")
+  @ApiOperation({ summary: "Проверить статус чата (онлайн/оффлайн)" })
   async getStatus() {
     return this.chatService.isOnline();
   }
@@ -31,19 +30,24 @@ export class ChatController {
   /**
    * Создать или получить комнату для заказа (публичный эндпоинт)
    */
-  @Post('rooms/order/:catalogOrderId')
-  @ApiOperation({ summary: 'Создать или получить комнату чата для заказа' })
-  async getOrCreateRoom(@Param('catalogOrderId') catalogOrderId: string) {
+  @Post("rooms/order/:catalogOrderId")
+  @ApiOperation({ summary: "Создать или получить комнату чата для заказа" })
+  async getOrCreateRoom(@Param("catalogOrderId") catalogOrderId: string) {
     return this.chatService.getOrCreateRoom(catalogOrderId);
   }
 
   /**
    * Создать или получить гостевую комнату (без заказа, публичный эндпоинт)
    */
-  @Post('rooms/guest')
-  @ApiOperation({ summary: 'Создать или получить гостевую комнату чата' })
+  @Post("rooms/guest")
+  @ApiOperation({ summary: "Создать или получить гостевую комнату чата" })
   async getOrCreateGuestRoom(
-    @Body() body: { guestSessionId: string; customerName: string; customerPhone?: string },
+    @Body()
+    body: {
+      guestSessionId: string;
+      customerName: string;
+      customerPhone?: string;
+    },
   ) {
     return this.chatService.getOrCreateGuestRoom(body);
   }
@@ -51,11 +55,13 @@ export class ChatController {
   /**
    * Получить все активные комнаты (для менеджера)
    */
-  @Get('rooms')
+  @Get("rooms")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
+  @Roles("SUPER_ADMIN", "OWNER", "MANAGER")
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Получить все активные комнаты чата (OWNER/MANAGER)' })
+  @ApiOperation({
+    summary: "Получить все активные комнаты чата (OWNER/MANAGER)",
+  })
   async getAllRooms() {
     return this.chatService.getAllRooms();
   }
@@ -63,32 +69,37 @@ export class ChatController {
   /**
    * Получить комнату по ID
    */
-  @Get('rooms/:roomId')
-  @ApiOperation({ summary: 'Получить комнату чата по ID' })
-  async getRoom(@Param('roomId') roomId: string) {
+  @Get("rooms/:roomId")
+  @ApiOperation({ summary: "Получить комнату чата по ID" })
+  async getRoom(@Param("roomId") roomId: string) {
     return this.chatService.getRoom(roomId);
   }
 
   /**
    * Получить непрочитанные сообщения для комнаты
    */
-  @Get('rooms/:roomId/unread')
+  @Get("rooms/:roomId/unread")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
+  @Roles("SUPER_ADMIN", "OWNER", "MANAGER")
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Получить непрочитанные сообщения для комнаты (OWNER/MANAGER)' })
-  async getUnreadMessages(@Param('roomId') roomId: string) {
+  @ApiOperation({
+    summary: "Получить непрочитанные сообщения для комнаты (OWNER/MANAGER)",
+  })
+  async getUnreadMessages(@Param("roomId") roomId: string) {
     return this.chatService.getUnreadMessages(roomId);
   }
 
   /**
    * Получить общее количество непрочитанных сообщений
    */
-  @Get('unread/total')
+  @Get("unread/total")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
+  @Roles("SUPER_ADMIN", "OWNER", "MANAGER")
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Получить общее количество непрочитанных сообщений (OWNER/MANAGER)' })
+  @ApiOperation({
+    summary:
+      "Получить общее количество непрочитанных сообщений (OWNER/MANAGER)",
+  })
   async getTotalUnreadCount() {
     const total = await this.chatService.getTotalUnreadCount();
     return { total };
@@ -97,13 +108,15 @@ export class ChatController {
   /**
    * Отметить сообщения как прочитанные
    */
-  @Post('rooms/:roomId/mark-read')
+  @Post("rooms/:roomId/mark-read")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
+  @Roles("SUPER_ADMIN", "OWNER", "MANAGER")
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Отметить сообщения как прочитанные (OWNER/MANAGER)' })
+  @ApiOperation({
+    summary: "Отметить сообщения как прочитанные (OWNER/MANAGER)",
+  })
   async markAsRead(
-    @Param('roomId') roomId: string,
+    @Param("roomId") roomId: string,
     @Body() body: { messageIds?: string[] },
   ) {
     return this.chatService.markMessagesAsRead(roomId, body.messageIds);
@@ -112,12 +125,12 @@ export class ChatController {
   /**
    * Закрыть комнату
    */
-  @Post('rooms/:roomId/close')
+  @Post("rooms/:roomId/close")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN', 'OWNER', 'MANAGER')
+  @Roles("SUPER_ADMIN", "OWNER", "MANAGER")
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Закрыть комнату чата (OWNER/MANAGER)' })
-  async closeRoom(@Param('roomId') roomId: string) {
+  @ApiOperation({ summary: "Закрыть комнату чата (OWNER/MANAGER)" })
+  async closeRoom(@Param("roomId") roomId: string) {
     return this.chatService.closeRoom(roomId);
   }
 }

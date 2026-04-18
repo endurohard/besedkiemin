@@ -1,5 +1,5 @@
-import { YeastarService } from './yeastar.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { YeastarService } from "./yeastar.service";
+import { PrismaService } from "../prisma/prisma.service";
 export declare class YeastarController {
     private readonly yeastarService;
     private readonly prisma;

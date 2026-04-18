@@ -16,13 +16,13 @@ class UpdateContactRequestDto {
 }
 exports.UpdateContactRequestDto = UpdateContactRequestDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Обработан ли запрос', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Обработан ли запрос", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], UpdateContactRequestDto.prototype, "isProcessed", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Примечания менеджера', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Примечания менеджера", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

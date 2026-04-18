@@ -1,5 +1,5 @@
-import { TelegramService } from './telegram.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { TelegramService } from "./telegram.service";
+import { PrismaService } from "../prisma/prisma.service";
 export declare class TelegramController {
     private readonly telegramService;
     private readonly prisma;

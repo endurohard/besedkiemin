@@ -1,6 +1,6 @@
-import { ProductTypesService } from './product-types.service';
-import { CreateProductTypeDto } from './dto/create-product-type.dto';
-import { UpdateProductTypeDto } from './dto/update-product-type.dto';
+import { ProductTypesService } from "./product-types.service";
+import { CreateProductTypeDto } from "./dto/create-product-type.dto";
+import { UpdateProductTypeDto } from "./dto/update-product-type.dto";
 export declare class ProductTypesController {
     private readonly productTypesService;
     constructor(productTypesService: ProductTypesService);

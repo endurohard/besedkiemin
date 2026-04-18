@@ -86,7 +86,7 @@ __decorate([
     __metadata("design:type", String)
 ], UserEntity.prototype, "paymentType", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ required: false, description: 'Оклад руб/мес (для SALARY)' }),
+    (0, swagger_1.ApiProperty)({ required: false, description: "Оклад руб/мес (для SALARY)" }),
     __metadata("design:type", Object)
 ], UserEntity.prototype, "monthlySalary", void 0);
 //# sourceMappingURL=user.entity.js.map

@@ -21,10 +21,10 @@ let InventoryService = class InventoryService {
             where: { id: data.productTypeId },
         });
         if (!productType) {
-            throw new common_1.NotFoundException('Тип товара не найден');
+            throw new common_1.NotFoundException("Тип товара не найден");
         }
         if (data.quantity <= 0) {
-            throw new common_1.BadRequestException('Количество должно быть больше 0');
+            throw new common_1.BadRequestException("Количество должно быть больше 0");
         }
         return this.prisma.inventoryItem.create({
             data: {
@@ -74,7 +74,7 @@ let InventoryService = class InventoryService {
                 },
             },
             orderBy: {
-                receivedAt: 'desc',
+                receivedAt: "desc",
             },
         });
         return items;
@@ -90,7 +90,7 @@ let InventoryService = class InventoryService {
                 order: true,
             },
             orderBy: {
-                receivedAt: 'desc',
+                receivedAt: "desc",
             },
         });
     }
@@ -105,7 +105,7 @@ let InventoryService = class InventoryService {
                 order: true,
             },
             orderBy: {
-                receivedAt: 'desc',
+                receivedAt: "desc",
             },
         });
     }
@@ -131,7 +131,7 @@ let InventoryService = class InventoryService {
                         },
                     },
                     orderBy: {
-                        createdAt: 'desc',
+                        createdAt: "desc",
                     },
                 },
             },
@@ -139,7 +139,7 @@ let InventoryService = class InventoryService {
     }
     async getInventorySummary() {
         const aggregated = await this.prisma.inventoryItem.groupBy({
-            by: ['productTypeId'],
+            by: ["productTypeId"],
             _sum: {
                 quantity: true,
             },
@@ -147,7 +147,7 @@ let InventoryService = class InventoryService {
                 id: true,
             },
         });
-        const productTypeIds = aggregated.map(a => a.productTypeId);
+        const productTypeIds = aggregated.map((a) => a.productTypeId);
         const productTypes = await this.prisma.productType.findMany({
             where: {
                 id: { in: productTypeIds },
@@ -157,8 +157,8 @@ let InventoryService = class InventoryService {
                 name: true,
             },
         });
-        const productTypeMap = new Map(productTypes.map(pt => [pt.id, pt]));
-        return aggregated.map(a => ({
+        const productTypeMap = new Map(productTypes.map((pt) => [pt.id, pt]));
+        return aggregated.map((a) => ({
             productType: productTypeMap.get(a.productTypeId),
             totalQuantity: a._sum.quantity || 0,
             itemCount: a._count.id,

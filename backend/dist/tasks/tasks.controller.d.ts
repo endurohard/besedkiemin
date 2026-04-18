@@ -1,4 +1,4 @@
-import { TasksService } from './tasks.service';
+import { TasksService } from "./tasks.service";
 export declare class TasksController {
     private readonly tasksService;
     constructor(tasksService: TasksService);
@@ -64,6 +64,7 @@ export declare class TasksController {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -137,6 +138,7 @@ export declare class TasksController {
             sipWsPort: number | null;
             isDepartmentAccount: boolean;
             pin: string | null;
+            pinLookup: string | null;
         } | null;
         status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
@@ -214,6 +216,7 @@ export declare class TasksController {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -293,6 +296,7 @@ export declare class TasksController {
             rejectedAt: Date | null;
             notes: string | null;
             defectPhotos: string[];
+            isDefect: boolean;
             quantityProcessed: number;
             productId: string;
             assignedToId: string;
@@ -362,6 +366,7 @@ export declare class TasksController {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -430,6 +435,7 @@ export declare class TasksController {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -451,6 +457,7 @@ export declare class TasksController {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -472,6 +479,7 @@ export declare class TasksController {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -493,6 +501,7 @@ export declare class TasksController {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;
@@ -560,6 +569,7 @@ export declare class TasksController {
         rejectedAt: Date | null;
         notes: string | null;
         defectPhotos: string[];
+        isDefect: boolean;
         quantityProcessed: number;
         productId: string;
         assignedToId: string;

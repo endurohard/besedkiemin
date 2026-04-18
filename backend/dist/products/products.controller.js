@@ -54,8 +54,8 @@ let ProductsController = class ProductsController {
 exports.ProductsController = ProductsController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('MANAGER'),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать новый продукт (только менеджер)' }),
+    (0, roles_decorator_1.Roles)("MANAGER"),
+    (0, swagger_1.ApiOperation)({ summary: "Создать новый продукт (только менеджер)" }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_product_dto_1.CreateProductDto]),
@@ -63,55 +63,64 @@ __decorate([
 ], ProductsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все продукты с фильтрами' }),
-    (0, swagger_1.ApiQuery)({ name: 'orderId', required: false, description: 'Фильтр по ID заказа' }),
-    (0, swagger_1.ApiQuery)({ name: 'stage', required: false, enum: client_1.ProductionStage, description: 'Фильтр по этапу' }),
-    __param(0, (0, common_1.Query)('orderId')),
-    __param(1, (0, common_1.Query)('stage')),
+    (0, swagger_1.ApiOperation)({ summary: "Получить все продукты с фильтрами" }),
+    (0, swagger_1.ApiQuery)({
+        name: "orderId",
+        required: false,
+        description: "Фильтр по ID заказа",
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: "stage",
+        required: false,
+        enum: client_1.ProductionStage,
+        description: "Фильтр по этапу",
+    }),
+    __param(0, (0, common_1.Query)("orderId")),
+    __param(1, (0, common_1.Query)("stage")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)('stage/:stage'),
-    (0, roles_decorator_1.Roles)('MANAGER', 'OWNER', 'SUPER_ADMIN', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить продукты на определенном этапе' }),
-    __param(0, (0, common_1.Param)('stage')),
+    (0, common_1.Get)("stage/:stage"),
+    (0, roles_decorator_1.Roles)("MANAGER", "OWNER", "SUPER_ADMIN", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить продукты на определенном этапе" }),
+    __param(0, (0, common_1.Param)("stage")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "getByStage", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить продукт по ID' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить продукт по ID" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Get)(':id/history'),
-    (0, roles_decorator_1.Roles)('MANAGER', 'OWNER', 'SUPER_ADMIN', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить историю прохождения продукта по этапам' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id/history"),
+    (0, roles_decorator_1.Roles)("MANAGER", "OWNER", "SUPER_ADMIN", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить историю прохождения продукта по этапам" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "getHistory", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)('MANAGER'),
-    (0, swagger_1.ApiOperation)({ summary: 'Обновить продукт (только менеджер)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Patch)(":id"),
+    (0, roles_decorator_1.Roles)("MANAGER"),
+    (0, swagger_1.ApiOperation)({ summary: "Обновить продукт (только менеджер)" }),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_product_dto_1.UpdateProductDto]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "update", null);
 __decorate([
-    (0, common_1.Post)(':id/move'),
-    (0, swagger_1.ApiOperation)({ summary: 'Переместить продукт на следующий этап' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)(":id/move"),
+    (0, swagger_1.ApiOperation)({ summary: "Переместить продукт на следующий этап" }),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -119,18 +128,18 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "moveToStage", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)('MANAGER'),
-    (0, swagger_1.ApiOperation)({ summary: 'Удалить продукт (только менеджер)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)(":id"),
+    (0, roles_decorator_1.Roles)("MANAGER"),
+    (0, swagger_1.ApiOperation)({ summary: "Удалить продукт (только менеджер)" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "remove", null);
 exports.ProductsController = ProductsController = __decorate([
-    (0, swagger_1.ApiTags)('products'),
+    (0, swagger_1.ApiTags)("products"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.Controller)('products'),
+    (0, common_1.Controller)("products"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [products_service_1.ProductsService])
 ], ProductsController);

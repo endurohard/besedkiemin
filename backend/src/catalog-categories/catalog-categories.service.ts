@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateCatalogCategoryDto } from './dto/create-catalog-category.dto';
-import { UpdateCatalogCategoryDto } from './dto/update-catalog-category.dto';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateCatalogCategoryDto } from "./dto/create-catalog-category.dto";
+import { UpdateCatalogCategoryDto } from "./dto/update-catalog-category.dto";
 
 @Injectable()
 export class CatalogCategoriesService {
@@ -14,7 +18,9 @@ export class CatalogCategoriesService {
     });
 
     if (existing) {
-      throw new ConflictException(`Категория с slug "${createDto.slug}" уже существует`);
+      throw new ConflictException(
+        `Категория с slug "${createDto.slug}" уже существует`,
+      );
     }
 
     return this.prisma.catalogCategory.create({
@@ -34,11 +40,11 @@ export class CatalogCategoriesService {
 
     return this.prisma.catalogCategory.findMany({
       where,
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
       include: {
         products: {
           where: { isActive: true },
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
           take: 10, // Только первые 10 товаров для списка категорий
         },
       },
@@ -51,7 +57,7 @@ export class CatalogCategoriesService {
       include: {
         products: {
           where: { isActive: true },
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
         },
       },
     });
@@ -69,7 +75,7 @@ export class CatalogCategoriesService {
       include: {
         products: {
           where: { isActive: true },
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
         },
       },
     });
@@ -91,7 +97,9 @@ export class CatalogCategoriesService {
       });
 
       if (existing && existing.id !== id) {
-        throw new ConflictException(`Категория с slug "${updateDto.slug}" уже существует`);
+        throw new ConflictException(
+          `Категория с slug "${updateDto.slug}" уже существует`,
+        );
       }
     }
 
@@ -110,7 +118,9 @@ export class CatalogCategoriesService {
     });
 
     if (productsCount > 0) {
-      throw new ConflictException(`Невозможно удалить категорию: в ней ${productsCount} товар(ов)`);
+      throw new ConflictException(
+        `Невозможно удалить категорию: в ней ${productsCount} товар(ов)`,
+      );
     }
 
     return this.prisma.catalogCategory.delete({

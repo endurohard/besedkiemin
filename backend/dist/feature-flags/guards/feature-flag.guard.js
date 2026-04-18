@@ -22,21 +22,18 @@ let FeatureFlagGuard = FeatureFlagGuard_1 = class FeatureFlagGuard {
         this.logger = new common_1.Logger(FeatureFlagGuard_1.name);
     }
     async canActivate(context) {
-        const requiredFlag = this.reflector.getAllAndOverride(feature_flag_decorator_1.FEATURE_FLAG_KEY, [
-            context.getHandler(),
-            context.getClass(),
-        ]);
+        const requiredFlag = this.reflector.getAllAndOverride(feature_flag_decorator_1.FEATURE_FLAG_KEY, [context.getHandler(), context.getClass()]);
         if (!requiredFlag) {
             return true;
         }
         const request = context.switchToHttp().getRequest();
         const user = request.user;
-        if (user?.roleCode === 'SUPER_ADMIN') {
+        if (user?.roleCode === "SUPER_ADMIN") {
             return true;
         }
         const isEnabled = await this.featureFlagsService.isEnabled(requiredFlag);
         if (!isEnabled) {
-            this.logger.warn(`Feature "${requiredFlag}" is disabled. Access denied for user ${user?.userId || 'anonymous'}`);
+            this.logger.warn(`Feature "${requiredFlag}" is disabled. Access denied for user ${user?.userId || "anonymous"}`);
             throw new common_1.ForbiddenException(`Функция "${requiredFlag}" временно отключена`);
         }
         return true;

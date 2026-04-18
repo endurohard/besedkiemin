@@ -24,13 +24,16 @@ let ShipmentsService = class ShipmentsService {
             where: { id: userId },
             include: { role: true },
         });
-        if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
-            throw new common_1.ForbiddenException('Только складист, менеджер и владелец могут создавать отгрузки');
+        if (!user ||
+            (user.role?.code !== "WAREHOUSE" &&
+                user.role?.code !== "OWNER" &&
+                user.role?.code !== "MANAGER")) {
+            throw new common_1.ForbiddenException("Только складист, менеджер и владелец могут создавать отгрузки");
         }
         if (!data.items || data.items.length === 0) {
-            throw new common_1.BadRequestException('Необходимо указать хотя бы один товар для отгрузки');
+            throw new common_1.BadRequestException("Необходимо указать хотя бы один товар для отгрузки");
         }
-        const inventoryItemIds = data.items.map(item => item.inventoryItemId);
+        const inventoryItemIds = data.items.map((item) => item.inventoryItemId);
         const inventoryItems = await this.prisma.inventoryItem.findMany({
             where: { id: { in: inventoryItemIds } },
             include: {
@@ -39,10 +42,10 @@ let ShipmentsService = class ShipmentsService {
             },
         });
         if (inventoryItems.length !== data.items.length) {
-            throw new common_1.NotFoundException('Один или несколько товаров не найдены на складе');
+            throw new common_1.NotFoundException("Один или несколько товаров не найдены на складе");
         }
         for (const itemData of data.items) {
-            const inventoryItem = inventoryItems.find(i => i.id === itemData.inventoryItemId);
+            const inventoryItem = inventoryItems.find((i) => i.id === itemData.inventoryItemId);
             if (!inventoryItem) {
                 throw new common_1.NotFoundException(`Товар с ID ${itemData.inventoryItemId} не найден`);
             }
@@ -51,7 +54,9 @@ let ShipmentsService = class ShipmentsService {
             }
         }
         const deliveryDateValue = data.deliveryDate
-            ? (data.deliveryDate instanceof Date ? data.deliveryDate : new Date(data.deliveryDate))
+            ? data.deliveryDate instanceof Date
+                ? data.deliveryDate
+                : new Date(data.deliveryDate)
             : undefined;
         const shipment = await this.prisma.$transaction(async (tx) => {
             const newShipment = await tx.shipment.create({
@@ -64,7 +69,7 @@ let ShipmentsService = class ShipmentsService {
                     orderNumber: data.orderNumber,
                     shippedById: userId,
                     items: {
-                        create: data.items.map(item => ({
+                        create: data.items.map((item) => ({
                             inventoryItemId: item.inventoryItemId,
                             quantity: item.quantity,
                         })),
@@ -95,7 +100,7 @@ let ShipmentsService = class ShipmentsService {
                 },
             });
             await Promise.all(data.items.map(async (itemData) => {
-                const inventoryItem = inventoryItems.find(i => i.id === itemData.inventoryItemId);
+                const inventoryItem = inventoryItems.find((i) => i.id === itemData.inventoryItemId);
                 return tx.inventoryItem.update({
                     where: { id: itemData.inventoryItemId },
                     data: {
@@ -115,7 +120,7 @@ let ShipmentsService = class ShipmentsService {
             include: { role: true },
         });
         if (!user) {
-            throw new common_1.ForbiddenException('Пользователь не найден');
+            throw new common_1.ForbiddenException("Пользователь не найден");
         }
         const where = options?.status ? { status: options.status } : {};
         const shipments = await this.prisma.shipment.findMany({
@@ -156,7 +161,7 @@ let ShipmentsService = class ShipmentsService {
                     select: { items: true },
                 },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
         });
         return shipments;
     }
@@ -165,7 +170,7 @@ let ShipmentsService = class ShipmentsService {
             where: { id: userId },
         });
         if (!user) {
-            throw new common_1.ForbiddenException('Пользователь не найден');
+            throw new common_1.ForbiddenException("Пользователь не найден");
         }
         return this.prisma.shipment.findMany({
             where: { status },
@@ -190,7 +195,7 @@ let ShipmentsService = class ShipmentsService {
                 },
             },
             orderBy: {
-                createdAt: 'desc',
+                createdAt: "desc",
             },
         });
     }
@@ -220,7 +225,7 @@ let ShipmentsService = class ShipmentsService {
             },
         });
         if (!shipment) {
-            throw new common_1.NotFoundException('Отгрузка не найдена');
+            throw new common_1.NotFoundException("Отгрузка не найдена");
         }
         return shipment;
     }
@@ -229,14 +234,17 @@ let ShipmentsService = class ShipmentsService {
             where: { id: userId },
             include: { role: true },
         });
-        if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
-            throw new common_1.ForbiddenException('Только складист, менеджер и владелец могут обновлять статус отгрузки');
+        if (!user ||
+            (user.role?.code !== "WAREHOUSE" &&
+                user.role?.code !== "OWNER" &&
+                user.role?.code !== "MANAGER")) {
+            throw new common_1.ForbiddenException("Только складист, менеджер и владелец могут обновлять статус отгрузки");
         }
         const shipment = await this.prisma.shipment.findUnique({
             where: { id },
         });
         if (!shipment) {
-            throw new common_1.NotFoundException('Отгрузка не найдена');
+            throw new common_1.NotFoundException("Отгрузка не найдена");
         }
         const updated = await this.prisma.shipment.update({
             where: { id },
@@ -270,8 +278,11 @@ let ShipmentsService = class ShipmentsService {
             where: { id: userId },
             include: { role: true },
         });
-        if (!user || (user.role?.code !== 'WAREHOUSE' && user.role?.code !== 'OWNER' && user.role?.code !== 'MANAGER')) {
-            throw new common_1.ForbiddenException('Только складист, менеджер и владелец могут отменять отгрузки');
+        if (!user ||
+            (user.role?.code !== "WAREHOUSE" &&
+                user.role?.code !== "OWNER" &&
+                user.role?.code !== "MANAGER")) {
+            throw new common_1.ForbiddenException("Только складист, менеджер и владелец могут отменять отгрузки");
         }
         const shipment = await this.prisma.shipment.findUnique({
             where: { id },
@@ -284,13 +295,13 @@ let ShipmentsService = class ShipmentsService {
             },
         });
         if (!shipment) {
-            throw new common_1.NotFoundException('Отгрузка не найдена');
+            throw new common_1.NotFoundException("Отгрузка не найдена");
         }
         if (shipment.status === client_1.ShipmentStatus.DELIVERED) {
-            throw new common_1.BadRequestException('Нельзя отменить доставленную отгрузку');
+            throw new common_1.BadRequestException("Нельзя отменить доставленную отгрузку");
         }
         if (shipment.status === client_1.ShipmentStatus.CANCELLED) {
-            throw new common_1.BadRequestException('Отгрузка уже отменена');
+            throw new common_1.BadRequestException("Отгрузка уже отменена");
         }
         const updatedShipment = await this.prisma.$transaction(async (tx) => {
             const cancelled = await tx.shipment.update({
@@ -341,7 +352,7 @@ let ShipmentsService = class ShipmentsService {
             },
         });
         if (!shipment) {
-            throw new common_1.NotFoundException('Отгрузка не найдена');
+            throw new common_1.NotFoundException("Отгрузка не найдена");
         }
         return {
             shipmentId: shipment.id,
@@ -350,8 +361,10 @@ let ShipmentsService = class ShipmentsService {
             customerPhone: shipment.customerPhone,
             deliveryAddress: shipment.deliveryAddress,
             deliveryDate: shipment.deliveryDate?.toISOString(),
-            orderNumber: shipment.orderNumber || shipment.items[0]?.inventoryItem?.order?.orderNumber || '—',
-            items: shipment.items.map(item => ({
+            orderNumber: shipment.orderNumber ||
+                shipment.items[0]?.inventoryItem?.order?.orderNumber ||
+                "—",
+            items: shipment.items.map((item) => ({
                 name: item.inventoryItem.name,
                 quantity: item.quantity,
                 productType: item.inventoryItem.productType.name,

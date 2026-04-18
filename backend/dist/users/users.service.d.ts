@@ -1,7 +1,7 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UserEntity } from './entities/user.entity';
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { UserEntity } from "./entities/user.entity";
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -28,6 +28,7 @@ export declare class UsersService {
         sipWsPort: number | null;
         isDepartmentAccount: boolean;
         pin: string | null;
+        pinLookup: string | null;
     } | null>;
     findByEmailWithRole(email: string): Promise<({
         role: {
@@ -63,6 +64,7 @@ export declare class UsersService {
         sipWsPort: number | null;
         isDepartmentAccount: boolean;
         pin: string | null;
+        pinLookup: string | null;
     }) | null>;
     update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity>;
     remove(id: string): Promise<void>;
@@ -102,5 +104,6 @@ export declare class UsersService {
         sipWsPort: number | null;
         isDepartmentAccount: boolean;
         pin: string | null;
+        pinLookup: string | null;
     }) | null>;
 }

@@ -1,5 +1,5 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { UpdateCompanySettingsDto } from "./dto/update-company-settings.dto";
 export declare class CompanySettingsService {
     private prisma;
     constructor(prisma: PrismaService);

@@ -28,10 +28,10 @@ let NomenclatureController = class NomenclatureController {
         return this.nomenclatureService.create(createDto);
     }
     findAll(includeInactive) {
-        return this.nomenclatureService.findAll(includeInactive === 'true');
+        return this.nomenclatureService.findAll(includeInactive === "true");
     }
     findByProductType(productTypeId, includeInactive) {
-        return this.nomenclatureService.findByProductType(productTypeId, includeInactive === 'true');
+        return this.nomenclatureService.findByProductType(productTypeId, includeInactive === "true");
     }
     findOne(id) {
         return this.nomenclatureService.findOne(id);
@@ -49,7 +49,7 @@ let NomenclatureController = class NomenclatureController {
 exports.NomenclatureController = NomenclatureController;
 __decorate([
     (0, common_1.Post)(),
-    (0, permissions_decorator_1.RequirePermissions)('nomenclature:manage'),
+    (0, permissions_decorator_1.RequirePermissions)("nomenclature:manage"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_nomenclature_dto_1.CreateNomenclatureDto]),
@@ -57,56 +57,56 @@ __decorate([
 ], NomenclatureController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, permissions_decorator_1.RequirePermissions)('nomenclature:view'),
-    __param(0, (0, common_1.Query)('includeInactive')),
+    (0, permissions_decorator_1.RequirePermissions)("nomenclature:view"),
+    __param(0, (0, common_1.Query)("includeInactive")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], NomenclatureController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)('by-type/:productTypeId'),
-    (0, permissions_decorator_1.RequirePermissions)('nomenclature:view'),
-    __param(0, (0, common_1.Param)('productTypeId')),
-    __param(1, (0, common_1.Query)('includeInactive')),
+    (0, common_1.Get)("by-type/:productTypeId"),
+    (0, permissions_decorator_1.RequirePermissions)("nomenclature:view"),
+    __param(0, (0, common_1.Param)("productTypeId")),
+    __param(1, (0, common_1.Query)("includeInactive")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], NomenclatureController.prototype, "findByProductType", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    (0, permissions_decorator_1.RequirePermissions)('nomenclature:view'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    (0, permissions_decorator_1.RequirePermissions)("nomenclature:view"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], NomenclatureController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
-    (0, permissions_decorator_1.RequirePermissions)('nomenclature:manage'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Patch)(":id"),
+    (0, permissions_decorator_1.RequirePermissions)("nomenclature:manage"),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_nomenclature_dto_1.UpdateNomenclatureDto]),
     __metadata("design:returntype", void 0)
 ], NomenclatureController.prototype, "update", null);
 __decorate([
-    (0, common_1.Patch)(':id/toggle-active'),
-    (0, permissions_decorator_1.RequirePermissions)('nomenclature:manage'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Patch)(":id/toggle-active"),
+    (0, permissions_decorator_1.RequirePermissions)("nomenclature:manage"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], NomenclatureController.prototype, "toggleActive", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
-    (0, permissions_decorator_1.RequirePermissions)('nomenclature:manage'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)(":id"),
+    (0, permissions_decorator_1.RequirePermissions)("nomenclature:manage"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], NomenclatureController.prototype, "remove", null);
 exports.NomenclatureController = NomenclatureController = __decorate([
-    (0, common_1.Controller)('nomenclature'),
+    (0, common_1.Controller)("nomenclature"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [nomenclature_service_1.NomenclatureService])
 ], NomenclatureController);

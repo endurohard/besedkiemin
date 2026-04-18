@@ -265,7 +265,7 @@ const ChatPage: React.FC = () => {
                       className={`max-w-[70%] rounded-lg px-4 py-2 ${
                         msg.senderType === 'MANAGER'
                           ? 'bg-blue-600 text-white'
-                          : 'bg-white border border-gray-200'
+                          : 'bg-card border border-border'
                       }`}
                     >
                       {msg.senderType === 'CUSTOMER' && (
@@ -286,7 +286,7 @@ const ChatPage: React.FC = () => {
               )}
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-white border border-gray-200 rounded-lg px-4 py-2">
+                  <div className="bg-card border border-border rounded-lg px-4 py-2">
                     <div className="flex gap-1">
                       <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
                       <span
@@ -305,7 +305,7 @@ const ChatPage: React.FC = () => {
             </CardContent>
 
             {/* Поле ввода */}
-            <div className="border-t p-4 bg-white">
+            <div className="border-t p-4 bg-card">
               <div className="flex gap-2">
                 <Input
                   value={messageText}

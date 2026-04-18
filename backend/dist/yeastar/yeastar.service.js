@@ -57,12 +57,12 @@ let YeastarService = YeastarService_1 = class YeastarService {
         this.logger = new common_1.Logger(YeastarService_1.name);
         this.accessToken = null;
         this.tokenExpiry = null;
-        const skipSSL = this.configService.get('YEASTAR_SKIP_SSL') === 'true';
+        const skipSSL = this.configService.get("YEASTAR_SKIP_SSL") === "true";
         this.httpsAgent = new https.Agent({
             rejectUnauthorized: !skipSSL,
         });
         if (skipSSL) {
-            this.logger.warn('Yeastar SSL verification disabled. Use only for self-signed certificates.');
+            this.logger.warn("Yeastar SSL verification disabled. Use only for self-signed certificates.");
         }
     }
     async getAccessToken(config) {
@@ -75,7 +75,7 @@ let YeastarService = YeastarService_1 = class YeastarService {
                 password: config.password,
             }, {
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
                 httpsAgent: this.httpsAgent,
             });
@@ -84,8 +84,8 @@ let YeastarService = YeastarService_1 = class YeastarService {
             return this.accessToken;
         }
         catch (error) {
-            this.logger.error('Yeastar login error:', error.response?.data || error.message);
-            throw new common_1.HttpException('Не удалось подключиться к Yeastar API', error.response?.status || 500);
+            this.logger.error("Yeastar login error:", error.response?.data || error.message);
+            throw new common_1.HttpException("Не удалось подключиться к Yeastar API", error.response?.status || 500);
         }
     }
     async makeCall(config, phoneNumber) {
@@ -94,22 +94,22 @@ let YeastarService = YeastarService_1 = class YeastarService {
             const response = await axios_1.default.post(`https://${config.host}/api/v2.0.0/extension/dial`, {
                 caller: config.extension,
                 callee: phoneNumber,
-                autoanswer: 'yes',
+                autoanswer: "yes",
             }, {
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
                 },
                 httpsAgent: this.httpsAgent,
             });
             return {
                 callid: response.data.callid,
-                status: 'calling',
+                status: "calling",
             };
         }
         catch (error) {
-            this.logger.error('Yeastar call error:', error.response?.data || error.message);
-            throw new common_1.HttpException('Не удалось совершить звонок через Yeastar', error.response?.status || 500);
+            this.logger.error("Yeastar call error:", error.response?.data || error.message);
+            throw new common_1.HttpException("Не удалось совершить звонок через Yeastar", error.response?.status || 500);
         }
     }
     async hangupCall(config, callid) {
@@ -119,15 +119,15 @@ let YeastarService = YeastarService_1 = class YeastarService {
                 callid: callid,
             }, {
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
                 },
                 httpsAgent: this.httpsAgent,
             });
         }
         catch (error) {
-            this.logger.error('Yeastar hangup error:', error.response?.data || error.message);
-            throw new common_1.HttpException('Не удалось завершить звонок', error.response?.status || 500);
+            this.logger.error("Yeastar hangup error:", error.response?.data || error.message);
+            throw new common_1.HttpException("Не удалось завершить звонок", error.response?.status || 500);
         }
     }
     async getActiveCalls(config) {
@@ -135,19 +135,19 @@ let YeastarService = YeastarService_1 = class YeastarService {
         try {
             const response = await axios_1.default.get(`https://${config.host}/api/v2.0.0/call/query`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
                 httpsAgent: this.httpsAgent,
             });
             return response.data.calls || [];
         }
         catch (error) {
-            this.logger.error('Yeastar query error:', error.response?.data || error.message);
+            this.logger.error("Yeastar query error:", error.response?.data || error.message);
             return [];
         }
     }
     async subscribeToEvents(config) {
-        this.logger.log('Subscribe to Yeastar events not implemented yet');
+        this.logger.log("Subscribe to Yeastar events not implemented yet");
     }
 };
 exports.YeastarService = YeastarService;

@@ -26,7 +26,7 @@ export const TaskCardWorkerActions = ({
     const statusText = task.status === TaskStatus.ACCEPTED ? 'В работе' : task.status === TaskStatus.COMPLETED ? 'Завершено' : '';
     const workerName = `${task.assignedTo?.firstName || ''} ${task.assignedTo?.lastName || ''}`.trim();
     return (
-      <div className="text-center p-1.5 bg-gray-50 border border-gray-200 rounded text-[10px] text-gray-600">
+      <div className="text-center p-1.5 bg-muted/50 border border-gray-200 rounded text-[10px] text-muted-foreground">
         {statusText} — {workerName}
       </div>
     );
@@ -140,7 +140,7 @@ export const TaskCardWorkerActions = ({
           {!isEditingQuantity ? (
             <button
               onClick={() => { setEditQuantity(task.quantity || task.product?.quantity || 0); setIsEditingQuantity(true); }}
-              className="w-full flex items-center justify-center gap-1 text-[10px] py-1 text-gray-500 hover:text-blue-600 transition-colors"
+              className="w-full flex items-center justify-center gap-1 text-[10px] py-1 text-muted-foreground hover:text-primary transition-colors"
             >
               <Pencil size={10} />
               Изменить кол-во
@@ -158,7 +158,7 @@ export const TaskCardWorkerActions = ({
               <button
                 onClick={() => updateQuantityMutation.mutate(editQuantity)}
                 disabled={updateQuantityMutation.isPending}
-                className="px-2 py-1 bg-blue-500 text-white rounded text-[10px] hover:bg-blue-600"
+                className="px-2 py-1 bg-primary/100 text-white rounded text-[10px] hover:bg-primary/80"
               >
                 OK
               </button>
@@ -174,7 +174,7 @@ export const TaskCardWorkerActions = ({
       )}
 
       {showNotesInput && task.status === TaskStatus.ACCEPTED && (
-        <div className="space-y-2 p-3 border rounded-md bg-blue-50">
+        <div className="space-y-2 p-3 border rounded-md bg-primary/10">
           {task.product && task.product.quantity > 1 && (
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -193,7 +193,7 @@ export const TaskCardWorkerActions = ({
             </div>
           )}
           {task.product && task.product.quantity === 1 && (
-            <div className="p-2 bg-blue-100 border border-blue-300 rounded">
+            <div className="p-2 bg-primary/20 border border-blue-300 rounded">
               <p className="text-sm font-medium text-blue-800">
                 Завершить работу: {task.product.quantity} шт.
               </p>

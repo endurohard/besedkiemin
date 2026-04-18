@@ -54,93 +54,101 @@ let ChatController = class ChatController {
 };
 exports.ChatController = ChatController;
 __decorate([
-    (0, common_1.Get)('status'),
-    (0, swagger_1.ApiOperation)({ summary: 'Проверить статус чата (онлайн/оффлайн)' }),
+    (0, common_1.Get)("status"),
+    (0, swagger_1.ApiOperation)({ summary: "Проверить статус чата (онлайн/оффлайн)" }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getStatus", null);
 __decorate([
-    (0, common_1.Post)('rooms/order/:catalogOrderId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать или получить комнату чата для заказа' }),
-    __param(0, (0, common_1.Param)('catalogOrderId')),
+    (0, common_1.Post)("rooms/order/:catalogOrderId"),
+    (0, swagger_1.ApiOperation)({ summary: "Создать или получить комнату чата для заказа" }),
+    __param(0, (0, common_1.Param)("catalogOrderId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getOrCreateRoom", null);
 __decorate([
-    (0, common_1.Post)('rooms/guest'),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать или получить гостевую комнату чата' }),
+    (0, common_1.Post)("rooms/guest"),
+    (0, swagger_1.ApiOperation)({ summary: "Создать или получить гостевую комнату чата" }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getOrCreateGuestRoom", null);
 __decorate([
-    (0, common_1.Get)('rooms'),
+    (0, common_1.Get)("rooms"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все активные комнаты чата (OWNER/MANAGER)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: "Получить все активные комнаты чата (OWNER/MANAGER)",
+    }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getAllRooms", null);
 __decorate([
-    (0, common_1.Get)('rooms/:roomId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить комнату чата по ID' }),
-    __param(0, (0, common_1.Param)('roomId')),
+    (0, common_1.Get)("rooms/:roomId"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить комнату чата по ID" }),
+    __param(0, (0, common_1.Param)("roomId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getRoom", null);
 __decorate([
-    (0, common_1.Get)('rooms/:roomId/unread'),
+    (0, common_1.Get)("rooms/:roomId/unread"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить непрочитанные сообщения для комнаты (OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('roomId')),
+    (0, swagger_1.ApiOperation)({
+        summary: "Получить непрочитанные сообщения для комнаты (OWNER/MANAGER)",
+    }),
+    __param(0, (0, common_1.Param)("roomId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getUnreadMessages", null);
 __decorate([
-    (0, common_1.Get)('unread/total'),
+    (0, common_1.Get)("unread/total"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить общее количество непрочитанных сообщений (OWNER/MANAGER)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: "Получить общее количество непрочитанных сообщений (OWNER/MANAGER)",
+    }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getTotalUnreadCount", null);
 __decorate([
-    (0, common_1.Post)('rooms/:roomId/mark-read'),
+    (0, common_1.Post)("rooms/:roomId/mark-read"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Отметить сообщения как прочитанные (OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('roomId')),
+    (0, swagger_1.ApiOperation)({
+        summary: "Отметить сообщения как прочитанные (OWNER/MANAGER)",
+    }),
+    __param(0, (0, common_1.Param)("roomId")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "markAsRead", null);
 __decorate([
-    (0, common_1.Post)('rooms/:roomId/close'),
+    (0, common_1.Post)("rooms/:roomId/close"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Закрыть комнату чата (OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('roomId')),
+    (0, swagger_1.ApiOperation)({ summary: "Закрыть комнату чата (OWNER/MANAGER)" }),
+    __param(0, (0, common_1.Param)("roomId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "closeRoom", null);
 exports.ChatController = ChatController = __decorate([
-    (0, swagger_1.ApiTags)('Chat'),
-    (0, common_1.Controller)('chat'),
+    (0, swagger_1.ApiTags)("Chat"),
+    (0, common_1.Controller)("chat"),
     __metadata("design:paramtypes", [chat_service_1.ChatService])
 ], ChatController);
 //# sourceMappingURL=chat.controller.js.map

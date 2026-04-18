@@ -1,7 +1,7 @@
-import { OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../prisma/prisma.service';
-import { ClaudeCodeService } from '../claude-code/claude-code.service';
+import { OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "../prisma/prisma.service";
+import { ClaudeCodeService } from "../claude-code/claude-code.service";
 export declare class TelegramService implements OnModuleInit {
     private prisma;
     private configService;

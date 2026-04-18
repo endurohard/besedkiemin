@@ -17,37 +17,44 @@ class CreateOrderDto {
 }
 exports.CreateOrderDto = CreateOrderDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'ORD-001', required: false, description: 'Номер заказа (если не указан - генерируется автоматически)' }),
+    (0, swagger_1.ApiProperty)({
+        example: "ORD-001",
+        required: false,
+        description: "Номер заказа (если не указан - генерируется автоматически)",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateOrderDto.prototype, "orderNumber", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Иван Иванов' }),
+    (0, swagger_1.ApiProperty)({ example: "Иван Иванов" }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateOrderDto.prototype, "customerName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '+7 999 123-45-67', required: false }),
+    (0, swagger_1.ApiProperty)({ example: "+7 999 123-45-67", required: false }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateOrderDto.prototype, "customerPhone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'г. Москва, ул. Ленина, д. 10', required: false }),
+    (0, swagger_1.ApiProperty)({ example: "г. Москва, ул. Ленина, д. 10", required: false }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateOrderDto.prototype, "customerAddress", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Комплект мебели для столовой', required: false }),
+    (0, swagger_1.ApiProperty)({ example: "Комплект мебели для столовой", required: false }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateOrderDto.prototype, "description", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Клиент попросил особое внимание к качеству', required: false }),
+    (0, swagger_1.ApiProperty)({
+        example: "Клиент попросил особое внимание к качеству",
+        required: false,
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
@@ -57,20 +64,28 @@ __decorate([
         example: client_1.OrderPriority.NORMAL,
         enum: client_1.OrderPriority,
         required: false,
-        description: 'Приоритет заказа: LOW, NORMAL, HIGH, URGENT'
+        description: "Приоритет заказа: LOW, NORMAL, HIGH, URGENT",
     }),
     (0, class_validator_1.IsEnum)(client_1.OrderPriority),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateOrderDto.prototype, "priority", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid-источника', required: false, description: 'ID источника заказа' }),
+    (0, swagger_1.ApiProperty)({
+        example: "uuid-источника",
+        required: false,
+        description: "ID источника заказа",
+    }),
     (0, class_validator_1.IsUUID)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateOrderDto.prototype, "sourceId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 50000, required: false, description: 'Общая сумма заказа' }),
+    (0, swagger_1.ApiProperty)({
+        example: 50000,
+        required: false,
+        description: "Общая сумма заказа",
+    }),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)

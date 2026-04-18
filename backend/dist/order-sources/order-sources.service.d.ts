@@ -1,5 +1,5 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateOrderSourceDto, UpdateOrderSourceDto } from './dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateOrderSourceDto, UpdateOrderSourceDto } from "./dto";
 export declare class OrderSourcesService {
     private prisma;
     constructor(prisma: PrismaService);

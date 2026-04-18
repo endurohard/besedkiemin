@@ -29,7 +29,7 @@ let ProductTypesController = class ProductTypesController {
         return this.productTypesService.create(createProductTypeDto);
     }
     findAll(includeInactive) {
-        return this.productTypesService.findAll(includeInactive === 'true');
+        return this.productTypesService.findAll(includeInactive === "true");
     }
     findOne(id) {
         return this.productTypesService.findOne(id);
@@ -47,8 +47,8 @@ let ProductTypesController = class ProductTypesController {
 exports.ProductTypesController = ProductTypesController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('MANAGER'),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать новый тип продукта (только менеджер)' }),
+    (0, roles_decorator_1.Roles)("MANAGER"),
+    (0, swagger_1.ApiOperation)({ summary: "Создать новый тип продукта (только менеджер)" }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_product_type_dto_1.CreateProductTypeDto]),
@@ -56,53 +56,55 @@ __decorate([
 ], ProductTypesController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все типы продуктов' }),
-    (0, swagger_1.ApiQuery)({ name: 'includeInactive', required: false, type: Boolean }),
-    __param(0, (0, common_1.Query)('includeInactive')),
+    (0, swagger_1.ApiOperation)({ summary: "Получить все типы продуктов" }),
+    (0, swagger_1.ApiQuery)({ name: "includeInactive", required: false, type: Boolean }),
+    __param(0, (0, common_1.Query)("includeInactive")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductTypesController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить тип продукта по ID' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить тип продукта по ID" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductTypesController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)('MANAGER'),
-    (0, swagger_1.ApiOperation)({ summary: 'Обновить тип продукта (только менеджер)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Patch)(":id"),
+    (0, roles_decorator_1.Roles)("MANAGER"),
+    (0, swagger_1.ApiOperation)({ summary: "Обновить тип продукта (только менеджер)" }),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_product_type_dto_1.UpdateProductTypeDto]),
     __metadata("design:returntype", void 0)
 ], ProductTypesController.prototype, "update", null);
 __decorate([
-    (0, common_1.Post)(':id/toggle-active'),
-    (0, roles_decorator_1.Roles)('MANAGER'),
-    (0, swagger_1.ApiOperation)({ summary: 'Переключить активность типа продукта (только менеджер)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)(":id/toggle-active"),
+    (0, roles_decorator_1.Roles)("MANAGER"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Переключить активность типа продукта (только менеджер)",
+    }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductTypesController.prototype, "toggleActive", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)('MANAGER'),
-    (0, swagger_1.ApiOperation)({ summary: 'Удалить тип продукта (только менеджер)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)(":id"),
+    (0, roles_decorator_1.Roles)("MANAGER"),
+    (0, swagger_1.ApiOperation)({ summary: "Удалить тип продукта (только менеджер)" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductTypesController.prototype, "remove", null);
 exports.ProductTypesController = ProductTypesController = __decorate([
-    (0, swagger_1.ApiTags)('product-types'),
+    (0, swagger_1.ApiTags)("product-types"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.Controller)('product-types'),
+    (0, common_1.Controller)("product-types"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [product_types_service_1.ProductTypesService])
 ], ProductTypesController);

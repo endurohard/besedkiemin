@@ -21,7 +21,7 @@ let ProductTypesService = class ProductTypesService {
             where: { name: createProductTypeDto.name },
         });
         if (existing) {
-            throw new common_1.ConflictException('Тип продукта с таким названием уже существует');
+            throw new common_1.ConflictException("Тип продукта с таким названием уже существует");
         }
         return this.prisma.productType.create({
             data: createProductTypeDto,
@@ -30,7 +30,7 @@ let ProductTypesService = class ProductTypesService {
     async findAll(includeInactive = false) {
         return this.prisma.productType.findMany({
             where: includeInactive ? {} : { isActive: true },
-            orderBy: { name: 'asc' },
+            orderBy: { name: "asc" },
         });
     }
     async findOne(id) {
@@ -43,7 +43,7 @@ let ProductTypesService = class ProductTypesService {
             },
         });
         if (!productType) {
-            throw new common_1.NotFoundException('Тип продукта не найден');
+            throw new common_1.NotFoundException("Тип продукта не найден");
         }
         return productType;
     }
@@ -54,7 +54,7 @@ let ProductTypesService = class ProductTypesService {
                 where: { name: updateProductTypeDto.name },
             });
             if (existing && existing.id !== id) {
-                throw new common_1.ConflictException('Тип продукта с таким названием уже существует');
+                throw new common_1.ConflictException("Тип продукта с таким названием уже существует");
             }
         }
         return this.prisma.productType.update({

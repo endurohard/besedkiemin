@@ -1,0 +1,171 @@
+name: tests
+
+on:
+  push:
+    branches: [main, docker-deploy]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-unit:
+    name: Backend unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Prisma client
+        working-directory: backend
+        run: npx prisma generate
+      - name: Run unit tests with coverage
+        working-directory: backend
+        run: npm run test:cov -- --ci
+      - name: Upload backend unit coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-coverage
+          path: backend/coverage
+          if-no-files-found: ignore
+
+  backend-integration:
+    name: Backend integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Prisma client
+        working-directory: backend
+        run: npx prisma generate
+      - name: Run integration tests (testcontainers)
+        working-directory: backend
+        run: npm run test:int -- --ci
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: 'true'
+      - name: Upload backend integration coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-coverage
+          path: backend/coverage-integration
+          if-no-files-found: ignore
+
+  backend-e2e:
+    name: Backend E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Prisma client
+        working-directory: backend
+        run: npx prisma generate
+      - name: Run E2E tests (testcontainers)
+        working-directory: backend
+        run: npm run test:e2e -- --ci
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: 'true'
+      - name: Upload backend E2E coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-e2e-coverage
+          path: backend/coverage-e2e
+          if-no-files-found: ignore
+
+  frontend-unit:
+    name: Frontend unit (vitest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run vitest with coverage
+        working-directory: frontend
+        run: npm run test:coverage
+      - name: Upload frontend unit coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-unit-coverage
+          path: frontend/coverage
+          if-no-files-found: ignore
+
+  frontend-e2e:
+    name: Frontend E2E (playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run Playwright smoke suite
+        working-directory: frontend
+        run: npm run test:e2e
+        env:
+          CI: 'true'
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore
+
+  coverage-gate:
+    name: Coverage gate
+    runs-on: ubuntu-latest
+    needs: [backend-unit, backend-integration, backend-e2e, frontend-unit]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-unit-coverage
+          path: coverage/backend-unit
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-integration-coverage
+          path: coverage/backend-integration
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-e2e-coverage
+          path: coverage/backend-e2e
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-unit-coverage
+          path: coverage/frontend-unit
+      - name: Enforce coverage thresholds
+        run: node .github/scripts/check-coverage.mjs

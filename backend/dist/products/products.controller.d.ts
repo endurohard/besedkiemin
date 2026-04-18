@@ -1,7 +1,7 @@
-import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductionStage } from '@prisma/client';
+import { ProductsService } from "./products.service";
+import { CreateProductDto } from "./dto/create-product.dto";
+import { UpdateProductDto } from "./dto/update-product.dto";
+import { ProductionStage } from "@prisma/client";
 export declare class ProductsController {
     private readonly productsService;
     constructor(productsService: ProductsService);

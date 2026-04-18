@@ -30,10 +30,10 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
             },
         });
         if (products.length !== productIds.length) {
-            throw new common_1.BadRequestException('Некоторые товары не найдены или неактивны');
+            throw new common_1.BadRequestException("Некоторые товары не найдены или неактивны");
         }
         const orderCount = await this.prisma.catalogOrder.count();
-        const orderNumber = `WEB-${String(orderCount + 1).padStart(6, '0')}`;
+        const orderNumber = `WEB-${String(orderCount + 1).padStart(6, "0")}`;
         let totalAmount = 0;
         const itemsData = createDto.items.map((item) => {
             const product = products.find((p) => p.id === item.productId);
@@ -85,9 +85,9 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
             if (order.items.length > 0) {
                 message += `\n📦 <b>Товары:</b>\n`;
                 order.items.forEach((item) => {
-                    message += `   • ${item.product.name} x ${item.quantity} = ${((item.price ?? 0) * item.quantity).toLocaleString('ru-RU')} ₽\n`;
+                    message += `   • ${item.product.name} x ${item.quantity} = ${((item.price ?? 0) * item.quantity).toLocaleString("ru-RU")} ₽\n`;
                 });
-                message += `\n💰 <b>Итого: ${totalAmount.toLocaleString('ru-RU')} ₽</b>`;
+                message += `\n💰 <b>Итого: ${totalAmount.toLocaleString("ru-RU")} ₽</b>`;
             }
             else {
                 message += `\n<i>Товары не указаны (быстрая заявка)</i>`;
@@ -95,12 +95,14 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
             await this.telegramService.notifyAdmins(message);
         }
         catch (error) {
-            this.logger.error('Ошибка отправки уведомления в Telegram:', error);
+            this.logger.error("Ошибка отправки уведомления в Telegram:", error);
         }
         return order;
     }
     async findAll(filters) {
-        const where = filters?.status ? { status: filters.status } : {};
+        const where = filters?.status
+            ? { status: filters.status }
+            : {};
         const page = Math.max(1, filters?.page || constants_1.PAGINATION.DEFAULT_PAGE);
         const limit = Math.min(constants_1.PAGINATION.MAX_PAGE_SIZE, Math.max(1, filters?.limit || constants_1.PAGINATION.DEFAULT_PAGE_SIZE));
         const [orders, total] = await Promise.all([
@@ -108,7 +110,7 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
                 where,
                 skip: (page - 1) * limit,
                 take: limit,
-                orderBy: { createdAt: 'desc' },
+                orderBy: { createdAt: "desc" },
                 include: {
                     items: {
                         include: {
@@ -172,7 +174,7 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
             data: {
                 contactedAt: new Date(),
                 contactedBy: userId,
-                status: 'CONTACTED',
+                status: "CONTACTED",
             },
             include: {
                 items: {
@@ -185,10 +187,10 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
     }
     async markProcessed(id, userId) {
         const catalogOrder = await this.findOne(id);
-        if (catalogOrder.status === 'IN_WORK') {
+        if (catalogOrder.status === "IN_WORK") {
             return catalogOrder;
         }
-        const productionOrderNumber = catalogOrder.orderNumber.replace('WEB-', 'ORD-');
+        const productionOrderNumber = catalogOrder.orderNumber.replace("WEB-", "ORD-");
         const existingProductionOrder = await this.prisma.order.findFirst({
             where: { orderNumber: productionOrderNumber },
         });
@@ -198,7 +200,7 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
                 data: {
                     processedAt: new Date(),
                     processedBy: userId,
-                    status: 'IN_WORK',
+                    status: "IN_WORK",
                 },
                 include: {
                     items: {
@@ -216,17 +218,17 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
             }),
             this.prisma.workflowStage.findFirst({
                 where: { isActive: true },
-                orderBy: { order: 'asc' },
+                orderBy: { order: "asc" },
                 include: { roles: { include: { role: true } } },
             }),
         ]);
         if (!defaultProductType) {
-            throw new common_1.BadRequestException('Не найдено активных типов продукции');
+            throw new common_1.BadRequestException("Не найдено активных типов продукции");
         }
         if (!firstStage) {
-            throw new common_1.BadRequestException('Не найдено активных стадий производства');
+            throw new common_1.BadRequestException("Не найдено активных стадий производства");
         }
-        const firstStageRoleIds = firstStage.roles.map(r => r.roleId);
+        const firstStageRoleIds = firstStage.roles.map((r) => r.roleId);
         const workers = await this.prisma.user.findMany({
             where: {
                 roleId: { in: firstStageRoleIds },
@@ -241,26 +243,28 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
         });
         const itemsToProcess = catalogOrder.items.length > 0
             ? catalogOrder.items
-            : [{
-                    product: { name: 'Заказ с сайта (уточнить состав)' },
+            : [
+                {
+                    product: { name: "Заказ с сайта (уточнить состав)" },
                     quantity: 1,
-                    price: 0
-                }];
+                    price: 0,
+                },
+            ];
         const result = await this.prisma.$transaction(async (tx) => {
             const lockedOrder = await tx.catalogOrder.findUnique({
                 where: { id },
                 select: { status: true },
             });
-            if (lockedOrder?.status === 'IN_WORK') {
-                throw new common_1.BadRequestException('Заказ уже обрабатывается');
+            if (lockedOrder?.status === "IN_WORK") {
+                throw new common_1.BadRequestException("Заказ уже обрабатывается");
             }
             const productionOrder = await tx.order.create({
                 data: {
                     orderNumber: productionOrderNumber,
                     customerName: catalogOrder.customerName,
                     customerPhone: catalogOrder.customerPhone,
-                    customerAddress: catalogOrder.deliveryAddress || '',
-                    status: 'NEW',
+                    customerAddress: catalogOrder.deliveryAddress || "",
+                    status: "NEW",
                     createdById: userId,
                 },
             });
@@ -288,7 +292,7 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
                 data: {
                     processedAt: new Date(),
                     processedBy: userId,
-                    status: 'IN_WORK',
+                    status: "IN_WORK",
                 },
                 include: {
                     items: {
@@ -305,7 +309,7 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
             .map(async (worker) => {
             const message = `🆕 *НОВАЯ ЗАДАЧА*\n\n` +
                 `*Продукт:* ${product.name}\n` +
-                `*Тип:* ${defaultProductType.name || 'Н/Д'}\n` +
+                `*Тип:* ${defaultProductType.name || "Н/Д"}\n` +
                 `*Количество:* ${product.quantity} шт.\n` +
                 `*Стадия:* ${firstStage.name}\n` +
                 `*Заказ:* ${result.productionOrder.orderNumber}\n` +
@@ -326,7 +330,7 @@ let CatalogOrdersService = CatalogOrdersService_1 = class CatalogOrdersService {
         return this.prisma.catalogOrder.update({
             where: { id },
             data: {
-                status: 'CANCELLED',
+                status: "CANCELLED",
                 cancellationReason,
                 processedAt: new Date(),
                 processedBy: userId,

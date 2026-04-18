@@ -27,8 +27,8 @@ const stageNames: Record<ProductionStage, string> = {
 };
 
 const statusColors: Record<PayrollStatus, string> = {
-  DRAFT: 'bg-gray-100 text-gray-800',
-  APPROVED: 'bg-blue-100 text-blue-800',
+  DRAFT: 'bg-muted text-foreground',
+  APPROVED: 'bg-primary/20 text-primary/90',
   PAID: 'bg-green-100 text-green-800',
   CANCELLED: 'bg-red-100 text-red-800',
 };
@@ -344,10 +344,10 @@ export default function PayrollPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
+      <div className="bg-card p-4 rounded-lg shadow mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Начало периода</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Начало периода</label>
             <input
               type="date"
               value={periodStart}
@@ -356,7 +356,7 @@ export default function PayrollPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Конец периода</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Конец периода</label>
             <input
               type="date"
               value={periodEnd}
@@ -365,7 +365,7 @@ export default function PayrollPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Сотрудник</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Сотрудник</label>
             <select
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
@@ -387,7 +387,7 @@ export default function PayrollPage() {
                 else if (activeTab === 'work-logs') loadWorkLogs();
                 else if (activeTab === 'penalties') loadPenalties();
               }}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+              className="bg-muted text-foreground px-4 py-2 rounded-lg hover:bg-accent"
             >
               Применить
             </button>
@@ -396,7 +396,7 @@ export default function PayrollPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b border-border mb-6">
         <nav className="-mb-px flex space-x-8">
           {[
             ...(!isWarehouse ? [
@@ -414,8 +414,8 @@ export default function PayrollPage() {
               onClick={() => setActiveTab(tab.id as Tab)}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               {tab.name}
@@ -429,26 +429,26 @@ export default function PayrollPage() {
         <div>
           {/* Totals */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-sm text-gray-500">Сдельная оплата</div>
+            <div className="bg-card p-4 rounded-lg shadow">
+              <div className="text-sm text-muted-foreground">Сдельная оплата</div>
               <div className="text-2xl font-bold text-green-600">
                 {formatCurrency(summary.totals.workAmount)}
               </div>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-sm text-gray-500">Комиссия</div>
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="bg-card p-4 rounded-lg shadow">
+              <div className="text-sm text-muted-foreground">Комиссия</div>
+              <div className="text-2xl font-bold text-primary">
                 {formatCurrency(summary.totals.commissionAmount)}
               </div>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-sm text-gray-500">Штрафы</div>
+            <div className="bg-card p-4 rounded-lg shadow">
+              <div className="text-sm text-muted-foreground">Штрафы</div>
               <div className="text-2xl font-bold text-red-600">
                 {formatCurrency(summary.totals.penaltyAmount)}
               </div>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-sm text-gray-500">Итого к выплате</div>
+            <div className="bg-card p-4 rounded-lg shadow">
+              <div className="text-sm text-muted-foreground">Итого к выплате</div>
               <div className="text-2xl font-bold">
                 {formatCurrency(summary.totals.totalAmount)}
               </div>
@@ -456,28 +456,28 @@ export default function PayrollPage() {
           </div>
 
           {/* Users table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-card rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Сотрудник</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Роль</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Сдельная</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Комиссия</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Штрафы</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Итого</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Работ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Сотрудник</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Роль</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Сдельная</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Комиссия</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Штрафы</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Итого</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Работ</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {summary.users.map((userSummary) => (
-                  <tr key={userSummary.userId} className="hover:bg-gray-50">
+                  <tr key={userSummary.userId} className="hover:bg-muted/50">
                     <td className="px-6 py-4 whitespace-nowrap">{userSummary.userName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{userSummary.role}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{userSummary.role}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-green-600">
                       {formatCurrency(userSummary.workAmount)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-blue-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-primary">
                       {formatCurrency(userSummary.commissionAmount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-red-600">
@@ -486,14 +486,14 @@ export default function PayrollPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right font-bold">
                       {formatCurrency(userSummary.totalAmount)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-muted-foreground">
                       {userSummary.workLogsCount}
                     </td>
                   </tr>
                 ))}
                 {summary.users.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-4 text-center text-muted-foreground">
                       Нет данных за выбранный период
                     </td>
                   </tr>
@@ -506,20 +506,20 @@ export default function PayrollPage() {
 
       {/* Periods Tab */}
       {activeTab === 'periods' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="bg-card rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Сотрудник</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Период</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Итого</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Статус</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Действия</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Сотрудник</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Период</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Итого</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Статус</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Действия</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-card divide-y divide-border">
               {periods.map((period) => (
-                <tr key={period.id} className="hover:bg-gray-50">
+                <tr key={period.id} className="hover:bg-muted/50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     {period.user?.lastName} {period.user?.firstName}
                   </td>
@@ -538,7 +538,7 @@ export default function PayrollPage() {
                     <div className="flex justify-center space-x-2">
                       <button
                         onClick={() => openPeriodDetail(period)}
-                        className="text-blue-600 hover:text-blue-900 text-sm"
+                        className="text-primary hover:text-blue-900 text-sm"
                       >
                         Детали
                       </button>
@@ -580,7 +580,7 @@ export default function PayrollPage() {
               ))}
               {periods.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-4 text-center text-muted-foreground">
                     Нет расчетов за выбранный период
                   </td>
                 </tr>
@@ -592,22 +592,22 @@ export default function PayrollPage() {
 
       {/* Work Logs Tab */}
       {activeTab === 'work-logs' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="bg-card rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Сотрудник</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Продукт</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Этап</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Цена</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Сумма</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Дата</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Сотрудник</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Продукт</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Этап</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Кол-во</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Цена</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Сумма</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-card divide-y divide-border">
               {workLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-gray-50">
+                <tr key={log.id} className="hover:bg-muted/50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {formatDate(log.completedAt)}
                   </td>
@@ -623,7 +623,7 @@ export default function PayrollPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     {log.quantity}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-muted-foreground">
                     {formatCurrency(log.pricePerUnit)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-green-600">
@@ -633,7 +633,7 @@ export default function PayrollPage() {
               ))}
               {workLogs.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-4 text-center text-muted-foreground">
                     Нет записей за выбранный период
                   </td>
                 </tr>
@@ -656,21 +656,21 @@ export default function PayrollPage() {
               </button>
             </div>
           )}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-card rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Сотрудник</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Причина</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Сумма</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Статус</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Действия</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Дата</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Сотрудник</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Причина</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Сумма</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Статус</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Действия</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {penalties.map((penalty) => (
-                  <tr key={penalty.id} className={`hover:bg-gray-50 ${penalty.isCancelled ? 'opacity-50' : ''}`}>
+                  <tr key={penalty.id} className={`hover:bg-muted/50 ${penalty.isCancelled ? 'opacity-50' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {formatDate(penalty.date)}
                     </td>
@@ -680,7 +680,7 @@ export default function PayrollPage() {
                     <td className="px-6 py-4">
                       <div className="text-sm">{penalty.reason}</div>
                       {penalty.notes && (
-                        <div className="text-xs text-gray-500">{penalty.notes}</div>
+                        <div className="text-xs text-muted-foreground">{penalty.notes}</div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-red-600">
@@ -688,7 +688,7 @@ export default function PayrollPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       {penalty.isCancelled ? (
-                        <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600">
+                        <span className="px-2 py-1 rounded-full text-xs bg-muted text-muted-foreground">
                           Отменен
                         </span>
                       ) : (
@@ -701,7 +701,7 @@ export default function PayrollPage() {
                       {canManage && !penalty.isCancelled && (
                         <button
                           onClick={() => handleCancelPenalty(penalty.id)}
-                          className="text-gray-600 hover:text-gray-900 text-sm"
+                          className="text-muted-foreground hover:text-gray-900 text-sm"
                         >
                           Отменить
                         </button>
@@ -711,7 +711,7 @@ export default function PayrollPage() {
                 ))}
                 {penalties.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-4 text-center text-muted-foreground">
                       Нет штрафов за выбранный период
                     </td>
                   </tr>
@@ -735,21 +735,21 @@ export default function PayrollPage() {
               </button>
             </div>
           )}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-card rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тип продукта</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Этап</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Цена за шт.</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Описание</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Статус</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Действия</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Тип продукта</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Этап</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Цена за шт.</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Описание</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Статус</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Действия</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {workRates.map((rate) => (
-                  <tr key={rate.id} className="hover:bg-gray-50">
+                  <tr key={rate.id} className="hover:bg-muted/50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       {rate.productType?.name || '-'}
                     </td>
@@ -759,11 +759,11 @@ export default function PayrollPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
                       {formatCurrency(rate.pricePerUnit)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {rate.description || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs ${rate.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${rate.isActive ? 'bg-green-100 text-green-800' : 'bg-muted text-muted-foreground'}`}>
                         {rate.isActive ? 'Активна' : 'Неактивна'}
                       </span>
                     </td>
@@ -781,7 +781,7 @@ export default function PayrollPage() {
                 ))}
                 {workRates.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-4 text-center text-muted-foreground">
                       Расценки не настроены
                     </td>
                   </tr>
@@ -795,9 +795,9 @@ export default function PayrollPage() {
       {/* Calculate Modal */}
       {showCalculateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Рассчитать зарплату</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Будет произведен расчет зарплаты за период с {formatDate(periodStart)} по {formatDate(periodEnd)}
               {selectedUserId ? ' для выбранного сотрудника' : ' для всех сотрудников'}.
             </p>
@@ -807,7 +807,7 @@ export default function PayrollPage() {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowCalculateModal(false)}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border rounded-lg hover:bg-muted/50"
               >
                 Отмена
               </button>
@@ -826,12 +826,12 @@ export default function PayrollPage() {
       {/* Work Rate Modal */}
       {showWorkRateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Новая расценка</h2>
             <form onSubmit={handleCreateWorkRate}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Тип продукта</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Тип продукта</label>
                   <select
                     value={workRateForm.productTypeId}
                     onChange={(e) => setWorkRateForm({ ...workRateForm, productTypeId: e.target.value, nomenclatureId: '' })}
@@ -846,8 +846,8 @@ export default function PayrollPage() {
                 </div>
                 {workRateForm.productTypeId && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Изделие (номенклатура) <span className="text-gray-400 text-xs">— необязательно</span>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      Изделие (номенклатура) <span className="text-muted-foreground text-xs">— необязательно</span>
                     </label>
                     {nomenclatures.length > 0 ? (
                       <>
@@ -863,7 +863,7 @@ export default function PayrollPage() {
                             </option>
                           ))}
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           Выберите конкретное изделие для индивидуальной расценки
                         </p>
                       </>
@@ -871,7 +871,7 @@ export default function PayrollPage() {
                       <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                         Нет номенклатур для этого типа продукта. Расценка будет применяться ко всем изделиям этого типа.
                         <br />
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           Создайте номенклатуры в разделе "Каталог" для индивидуальных расценок.
                         </span>
                       </div>
@@ -879,7 +879,7 @@ export default function PayrollPage() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Этап</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Этап</label>
                   <select
                     value={workRateForm.stage}
                     onChange={(e) => setWorkRateForm({ ...workRateForm, stage: e.target.value as ProductionStage })}
@@ -894,7 +894,7 @@ export default function PayrollPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Цена за единицу (руб.)</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Цена за единицу (руб.)</label>
                   <input
                     type="number"
                     value={workRateForm.pricePerUnit}
@@ -906,7 +906,7 @@ export default function PayrollPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Описание</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Описание</label>
                   <input
                     type="text"
                     value={workRateForm.description}
@@ -920,7 +920,7 @@ export default function PayrollPage() {
                 <button
                   type="button"
                   onClick={() => setShowWorkRateModal(false)}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border rounded-lg hover:bg-muted/50"
                 >
                   Отмена
                 </button>
@@ -939,12 +939,12 @@ export default function PayrollPage() {
       {/* Penalty Modal */}
       {showPenaltyModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Новый штраф</h2>
             <form onSubmit={handleCreatePenalty}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Сотрудник</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Сотрудник</label>
                   <select
                     value={penaltyForm.userId}
                     onChange={(e) => setPenaltyForm({ ...penaltyForm, userId: e.target.value })}
@@ -960,7 +960,7 @@ export default function PayrollPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Сумма штрафа (руб.)</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Сумма штрафа (руб.)</label>
                   <div className="grid grid-cols-5 gap-2 mb-2">
                     {[200, 400, 600, 800, 1000].map((amt) => (
                       <button
@@ -970,7 +970,7 @@ export default function PayrollPage() {
                         className={`px-2 py-2 rounded-lg text-sm font-medium border transition-colors ${
                           penaltyForm.amount === amt
                             ? 'bg-red-600 text-white border-red-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                            : 'bg-card text-foreground border-border hover:bg-muted/50'
                         }`}
                       >
                         {amt} ₽
@@ -986,7 +986,7 @@ export default function PayrollPage() {
                         className={`px-2 py-2 rounded-lg text-sm font-medium border transition-colors ${
                           penaltyForm.amount === amt
                             ? 'bg-red-600 text-white border-red-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                            : 'bg-card text-foreground border-border hover:bg-muted/50'
                         }`}
                       >
                         {amt} ₽
@@ -998,7 +998,7 @@ export default function PayrollPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Причина</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Причина</label>
                   <input
                     type="text"
                     value={penaltyForm.reason}
@@ -1008,7 +1008,7 @@ export default function PayrollPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Заметки</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Заметки</label>
                   <textarea
                     value={penaltyForm.notes}
                     onChange={(e) => setPenaltyForm({ ...penaltyForm, notes: e.target.value })}
@@ -1022,7 +1022,7 @@ export default function PayrollPage() {
                 <button
                   type="button"
                   onClick={() => setShowPenaltyModal(false)}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border rounded-lg hover:bg-muted/50"
                 >
                   Отмена
                 </button>
@@ -1041,40 +1041,40 @@ export default function PayrollPage() {
       {/* Period Detail Modal */}
       {showPeriodDetailModal && selectedPeriod && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-auto">
+          <div className="bg-card rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">
                 Детали расчета: {selectedPeriod.user?.lastName} {selectedPeriod.user?.firstName}
               </h2>
               <button
                 onClick={() => setShowPeriodDetailModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-muted-foreground hover:text-foreground text-2xl"
               >
                 &times;
               </button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-500">Оклад</div>
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <div className="text-sm text-muted-foreground">Оклад</div>
                 <div className="font-bold">{formatCurrency(selectedPeriod.baseSalary)}</div>
               </div>
               <div className="bg-green-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-500">Сдельная</div>
+                <div className="text-sm text-muted-foreground">Сдельная</div>
                 <div className="font-bold text-green-600">{formatCurrency(selectedPeriod.workAmount)}</div>
               </div>
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-500">Комиссия</div>
-                <div className="font-bold text-blue-600">{formatCurrency(selectedPeriod.commissionAmount)}</div>
+              <div className="bg-primary/10 p-3 rounded-lg">
+                <div className="text-sm text-muted-foreground">Комиссия</div>
+                <div className="font-bold text-primary">{formatCurrency(selectedPeriod.commissionAmount)}</div>
               </div>
               <div className="bg-red-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-500">Штрафы</div>
+                <div className="text-sm text-muted-foreground">Штрафы</div>
                 <div className="font-bold text-red-600">{formatCurrency(selectedPeriod.penaltyAmount)}</div>
               </div>
             </div>
 
-            <div className="text-right mb-6 p-4 bg-gray-100 rounded-lg">
-              <span className="text-gray-600">Итого к выплате: </span>
+            <div className="text-right mb-6 p-4 bg-muted rounded-lg">
+              <span className="text-muted-foreground">Итого к выплате: </span>
               <span className="text-2xl font-bold">{formatCurrency(selectedPeriod.totalAmount)}</span>
             </div>
 
@@ -1083,17 +1083,17 @@ export default function PayrollPage() {
               <div className="mb-6">
                 <h3 className="font-bold mb-2">Выполненные работы ({selectedPeriod.workLogs.length})</h3>
                 <div className="border rounded-lg overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className="min-w-full divide-y divide-border">
+                    <thead className="bg-muted/50">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Дата</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Продукт</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Этап</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Кол-во</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Сумма</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Дата</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Продукт</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Этап</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Кол-во</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Сумма</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-border">
                       {selectedPeriod.workLogs.map((log) => (
                         <tr key={log.id}>
                           <td className="px-4 py-2 text-sm">{formatDate(log.completedAt)}</td>
@@ -1116,15 +1116,15 @@ export default function PayrollPage() {
               <div className="mb-6">
                 <h3 className="font-bold mb-2">Штрафы ({selectedPeriod.penalties.length})</h3>
                 <div className="border rounded-lg overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className="min-w-full divide-y divide-border">
+                    <thead className="bg-muted/50">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Дата</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Причина</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Сумма</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Дата</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Причина</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Сумма</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-border">
                       {selectedPeriod.penalties.map((penalty) => (
                         <tr key={penalty.id}>
                           <td className="px-4 py-2 text-sm">{formatDate(penalty.date)}</td>

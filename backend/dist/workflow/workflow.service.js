@@ -19,7 +19,7 @@ let WorkflowService = class WorkflowService {
     async findAll() {
         return this.prisma.workflowStage.findMany({
             orderBy: {
-                order: 'asc',
+                order: "asc",
             },
         });
     }
@@ -29,7 +29,7 @@ let WorkflowService = class WorkflowService {
                 isActive: true,
             },
             orderBy: {
-                order: 'asc',
+                order: "asc",
             },
         });
     }
@@ -38,7 +38,7 @@ let WorkflowService = class WorkflowService {
             where: { id },
         });
         if (!stage) {
-            throw new common_1.NotFoundException('Этап workflow не найден');
+            throw new common_1.NotFoundException("Этап workflow не найден");
         }
         return stage;
     }
@@ -80,7 +80,7 @@ let WorkflowService = class WorkflowService {
             where: { workflowStageId: id },
         });
         if (relatedTasks > 0 || relatedHistory > 0) {
-            throw new common_1.BadRequestException('Нельзя удалить этап, так как с ним связаны задачи или история продуктов. Деактивируйте его вместо удаления.');
+            throw new common_1.BadRequestException("Нельзя удалить этап, так как с ним связаны задачи или история продуктов. Деактивируйте его вместо удаления.");
         }
         return this.prisma.workflowStage.delete({
             where: { id },
@@ -94,7 +94,7 @@ let WorkflowService = class WorkflowService {
             },
         });
         if (stages.length !== stageIds.length) {
-            throw new common_1.BadRequestException('Некоторые этапы не найдены');
+            throw new common_1.BadRequestException("Некоторые этапы не найдены");
         }
         await this.prisma.$transaction(async (tx) => {
             for (let i = 0; i < stageIds.length; i++) {
@@ -115,38 +115,38 @@ let WorkflowService = class WorkflowService {
     async initializeDefaultWorkflow() {
         const existingStages = await this.prisma.workflowStage.count();
         if (existingStages > 0) {
-            throw new common_1.BadRequestException('Workflow уже настроен');
+            throw new common_1.BadRequestException("Workflow уже настроен");
         }
         const defaultStages = [
             {
-                name: 'Заготовка',
-                description: 'Подготовка материалов и заготовок',
+                name: "Заготовка",
+                description: "Подготовка материалов и заготовок",
                 order: 1,
-                legacyStage: 'PREPARATION',
+                legacyStage: "PREPARATION",
             },
             {
-                name: 'Сборка',
-                description: 'Сборка изделий',
+                name: "Сборка",
+                description: "Сборка изделий",
                 order: 2,
-                legacyStage: 'ASSEMBLY',
+                legacyStage: "ASSEMBLY",
             },
             {
-                name: 'Покраска',
-                description: 'Покраска и финишная обработка',
+                name: "Покраска",
+                description: "Покраска и финишная обработка",
                 order: 3,
-                legacyStage: 'PAINTING',
+                legacyStage: "PAINTING",
             },
             {
-                name: 'Пошив',
-                description: 'Пошив и обивка изделий',
+                name: "Пошив",
+                description: "Пошив и обивка изделий",
                 order: 4,
-                legacyStage: 'SEWING',
+                legacyStage: "SEWING",
             },
             {
-                name: 'Склад',
-                description: 'Проверка качества, упаковка и отгрузка',
+                name: "Склад",
+                description: "Проверка качества, упаковка и отгрузка",
                 order: 5,
-                legacyStage: 'QUALITY_CHECK',
+                legacyStage: "QUALITY_CHECK",
             },
         ];
         for (const stage of defaultStages) {
@@ -162,7 +162,7 @@ let WorkflowService = class WorkflowService {
                 isActive: true,
             },
             orderBy: {
-                order: 'asc',
+                order: "asc",
             },
         });
     }
@@ -174,7 +174,7 @@ let WorkflowService = class WorkflowService {
                 isActive: true,
             },
             orderBy: {
-                order: 'desc',
+                order: "desc",
             },
         });
     }

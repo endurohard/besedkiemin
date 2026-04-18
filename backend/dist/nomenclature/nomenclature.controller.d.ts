@@ -1,6 +1,6 @@
-import { NomenclatureService } from './nomenclature.service';
-import { CreateNomenclatureDto } from './dto/create-nomenclature.dto';
-import { UpdateNomenclatureDto } from './dto/update-nomenclature.dto';
+import { NomenclatureService } from "./nomenclature.service";
+import { CreateNomenclatureDto } from "./dto/create-nomenclature.dto";
+import { UpdateNomenclatureDto } from "./dto/update-nomenclature.dto";
 export declare class NomenclatureController {
     private readonly nomenclatureService;
     constructor(nomenclatureService: NomenclatureService);

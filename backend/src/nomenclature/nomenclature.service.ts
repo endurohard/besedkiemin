@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateNomenclatureDto } from './dto/create-nomenclature.dto';
-import { UpdateNomenclatureDto } from './dto/update-nomenclature.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateNomenclatureDto } from "./dto/create-nomenclature.dto";
+import { UpdateNomenclatureDto } from "./dto/update-nomenclature.dto";
 
 @Injectable()
 export class NomenclatureService {
@@ -22,10 +22,7 @@ export class NomenclatureService {
       include: {
         productType: true,
       },
-      orderBy: [
-        { productType: { name: 'asc' } },
-        { name: 'asc' },
-      ],
+      orderBy: [{ productType: { name: "asc" } }, { name: "asc" }],
     });
   }
 
@@ -38,7 +35,7 @@ export class NomenclatureService {
       include: {
         productType: true,
       },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
   }
 

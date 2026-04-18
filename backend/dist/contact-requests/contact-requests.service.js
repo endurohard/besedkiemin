@@ -31,7 +31,7 @@ let ContactRequestsService = class ContactRequestsService {
         const where = onlyUnprocessed ? { isProcessed: false } : {};
         return this.prisma.contactRequest.findMany({
             where,
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
         });
     }
     async findOne(id) {

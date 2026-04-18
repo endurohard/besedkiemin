@@ -5,9 +5,9 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
-import { Prisma } from '@prisma/client';
+} from "@nestjs/common";
+import { Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 
 interface ErrorResponse {
   statusCode: number;
@@ -35,7 +35,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(errorResponse.statusCode).json(errorResponse);
   }
 
-  private buildErrorResponse(exception: unknown, request: Request): ErrorResponse {
+  private buildErrorResponse(
+    exception: unknown,
+    request: Request,
+  ): ErrorResponse {
     const timestamp = new Date().toISOString();
     const path = request.url;
 
@@ -47,9 +50,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       let message: string;
       let details: any;
 
-      if (typeof exceptionResponse === 'string') {
+      if (typeof exceptionResponse === "string") {
         message = exceptionResponse;
-      } else if (typeof exceptionResponse === 'object') {
+      } else if (typeof exceptionResponse === "object") {
         const res = exceptionResponse as any;
         message = res.message || exception.message;
         details = res.error ? undefined : res;
@@ -63,7 +66,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         error: this.getErrorName(status),
         timestamp,
         path,
-        details: Array.isArray(message) && message.length > 1 ? message : details,
+        details:
+          Array.isArray(message) && message.length > 1 ? message : details,
       };
     }
 
@@ -75,8 +79,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof Prisma.PrismaClientValidationError) {
       return {
         statusCode: HttpStatus.BAD_REQUEST,
-        message: 'Ошибка валидации данных',
-        error: 'Bad Request',
+        message: "Ошибка валидации данных",
+        error: "Bad Request",
         timestamp,
         path,
       };
@@ -86,10 +90,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const unknownError = exception as Error;
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: process.env.NODE_ENV === 'production'
-        ? 'Внутренняя ошибка сервера'
-        : unknownError?.message || 'Неизвестная ошибка',
-      error: 'Internal Server Error',
+      message:
+        process.env.NODE_ENV === "production"
+          ? "Внутренняя ошибка сервера"
+          : unknownError?.message || "Неизвестная ошибка",
+      error: "Internal Server Error",
       timestamp,
       path,
     };
@@ -101,39 +106,39 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     path: string,
   ): ErrorResponse {
     switch (exception.code) {
-      case 'P2002': // Unique constraint violation
+      case "P2002": // Unique constraint violation
         const target = (exception.meta?.target as string[]) || [];
         return {
           statusCode: HttpStatus.CONFLICT,
-          message: `Запись с такими данными уже существует: ${target.join(', ')}`,
-          error: 'Conflict',
+          message: `Запись с такими данными уже существует: ${target.join(", ")}`,
+          error: "Conflict",
           timestamp,
           path,
         };
 
-      case 'P2025': // Record not found
+      case "P2025": // Record not found
         return {
           statusCode: HttpStatus.NOT_FOUND,
-          message: 'Запись не найдена',
-          error: 'Not Found',
+          message: "Запись не найдена",
+          error: "Not Found",
           timestamp,
           path,
         };
 
-      case 'P2003': // Foreign key constraint failed
+      case "P2003": // Foreign key constraint failed
         return {
           statusCode: HttpStatus.BAD_REQUEST,
-          message: 'Связанная запись не найдена',
-          error: 'Bad Request',
+          message: "Связанная запись не найдена",
+          error: "Bad Request",
           timestamp,
           path,
         };
 
-      case 'P2014': // Relation violation
+      case "P2014": // Relation violation
         return {
           statusCode: HttpStatus.BAD_REQUEST,
-          message: 'Невозможно удалить запись: существуют связанные данные',
-          error: 'Bad Request',
+          message: "Невозможно удалить запись: существуют связанные данные",
+          error: "Bad Request",
           timestamp,
           path,
         };
@@ -141,10 +146,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       default:
         return {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: process.env.NODE_ENV === 'production'
-            ? 'Ошибка базы данных'
-            : `Database error: ${exception.code}`,
-          error: 'Internal Server Error',
+          message:
+            process.env.NODE_ENV === "production"
+              ? "Ошибка базы данных"
+              : `Database error: ${exception.code}`,
+          error: "Internal Server Error",
           timestamp,
           path,
         };
@@ -153,30 +159,34 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
   private getErrorName(status: number): string {
     const statusNames: Record<number, string> = {
-      400: 'Bad Request',
-      401: 'Unauthorized',
-      403: 'Forbidden',
-      404: 'Not Found',
-      409: 'Conflict',
-      422: 'Unprocessable Entity',
-      429: 'Too Many Requests',
-      500: 'Internal Server Error',
-      502: 'Bad Gateway',
-      503: 'Service Unavailable',
+      400: "Bad Request",
+      401: "Unauthorized",
+      403: "Forbidden",
+      404: "Not Found",
+      409: "Conflict",
+      422: "Unprocessable Entity",
+      429: "Too Many Requests",
+      500: "Internal Server Error",
+      502: "Bad Gateway",
+      503: "Service Unavailable",
     };
 
-    return statusNames[status] || 'Error';
+    return statusNames[status] || "Error";
   }
 
-  private logError(exception: unknown, request: Request, errorResponse: ErrorResponse): void {
+  private logError(
+    exception: unknown,
+    request: Request,
+    errorResponse: ErrorResponse,
+  ): void {
     const logMessage = {
       method: request.method,
       url: request.url,
       statusCode: errorResponse.statusCode,
       message: errorResponse.message,
       userId: (request as any).user?.userId,
-      userAgent: request.headers['user-agent'],
-      ip: request.ip || request.headers['x-forwarded-for'],
+      userAgent: request.headers["user-agent"],
+      ip: request.ip || request.headers["x-forwarded-for"],
     };
 
     if (errorResponse.statusCode >= 500) {

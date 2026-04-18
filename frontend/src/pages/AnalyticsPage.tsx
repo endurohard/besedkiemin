@@ -102,7 +102,7 @@ export const AnalyticsPage = () => {
           <Card>
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">Активные заказы</p>
-              <p className="text-3xl font-bold mt-2 text-blue-600">
+              <p className="text-3xl font-bold mt-2 text-primary">
                 {productionOverview?.orders.active || 0}
               </p>
             </CardContent>
@@ -138,7 +138,7 @@ export const AnalyticsPage = () => {
               {Object.entries(productionOverview?.stageDistribution || {}).map(
                 ([stage, count]) => (
                   <div key={stage} className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-2xl font-bold text-blue-600">{count}</p>
+                    <p className="text-2xl font-bold text-primary">{count}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {getStageLabel(stage as ProductionStage)}
                     </p>
@@ -257,7 +257,7 @@ export const AnalyticsPage = () => {
                     <tr key={perf.user.id} className="border-b hover:bg-muted/50">
                       <td className="p-2 font-medium">{perf.user.name}</td>
                       <td className="p-2">
-                        <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
+                        <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary/90">
                           {typeof perf.user.role === 'object' ? perf.user.role.name : perf.user.role}
                         </span>
                       </td>
@@ -325,7 +325,7 @@ export const AnalyticsPage = () => {
                       <span className="text-sm text-muted-foreground">
                         В производстве:
                       </span>
-                      <span className="font-semibold text-blue-600">
+                      <span className="font-semibold text-primary">
                         {stat.inProduction}
                       </span>
                     </div>
@@ -411,7 +411,7 @@ export const AnalyticsPage = () => {
           <Card>
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">Создано заказов</p>
-              <p className="text-3xl font-bold mt-2 text-blue-600">
+              <p className="text-3xl font-bold mt-2 text-primary">
                 {performanceSummary?.ordersCreated || 0}
               </p>
             </CardContent>
@@ -467,10 +467,10 @@ export const AnalyticsPage = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-2">
-                <Timer size={20} className="text-blue-600" />
+                <Timer size={20} className="text-primary" />
                 <p className="text-sm text-muted-foreground">Полный цикл</p>
               </div>
-              <p className="text-3xl font-bold text-blue-600">
+              <p className="text-3xl font-bold text-primary">
                 {fullCycleAnalytics?.summary.avgFullCycleHours
                   ? formatDuration(fullCycleAnalytics.summary.avgFullCycleHours)
                   : '0 ч'}
@@ -596,7 +596,7 @@ export const AnalyticsPage = () => {
                           </div>
                         </td>
                         <td className="p-2 text-center">{cycle.quantity}</td>
-                        <td className="p-2 text-center font-semibold text-blue-600">
+                        <td className="p-2 text-center font-semibold text-primary">
                           {formatDuration(cycle.durations.fullCycleHours)}
                         </td>
                         <td className="p-2 text-center text-purple-600">
@@ -645,7 +645,7 @@ export const AnalyticsPage = () => {
                       <tr key={idx} className="border-b hover:bg-muted/50">
                         <td className="p-2 font-medium">{order.orderNumber}</td>
                         <td className="p-2">{order.customerName}</td>
-                        <td className="p-2 text-center font-semibold text-blue-600">
+                        <td className="p-2 text-center font-semibold text-primary">
                           {formatDuration(order.currentDurationHours)}
                         </td>
                         <td className="p-2 text-center">
@@ -663,7 +663,7 @@ export const AnalyticsPage = () => {
                             {order.products.map((product, pIdx) => (
                               <div key={pIdx} className="flex items-center gap-2">
                                 <span>{product.name}</span>
-                                <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
+                                <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary/90">
                                   {getStageLabel(product.stage)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">

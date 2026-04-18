@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class InventoryService {
@@ -18,11 +22,11 @@ export class InventoryService {
     });
 
     if (!productType) {
-      throw new NotFoundException('Тип товара не найден');
+      throw new NotFoundException("Тип товара не найден");
     }
 
     if (data.quantity <= 0) {
-      throw new BadRequestException('Количество должно быть больше 0');
+      throw new BadRequestException("Количество должно быть больше 0");
     }
 
     // Создаём товар на складе без привязки к заказу/продукту
@@ -41,9 +45,7 @@ export class InventoryService {
   }
 
   // Получить все складские остатки
-  async getAllInventory(options?: {
-    productTypeId?: string;
-  }) {
+  async getAllInventory(options?: { productTypeId?: string }) {
     const where = options?.productTypeId
       ? { productTypeId: options.productTypeId }
       : {};
@@ -79,7 +81,7 @@ export class InventoryService {
         },
       },
       orderBy: {
-        receivedAt: 'desc',
+        receivedAt: "desc",
       },
     });
 
@@ -98,7 +100,7 @@ export class InventoryService {
         order: true,
       },
       orderBy: {
-        receivedAt: 'desc',
+        receivedAt: "desc",
       },
     });
   }
@@ -115,7 +117,7 @@ export class InventoryService {
         order: true,
       },
       orderBy: {
-        receivedAt: 'desc',
+        receivedAt: "desc",
       },
     });
   }
@@ -143,7 +145,7 @@ export class InventoryService {
             },
           },
           orderBy: {
-            createdAt: 'desc',
+            createdAt: "desc",
           },
         },
       },
@@ -154,7 +156,7 @@ export class InventoryService {
   async getInventorySummary() {
     // Используем groupBy для агрегации на уровне БД
     const aggregated = await this.prisma.inventoryItem.groupBy({
-      by: ['productTypeId'],
+      by: ["productTypeId"],
       _sum: {
         quantity: true,
       },
@@ -164,7 +166,7 @@ export class InventoryService {
     });
 
     // Получаем типы продуктов одним запросом
-    const productTypeIds = aggregated.map(a => a.productTypeId);
+    const productTypeIds = aggregated.map((a) => a.productTypeId);
     const productTypes = await this.prisma.productType.findMany({
       where: {
         id: { in: productTypeIds },
@@ -175,9 +177,9 @@ export class InventoryService {
       },
     });
 
-    const productTypeMap = new Map(productTypes.map(pt => [pt.id, pt]));
+    const productTypeMap = new Map(productTypes.map((pt) => [pt.id, pt]));
 
-    return aggregated.map(a => ({
+    return aggregated.map((a) => ({
       productType: productTypeMap.get(a.productTypeId),
       totalQuantity: a._sum.quantity || 0,
       itemCount: a._count.id,

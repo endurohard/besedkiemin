@@ -16,13 +16,13 @@ const passport_local_1 = require("passport-local");
 const auth_service_1 = require("../auth.service");
 let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)(passport_local_1.Strategy) {
     constructor(authService) {
-        super({ usernameField: 'email' });
+        super({ usernameField: "email" });
         this.authService = authService;
     }
     async validate(email, password) {
         const user = await this.authService.validateUser(email, password);
         if (!user) {
-            throw new common_1.UnauthorizedException('Неверный email или пароль');
+            throw new common_1.UnauthorizedException("Неверный email или пароль");
         }
         return user;
     }

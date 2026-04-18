@@ -28,7 +28,7 @@ let CallbackService = CallbackService_1 = class CallbackService {
                 message: data.message || null,
                 catalogOrderId: data.catalogOrderId || null,
                 preferredTime: data.preferredTime || null,
-                status: 'NEW',
+                status: "NEW",
             },
         });
         try {
@@ -50,11 +50,11 @@ let CallbackService = CallbackService_1 = class CallbackService {
                     telegramMessage += `📋 <b>Заказ:</b> ${order.orderNumber}\n`;
                 }
             }
-            telegramMessage += `\n⏰ <b>Время заявки:</b> ${new Date().toLocaleString('ru-RU')}`;
+            telegramMessage += `\n⏰ <b>Время заявки:</b> ${new Date().toLocaleString("ru-RU")}`;
             await this.telegramService.notifyAdmins(telegramMessage);
         }
         catch (error) {
-            this.logger.error('Ошибка отправки уведомления в Telegram:', error);
+            this.logger.error("Ошибка отправки уведомления в Telegram:", error);
         }
         return request;
     }
@@ -62,7 +62,7 @@ let CallbackService = CallbackService_1 = class CallbackService {
         const where = status ? { status } : {};
         return this.prisma.callbackRequest.findMany({
             where,
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
         });
     }
     async findOne(id) {
@@ -87,13 +87,13 @@ let CallbackService = CallbackService_1 = class CallbackService {
         });
     }
     async markContacted(id, userId, notes) {
-        return this.updateStatus(id, 'CONTACTED', userId, notes);
+        return this.updateStatus(id, "CONTACTED", userId, notes);
     }
     async markCompleted(id, userId, notes) {
-        return this.updateStatus(id, 'COMPLETED', userId, notes);
+        return this.updateStatus(id, "COMPLETED", userId, notes);
     }
     async cancel(id, userId, notes) {
-        return this.updateStatus(id, 'CANCELLED', userId, notes);
+        return this.updateStatus(id, "CANCELLED", userId, notes);
     }
     async remove(id) {
         await this.findOne(id);

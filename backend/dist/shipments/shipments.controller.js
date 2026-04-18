@@ -59,15 +59,15 @@ let ShipmentsController = class ShipmentsController {
 exports.ShipmentsController = ShipmentsController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать отгрузку (списать товары со склада)' }),
-    __param(0, (0, common_1.Body)('items')),
-    __param(1, (0, common_1.Body)('customerName')),
-    __param(2, (0, common_1.Body)('customerPhone')),
-    __param(3, (0, common_1.Body)('deliveryAddress')),
-    __param(4, (0, common_1.Body)('deliveryDate')),
-    __param(5, (0, common_1.Body)('notes')),
-    __param(6, (0, common_1.Body)('orderNumber')),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Создать отгрузку (списать товары со склада)" }),
+    __param(0, (0, common_1.Body)("items")),
+    __param(1, (0, common_1.Body)("customerName")),
+    __param(2, (0, common_1.Body)("customerPhone")),
+    __param(3, (0, common_1.Body)("deliveryAddress")),
+    __param(4, (0, common_1.Body)("deliveryDate")),
+    __param(5, (0, common_1.Body)("notes")),
+    __param(6, (0, common_1.Body)("orderNumber")),
     __param(7, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Array, String, String, String, Date, String, String, Object]),
@@ -75,67 +75,72 @@ __decorate([
 ], ShipmentsController.prototype, "createShipment", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все отгрузки с пагинацией' }),
-    (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: client_1.ShipmentStatus, description: 'Фильтр по статусу' }),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить все отгрузки с пагинацией" }),
+    (0, swagger_1.ApiQuery)({
+        name: "status",
+        required: false,
+        enum: client_1.ShipmentStatus,
+        description: "Фильтр по статусу",
+    }),
     __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Query)('status')),
+    __param(1, (0, common_1.Query)("status")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], ShipmentsController.prototype, "getAllShipments", null);
 __decorate([
-    (0, common_1.Get)('status/:status'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить отгрузки по статусу' }),
-    __param(0, (0, common_1.Param)('status')),
+    (0, common_1.Get)("status/:status"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить отгрузки по статусу" }),
+    __param(0, (0, common_1.Param)("status")),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ShipmentsController.prototype, "getShipmentsByStatus", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить детали отгрузки' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить детали отгрузки" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ShipmentsController.prototype, "getShipment", null);
 __decorate([
-    (0, common_1.Patch)(':id/status'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Обновить статус отгрузки' }),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)('status')),
+    (0, common_1.Patch)(":id/status"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Обновить статус отгрузки" }),
+    __param(0, (0, common_1.Param)("id")),
+    __param(1, (0, common_1.Body)("status")),
     __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", void 0)
 ], ShipmentsController.prototype, "updateShipmentStatus", null);
 __decorate([
-    (0, common_1.Post)(':id/cancel'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Отменить отгрузку (вернуть товар на склад)' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)(":id/cancel"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Отменить отгрузку (вернуть товар на склад)" }),
+    __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ShipmentsController.prototype, "cancelShipment", null);
 __decorate([
-    (0, common_1.Get)(':id/waybill'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить данные для путевого листа' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id/waybill"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить данные для путевого листа" }),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ShipmentsController.prototype, "getWaybillData", null);
 exports.ShipmentsController = ShipmentsController = __decorate([
-    (0, swagger_1.ApiTags)('Shipments'),
-    (0, common_1.Controller)('shipments'),
+    (0, swagger_1.ApiTags)("Shipments"),
+    (0, common_1.Controller)("shipments"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [shipments_service_1.ShipmentsService])

@@ -30,10 +30,7 @@ let NomenclatureService = class NomenclatureService {
             include: {
                 productType: true,
             },
-            orderBy: [
-                { productType: { name: 'asc' } },
-                { name: 'asc' },
-            ],
+            orderBy: [{ productType: { name: "asc" } }, { name: "asc" }],
         });
     }
     async findByProductType(productTypeId, includeInactive = false) {
@@ -45,7 +42,7 @@ let NomenclatureService = class NomenclatureService {
             include: {
                 productType: true,
             },
-            orderBy: { name: 'asc' },
+            orderBy: { name: "asc" },
         });
     }
     async findOne(id) {

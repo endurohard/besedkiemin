@@ -17,19 +17,19 @@ class OrderItemDto {
 }
 exports.OrderItemDto = OrderItemDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'ID товара' }),
+    (0, swagger_1.ApiProperty)({ description: "ID товара" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], OrderItemDto.prototype, "productId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Количество', default: 1 }),
+    (0, swagger_1.ApiProperty)({ description: "Количество", default: 1 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
 ], OrderItemDto.prototype, "quantity", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Комментарий к позиции', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Комментарий к позиции", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -38,35 +38,35 @@ class CreateCatalogOrderDto {
 }
 exports.CreateCatalogOrderDto = CreateCatalogOrderDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Имя клиента' }),
+    (0, swagger_1.ApiProperty)({ description: "Имя клиента" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateCatalogOrderDto.prototype, "customerName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Телефон клиента' }),
+    (0, swagger_1.ApiProperty)({ description: "Телефон клиента" }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateCatalogOrderDto.prototype, "customerPhone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Email клиента', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Email клиента", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], CreateCatalogOrderDto.prototype, "customerEmail", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Комментарий к заказу', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Комментарий к заказу", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateCatalogOrderDto.prototype, "comment", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Адрес доставки', required: false }),
+    (0, swagger_1.ApiProperty)({ description: "Адрес доставки", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateCatalogOrderDto.prototype, "deliveryAddress", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Позиции заказа', type: [OrderItemDto] }),
+    (0, swagger_1.ApiProperty)({ description: "Позиции заказа", type: [OrderItemDto] }),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
     (0, class_transformer_1.Type)(() => OrderItemDto),

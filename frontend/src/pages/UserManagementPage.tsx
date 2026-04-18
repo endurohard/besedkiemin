@@ -299,7 +299,7 @@ export const UserManagementPage = () => {
                       }
                       placeholder="50000"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Выработка будет учитываться для аналитики, но начисление сдельной зарплаты отключено
                     </p>
                   </div>
@@ -357,7 +357,7 @@ export const UserManagementPage = () => {
                     />
                   </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-muted-foreground mt-2">
                   * Настройки телефонии для автоматического подключения
                 </p>
               </div>
@@ -422,11 +422,11 @@ export const UserManagementPage = () => {
                     </td>
                     <td className="p-2 text-center">
                       {user.paymentType === 'SALARY' ? (
-                        <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 font-medium">
+                        <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary/90 font-medium">
                           Оклад{user.monthlySalary ? ` ${user.monthlySalary.toLocaleString()}₽` : ''}
                         </span>
                       ) : (
-                        <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">
+                        <span className="text-xs px-2 py-1 rounded bg-muted text-foreground">
                           Сдельная
                         </span>
                       )}

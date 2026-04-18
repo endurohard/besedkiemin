@@ -26,7 +26,7 @@ let UploadController = class UploadController {
     }
     async uploadSchemaImage(file) {
         if (!file) {
-            throw new common_1.BadRequestException('Файл не предоставлен');
+            throw new common_1.BadRequestException("Файл не предоставлен");
         }
         return {
             url: `/uploads/${file.filename}`,
@@ -38,19 +38,19 @@ let UploadController = class UploadController {
 };
 exports.UploadController = UploadController;
 __decorate([
-    (0, common_1.Post)('schema-image'),
-    (0, roles_decorator_1.Roles)('OWNER', 'MANAGER', 'WAREHOUSE'),
-    (0, swagger_1.ApiOperation)({ summary: 'Загрузить фото схемы или фото брака' }),
-    (0, swagger_1.ApiConsumes)('multipart/form-data'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {})),
+    (0, common_1.Post)("schema-image"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Загрузить фото схемы или фото брака" }),
+    (0, swagger_1.ApiConsumes)("multipart/form-data"),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)("file", {})),
     __param(0, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UploadController.prototype, "uploadSchemaImage", null);
 exports.UploadController = UploadController = __decorate([
-    (0, swagger_1.ApiTags)('Upload'),
-    (0, common_1.Controller)('upload'),
+    (0, swagger_1.ApiTags)("Upload"),
+    (0, common_1.Controller)("upload"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [upload_service_1.UploadService])

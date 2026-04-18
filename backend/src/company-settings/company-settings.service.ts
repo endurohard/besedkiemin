@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { UpdateCompanySettingsDto } from "./dto/update-company-settings.dto";
 
 @Injectable()
 export class CompanySettingsService {
@@ -14,11 +14,11 @@ export class CompanySettingsService {
     if (!settings) {
       settings = await this.prisma.companySettings.create({
         data: {
-          companyName: 'Моя компания',
-          phone: '',
-          email: '',
-          address: '',
-          inn: '',
+          companyName: "Моя компания",
+          phone: "",
+          email: "",
+          address: "",
+          inn: "",
           logoUrl: null,
         },
       });

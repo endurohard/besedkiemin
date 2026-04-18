@@ -64,7 +64,7 @@ __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
     (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60000 } }),
-    (0, swagger_1.ApiOperation)({ summary: 'Создать заказ (публичный доступ, rate limited)' }),
+    (0, swagger_1.ApiOperation)({ summary: "Создать заказ (публичный доступ, rate limited)" }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_catalog_order_dto_1.CreateCatalogOrderDto]),
@@ -73,94 +73,96 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, feature_flag_guard_1.FeatureFlagGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить все заказы (SUPER_ADMIN/OWNER/MANAGER)' }),
-    (0, swagger_1.ApiQuery)({ name: 'status', required: false }),
-    (0, swagger_1.ApiQuery)({ name: 'page', required: false, type: Number }),
-    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, type: Number }),
-    __param(0, (0, common_1.Query)('status')),
-    __param(1, (0, common_1.Query)('page')),
-    __param(2, (0, common_1.Query)('limit')),
+    (0, swagger_1.ApiOperation)({ summary: "Получить все заказы (SUPER_ADMIN/OWNER/MANAGER)" }),
+    (0, swagger_1.ApiQuery)({ name: "status", required: false }),
+    (0, swagger_1.ApiQuery)({ name: "page", required: false, type: Number }),
+    (0, swagger_1.ApiQuery)({ name: "limit", required: false, type: Number }),
+    __param(0, (0, common_1.Query)("status")),
+    __param(1, (0, common_1.Query)("page")),
+    __param(2, (0, common_1.Query)("limit")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], CatalogOrdersController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':id'),
+    (0, common_1.Get)(":id"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, feature_flag_guard_1.FeatureFlagGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Получить заказ по ID (SUPER_ADMIN/OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    (0, swagger_1.ApiOperation)({ summary: "Получить заказ по ID (SUPER_ADMIN/OWNER/MANAGER)" }),
+    __param(0, (0, common_1.Param)("id", common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], CatalogOrdersController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
+    (0, common_1.Patch)(":id"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, feature_flag_guard_1.FeatureFlagGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Обновить заказ (SUPER_ADMIN/OWNER/MANAGER)' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    (0, swagger_1.ApiOperation)({ summary: "Обновить заказ (SUPER_ADMIN/OWNER/MANAGER)" }),
+    __param(0, (0, common_1.Param)("id", common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_catalog_order_dto_1.UpdateCatalogOrderDto]),
     __metadata("design:returntype", void 0)
 ], CatalogOrdersController.prototype, "update", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
+    (0, common_1.Delete)(":id"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, feature_flag_guard_1.FeatureFlagGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Удалить заказ (SUPER_ADMIN/OWNER)' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    (0, swagger_1.ApiOperation)({ summary: "Удалить заказ (SUPER_ADMIN/OWNER)" }),
+    __param(0, (0, common_1.Param)("id", common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], CatalogOrdersController.prototype, "remove", null);
 __decorate([
-    (0, common_1.Post)(':id/mark-contacted'),
+    (0, common_1.Post)(":id/mark-contacted"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, feature_flag_guard_1.FeatureFlagGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Отметить "Связались с клиентом"' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(0, (0, common_1.Param)("id", common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], CatalogOrdersController.prototype, "markContacted", null);
 __decorate([
-    (0, common_1.Post)(':id/mark-processed'),
+    (0, common_1.Post)(":id/mark-processed"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, feature_flag_guard_1.FeatureFlagGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Отметить "Оформили заказ" и создать производственный заказ' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Отметить "Оформили заказ" и создать производственный заказ',
+    }),
+    __param(0, (0, common_1.Param)("id", common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], CatalogOrdersController.prototype, "markProcessed", null);
 __decorate([
-    (0, common_1.Post)(':id/cancel'),
+    (0, common_1.Post)(":id/cancel"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, feature_flag_guard_1.FeatureFlagGuard),
-    (0, roles_decorator_1.Roles)('SUPER_ADMIN', 'OWNER', 'MANAGER'),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER", "MANAGER"),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Отменить заказ с указанием причины' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Body)('cancellationReason')),
+    (0, swagger_1.ApiOperation)({ summary: "Отменить заказ с указанием причины" }),
+    __param(0, (0, common_1.Param)("id", common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)("cancellationReason")),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", void 0)
 ], CatalogOrdersController.prototype, "cancelOrder", null);
 exports.CatalogOrdersController = CatalogOrdersController = __decorate([
-    (0, swagger_1.ApiTags)('Catalog Orders'),
-    (0, common_1.Controller)('catalog-orders'),
-    (0, feature_flag_decorator_1.RequireFeature)('catalog_orders'),
+    (0, swagger_1.ApiTags)("Catalog Orders"),
+    (0, common_1.Controller)("catalog-orders"),
+    (0, feature_flag_decorator_1.RequireFeature)("catalog_orders"),
     __metadata("design:paramtypes", [catalog_orders_service_1.CatalogOrdersService])
 ], CatalogOrdersController);
 //# sourceMappingURL=catalog-orders.controller.js.map

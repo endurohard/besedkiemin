@@ -28,10 +28,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 nomenclature: true,
                 workflowStage: true,
             },
-            orderBy: [
-                { productType: { name: 'asc' } },
-                { stage: 'asc' },
-            ],
+            orderBy: [{ productType: { name: "asc" } }, { stage: "asc" }],
         });
     }
     async findActiveWorkRates() {
@@ -42,10 +39,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 nomenclature: true,
                 workflowStage: true,
             },
-            orderBy: [
-                { productType: { name: 'asc' } },
-                { stage: 'asc' },
-            ],
+            orderBy: [{ productType: { name: "asc" } }, { stage: "asc" }],
         });
     }
     async findWorkRate(productTypeId, stage, nomenclatureId) {
@@ -156,7 +150,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                     },
                 },
             },
-            orderBy: { date: 'desc' },
+            orderBy: { date: "desc" },
         });
     }
     async createPenalty(dto, createdById) {
@@ -188,7 +182,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
         try {
             const createdByName = penalty.createdBy
                 ? `${penalty.createdBy.lastName} ${penalty.createdBy.firstName}`
-                : 'Система';
+                : "Система";
             await this.telegramService.sendPenaltyNotification({
                 userId: dto.userId,
                 amount: dto.amount,
@@ -197,7 +191,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             });
         }
         catch (error) {
-            this.logger.error('Failed to send penalty Telegram notification', error);
+            this.logger.error("Failed to send penalty Telegram notification", error);
         }
         return penalty;
     }
@@ -218,14 +212,14 @@ let PayrollService = PayrollService_1 = class PayrollService {
             throw new common_1.NotFoundException(`Штраф с ID ${id} не найден`);
         }
         if (penalty.isCancelled) {
-            throw new common_1.BadRequestException('Штраф уже отменен');
+            throw new common_1.BadRequestException("Штраф уже отменен");
         }
         if (penalty.payrollPeriodId) {
             const period = await this.prisma.payrollPeriod.findUnique({
                 where: { id: penalty.payrollPeriodId },
             });
             if (period?.status === client_1.PayrollStatus.PAID) {
-                throw new common_1.BadRequestException('Нельзя отменить штраф, включённый в выплаченный расчёт');
+                throw new common_1.BadRequestException("Нельзя отменить штраф, включённый в выплаченный расчёт");
             }
         }
         return this.prisma.penalty.update({
@@ -251,7 +245,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 },
                 role: true,
             },
-            orderBy: { createdAt: 'asc' },
+            orderBy: { createdAt: "asc" },
         });
     }
     async findManagerCommission(userId) {
@@ -275,25 +269,29 @@ let PayrollService = PayrollService_1 = class PayrollService {
     }
     async createManagerCommission(dto) {
         if (dto.userId) {
-            const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+            const user = await this.prisma.user.findUnique({
+                where: { id: dto.userId },
+            });
             if (!user) {
-                throw new common_1.NotFoundException('Пользователь не найден');
+                throw new common_1.NotFoundException("Пользователь не найден");
             }
             const existing = await this.prisma.managerCommission.findUnique({
                 where: { userId: dto.userId },
             });
             if (existing) {
-                throw new common_1.ConflictException('Настройки комиссии для этого пользователя уже существуют');
+                throw new common_1.ConflictException("Настройки комиссии для этого пользователя уже существуют");
             }
         }
         if (dto.roleId) {
-            const role = await this.prisma.role.findUnique({ where: { id: dto.roleId } });
+            const role = await this.prisma.role.findUnique({
+                where: { id: dto.roleId },
+            });
             if (!role) {
-                throw new common_1.NotFoundException('Роль не найдена');
+                throw new common_1.NotFoundException("Роль не найдена");
             }
         }
         if (!dto.userId && !dto.roleId) {
-            throw new common_1.BadRequestException('Необходимо указать userId или roleId');
+            throw new common_1.BadRequestException("Необходимо указать userId или roleId");
         }
         return this.prisma.managerCommission.create({
             data: dto,
@@ -350,10 +348,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 },
                 penalties: true,
             },
-            orderBy: [
-                { periodStart: 'desc' },
-                { user: { lastName: 'asc' } },
-            ],
+            orderBy: [{ periodStart: "desc" }, { user: { lastName: "asc" } }],
         });
     }
     async findPayrollPeriod(id) {
@@ -416,7 +411,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             },
         });
         if (existingPeriod) {
-            throw new common_1.ConflictException('Расчет за этот период уже существует');
+            throw new common_1.ConflictException("Расчет за этот период уже существует");
         }
         const workLogs = await this.prisma.workLog.findMany({
             where: {
@@ -545,7 +540,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
     async approvePayrollPeriod(id, approvedById, notes) {
         const period = await this.findPayrollPeriod(id);
         if (period.status !== client_1.PayrollStatus.DRAFT) {
-            throw new common_1.BadRequestException('Можно утвердить только черновик');
+            throw new common_1.BadRequestException("Можно утвердить только черновик");
         }
         return this.prisma.payrollPeriod.update({
             where: { id },
@@ -561,7 +556,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
     async markPayrollAsPaid(id, paidById, notes) {
         const period = await this.findPayrollPeriod(id);
         if (period.status !== client_1.PayrollStatus.APPROVED) {
-            throw new common_1.BadRequestException('Можно выплатить только утвержденный расчет');
+            throw new common_1.BadRequestException("Можно выплатить только утвержденный расчет");
         }
         return this.prisma.payrollPeriod.update({
             where: { id },
@@ -577,7 +572,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
     async cancelPayrollPeriod(id) {
         const period = await this.findPayrollPeriod(id);
         if (period.status === client_1.PayrollStatus.PAID) {
-            throw new common_1.BadRequestException('Нельзя отменить уже выплаченный расчет');
+            throw new common_1.BadRequestException("Нельзя отменить уже выплаченный расчет");
         }
         await this.prisma.$transaction([
             this.prisma.workLog.updateMany({
@@ -597,8 +592,9 @@ let PayrollService = PayrollService_1 = class PayrollService {
     }
     async deletePayrollPeriod(id) {
         const period = await this.findPayrollPeriod(id);
-        if (period.status !== client_1.PayrollStatus.DRAFT && period.status !== client_1.PayrollStatus.CANCELLED) {
-            throw new common_1.BadRequestException('Можно удалить только черновик или отмененный расчет');
+        if (period.status !== client_1.PayrollStatus.DRAFT &&
+            period.status !== client_1.PayrollStatus.CANCELLED) {
+            throw new common_1.BadRequestException("Можно удалить только черновик или отмененный расчет");
         }
         await this.prisma.$transaction([
             this.prisma.workLog.updateMany({
@@ -631,7 +627,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             where: { id: data.userId },
             select: { paymentType: true },
         });
-        const isSalaryWorker = worker?.paymentType === 'SALARY';
+        const isSalaryWorker = worker?.paymentType === "SALARY";
         let pricePerUnit = 0;
         let totalAmount = 0;
         if (!isSalaryWorker) {
@@ -707,7 +703,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 productType: true,
                 task: true,
             },
-            orderBy: { completedAt: 'desc' },
+            orderBy: { completedAt: "desc" },
         });
     }
     async getWorkerEarnings(userId, startDate, endDate) {
@@ -716,7 +712,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             include: { role: true },
         });
         if (!user) {
-            throw new common_1.NotFoundException('Пользователь не найден');
+            throw new common_1.NotFoundException("Пользователь не найден");
         }
         const now = new Date();
         const start = startDate
@@ -743,7 +739,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                         select: { id: true, name: true },
                     },
                 },
-                orderBy: { completedAt: 'desc' },
+                orderBy: { completedAt: "desc" },
             }),
             this.prisma.workLog.findMany({
                 where: {
@@ -754,7 +750,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                     product: { select: { id: true, name: true } },
                     productType: { select: { id: true, name: true } },
                 },
-                orderBy: { completedAt: 'desc' },
+                orderBy: { completedAt: "desc" },
             }),
             this.prisma.penalty.findMany({
                 where: {
@@ -762,7 +758,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                     date: { gte: start, lte: end },
                     isCancelled: false,
                 },
-                orderBy: { date: 'desc' },
+                orderBy: { date: "desc" },
             }),
             this.prisma.penalty.findMany({
                 where: {
@@ -791,7 +787,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 earnings: todayTotal,
                 penalties: todayPenaltyTotal,
                 net: todayTotal - todayPenaltyTotal,
-                workLogs: todayLogs.map(log => ({
+                workLogs: todayLogs.map((log) => ({
                     id: log.id,
                     product: log.product?.name,
                     productType: log.productType?.name,
@@ -808,7 +804,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 net: periodTotal - penaltyTotal,
                 workLogsCount: workLogs.length,
             },
-            recentWorkLogs: workLogs.slice(0, 20).map(log => ({
+            recentWorkLogs: workLogs.slice(0, 20).map((log) => ({
                 id: log.id,
                 product: log.product?.name,
                 productType: log.productType?.name,
@@ -818,7 +814,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 totalAmount: log.totalAmount,
                 completedAt: log.completedAt,
             })),
-            penalties: penalties.map(p => ({
+            penalties: penalties.map((p) => ({
                 id: p.id,
                 amount: p.amount,
                 reason: p.reason,
@@ -830,10 +826,10 @@ let PayrollService = PayrollService_1 = class PayrollService {
         const start = new Date(periodStart);
         const end = new Date(periodEnd);
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-            throw new common_1.BadRequestException('Неверный формат даты периода');
+            throw new common_1.BadRequestException("Неверный формат даты периода");
         }
         const workLogsByUser = await this.prisma.workLog.groupBy({
-            by: ['userId'],
+            by: ["userId"],
             where: {
                 completedAt: { gte: start, lte: end },
             },
@@ -841,7 +837,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             _count: true,
         });
         const penaltiesByUser = await this.prisma.penalty.groupBy({
-            by: ['userId'],
+            by: ["userId"],
             where: {
                 date: { gte: start, lte: end },
                 isCancelled: false,
@@ -861,15 +857,15 @@ let PayrollService = PayrollService_1 = class PayrollService {
         const commissions = await this.prisma.managerCommission.findMany({
             where: { isActive: true },
         });
-        const usersWithCommissions = usersData.filter(u => {
-            return commissions.some(c => c.userId === u.id || c.roleId === u.roleId);
+        const usersWithCommissions = usersData.filter((u) => {
+            return commissions.some((c) => c.userId === u.id || c.roleId === u.roleId);
         });
-        const commissionUserIds = usersWithCommissions.map(u => u.id);
-        let ordersByUser = new Map();
-        let ordersWithMinByUser = new Map();
+        const commissionUserIds = usersWithCommissions.map((u) => u.id);
+        const ordersByUser = new Map();
+        const ordersWithMinByUser = new Map();
         if (commissionUserIds.length > 0) {
             const orderGroups = await this.prisma.order.groupBy({
-                by: ['createdById'],
+                by: ["createdById"],
                 _sum: { totalAmount: true },
                 where: {
                     createdById: { in: commissionUserIds },
@@ -880,17 +876,21 @@ let PayrollService = PayrollService_1 = class PayrollService {
             for (const group of orderGroups) {
                 ordersByUser.set(group.createdById, group._sum.totalAmount || 0);
             }
-            const minAmounts = [...new Set(commissions.filter(c => c.minOrderAmount).map(c => c.minOrderAmount))];
+            const minAmounts = [
+                ...new Set(commissions
+                    .filter((c) => c.minOrderAmount)
+                    .map((c) => c.minOrderAmount)),
+            ];
             if (minAmounts.length > 0) {
                 for (const minAmount of minAmounts) {
-                    const relevantUserIds = commissionUserIds.filter(uid => {
-                        const uc = commissions.find(c => c.userId === uid) ||
-                            commissions.find(c => c.roleId === usersData.find(u => u.id === uid)?.roleId);
+                    const relevantUserIds = commissionUserIds.filter((uid) => {
+                        const uc = commissions.find((c) => c.userId === uid) ||
+                            commissions.find((c) => c.roleId === usersData.find((u) => u.id === uid)?.roleId);
                         return uc?.minOrderAmount === minAmount;
                     });
                     if (relevantUserIds.length > 0) {
                         const filteredGroups = await this.prisma.order.groupBy({
-                            by: ['createdById'],
+                            by: ["createdById"],
                             _sum: { totalAmount: true },
                             where: {
                                 createdById: { in: relevantUserIds },
@@ -912,20 +912,21 @@ let PayrollService = PayrollService_1 = class PayrollService {
             const penaltyAmount = penaltyData?._sum.amount || 0;
             let commissionAmount = 0;
             let baseSalary = 0;
-            const userCommission = commissions.find(c => c.userId === user.id)
-                || commissions.find(c => c.roleId === user.roleId);
+            const userCommission = commissions.find((c) => c.userId === user.id) ||
+                commissions.find((c) => c.roleId === user.roleId);
             if (userCommission) {
                 baseSalary = userCommission.baseSalary || 0;
                 const ordersAmount = userCommission.minOrderAmount
-                    ? (ordersWithMinByUser.get(user.id) || 0)
-                    : (ordersByUser.get(user.id) || 0);
-                commissionAmount = ordersAmount * (userCommission.commissionPercent / 100);
+                    ? ordersWithMinByUser.get(user.id) || 0
+                    : ordersByUser.get(user.id) || 0;
+                commissionAmount =
+                    ordersAmount * (userCommission.commissionPercent / 100);
             }
             const totalAmount = baseSalary + workAmount + commissionAmount - penaltyAmount;
             return {
                 userId: user.id,
                 userName: `${user.firstName} ${user.lastName}`,
-                role: user.role?.name || 'Без роли',
+                role: user.role?.name || "Без роли",
                 baseSalary,
                 workAmount,
                 commissionAmount,
@@ -949,7 +950,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
     async getWorkerStats(startDate, endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
-        const productionRoleCodes = ['PREPARER', 'PAINTER', 'ASSEMBLER', 'SEWER'];
+        const productionRoleCodes = ["PREPARER", "PAINTER", "ASSEMBLER", "SEWER"];
         const workers = await this.prisma.user.findMany({
             where: {
                 isActive: true,
@@ -959,36 +960,45 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 role: true,
             },
         });
-        const stats = await Promise.all(workers.map(async (worker) => {
-            const workLogs = await this.prisma.workLog.findMany({
+        const workerIds = workers.map((w) => w.id);
+        const [workLogsGrouped, penaltiesGrouped] = await Promise.all([
+            this.prisma.workLog.groupBy({
+                by: ["userId"],
                 where: {
-                    userId: worker.id,
+                    userId: { in: workerIds },
                     completedAt: { gte: start, lte: end },
                 },
-                select: {
-                    quantity: true,
-                    totalAmount: true,
-                    pricePerUnit: true,
-                    stage: true,
-                    completedAt: true,
-                },
-            });
-            const penalties = await this.prisma.penalty.aggregate({
+                _sum: { quantity: true, totalAmount: true },
+                _count: { _all: true },
+            }),
+            this.prisma.penalty.groupBy({
+                by: ["userId"],
                 where: {
-                    userId: worker.id,
+                    userId: { in: workerIds },
                     date: { gte: start, lte: end },
                     isCancelled: false,
                 },
                 _sum: { amount: true },
-                _count: true,
-            });
-            const itemsCompleted = workLogs.reduce((sum, wl) => sum + wl.quantity, 0);
-            const workAmount = workLogs.reduce((sum, wl) => sum + wl.totalAmount, 0);
-            const penaltyAmount = penalties._sum.amount || 0;
+                _count: { _all: true },
+            }),
+        ]);
+        const workByUser = new Map(workLogsGrouped.map((w) => [w.userId, w]));
+        const penaltyByUser = new Map(penaltiesGrouped.map((p) => [p.userId, p]));
+        return workers.map((worker) => {
+            const work = workByUser.get(worker.id);
+            const penalty = penaltyByUser.get(worker.id);
+            const itemsCompleted = work?._sum.quantity ?? 0;
+            const workAmount = work?._sum.totalAmount ?? 0;
+            const workLogsCount = work?._count._all ?? 0;
+            const penaltyAmount = penalty?._sum.amount ?? 0;
+            const penaltyCount = penalty?._count._all ?? 0;
             const netAmount = workAmount - penaltyAmount;
             let efficiencyCoefficient = null;
-            if (worker.paymentType === 'SALARY' && worker.monthlySalary && worker.monthlySalary > 0) {
-                efficiencyCoefficient = Math.round((workAmount / worker.monthlySalary) * 100) / 100;
+            if (worker.paymentType === "SALARY" &&
+                worker.monthlySalary &&
+                worker.monthlySalary > 0) {
+                efficiencyCoefficient =
+                    Math.round((workAmount / worker.monthlySalary) * 100) / 100;
             }
             return {
                 userId: worker.id,
@@ -1000,13 +1010,12 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 itemsCompleted,
                 workAmount,
                 penaltyAmount,
-                penaltyCount: penalties._count,
+                penaltyCount,
                 netAmount,
                 efficiencyCoefficient,
-                workLogsCount: workLogs.length,
+                workLogsCount,
             };
-        }));
-        return stats;
+        });
     }
 };
 exports.PayrollService = PayrollService;

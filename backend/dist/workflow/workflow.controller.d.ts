@@ -1,7 +1,7 @@
-import { WorkflowService } from './workflow.service';
-import { CreateWorkflowStageDto } from './dto/create-workflow-stage.dto';
-import { UpdateWorkflowStageDto } from './dto/update-workflow-stage.dto';
-import { ReorderWorkflowStagesDto } from './dto/reorder-workflow-stages.dto';
+import { WorkflowService } from "./workflow.service";
+import { CreateWorkflowStageDto } from "./dto/create-workflow-stage.dto";
+import { UpdateWorkflowStageDto } from "./dto/update-workflow-stage.dto";
+import { ReorderWorkflowStagesDto } from "./dto/reorder-workflow-stages.dto";
 export declare class WorkflowController {
     private readonly workflowService;
     constructor(workflowService: WorkflowService);

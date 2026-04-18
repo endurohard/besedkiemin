@@ -1,6 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { ProductionStage, OrderStatus, QualityStatus, ShipmentStatus } from '@prisma/client';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import {
+  ProductionStage,
+  OrderStatus,
+  QualityStatus,
+  ShipmentStatus,
+} from "@prisma/client";
 
 @Injectable()
 export class AnalyticsService {
@@ -42,7 +47,11 @@ export class AnalyticsService {
       this.prisma.product.count({
         where: {
           stage: {
-            notIn: [ProductionStage.PENDING, ProductionStage.COMPLETED, ProductionStage.REJECTED],
+            notIn: [
+              ProductionStage.PENDING,
+              ProductionStage.COMPLETED,
+              ProductionStage.REJECTED,
+            ],
           },
         },
       }),
@@ -53,10 +62,12 @@ export class AnalyticsService {
       }),
 
       // Забракованные продукты - считаем по уникальным продуктам, которые были забракованы
-      this.prisma.qualityCheck.groupBy({
-        by: ['productId'],
-        where: { status: QualityStatus.REJECTED },
-      }).then(result => result.length),
+      this.prisma.qualityCheck
+        .groupBy({
+          by: ["productId"],
+          where: { status: QualityStatus.REJECTED },
+        })
+        .then((result) => result.length),
 
       // Продукты ожидающие проверки качества
       this.prisma.product.count({
@@ -66,21 +77,27 @@ export class AnalyticsService {
 
     // Статистика по этапам
     const productsByStage = await this.prisma.product.groupBy({
-      by: ['stage'],
+      by: ["stage"],
       _count: true,
     });
 
-    const stageStats = productsByStage.reduce((acc, item) => {
-      acc[item.stage] = item._count;
-      return acc;
-    }, {} as Record<string, number>);
+    const stageStats = productsByStage.reduce(
+      (acc, item) => {
+        acc[item.stage] = item._count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return {
       orders: {
         total: totalOrders,
         active: activeOrders,
         completed: completedOrders,
-        completionRate: totalOrders > 0 ? ((completedOrders / totalOrders) * 100).toFixed(1) : '0',
+        completionRate:
+          totalOrders > 0
+            ? ((completedOrders / totalOrders) * 100).toFixed(1)
+            : "0",
       },
       products: {
         total: totalProducts,
@@ -88,7 +105,10 @@ export class AnalyticsService {
         completed: completedProducts,
         rejected: rejectedProducts,
         pendingQualityCheck: pendingQualityChecks,
-        completionRate: totalProducts > 0 ? ((completedProducts / totalProducts) * 100).toFixed(1) : '0',
+        completionRate:
+          totalProducts > 0
+            ? ((completedProducts / totalProducts) * 100).toFixed(1)
+            : "0",
       },
       stageDistribution: stageStats,
     };
@@ -101,7 +121,7 @@ export class AnalyticsService {
     const users = await this.prisma.user.findMany({
       where: {
         isActive: true,
-        role: { code: { not: 'SUPER_ADMIN' } },
+        role: { code: { not: "SUPER_ADMIN" } },
       },
       select: {
         id: true,
@@ -130,8 +150,12 @@ export class AnalyticsService {
 
     // Обрабатываем данные в памяти без дополнительных запросов
     const userStats = users.map((user) => {
-      const completedHistory = user.productHistory.filter(h => h.completedAt !== null);
-      const activeHistory = user.productHistory.find(h => h.completedAt === null);
+      const completedHistory = user.productHistory.filter(
+        (h) => h.completedAt !== null,
+      );
+      const activeHistory = user.productHistory.find(
+        (h) => h.completedAt === null,
+      );
 
       // Среднее время выполнения
       let avgTaskDuration = 0;
@@ -140,7 +164,9 @@ export class AnalyticsService {
           if (!task.completedAt) return sum;
           return sum + (task.completedAt.getTime() - task.startedAt.getTime());
         }, 0);
-        avgTaskDuration = Math.round(totalDuration / completedHistory.length / 1000 / 60 / 60);
+        avgTaskDuration = Math.round(
+          totalDuration / completedHistory.length / 1000 / 60 / 60,
+        );
       }
 
       return {
@@ -153,12 +179,14 @@ export class AnalyticsService {
           completedTasks: completedHistory.length,
           avgTaskDurationHours: avgTaskDuration,
           hasActiveTask: !!activeHistory,
-          activeTask: activeHistory ? {
-            productName: activeHistory.product.name,
-            orderNumber: activeHistory.product.order.orderNumber,
-            stage: activeHistory.stage,
-            startedAt: activeHistory.startedAt,
-          } : null,
+          activeTask: activeHistory
+            ? {
+                productName: activeHistory.product.name,
+                orderNumber: activeHistory.product.order.orderNumber,
+                stage: activeHistory.stage,
+                startedAt: activeHistory.startedAt,
+              }
+            : null,
         },
       };
     });
@@ -193,7 +221,7 @@ export class AnalyticsService {
       this.prisma.qualityCheck.findMany({
         where: { status: QualityStatus.REJECTED },
         take: 10,
-        orderBy: { checkedAt: 'desc' },
+        orderBy: { checkedAt: "desc" },
         include: {
           product: {
             select: {
@@ -216,9 +244,8 @@ export class AnalyticsService {
       }),
     ]);
 
-    const approvalRate = totalChecks > 0
-      ? ((approvedChecks / totalChecks) * 100).toFixed(1)
-      : '0';
+    const approvalRate =
+      totalChecks > 0 ? ((approvedChecks / totalChecks) * 100).toFixed(1) : "0";
 
     return {
       total: totalChecks,
@@ -226,7 +253,7 @@ export class AnalyticsService {
       rejected: rejectedChecks,
       pending: pendingChecks,
       approvalRate,
-      recentRejections: recentRejections.map(check => ({
+      recentRejections: recentRejections.map((check) => ({
         id: check.id,
         productName: check.product.name,
         orderNumber: check.product.order.orderNumber,
@@ -234,7 +261,7 @@ export class AnalyticsService {
         reason: check.notes,
         checkedBy: check.checkedBy
           ? `${check.checkedBy.firstName} ${check.checkedBy.lastName}`
-          : 'Не указан',
+          : "Не указан",
         checkedAt: check.checkedAt,
       })),
     };
@@ -260,10 +287,20 @@ export class AnalyticsService {
     const typeStats = productTypes.map((type) => {
       const products = type.products;
       const total = products.length;
-      const completed = products.filter(p => p.stage === ProductionStage.COMPLETED).length;
-      const excludedStages: ProductionStage[] = [ProductionStage.PENDING, ProductionStage.COMPLETED, ProductionStage.REJECTED];
-      const inProduction = products.filter(p => !excludedStages.includes(p.stage)).length;
-      const rejected = products.filter(p => p.stage === ProductionStage.REJECTED).length;
+      const completed = products.filter(
+        (p) => p.stage === ProductionStage.COMPLETED,
+      ).length;
+      const excludedStages: ProductionStage[] = [
+        ProductionStage.PENDING,
+        ProductionStage.COMPLETED,
+        ProductionStage.REJECTED,
+      ];
+      const inProduction = products.filter(
+        (p) => !excludedStages.includes(p.stage),
+      ).length;
+      const rejected = products.filter(
+        (p) => p.stage === ProductionStage.REJECTED,
+      ).length;
 
       return {
         type: type.name,
@@ -271,7 +308,8 @@ export class AnalyticsService {
         completed,
         inProduction,
         rejected,
-        completionRate: total > 0 ? ((completed / total) * 100).toFixed(1) : '0',
+        completionRate:
+          total > 0 ? ((completed / total) * 100).toFixed(1) : "0",
       };
     });
 
@@ -333,13 +371,17 @@ export class AnalyticsService {
       period: {
         start,
         end,
-        days: Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
+        days: Math.ceil(
+          (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+        ),
       },
       ordersCreated,
       ordersCompleted,
       productsCompleted,
       qualityChecksPerformed,
-      avgProductsPerDay: productsCompleted / Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
+      avgProductsPerDay:
+        productsCompleted /
+        Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
     };
   }
 
@@ -368,7 +410,7 @@ export class AnalyticsService {
                     productType: true,
                     history: {
                       orderBy: {
-                        startedAt: 'asc',
+                        startedAt: "asc",
                       },
                     },
                   },
@@ -381,31 +423,38 @@ export class AnalyticsService {
     });
 
     // Статистика по завершенным циклам
-    const cycleStats = deliveredShipments.flatMap(shipment =>
-      shipment.items.map(item => {
+    const cycleStats = deliveredShipments.flatMap((shipment) =>
+      shipment.items.map((item) => {
         const product = item.inventoryItem.product!;
         const order = product.order!;
         const history = product.history;
 
         // Время от создания заказа до доставки (полный цикл)
-        const fullCycleDuration = shipment.updatedAt.getTime() - order.createdAt.getTime();
+        const fullCycleDuration =
+          shipment.updatedAt.getTime() - order.createdAt.getTime();
 
         // Время производства (от первого этапа до завершения)
-        const productionStart = history.length > 0 ? history[0].startedAt : product.createdAt;
-        const productionEnd = history.find(h => h.stage === ProductionStage.COMPLETED)?.completedAt || product.updatedAt;
-        const productionDuration = productionEnd.getTime() - productionStart.getTime();
+        const productionStart =
+          history.length > 0 ? history[0].startedAt : product.createdAt;
+        const productionEnd =
+          history.find((h) => h.stage === ProductionStage.COMPLETED)
+            ?.completedAt || product.updatedAt;
+        const productionDuration =
+          productionEnd.getTime() - productionStart.getTime();
 
         // Время на складе (от завершения производства до отгрузки)
         const warehouseStart = productionEnd;
         const warehouseEnd = shipment.createdAt;
-        const warehouseDuration = warehouseEnd.getTime() - warehouseStart.getTime();
+        const warehouseDuration =
+          warehouseEnd.getTime() - warehouseStart.getTime();
 
         // Время доставки (от отгрузки до доставки)
-        const deliveryDuration = shipment.updatedAt.getTime() - shipment.createdAt.getTime();
+        const deliveryDuration =
+          shipment.updatedAt.getTime() - shipment.createdAt.getTime();
 
         // Время по этапам производства
         const stagesDuration: Record<string, number> = {};
-        history.forEach(h => {
+        history.forEach((h) => {
           if (h.completedAt) {
             const duration = h.completedAt.getTime() - h.startedAt.getTime();
             stagesDuration[h.stage] = (stagesDuration[h.stage] || 0) + duration;
@@ -416,58 +465,84 @@ export class AnalyticsService {
           orderNumber: order.orderNumber,
           customerName: order.customerName,
           productName: product.name,
-          productType: product.productType?.name || 'Не указан',
+          productType: product.productType?.name || "Не указан",
           quantity: item.quantity,
           orderCreatedAt: order.createdAt,
           deliveredAt: shipment.updatedAt,
           // Длительности в часах
           durations: {
-            fullCycleHours: Math.round(fullCycleDuration / 1000 / 60 / 60 * 10) / 10,
-            productionHours: Math.round(productionDuration / 1000 / 60 / 60 * 10) / 10,
-            warehouseHours: Math.round(warehouseDuration / 1000 / 60 / 60 * 10) / 10,
-            deliveryHours: Math.round(deliveryDuration / 1000 / 60 / 60 * 10) / 10,
-            stageHours: Object.entries(stagesDuration).reduce((acc, [stage, duration]) => {
-              acc[stage] = Math.round(duration / 1000 / 60 / 60 * 10) / 10;
-              return acc;
-            }, {} as Record<string, number>),
+            fullCycleHours:
+              Math.round((fullCycleDuration / 1000 / 60 / 60) * 10) / 10,
+            productionHours:
+              Math.round((productionDuration / 1000 / 60 / 60) * 10) / 10,
+            warehouseHours:
+              Math.round((warehouseDuration / 1000 / 60 / 60) * 10) / 10,
+            deliveryHours:
+              Math.round((deliveryDuration / 1000 / 60 / 60) * 10) / 10,
+            stageHours: Object.entries(stagesDuration).reduce(
+              (acc, [stage, duration]) => {
+                acc[stage] = Math.round((duration / 1000 / 60 / 60) * 10) / 10;
+                return acc;
+              },
+              {} as Record<string, number>,
+            ),
           },
         };
-      })
+      }),
     );
 
     // Средние показатели
-    const avgFullCycle = cycleStats.length > 0
-      ? cycleStats.reduce((sum, stat) => sum + stat.durations.fullCycleHours, 0) / cycleStats.length
-      : 0;
+    const avgFullCycle =
+      cycleStats.length > 0
+        ? cycleStats.reduce(
+            (sum, stat) => sum + stat.durations.fullCycleHours,
+            0,
+          ) / cycleStats.length
+        : 0;
 
-    const avgProduction = cycleStats.length > 0
-      ? cycleStats.reduce((sum, stat) => sum + stat.durations.productionHours, 0) / cycleStats.length
-      : 0;
+    const avgProduction =
+      cycleStats.length > 0
+        ? cycleStats.reduce(
+            (sum, stat) => sum + stat.durations.productionHours,
+            0,
+          ) / cycleStats.length
+        : 0;
 
-    const avgWarehouse = cycleStats.length > 0
-      ? cycleStats.reduce((sum, stat) => sum + stat.durations.warehouseHours, 0) / cycleStats.length
-      : 0;
+    const avgWarehouse =
+      cycleStats.length > 0
+        ? cycleStats.reduce(
+            (sum, stat) => sum + stat.durations.warehouseHours,
+            0,
+          ) / cycleStats.length
+        : 0;
 
-    const avgDelivery = cycleStats.length > 0
-      ? cycleStats.reduce((sum, stat) => sum + stat.durations.deliveryHours, 0) / cycleStats.length
-      : 0;
+    const avgDelivery =
+      cycleStats.length > 0
+        ? cycleStats.reduce(
+            (sum, stat) => sum + stat.durations.deliveryHours,
+            0,
+          ) / cycleStats.length
+        : 0;
 
     // Средние показатели по этапам — динамически из WorkflowStage
     const workflowStages = await this.prisma.workflowStage.findMany({
       where: { isActive: true },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
       select: { legacyStage: true },
     });
-    const allStages = workflowStages.map(s => s.legacyStage as ProductionStage);
+    const allStages = workflowStages.map(
+      (s) => s.legacyStage as ProductionStage,
+    );
 
     const avgStages: Record<string, number> = {};
-    allStages.forEach(stage => {
+    allStages.forEach((stage) => {
       const stageData = cycleStats
-        .map(stat => stat.durations.stageHours[stage] || 0)
-        .filter(val => val > 0);
-      avgStages[stage] = stageData.length > 0
-        ? stageData.reduce((sum, val) => sum + val, 0) / stageData.length
-        : 0;
+        .map((stat) => stat.durations.stageHours[stage] || 0)
+        .filter((val) => val > 0);
+      avgStages[stage] =
+        stageData.length > 0
+          ? stageData.reduce((sum, val) => sum + val, 0) / stageData.length
+          : 0;
     });
 
     // Статистика текущих заказов в работе
@@ -483,7 +558,7 @@ export class AnalyticsService {
             productType: true,
             history: {
               orderBy: {
-                startedAt: 'asc',
+                startedAt: "asc",
               },
             },
           },
@@ -491,24 +566,30 @@ export class AnalyticsService {
       },
     });
 
-    const inProgressStats = ordersInProgress.map(order => {
+    const inProgressStats = ordersInProgress.map((order) => {
       const currentDuration = Date.now() - order.createdAt.getTime();
       const products = order.products;
 
-      const completedProducts = products.filter(p => p.stage === ProductionStage.COMPLETED).length;
+      const completedProducts = products.filter(
+        (p) => p.stage === ProductionStage.COMPLETED,
+      ).length;
       const totalProducts = products.length;
 
       return {
         orderNumber: order.orderNumber,
         customerName: order.customerName,
         createdAt: order.createdAt,
-        currentDurationHours: Math.round(currentDuration / 1000 / 60 / 60 * 10) / 10,
+        currentDurationHours:
+          Math.round((currentDuration / 1000 / 60 / 60) * 10) / 10,
         totalProducts,
         completedProducts,
-        completionPercent: totalProducts > 0 ? Math.round((completedProducts / totalProducts) * 100) : 0,
-        products: products.map(p => ({
+        completionPercent:
+          totalProducts > 0
+            ? Math.round((completedProducts / totalProducts) * 100)
+            : 0,
+        products: products.map((p) => ({
           name: p.name,
-          type: p.productType?.name || 'Не указан',
+          type: p.productType?.name || "Не указан",
           stage: p.stage,
           quantity: p.quantity,
         })),
@@ -519,7 +600,9 @@ export class AnalyticsService {
       period: {
         start,
         end,
-        days: Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
+        days: Math.ceil(
+          (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+        ),
       },
       summary: {
         totalDelivered: cycleStats.length,
@@ -527,23 +610,27 @@ export class AnalyticsService {
         avgProductionHours: Math.round(avgProduction * 10) / 10,
         avgWarehouseHours: Math.round(avgWarehouse * 10) / 10,
         avgDeliveryHours: Math.round(avgDelivery * 10) / 10,
-        avgStageHours: Object.entries(avgStages).reduce((acc, [stage, hours]) => {
-          acc[stage] = Math.round(hours * 10) / 10;
-          return acc;
-        }, {} as Record<string, number>),
+        avgStageHours: Object.entries(avgStages).reduce(
+          (acc, [stage, hours]) => {
+            acc[stage] = Math.round(hours * 10) / 10;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
       },
-      completedCycles: cycleStats.sort((a, b) =>
-        b.deliveredAt.getTime() - a.deliveredAt.getTime()
+      completedCycles: cycleStats.sort(
+        (a, b) => b.deliveredAt.getTime() - a.deliveredAt.getTime(),
       ),
-      ordersInProgress: inProgressStats.sort((a, b) =>
-        b.currentDurationHours - a.currentDurationHours
+      ordersInProgress: inProgressStats.sort(
+        (a, b) => b.currentDurationHours - a.currentDurationHours,
       ),
     };
   }
 
   // Отчёт производительности сотрудников (коэффициент полезности)
   async getProductivityReport(startDate?: Date, endDate?: Date) {
-    const start = startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const start =
+      startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const end = endDate || new Date();
 
     // Рабочих дней в периоде (пн-пт)
@@ -553,7 +640,7 @@ export class AnalyticsService {
     const workers = await this.prisma.user.findMany({
       where: {
         isActive: true,
-        role: { code: { notIn: ['SUPER_ADMIN', 'MANAGER', 'OWNER'] } },
+        role: { code: { notIn: ["SUPER_ADMIN", "MANAGER", "OWNER"] } },
       },
       select: {
         id: true,
@@ -567,7 +654,7 @@ export class AnalyticsService {
 
     // Получаем work_logs за период по всем работникам
     const workLogs = await this.prisma.workLog.groupBy({
-      by: ['userId'],
+      by: ["userId"],
       where: {
         completedAt: { gte: start, lte: end },
       },
@@ -575,11 +662,11 @@ export class AnalyticsService {
       _count: { id: true },
     });
 
-    const logMap = new Map(workLogs.map(l => [l.userId, l]));
+    const logMap = new Map(workLogs.map((l) => [l.userId, l]));
 
     // Детали по этапам
     const stageDetails = await this.prisma.workLog.groupBy({
-      by: ['userId', 'stage'],
+      by: ["userId", "stage"],
       where: { completedAt: { gte: start, lte: end } },
       _sum: { quantity: true },
     });
@@ -590,16 +677,15 @@ export class AnalyticsService {
       stageMap.get(s.userId)![s.stage] = s._sum.quantity || 0;
     }
 
-    const report = workers.map(worker => {
+    const report = workers.map((worker) => {
       const logs = logMap.get(worker.id);
       const itemsMade = logs?._sum?.quantity || 0;
       const earnedAmount = logs?._sum?.totalAmount || 0;
       const tasksCompleted = logs?._count?.id || 0;
 
       // Коэффициент полезности = изделий в день (за рабочие дни периода)
-      const coefficient = workingDays > 0
-        ? Math.round((itemsMade / workingDays) * 100) / 100
-        : 0;
+      const coefficient =
+        workingDays > 0 ? Math.round((itemsMade / workingDays) * 100) / 100 : 0;
 
       return {
         worker: {
@@ -612,8 +698,8 @@ export class AnalyticsService {
         stats: {
           itemsMade,
           tasksCompleted,
-          earnedAmount: worker.paymentType === 'SALARY' ? 0 : earnedAmount,
-          coefficient,        // изделий/рабочий день
+          earnedAmount: worker.paymentType === "SALARY" ? 0 : earnedAmount,
+          coefficient, // изделий/рабочий день
           workingDays,
           stageBreakdown: stageMap.get(worker.id) || {},
         },
@@ -623,7 +709,7 @@ export class AnalyticsService {
     // Сортировка: сначала окладники, потом сдельники — по убыванию коэффициента
     report.sort((a, b) => {
       if (a.worker.paymentType !== b.worker.paymentType) {
-        return a.worker.paymentType === 'SALARY' ? -1 : 1;
+        return a.worker.paymentType === "SALARY" ? -1 : 1;
       }
       return b.stats.coefficient - a.stats.coefficient;
     });
@@ -631,8 +717,9 @@ export class AnalyticsService {
     return {
       period: { start, end, workingDays },
       totalWorkers: workers.length,
-      salaryWorkers: workers.filter(w => w.paymentType === 'SALARY').length,
-      pieceRateWorkers: workers.filter(w => w.paymentType === 'PIECE_RATE').length,
+      salaryWorkers: workers.filter((w) => w.paymentType === "SALARY").length,
+      pieceRateWorkers: workers.filter((w) => w.paymentType === "PIECE_RATE")
+        .length,
       workers: report,
     };
   }

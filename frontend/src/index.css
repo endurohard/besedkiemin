@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer base {
+  /* Публичная часть (/, /catalog) — светлая тема без изменений */
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -22,6 +23,85 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    /* Сайдбар/header — для публичной части не используется, но дефолт нужен */
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+  }
+
+  /*
+   * Админка /app использует класс .admin-theme + data-theme="dark"|"light".
+   * Тёмная палитра — из Figma "Sales Management Dashboard":
+   *   sidebar:  #171821
+   *   surface:  #21222d
+   *   card:     #1c1d27
+   *   primary:  #a9dfd8 (бирюза)
+   *   danger:   #f2786a
+   *   warning:  #feb95a
+   */
+  .admin-theme[data-theme="dark"] {
+    --background: 232 14% 15%;        /* #21222d */
+    --foreground: 0 0% 95%;           /* #f2f2f2 */
+
+    --card: 234 17% 13%;              /* #1c1d27 */
+    --card-foreground: 0 0% 95%;
+
+    --primary: 175 48% 77%;           /* #a9dfd8 */
+    --primary-foreground: 234 17% 12%;
+
+    --secondary: 232 16% 20%;
+    --secondary-foreground: 0 0% 85%;
+
+    --muted: 232 14% 22%;
+    --muted-foreground: 0 0% 75%;
+
+    --accent: 232 14% 25%;
+    --accent-foreground: 0 0% 90%;
+
+    --destructive: 6 83% 67%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 234 17% 22%;
+    --input: 234 17% 22%;
+    --ring: 175 48% 77%;
+    --radius: 0.5rem;
+
+    --sidebar: 234 18% 12%;           /* #171821 */
+    --sidebar-foreground: 0 0% 95%;
+  }
+
+  /*
+   * Светлая тема админки — мягкие бежево-голубые оттенки, primary тот же бирюзовый
+   * (для узнаваемости бренда), но темнее для контраста на светлом фоне.
+   */
+  .admin-theme[data-theme="light"] {
+    --background: 210 20% 98%;        /* почти белый фон */
+    --foreground: 232 20% 14%;        /* тёмный текст */
+
+    --card: 0 0% 100%;
+    --card-foreground: 232 20% 14%;
+
+    --primary: 175 45% 40%;           /* бирюза темнее для контраста */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 232 20% 14%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 40%;
+
+    --accent: 210 20% 92%;
+    --accent-foreground: 232 20% 14%;
+
+    --destructive: 6 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 175 45% 40%;
+    --radius: 0.5rem;
+
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 232 20% 14%;
   }
 }
 
@@ -32,5 +112,59 @@
   body {
     @apply bg-background text-foreground;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+}
+
+/*
+ * Админка /app использует тёмную тему, но часть страниц ещё держит хардкод
+ * tailwind-классы типа text-gray-900 / bg-white. Чтобы не переписывать 18 файлов
+ * точечно, маппим их на семантические токены через .admin-theme scope.
+ */
+@layer utilities {
+  .admin-theme[data-theme="dark"] .text-gray-900,
+  .admin-theme[data-theme="dark"] .text-gray-800,
+  .admin-theme[data-theme="dark"] .text-gray-700,
+  .admin-theme[data-theme="dark"] .text-black {
+    color: hsl(var(--foreground));
+  }
+  .admin-theme[data-theme="dark"] .text-gray-600,
+  .admin-theme[data-theme="dark"] .text-gray-500,
+  .admin-theme[data-theme="dark"] .text-gray-400 {
+    color: hsl(var(--muted-foreground));
+  }
+  .admin-theme[data-theme="dark"] .bg-white {
+    background-color: hsl(var(--card));
+  }
+  .admin-theme[data-theme="dark"] .bg-gray-50,
+  .admin-theme[data-theme="dark"] .bg-gray-100 {
+    background-color: hsl(var(--muted) / 0.5);
+  }
+  .admin-theme[data-theme="dark"] .bg-gray-200,
+  .admin-theme[data-theme="dark"] .bg-gray-300 {
+    background-color: hsl(var(--accent));
+  }
+  .admin-theme[data-theme="dark"] .border-gray-100,
+  .admin-theme[data-theme="dark"] .border-gray-200,
+  .admin-theme[data-theme="dark"] .border-gray-300 {
+    border-color: hsl(var(--border));
+  }
+  .admin-theme[data-theme="dark"] .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+  .admin-theme[data-theme="dark"] .divide-gray-200 > :not([hidden]) ~ :not([hidden]),
+  .admin-theme[data-theme="dark"] .divide-gray-300 > :not([hidden]) ~ :not([hidden]) {
+    border-color: hsl(var(--border));
+  }
+  /* Alert-подобные светлые фоны мапим на тёмные варианты */
+  .admin-theme[data-theme="dark"] .bg-red-100 {
+    background-color: hsl(6 83% 67% / 0.15);
+  }
+  .admin-theme[data-theme="dark"] .bg-red-50 {
+    background-color: hsl(6 83% 67% / 0.08);
+  }
+  .admin-theme[data-theme="dark"] .text-red-700,
+  .admin-theme[data-theme="dark"] .text-red-800 {
+    color: hsl(6 83% 75%);
+  }
+  .admin-theme[data-theme="dark"] .border-red-400 {
+    border-color: hsl(6 83% 60% / 0.5);
   }
 }

@@ -44,14 +44,14 @@ export const TaskCardWorkerSelectModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-4 w-full max-w-sm mx-4 shadow-xl">
+      <div className="bg-card rounded-lg p-4 w-full max-w-sm mx-4 shadow-xl">
         <div className="flex items-center gap-2 mb-4">
-          <User size={20} className="text-blue-600" />
+          <User size={20} className="text-primary" />
           <h3 className="text-lg font-bold">Принять задачу</h3>
         </div>
 
         <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-2">
+          <p className="text-sm text-muted-foreground mb-2">
             Кто будет выполнять задачу "{task.title}"?
           </p>
 
@@ -64,7 +64,7 @@ export const TaskCardWorkerSelectModal = ({
               <select
                 value={selectedWorkerId}
                 onChange={(e) => setSelectedWorkerId(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg bg-white text-base mb-3"
+                className="w-full p-3 border border-border rounded-lg bg-card text-base mb-3"
               >
                 <option value="">-- Выберите сотрудника --</option>
                 {departmentWorkers?.map((worker) => (
@@ -76,7 +76,7 @@ export const TaskCardWorkerSelectModal = ({
 
               {taskQuantity > 1 && (
                 <div className="mb-3">
-                  <label className="text-sm text-gray-600 block mb-1">
+                  <label className="text-sm text-muted-foreground block mb-1">
                     Количество (из {taskQuantity}):
                   </label>
                   <input
@@ -88,7 +88,7 @@ export const TaskCardWorkerSelectModal = ({
                       Math.max(1, parseInt(e.target.value) || 1),
                       taskQuantity
                     ))}
-                    className="w-full p-3 border border-gray-300 rounded-lg bg-white text-base"
+                    className="w-full p-3 border border-border rounded-lg bg-card text-base"
                   />
                 </div>
               )}

@@ -27,7 +27,7 @@ let QualityChecksService = class QualityChecksService {
             include: { productType: true },
         });
         if (!product) {
-            throw new common_1.NotFoundException('Продукт не найден');
+            throw new common_1.NotFoundException("Продукт не найден");
         }
         let photoUrl;
         if (photoFile) {
@@ -69,11 +69,16 @@ let QualityChecksService = class QualityChecksService {
                 });
                 const previousStage = currentWorkflowStage
                     ? await this.prisma.workflowStage.findFirst({
-                        where: { order: { lt: currentWorkflowStage.order }, isActive: true },
-                        orderBy: { order: 'desc' },
+                        where: {
+                            order: { lt: currentWorkflowStage.order },
+                            isActive: true,
+                        },
+                        orderBy: { order: "desc" },
                     })
                     : null;
-                returnStage = previousStage?.legacyStage || client_1.ProductionStage.PAINTING;
+                returnStage =
+                    previousStage?.legacyStage ||
+                        client_1.ProductionStage.PAINTING;
             }
             await this.prisma.product.update({
                 where: { id: createQualityCheckDto.productId },
@@ -84,12 +89,12 @@ let QualityChecksService = class QualityChecksService {
                     productId: createQualityCheckDto.productId,
                     stage: returnStage,
                     userId,
-                    notes: 'Возврат на доработку после браковки',
+                    notes: "Возврат на доработку после браковки",
                 },
             });
             await this.telegramService.sendDefectNotification({
                 productName: product.name,
-                productType: product.productType?.name || 'Не указан',
+                productType: product.productType?.name || "Не указан",
                 orderNumber: qualityCheck.product.order.orderNumber,
                 customerName: qualityCheck.product.order.customerName,
                 notes: createQualityCheckDto.notes,
@@ -102,19 +107,19 @@ let QualityChecksService = class QualityChecksService {
                         stage: returnStage,
                         completedAt: { not: null },
                     },
-                    orderBy: { completedAt: 'desc' },
+                    orderBy: { completedAt: "desc" },
                     select: { userId: true },
                 });
                 const penaltyUserId = lastHistory?.userId;
                 if (penaltyUserId) {
                     const checkerName = qualityCheck.checkedBy
                         ? `${qualityCheck.checkedBy.lastName} ${qualityCheck.checkedBy.firstName}`
-                        : 'Склад';
+                        : "Склад";
                     await this.prisma.penalty.create({
                         data: {
                             userId: penaltyUserId,
                             amount: createQualityCheckDto.penaltyAmount,
-                            reason: createQualityCheckDto.notes || 'Брак на контроле качества',
+                            reason: createQualityCheckDto.notes || "Брак на контроле качества",
                             productId: createQualityCheckDto.productId,
                             createdById: userId,
                         },
@@ -122,7 +127,7 @@ let QualityChecksService = class QualityChecksService {
                     await this.telegramService.sendPenaltyNotification({
                         userId: penaltyUserId,
                         amount: createQualityCheckDto.penaltyAmount,
-                        reason: createQualityCheckDto.notes || 'Брак на контроле качества',
+                        reason: createQualityCheckDto.notes || "Брак на контроле качества",
                         createdByName: checkerName,
                     });
                 }
@@ -138,7 +143,7 @@ let QualityChecksService = class QualityChecksService {
                     productId: createQualityCheckDto.productId,
                     stage: client_1.ProductionStage.COMPLETED,
                     userId,
-                    notes: 'Принято складом',
+                    notes: "Принято складом",
                 },
             });
         }
@@ -173,7 +178,7 @@ let QualityChecksService = class QualityChecksService {
                 },
             },
             orderBy: {
-                createdAt: 'desc',
+                createdAt: "desc",
             },
         });
     }
@@ -197,7 +202,7 @@ let QualityChecksService = class QualityChecksService {
             },
         });
         if (!qualityCheck) {
-            throw new common_1.NotFoundException('Проверка качества не найдена');
+            throw new common_1.NotFoundException("Проверка качества не найдена");
         }
         return qualityCheck;
     }

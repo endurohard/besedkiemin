@@ -1,5 +1,5 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { TelegramService } from '../telegram/telegram.service';
+import { PrismaService } from "../prisma/prisma.service";
+import { TelegramService } from "../telegram/telegram.service";
 export declare class CallbackService {
     private prisma;
     private telegramService;

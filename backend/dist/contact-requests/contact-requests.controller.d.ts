@@ -1,6 +1,6 @@
-import { ContactRequestsService } from './contact-requests.service';
-import { CreateContactRequestDto } from './dto/create-contact-request.dto';
-import { UpdateContactRequestDto } from './dto/update-contact-request.dto';
+import { ContactRequestsService } from "./contact-requests.service";
+import { CreateContactRequestDto } from "./dto/create-contact-request.dto";
+import { UpdateContactRequestDto } from "./dto/update-contact-request.dto";
 export declare class ContactRequestsController {
     private readonly contactRequestsService;
     constructor(contactRequestsService: ContactRequestsService);

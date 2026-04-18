@@ -35,7 +35,7 @@ let CompanySettingsController = class CompanySettingsController {
 };
 exports.CompanySettingsController = CompanySettingsController;
 __decorate([
-    (0, common_1.Get)('public'),
+    (0, common_1.Get)("public"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -50,14 +50,14 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('OWNER'),
+    (0, roles_decorator_1.Roles)("OWNER"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [update_company_settings_dto_1.UpdateCompanySettingsDto]),
     __metadata("design:returntype", Promise)
 ], CompanySettingsController.prototype, "update", null);
 exports.CompanySettingsController = CompanySettingsController = __decorate([
-    (0, common_1.Controller)('company-settings'),
+    (0, common_1.Controller)("company-settings"),
     __metadata("design:paramtypes", [company_settings_service_1.CompanySettingsService])
 ], CompanySettingsController);
 //# sourceMappingURL=company-settings.controller.js.map

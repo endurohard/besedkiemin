@@ -99,7 +99,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen flex items-center justify-center admin-theme bg-gradient-to-br from-[#21222d] to-[#171821] p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center">Besedki EMIN</CardTitle>
@@ -213,7 +213,7 @@ export const LoginPage = () => {
                     type="button"
                     onClick={() => handleDepartmentLogin('assembler@example.com', 'password123')}
                     disabled={isLoading}
-                    className="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-700 font-medium transition-colors border border-blue-200 disabled:opacity-50"
+                    className="p-3 bg-primary/10 hover:bg-primary/20 rounded-lg text-primary font-medium transition-colors border border-blue-200 disabled:opacity-50"
                   >
                     Сборка
                   </button>
@@ -232,9 +232,9 @@ export const LoginPage = () => {
             // Отображение кода Telegram
             <div className="space-y-4">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 mb-4">
                   <svg
-                    className="w-8 h-8 text-blue-600"
+                    className="w-8 h-8 text-primary"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
@@ -248,10 +248,10 @@ export const LoginPage = () => {
                 </p>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border-2 border-blue-200">
+              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 rounded-lg border-2 border-primary/20">
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground mb-2 font-medium">Ваш код:</p>
-                  <div className="text-4xl font-bold text-blue-600 tracking-wider mb-2 font-mono">
+                  <div className="text-4xl font-bold text-primary tracking-wider mb-2 font-mono">
                     {telegramCode}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -265,7 +265,7 @@ export const LoginPage = () => {
                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                   <li>Откройте Telegram</li>
                   <li>Найдите бота @besedkiemin_bot</li>
-                  <li>Отправьте команду: <code className="bg-white px-2 py-1 rounded">/login {telegramCode}</code></li>
+                  <li>Отправьте команду: <code className="bg-card px-2 py-1 rounded">/login {telegramCode}</code></li>
                   <li>Дождитесь подтверждения</li>
                 </ol>
               </div>

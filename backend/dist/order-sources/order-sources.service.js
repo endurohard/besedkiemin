@@ -18,7 +18,7 @@ let OrderSourcesService = class OrderSourcesService {
     }
     async findAll() {
         return this.prisma.orderSource.findMany({
-            orderBy: { order: 'asc' },
+            orderBy: { order: "asc" },
             include: {
                 _count: {
                     select: { orders: true },
@@ -29,7 +29,7 @@ let OrderSourcesService = class OrderSourcesService {
     async findActive() {
         return this.prisma.orderSource.findMany({
             where: { isActive: true },
-            orderBy: { order: 'asc' },
+            orderBy: { order: "asc" },
         });
     }
     async findOne(id) {
@@ -52,11 +52,15 @@ let OrderSourcesService = class OrderSourcesService {
         });
     }
     async create(dto) {
-        const existingByName = await this.prisma.orderSource.findUnique({ where: { name: dto.name } });
+        const existingByName = await this.prisma.orderSource.findUnique({
+            where: { name: dto.name },
+        });
         if (existingByName) {
             throw new common_1.ConflictException(`Источник с названием "${dto.name}" уже существует`);
         }
-        const existingByCode = await this.prisma.orderSource.findUnique({ where: { code: dto.code } });
+        const existingByCode = await this.prisma.orderSource.findUnique({
+            where: { code: dto.code },
+        });
         if (existingByCode) {
             throw new common_1.ConflictException(`Источник с кодом "${dto.code}" уже существует`);
         }
@@ -67,13 +71,17 @@ let OrderSourcesService = class OrderSourcesService {
     async update(id, dto) {
         const source = await this.findOne(id);
         if (dto.name && dto.name !== source.name) {
-            const existingByName = await this.prisma.orderSource.findUnique({ where: { name: dto.name } });
+            const existingByName = await this.prisma.orderSource.findUnique({
+                where: { name: dto.name },
+            });
             if (existingByName) {
                 throw new common_1.ConflictException(`Источник с названием "${dto.name}" уже существует`);
             }
         }
         if (dto.code && dto.code !== source.code) {
-            const existingByCode = await this.prisma.orderSource.findUnique({ where: { code: dto.code } });
+            const existingByCode = await this.prisma.orderSource.findUnique({
+                where: { code: dto.code },
+            });
             if (existingByCode) {
                 throw new common_1.ConflictException(`Источник с кодом "${dto.code}" уже существует`);
             }
@@ -93,14 +101,62 @@ let OrderSourcesService = class OrderSourcesService {
     }
     async initializeDefaultSources() {
         const defaultSources = [
-            { name: 'Авито', code: 'AVITO', color: '#00AAFF', icon: 'avito', order: 1 },
-            { name: 'Инстаграм', code: 'INSTAGRAM', color: '#E4405F', icon: 'instagram', order: 2 },
-            { name: 'Сайт', code: 'WEBSITE', color: '#4CAF50', icon: 'globe', order: 3 },
-            { name: 'Телефон', code: 'PHONE', color: '#2196F3', icon: 'phone', order: 4 },
-            { name: 'WhatsApp', code: 'WHATSAPP', color: '#25D366', icon: 'whatsapp', order: 5 },
-            { name: 'Telegram', code: 'TELEGRAM', color: '#0088CC', icon: 'telegram', order: 6 },
-            { name: 'Личный визит', code: 'VISIT', color: '#FF9800', icon: 'user', order: 7 },
-            { name: 'Рекомендация', code: 'REFERRAL', color: '#9C27B0', icon: 'users', order: 8 },
+            {
+                name: "Авито",
+                code: "AVITO",
+                color: "#00AAFF",
+                icon: "avito",
+                order: 1,
+            },
+            {
+                name: "Инстаграм",
+                code: "INSTAGRAM",
+                color: "#E4405F",
+                icon: "instagram",
+                order: 2,
+            },
+            {
+                name: "Сайт",
+                code: "WEBSITE",
+                color: "#4CAF50",
+                icon: "globe",
+                order: 3,
+            },
+            {
+                name: "Телефон",
+                code: "PHONE",
+                color: "#2196F3",
+                icon: "phone",
+                order: 4,
+            },
+            {
+                name: "WhatsApp",
+                code: "WHATSAPP",
+                color: "#25D366",
+                icon: "whatsapp",
+                order: 5,
+            },
+            {
+                name: "Telegram",
+                code: "TELEGRAM",
+                color: "#0088CC",
+                icon: "telegram",
+                order: 6,
+            },
+            {
+                name: "Личный визит",
+                code: "VISIT",
+                color: "#FF9800",
+                icon: "user",
+                order: 7,
+            },
+            {
+                name: "Рекомендация",
+                code: "REFERRAL",
+                color: "#9C27B0",
+                icon: "users",
+                order: 8,
+            },
         ];
         for (const source of defaultSources) {
             const existing = await this.prisma.orderSource.findUnique({
@@ -110,7 +166,7 @@ let OrderSourcesService = class OrderSourcesService {
                 await this.prisma.orderSource.create({ data: source });
             }
         }
-        return { success: true, message: 'Источники заказов инициализированы' };
+        return { success: true, message: "Источники заказов инициализированы" };
     }
 };
 exports.OrderSourcesService = OrderSourcesService;

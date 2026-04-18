@@ -120,7 +120,7 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
 
       {showRejectForm && (
         <div className="space-y-3 p-3 border rounded-md bg-red-50">
-          <div className="text-sm text-gray-600 mb-2">
+          <div className="text-sm text-muted-foreground mb-2">
             Доступно для обработки: <strong>{availableQuantity} шт.</strong>
           </div>
 
@@ -135,7 +135,7 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
                 onChange={(e) => setRejectQuantity(Math.min(availableQuantity, Math.max(1, parseInt(e.target.value) || 1)))}
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 После брака {rejectQuantity} шт., останется {availableQuantity - rejectQuantity} шт. для приёма на склад
               </p>
             </div>
@@ -166,7 +166,7 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
             </select>
           </div>
 
-          <div className="flex items-center gap-2 p-2 border border-blue-200 rounded-md bg-blue-50">
+          <div className="flex items-center gap-2 p-2 border border-blue-200 rounded-md bg-primary/10">
             <input
               type="checkbox"
               id="requestPhotoCheckbox"
@@ -206,7 +206,7 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
                       className={`px-1 py-1.5 rounded text-xs font-medium border transition-colors ${
                         penaltyAmount === amt
                           ? 'bg-red-600 text-white border-red-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-muted/50'
                       }`}
                     >
                       {amt} ₽
@@ -222,7 +222,7 @@ export const TaskCardWarehouseActions = ({ task }: TaskCardWarehouseActionsProps
                       className={`px-1 py-1.5 rounded text-xs font-medium border transition-colors ${
                         penaltyAmount === amt
                           ? 'bg-red-600 text-white border-red-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-muted/50'
                       }`}
                     >
                       {amt} ₽
