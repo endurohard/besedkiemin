@@ -180,6 +180,8 @@ export class OrdersService {
       include: {
         products: {
           include: {
+            productType: { select: { id: true, name: true } },
+            nomenclature: { select: { id: true, name: true, color: true } },
             history: {
               include: {
                 user: {
@@ -190,10 +192,25 @@ export class OrdersService {
                     role: true,
                   },
                 },
+                workflowStage: { select: { id: true, name: true, order: true } },
               },
               orderBy: {
                 startedAt: "asc",
               },
+            },
+            tasks: {
+              where: { status: { in: ["NEW", "ACCEPTED", "COMPLETED"] } },
+              include: {
+                assignedTo: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    role: { select: { code: true, name: true } },
+                  },
+                },
+              },
+              orderBy: { createdAt: "asc" },
             },
             qualityChecks: {
               include: {

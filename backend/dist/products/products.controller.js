@@ -29,6 +29,9 @@ let ProductsController = class ProductsController {
     create(createProductDto) {
         return this.productsService.create(createProductDto);
     }
+    createFromInventory(createProductDto) {
+        return this.productsService.createFromInventory(createProductDto);
+    }
     findAll(orderId, stage) {
         return this.productsService.findAll({ orderId, stage });
     }
@@ -61,6 +64,17 @@ __decorate([
     __metadata("design:paramtypes", [create_product_dto_1.CreateProductDto]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)("from-inventory"),
+    (0, roles_decorator_1.Roles)("MANAGER", "OWNER"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Создать позицию заказа, списав её со склада (для внутренних заказов)",
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_product_dto_1.CreateProductDto]),
+    __metadata("design:returntype", void 0)
+], ProductsController.prototype, "createFromInventory", null);
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({ summary: "Получить все продукты с фильтрами" }),

@@ -137,6 +137,52 @@ let InventoryService = class InventoryService {
             },
         });
     }
+    async getAvailability(productTypeId, name) {
+        const aggregate = await this.prisma.inventoryItem.aggregate({
+            where: {
+                productTypeId,
+                name,
+                quantity: { gt: 0 },
+            },
+            _sum: { quantity: true },
+        });
+        return { quantity: aggregate._sum.quantity || 0 };
+    }
+    async consumeInventoryTx(tx, params) {
+        if (params.quantity <= 0) {
+            throw new common_1.BadRequestException("Количество для списания должно быть больше 0");
+        }
+        const items = await tx.inventoryItem.findMany({
+            where: {
+                productTypeId: params.productTypeId,
+                name: params.name,
+                quantity: { gt: 0 },
+            },
+            orderBy: { receivedAt: "asc" },
+        });
+        const total = items.reduce((sum, item) => sum + item.quantity, 0);
+        if (total < params.quantity) {
+            throw new common_1.BadRequestException(`На складе недостаточно: нужно ${params.quantity}, доступно ${total}`);
+        }
+        let remaining = params.quantity;
+        for (const item of items) {
+            if (remaining <= 0)
+                break;
+            const take = Math.min(item.quantity, remaining);
+            const nextQty = item.quantity - take;
+            if (nextQty === 0) {
+                await tx.inventoryItem.delete({ where: { id: item.id } });
+            }
+            else {
+                await tx.inventoryItem.update({
+                    where: { id: item.id },
+                    data: { quantity: nextQty },
+                });
+            }
+            remaining -= take;
+        }
+        return params.quantity;
+    }
     async getInventorySummary() {
         const aggregated = await this.prisma.inventoryItem.groupBy({
             by: ["productTypeId"],

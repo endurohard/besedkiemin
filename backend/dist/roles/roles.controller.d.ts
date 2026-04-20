@@ -9,9 +9,9 @@ export declare class RolesController {
         };
         workflowStages: ({
             workflowStage: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -24,9 +24,9 @@ export declare class RolesController {
             workflowStageId: string;
         })[];
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -47,9 +47,9 @@ export declare class RolesController {
         };
         workflowStages: ({
             workflowStage: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -62,9 +62,9 @@ export declare class RolesController {
             workflowStageId: string;
         })[];
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -80,9 +80,9 @@ export declare class RolesController {
         };
         workflowStages: ({
             workflowStage: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -95,9 +95,9 @@ export declare class RolesController {
             workflowStageId: string;
         })[];
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -113,9 +113,9 @@ export declare class RolesController {
         };
         workflowStages: ({
             workflowStage: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -128,9 +128,9 @@ export declare class RolesController {
             workflowStageId: string;
         })[];
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;

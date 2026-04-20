@@ -92,6 +92,15 @@ export default function PayrollPage() {
     notes: '',
   });
 
+  // Inline-редактирование расценки
+  const [editingRateId, setEditingRateId] = useState<string | null>(null);
+  const [editingRateForm, setEditingRateForm] = useState<{ pricePerUnit: number; description: string; isActive: boolean }>({
+    pricePerUnit: 0,
+    description: '',
+    isActive: true,
+  });
+  const [rateNomenclatureFilter, setRateNomenclatureFilter] = useState('');
+
   const canManage = user?.role.code === 'SUPER_ADMIN' || user?.role.code === 'OWNER';
   const canManagePenalties = canManage || user?.role.code === 'WAREHOUSE';
   const isWarehouse = user?.role.code === 'WAREHOUSE';
@@ -259,6 +268,29 @@ export default function PayrollPage() {
       setWorkRateForm({ productTypeId: '', nomenclatureId: '', stage: ProductionStage.DESIGN, pricePerUnit: 0, description: '' });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка создания расценки');
+    }
+  };
+
+  const startEditWorkRate = (rate: WorkRate) => {
+    setEditingRateId(rate.id);
+    setEditingRateForm({
+      pricePerUnit: rate.pricePerUnit,
+      description: rate.description || '',
+      isActive: rate.isActive,
+    });
+  };
+
+  const cancelEditWorkRate = () => {
+    setEditingRateId(null);
+  };
+
+  const saveEditWorkRate = async (id: string) => {
+    try {
+      await payrollApi.updateWorkRate(id, editingRateForm);
+      setEditingRateId(null);
+      loadWorkRates();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Ошибка обновления расценки');
     }
   };
 
@@ -725,20 +757,31 @@ export default function PayrollPage() {
       {/* Work Rates Tab */}
       {activeTab === 'work-rates' && (
         <div>
-          {canManage && (
-            <div className="mb-4">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            {canManage && (
               <button
                 onClick={() => setShowWorkRateModal(true)}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
               >
                 + Добавить расценку
               </button>
-            </div>
-          )}
+            )}
+            <input
+              type="text"
+              value={rateNomenclatureFilter}
+              onChange={(e) => setRateNomenclatureFilter(e.target.value)}
+              placeholder="Поиск по номенклатуре / типу..."
+              className="px-3 py-2 border border-border rounded-md text-sm flex-1 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <span className="text-sm text-muted-foreground">
+              Всего: {workRates.length}
+            </span>
+          </div>
           <div className="bg-card rounded-lg shadow overflow-hidden">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted/50">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Номенклатура</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Тип продукта</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Этап</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Цена за шт.</th>
@@ -748,40 +791,122 @@ export default function PayrollPage() {
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
-                {workRates.map((rate) => (
-                  <tr key={rate.id} className="hover:bg-muted/50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {rate.productType?.name || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {stageNames[rate.stage]}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
-                      {formatCurrency(rate.pricePerUnit)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
-                      {rate.description || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs ${rate.isActive ? 'bg-green-100 text-green-800' : 'bg-muted text-muted-foreground'}`}>
-                        {rate.isActive ? 'Активна' : 'Неактивна'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {canManage && (
-                        <button
-                          onClick={() => handleDeleteWorkRate(rate.id)}
-                          className="text-red-600 hover:text-red-900 text-sm"
-                        >
-                          Удалить
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {workRates
+                  .filter((rate) => {
+                    const q = rateNomenclatureFilter.trim().toLowerCase();
+                    if (!q) return true;
+                    return (
+                      (rate.nomenclature?.name || '').toLowerCase().includes(q) ||
+                      (rate.productType?.name || '').toLowerCase().includes(q) ||
+                      (rate.description || '').toLowerCase().includes(q)
+                    );
+                  })
+                  .map((rate) => {
+                  const isEditing = editingRateId === rate.id;
+                  return (
+                    <tr key={rate.id} className={`hover:bg-muted/50 ${isEditing ? 'bg-amber-50/40' : ''}`}>
+                      <td className="px-6 py-4 text-sm">
+                        {rate.nomenclature?.name ? (
+                          <span className="font-medium">{rate.nomenclature.name}</span>
+                        ) : (
+                          <span className="text-muted-foreground italic">Все изделия типа</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {rate.productType?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {stageNames[rate.stage]}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={editingRateForm.pricePerUnit}
+                            onChange={(e) =>
+                              setEditingRateForm({ ...editingRateForm, pricePerUnit: Number(e.target.value) })
+                            }
+                            className="w-28 px-2 py-1 border border-border rounded text-right focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        ) : (
+                          formatCurrency(rate.pricePerUnit)
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editingRateForm.description}
+                            onChange={(e) =>
+                              setEditingRateForm({ ...editingRateForm, description: e.target.value })
+                            }
+                            className="w-full px-2 py-1 border border-border rounded focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        ) : (
+                          rate.description || '-'
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {isEditing ? (
+                          <label className="inline-flex items-center gap-1 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={editingRateForm.isActive}
+                              onChange={(e) =>
+                                setEditingRateForm({ ...editingRateForm, isActive: e.target.checked })
+                              }
+                            />
+                            Активна
+                          </label>
+                        ) : (
+                          <span className={`px-2 py-1 rounded-full text-xs ${rate.isActive ? 'bg-green-100 text-green-800' : 'bg-muted text-muted-foreground'}`}>
+                            {rate.isActive ? 'Активна' : 'Неактивна'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {canManage && (
+                          isEditing ? (
+                            <div className="flex justify-center gap-3">
+                              <button
+                                onClick={() => saveEditWorkRate(rate.id)}
+                                className="text-green-700 hover:text-green-900 text-sm font-medium"
+                              >
+                                Сохранить
+                              </button>
+                              <button
+                                onClick={cancelEditWorkRate}
+                                className="text-muted-foreground hover:text-foreground text-sm"
+                              >
+                                Отмена
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex justify-center gap-3">
+                              <button
+                                onClick={() => startEditWorkRate(rate)}
+                                className="text-blue-600 hover:text-blue-900 text-sm"
+                              >
+                                Редактировать
+                              </button>
+                              <button
+                                onClick={() => handleDeleteWorkRate(rate.id)}
+                                className="text-red-600 hover:text-red-900 text-sm"
+                              >
+                                Удалить
+                              </button>
+                            </div>
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
                 {workRates.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-6 py-4 text-center text-muted-foreground">
                       Расценки не настроены
                     </td>
                   </tr>

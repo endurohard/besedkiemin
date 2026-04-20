@@ -122,6 +122,38 @@ export declare class AnalyticsController {
             }[];
         }[];
     }>;
+    getOrderProductionReport(startDate?: string, endDate?: string): Promise<{
+        id: string;
+        orderNumber: string;
+        customerName: string;
+        status: import(".prisma/client").$Enums.OrderStatus;
+        createdAt: Date;
+        totalAmount: number | null;
+        createdBy: string | null;
+        products: {
+            id: string;
+            name: string;
+            productType: string | null;
+            quantity: number;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            color: string | null;
+            dimensions: string | null;
+            stages: {
+                stage: string;
+                stageName: string;
+                stageOrder: number | null;
+                workers: {
+                    id: string;
+                    name: string;
+                    role: string | null;
+                    status: string;
+                    startedAt: Date;
+                    completedAt: Date | null;
+                    durationHours: number | null;
+                }[];
+            }[];
+        }[];
+    }[]>;
     getProductivityReport(startDate?: string, endDate?: string): Promise<{
         period: {
             start: Date;

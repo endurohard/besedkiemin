@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { TelegramService } from "../telegram/telegram.service";
+import { InventoryService } from "../inventory/inventory.service";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { ProductionStage, OrderStatus } from "@prisma/client";
@@ -17,7 +18,66 @@ export class ProductsService {
   constructor(
     private prisma: PrismaService,
     private telegramService: TelegramService,
+    private inventoryService: InventoryService,
   ) {}
+
+  async createFromInventory(dto: CreateProductDto) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: dto.orderId },
+    });
+    if (!order) {
+      throw new NotFoundException("Заказ не найден");
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await this.inventoryService.consumeInventoryTx(tx, {
+        productTypeId: dto.productTypeId,
+        name: dto.name,
+        quantity: dto.quantity,
+      });
+
+      const product = await tx.product.create({
+        data: {
+          name: dto.name,
+          productTypeId: dto.productTypeId,
+          description: dto.description,
+          quantity: dto.quantity,
+          dimensions: dto.dimensions,
+          schemaImageUrl: dto.schemaImageUrl,
+          orderId: dto.orderId,
+          deadline: dto.deadline,
+          stage: ProductionStage.COMPLETED,
+          color: dto.color,
+          upholsteryMaterial: dto.upholsteryMaterial,
+          requiresSewing: dto.requiresSewing,
+          nomenclatureId: dto.nomenclatureId,
+          isCustom: dto.isCustom ?? false,
+        },
+        include: { order: true, productType: true },
+      });
+
+      // Обновляем статус заказа: если все позиции COMPLETED — заказ COMPLETED
+      const siblings = await tx.product.findMany({
+        where: { orderId: dto.orderId },
+      });
+      const allCompleted = siblings.every(
+        (p) => p.stage === ProductionStage.COMPLETED,
+      );
+      if (allCompleted) {
+        await tx.order.update({
+          where: { id: dto.orderId },
+          data: { status: OrderStatus.COMPLETED },
+        });
+      } else {
+        await tx.order.update({
+          where: { id: dto.orderId },
+          data: { status: OrderStatus.IN_PRODUCTION },
+        });
+      }
+
+      return product;
+    });
+  }
 
   async create(createProductDto: CreateProductDto) {
     // Проверяем существует ли заказ
@@ -83,6 +143,7 @@ export class ProductsService {
           upholsteryMaterial: createProductDto.upholsteryMaterial,
           requiresSewing: createProductDto.requiresSewing,
           nomenclatureId: createProductDto.nomenclatureId,
+          isCustom: createProductDto.isCustom ?? false,
           stageAssignments: createProductDto.stageAssignments || undefined,
         },
         include: {

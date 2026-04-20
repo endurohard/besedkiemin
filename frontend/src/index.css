@@ -115,6 +115,18 @@
   }
 }
 
+/* Принудительно непрозрачный фон для sticky-шапки и сайдбара админки, */
+/* чтобы скроллящийся контент не просвечивал сквозь них. */
+.admin-theme > header {
+  background-color: hsl(var(--sidebar)) !important;
+}
+.admin-theme[data-theme="dark"] > header {
+  background-color: #171821 !important;
+}
+.admin-theme[data-theme="light"] > header {
+  background-color: #ffffff !important;
+}
+
 /*
  * Админка /app использует тёмную тему, но часть страниц ещё держит хардкод
  * tailwind-классы типа text-gray-900 / bg-white. Чтобы не переписывать 18 файлов
@@ -166,5 +178,106 @@
   }
   .admin-theme[data-theme="dark"] .border-red-400 {
     border-color: hsl(6 83% 60% / 0.5);
+  }
+
+  /* Светлые пастельные фоны (blue/yellow/green/purple/orange) в тёмной теме — */
+  /* чтобы они не сливались со светлым текстом после ремапа text-gray-* */
+  .admin-theme[data-theme="dark"] .bg-blue-50,
+  .admin-theme[data-theme="dark"] .bg-yellow-50,
+  .admin-theme[data-theme="dark"] .bg-green-50,
+  .admin-theme[data-theme="dark"] .bg-purple-50,
+  .admin-theme[data-theme="dark"] .bg-orange-50 {
+    background-color: hsl(var(--muted) / 0.6);
+  }
+  .admin-theme[data-theme="dark"] .bg-blue-100,
+  .admin-theme[data-theme="dark"] .bg-yellow-100,
+  .admin-theme[data-theme="dark"] .bg-green-100,
+  .admin-theme[data-theme="dark"] .bg-purple-100,
+  .admin-theme[data-theme="dark"] .bg-orange-100 {
+    background-color: hsl(var(--accent));
+  }
+  .admin-theme[data-theme="dark"] .border-blue-200,
+  .admin-theme[data-theme="dark"] .border-yellow-200,
+  .admin-theme[data-theme="dark"] .border-green-200,
+  .admin-theme[data-theme="dark"] .border-purple-200,
+  .admin-theme[data-theme="dark"] .border-orange-200 {
+    border-color: hsl(var(--border));
+  }
+
+  /* Градиенты (bg-gradient-to-r from-* to-*) — переопределяем стоп-позиции */
+  .admin-theme[data-theme="dark"] .from-blue-50,
+  .admin-theme[data-theme="dark"] .from-yellow-50,
+  .admin-theme[data-theme="dark"] .from-green-50,
+  .admin-theme[data-theme="dark"] .from-orange-50,
+  .admin-theme[data-theme="dark"] .from-red-50,
+  .admin-theme[data-theme="dark"] .from-gray-50 {
+    --tw-gradient-from: hsl(var(--muted) / 0.7) var(--tw-gradient-from-position);
+    --tw-gradient-to: hsl(var(--muted) / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .admin-theme[data-theme="dark"] .from-blue-100,
+  .admin-theme[data-theme="dark"] .from-yellow-100,
+  .admin-theme[data-theme="dark"] .from-red-100,
+  .admin-theme[data-theme="dark"] .from-orange-100,
+  .admin-theme[data-theme="dark"] .from-gray-100 {
+    --tw-gradient-from: hsl(var(--accent)) var(--tw-gradient-from-position);
+    --tw-gradient-to: hsl(var(--accent) / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .admin-theme[data-theme="dark"] .to-blue-100,
+  .admin-theme[data-theme="dark"] .to-yellow-100,
+  .admin-theme[data-theme="dark"] .to-green-100,
+  .admin-theme[data-theme="dark"] .to-orange-100,
+  .admin-theme[data-theme="dark"] .to-red-100,
+  .admin-theme[data-theme="dark"] .to-gray-100 {
+    --tw-gradient-to: hsl(var(--accent)) var(--tw-gradient-to-position);
+  }
+  .admin-theme[data-theme="dark"] .to-blue-200,
+  .admin-theme[data-theme="dark"] .to-yellow-200,
+  .admin-theme[data-theme="dark"] .to-green-200,
+  .admin-theme[data-theme="dark"] .to-orange-200,
+  .admin-theme[data-theme="dark"] .to-red-200 {
+    --tw-gradient-to: hsl(var(--secondary)) var(--tw-gradient-to-position);
+  }
+
+  /* Бейджи статусов: тёмный текст на светлом фоне → светлый текст на тёмном */
+  .admin-theme[data-theme="dark"] .text-blue-700,
+  .admin-theme[data-theme="dark"] .text-blue-800,
+  .admin-theme[data-theme="dark"] .text-blue-900 {
+    color: hsl(210 90% 80%);
+  }
+  .admin-theme[data-theme="dark"] .text-yellow-700,
+  .admin-theme[data-theme="dark"] .text-yellow-800,
+  .admin-theme[data-theme="dark"] .text-yellow-900 {
+    color: hsl(45 90% 75%);
+  }
+  .admin-theme[data-theme="dark"] .text-green-700,
+  .admin-theme[data-theme="dark"] .text-green-800,
+  .admin-theme[data-theme="dark"] .text-green-900 {
+    color: hsl(140 60% 75%);
+  }
+  .admin-theme[data-theme="dark"] .text-purple-700,
+  .admin-theme[data-theme="dark"] .text-purple-800,
+  .admin-theme[data-theme="dark"] .text-purple-900 {
+    color: hsl(270 70% 80%);
+  }
+  .admin-theme[data-theme="dark"] .text-orange-700,
+  .admin-theme[data-theme="dark"] .text-orange-800,
+  .admin-theme[data-theme="dark"] .text-orange-900 {
+    color: hsl(28 90% 75%);
+  }
+  .admin-theme[data-theme="dark"] .bg-purple-100 {
+    background-color: hsl(270 40% 30% / 0.6);
+  }
+  .admin-theme[data-theme="dark"] .bg-purple-50 {
+    background-color: hsl(270 40% 30% / 0.3);
+  }
+  .admin-theme[data-theme="dark"] .border-blue-300,
+  .admin-theme[data-theme="dark"] .border-yellow-300,
+  .admin-theme[data-theme="dark"] .border-green-300,
+  .admin-theme[data-theme="dark"] .border-purple-300,
+  .admin-theme[data-theme="dark"] .border-orange-300,
+  .admin-theme[data-theme="dark"] .border-red-300 {
+    border-color: hsl(var(--border));
   }
 }

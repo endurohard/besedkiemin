@@ -9,12 +9,12 @@ export declare class CallbackController {
         catalogOrderId?: string;
         preferredTime?: string;
     }): Promise<{
-        status: string;
-        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -23,12 +23,12 @@ export declare class CallbackController {
         preferredTime: string | null;
     }>;
     findAll(status?: string): Promise<{
-        status: string;
-        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -37,12 +37,12 @@ export declare class CallbackController {
         preferredTime: string | null;
     }[]>;
     findOne(id: string): Promise<{
-        status: string;
-        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -53,12 +53,12 @@ export declare class CallbackController {
     markContacted(id: string, body: {
         notes?: string;
     }, req: any): Promise<{
-        status: string;
-        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -69,12 +69,12 @@ export declare class CallbackController {
     markCompleted(id: string, body: {
         notes?: string;
     }, req: any): Promise<{
-        status: string;
-        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -85,12 +85,12 @@ export declare class CallbackController {
     cancel(id: string, body: {
         notes?: string;
     }, req: any): Promise<{
-        status: string;
-        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -99,12 +99,12 @@ export declare class CallbackController {
         preferredTime: string | null;
     }>;
     remove(id: string): Promise<{
-        status: string;
-        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;

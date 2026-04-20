@@ -113,6 +113,15 @@ export default function ProductionWorkersPage() {
     pin: '',
   });
 
+  // Inline-редактирование расценки + поиск
+  const [editingRateId, setEditingRateId] = useState<string | null>(null);
+  const [editingRateForm, setEditingRateForm] = useState<{
+    pricePerUnit: number;
+    description: string;
+    isActive: boolean;
+  }>({ pricePerUnit: 0, description: '', isActive: true });
+  const [rateSearch, setRateSearch] = useState('');
+
   const [workRateForm, setWorkRateForm] = useState({
     productTypeId: '',
     nomenclatureId: '',
@@ -283,6 +292,31 @@ export default function ProductionWorkersPage() {
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка добавления расценки');
+    }
+  };
+
+  const startEditWorkRate = (rate: WorkRate) => {
+    setEditingRateId(rate.id);
+    setEditingRateForm({
+      pricePerUnit: rate.pricePerUnit,
+      description: rate.description || '',
+      isActive: rate.isActive,
+    });
+  };
+
+  const cancelEditWorkRate = () => {
+    setEditingRateId(null);
+  };
+
+  const saveEditWorkRate = async (rateId: string) => {
+    try {
+      await payrollApi.updateWorkRate(rateId, editingRateForm);
+      setEditingRateId(null);
+      setSuccess('Расценка обновлена');
+      loadData();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Ошибка обновления расценки');
     }
   };
 
@@ -491,26 +525,147 @@ export default function ProductionWorkersPage() {
             )}
           </div>
 
-          <div className="divide-y">
+          <div className="px-4 py-3 border-b flex items-center gap-2">
+            <input
+              type="text"
+              value={rateSearch}
+              onChange={(e) => setRateSearch(e.target.value)}
+              placeholder="Поиск по номенклатуре / типу..."
+              className="flex-1 border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {currentRates.length} расц.
+            </span>
+          </div>
+
+          <div className="divide-y max-h-[60vh] overflow-y-auto">
             {currentRates.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">Расценки не настроены</div>
             ) : (
-              currentRates.map((rate) => (
-                <div key={rate.id} className="p-4 flex items-center justify-between hover:bg-muted/50">
-                  <div>
-                    <div className="font-medium">{rate.productType?.name || 'Все типы'}</div>
-                    {rate.description && <div className="text-sm text-muted-foreground">{rate.description}</div>}
+              currentRates
+                .filter((rate) => {
+                  const q = rateSearch.trim().toLowerCase();
+                  if (!q) return true;
+                  return (
+                    (rate.nomenclature?.name || '').toLowerCase().includes(q) ||
+                    (rate.productType?.name || '').toLowerCase().includes(q) ||
+                    (rate.description || '').toLowerCase().includes(q)
+                  );
+                })
+                .map((rate) => {
+                const isEditing = editingRateId === rate.id;
+                const title = rate.nomenclature?.name
+                  ? rate.nomenclature.name
+                  : rate.productType?.name
+                  ? `${rate.productType.name} (все изделия)`
+                  : 'Все типы';
+                const subtitle = rate.nomenclature
+                  ? rate.productType?.name
+                  : null;
+                return (
+                  <div
+                    key={rate.id}
+                    className={`p-4 flex items-center justify-between gap-3 hover:bg-muted/50 ${
+                      isEditing ? 'bg-amber-50/40' : ''
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate">{title}</div>
+                      {subtitle && (
+                        <div className="text-xs text-muted-foreground">{subtitle}</div>
+                      )}
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editingRateForm.description}
+                          onChange={(e) =>
+                            setEditingRateForm({ ...editingRateForm, description: e.target.value })
+                          }
+                          placeholder="Описание"
+                          className="mt-1 w-full border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      ) : (
+                        rate.description && (
+                          <div className="text-sm text-muted-foreground truncate">
+                            {rate.description}
+                          </div>
+                        )
+                      )}
+                      {isEditing && (
+                        <label className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <input
+                            type="checkbox"
+                            checked={editingRateForm.isActive}
+                            onChange={(e) =>
+                              setEditingRateForm({ ...editingRateForm, isActive: e.target.checked })
+                            }
+                          />
+                          Активна
+                        </label>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={editingRateForm.pricePerUnit}
+                          onChange={(e) =>
+                            setEditingRateForm({
+                              ...editingRateForm,
+                              pricePerUnit: Number(e.target.value),
+                            })
+                          }
+                          className="w-28 border rounded px-2 py-1 text-right focus:outline-none focus:ring-2 focus:ring-ring"
+                          autoFocus
+                        />
+                      ) : (
+                        <span className="text-lg font-bold text-green-600">
+                          {formatCurrency(rate.pricePerUnit)}
+                        </span>
+                      )}
+                      {canManage && (
+                        isEditing ? (
+                          <>
+                            <button
+                              onClick={() => saveEditWorkRate(rate.id)}
+                              className="p-2 text-green-700 hover:bg-green-50 rounded"
+                              title="Сохранить"
+                            >
+                              <Save size={16} />
+                            </button>
+                            <button
+                              onClick={cancelEditWorkRate}
+                              className="p-2 text-muted-foreground hover:bg-muted rounded text-xs"
+                              title="Отмена"
+                            >
+                              Отмена
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => startEditWorkRate(rate)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                              title="Редактировать"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteWorkRate(rate.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded"
+                              title="Удалить"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-green-600">{formatCurrency(rate.pricePerUnit)}</span>
-                    {canManage && (
-                      <button onClick={() => handleDeleteWorkRate(rate.id)} className="p-2 text-red-600 hover:bg-red-50 rounded" title="Удалить">
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 

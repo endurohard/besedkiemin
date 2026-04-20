@@ -17,9 +17,9 @@ export declare class AuthController {
             firstName: string;
             lastName: string;
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -55,9 +55,9 @@ export declare class AuthController {
             firstName: string;
             lastName: string;
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -85,9 +85,9 @@ export declare class AuthController {
             firstName: string;
             lastName: string;
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;

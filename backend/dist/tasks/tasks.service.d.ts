@@ -11,57 +11,56 @@ export declare class TasksService {
     constructor(prisma: PrismaService, telegramService: TelegramService, payrollService: PayrollService, notifications: NotificationsGateway);
     getMyTasks(userId: string): Promise<({
         product: {
+            productType: {
+                id: string;
+                description: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                isActive: boolean;
+                name: string;
+                requiresSewing: boolean;
+                productionTimeHours: number | null;
+            };
             order: {
                 id: string;
                 priority: import(".prisma/client").$Enums.OrderPriority;
                 orderNumber: string;
                 customerName: string;
             };
-            productType: {
-                description: string | null;
-                name: string;
-                isActive: boolean;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                requiresSewing: boolean;
-                productionTimeHours: number | null;
-            };
         } & {
-            description: string | null;
-            name: string;
             id: string;
-            color: string | null;
-            createdAt: Date;
-            updatedAt: Date;
+            description: string | null;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
-            productTypeId: string;
-            orderId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            color: string | null;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            productTypeId: string;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+            orderId: string;
             nomenclatureId: string | null;
         };
         assignedTo: {
+            id: string;
+            firstName: string;
+            lastName: string;
             role: {
                 name: string;
                 code: string;
             };
-            firstName: string;
-            lastName: string;
-            id: string;
         };
     } & {
-        status: import(".prisma/client").$Enums.TaskStatus;
-        description: string | null;
-        title: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        title: string;
+        description: string | null;
+        status: import(".prisma/client").$Enums.TaskStatus;
         stage: import(".prisma/client").$Enums.ProductionStage;
         quantity: number;
         priority: import(".prisma/client").$Enums.TaskPriority;
@@ -76,6 +75,8 @@ export declare class TasksService {
         productId: string;
         assignedToId: string;
         workflowStageId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     })[]>;
     getDepartmentTasks(userId: string): Promise<{
         worker: {
@@ -86,52 +87,51 @@ export declare class TasksService {
         };
         tasks: ({
             product: {
+                productType: {
+                    id: string;
+                    description: string | null;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    isActive: boolean;
+                    name: string;
+                    requiresSewing: boolean;
+                    productionTimeHours: number | null;
+                };
                 order: {
                     id: string;
                     priority: import(".prisma/client").$Enums.OrderPriority;
                     orderNumber: string;
                 };
-                productType: {
-                    description: string | null;
-                    name: string;
-                    isActive: boolean;
-                    id: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    requiresSewing: boolean;
-                    productionTimeHours: number | null;
-                };
             } & {
-                description: string | null;
-                name: string;
                 id: string;
-                color: string | null;
-                createdAt: Date;
-                updatedAt: Date;
+                description: string | null;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 quantity: number;
-                productTypeId: string;
-                orderId: string;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                color: string | null;
                 dimensions: string | null;
                 schemaImageUrl: string | null;
                 deadline: Date | null;
+                productTypeId: string;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                isCustom: boolean;
                 stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+                orderId: string;
                 nomenclatureId: string | null;
             };
             assignedTo: {
+                id: string;
                 firstName: string;
                 lastName: string;
-                id: string;
             };
         } & {
-            status: import(".prisma/client").$Enums.TaskStatus;
-            description: string | null;
-            title: string;
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
+            title: string;
+            description: string | null;
+            status: import(".prisma/client").$Enums.TaskStatus;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
             priority: import(".prisma/client").$Enums.TaskPriority;
@@ -146,28 +146,40 @@ export declare class TasksService {
             productId: string;
             assignedToId: string;
             workflowStageId: string | null;
+            createdAt: Date;
+            updatedAt: Date;
         })[];
     }[]>;
     getDepartmentWorkers(userId: string): Promise<{
-        role: {
-            name: string;
-            id: string;
-            code: string;
-        };
+        id: string;
         firstName: string;
         lastName: string;
-        id: string;
+        role: {
+            id: string;
+            name: string;
+            code: string;
+        };
     }[]>;
     acceptTask(taskId: string, workerId: string, requesterId?: string, acceptQuantity?: number): Promise<{
         product: {
-            order: {
-                status: import(".prisma/client").$Enums.OrderStatus;
-                description: string | null;
+            productType: {
                 id: string;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
+                name: string;
+                requiresSewing: boolean;
+                productionTimeHours: number | null;
+            };
+            order: {
+                id: string;
+                description: string | null;
+                status: import(".prisma/client").$Enums.OrderStatus;
                 priority: import(".prisma/client").$Enums.OrderPriority;
                 notes: string | null;
+                createdAt: Date;
+                updatedAt: Date;
                 orderNumber: string;
                 customerName: string;
                 customerPhone: string | null;
@@ -176,42 +188,31 @@ export declare class TasksService {
                 totalAmount: number | null;
                 createdById: string;
             };
-            productType: {
-                description: string | null;
-                name: string;
-                isActive: boolean;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                requiresSewing: boolean;
-                productionTimeHours: number | null;
-            };
         } & {
-            description: string | null;
-            name: string;
             id: string;
-            color: string | null;
-            createdAt: Date;
-            updatedAt: Date;
+            description: string | null;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
-            productTypeId: string;
-            orderId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            color: string | null;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            productTypeId: string;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+            orderId: string;
             nomenclatureId: string | null;
         };
     } & {
-        status: import(".prisma/client").$Enums.TaskStatus;
-        description: string | null;
-        title: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        title: string;
+        description: string | null;
+        status: import(".prisma/client").$Enums.TaskStatus;
         stage: import(".prisma/client").$Enums.ProductionStage;
         quantity: number;
         priority: import(".prisma/client").$Enums.TaskPriority;
@@ -226,17 +227,117 @@ export declare class TasksService {
         productId: string;
         assignedToId: string;
         workflowStageId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
+    reassignTask(taskId: string, newWorkerId: string, requesterId: string): Promise<{
+        product: {
+            productType: {
+                id: string;
+                description: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                isActive: boolean;
+                name: string;
+                requiresSewing: boolean;
+                productionTimeHours: number | null;
+            };
+            order: {
+                id: string;
+                description: string | null;
+                status: import(".prisma/client").$Enums.OrderStatus;
+                priority: import(".prisma/client").$Enums.OrderPriority;
+                notes: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                orderNumber: string;
+                customerName: string;
+                customerPhone: string | null;
+                customerAddress: string | null;
+                sourceId: string | null;
+                totalAmount: number | null;
+                createdById: string;
+            };
+        } & {
+            id: string;
+            description: string | null;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            quantity: number;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            color: string | null;
+            dimensions: string | null;
+            schemaImageUrl: string | null;
+            deadline: Date | null;
+            productTypeId: string;
+            requiresSewing: boolean | null;
+            upholsteryMaterial: string | null;
+            isCustom: boolean;
+            stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+            orderId: string;
+            nomenclatureId: string | null;
+        };
+        assignedTo: {
+            id: string;
+            firstName: string;
+            lastName: string;
+            role: {
+                name: string;
+                code: string;
+            };
+        };
+    } & {
+        id: string;
+        title: string;
+        description: string | null;
+        status: import(".prisma/client").$Enums.TaskStatus;
+        stage: import(".prisma/client").$Enums.ProductionStage;
+        quantity: number;
+        priority: import(".prisma/client").$Enums.TaskPriority;
+        acceptedAt: Date | null;
+        completedAt: Date | null;
+        passedAt: Date | null;
+        rejectedAt: Date | null;
+        notes: string | null;
+        defectPhotos: string[];
+        isDefect: boolean;
+        quantityProcessed: number;
+        productId: string;
+        assignedToId: string;
+        workflowStageId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    getReassignableWorkers(taskId: string): Promise<{
+        id: string;
+        firstName: string;
+        lastName: string;
+        role: {
+            name: string;
+            code: string;
+        };
+    }[]>;
     completeTask(taskId: string, userId: string, notes?: string, quantity?: number): Promise<{
         product: {
-            order: {
-                status: import(".prisma/client").$Enums.OrderStatus;
-                description: string | null;
+            productType: {
                 id: string;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
+                name: string;
+                requiresSewing: boolean;
+                productionTimeHours: number | null;
+            };
+            order: {
+                id: string;
+                description: string | null;
+                status: import(".prisma/client").$Enums.OrderStatus;
                 priority: import(".prisma/client").$Enums.OrderPriority;
                 notes: string | null;
+                createdAt: Date;
+                updatedAt: Date;
                 orderNumber: string;
                 customerName: string;
                 customerPhone: string | null;
@@ -245,42 +346,31 @@ export declare class TasksService {
                 totalAmount: number | null;
                 createdById: string;
             };
-            productType: {
-                description: string | null;
-                name: string;
-                isActive: boolean;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                requiresSewing: boolean;
-                productionTimeHours: number | null;
-            };
         } & {
-            description: string | null;
-            name: string;
             id: string;
-            color: string | null;
-            createdAt: Date;
-            updatedAt: Date;
+            description: string | null;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
-            productTypeId: string;
-            orderId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            color: string | null;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            productTypeId: string;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+            orderId: string;
             nomenclatureId: string | null;
         };
     } & {
-        status: import(".prisma/client").$Enums.TaskStatus;
-        description: string | null;
-        title: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        title: string;
+        description: string | null;
+        status: import(".prisma/client").$Enums.TaskStatus;
         stage: import(".prisma/client").$Enums.ProductionStage;
         quantity: number;
         priority: import(".prisma/client").$Enums.TaskPriority;
@@ -295,14 +385,14 @@ export declare class TasksService {
         productId: string;
         assignedToId: string;
         workflowStageId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     passTask(taskId: string, userId: string): Promise<{
-        status: import(".prisma/client").$Enums.TaskStatus;
-        description: string | null;
-        title: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        title: string;
+        description: string | null;
+        status: import(".prisma/client").$Enums.TaskStatus;
         stage: import(".prisma/client").$Enums.ProductionStage;
         quantity: number;
         priority: import(".prisma/client").$Enums.TaskPriority;
@@ -317,14 +407,14 @@ export declare class TasksService {
         productId: string;
         assignedToId: string;
         workflowStageId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     rejectTask(taskId: string, userId: string, notes: string, quantity?: number, defectPhotoUrl?: string, requestPhoto?: boolean, returnToStage?: string, penaltyAmount?: number): Promise<{
-        status: import(".prisma/client").$Enums.TaskStatus;
-        description: string | null;
-        title: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        title: string;
+        description: string | null;
+        status: import(".prisma/client").$Enums.TaskStatus;
         stage: import(".prisma/client").$Enums.ProductionStage;
         quantity: number;
         priority: import(".prisma/client").$Enums.TaskPriority;
@@ -339,14 +429,14 @@ export declare class TasksService {
         productId: string;
         assignedToId: string;
         workflowStageId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     approveTask(taskId: string, userId: string, quantity: number): Promise<{
-        status: import(".prisma/client").$Enums.TaskStatus;
-        description: string | null;
-        title: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        title: string;
+        description: string | null;
+        status: import(".prisma/client").$Enums.TaskStatus;
         stage: import(".prisma/client").$Enums.ProductionStage;
         quantity: number;
         priority: import(".prisma/client").$Enums.TaskPriority;
@@ -361,19 +451,31 @@ export declare class TasksService {
         productId: string;
         assignedToId: string;
         workflowStageId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     private updateOrderStatus;
     getDefectsWithPhotos(userId?: string): Promise<{
         product: {
             qualityChecks: undefined;
-            order: {
-                status: import(".prisma/client").$Enums.OrderStatus;
-                description: string | null;
+            productType: {
                 id: string;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
+                name: string;
+                requiresSewing: boolean;
+                productionTimeHours: number | null;
+            };
+            order: {
+                id: string;
+                description: string | null;
+                status: import(".prisma/client").$Enums.OrderStatus;
                 priority: import(".prisma/client").$Enums.OrderPriority;
                 notes: string | null;
+                createdAt: Date;
+                updatedAt: Date;
                 orderNumber: string;
                 customerName: string;
                 customerPhone: string | null;
@@ -382,77 +484,78 @@ export declare class TasksService {
                 totalAmount: number | null;
                 createdById: string;
             };
-            productType: {
-                description: string | null;
-                name: string;
-                isActive: boolean;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                requiresSewing: boolean;
-                productionTimeHours: number | null;
-            };
-            description: string | null;
-            name: string;
             id: string;
-            color: string | null;
-            createdAt: Date;
-            updatedAt: Date;
+            description: string | null;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
-            productTypeId: string;
-            orderId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            color: string | null;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            productTypeId: string;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+            orderId: string;
             nomenclatureId: string | null;
         };
         defectPhotos: string[];
         checkedBy: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
             email: string;
             password: string;
             firstName: string;
             lastName: string;
+            isActive: boolean;
+            isDepartmentAccount: boolean;
             roleId: string;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
+            pin: string | null;
+            pinLookup: string | null;
+            telegramId: string | null;
             sipServer: string | null;
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
-            paymentType: import(".prisma/client").$Enums.PaymentType;
-            monthlySalary: number | null;
-            isActive: boolean;
-            telegramId: string | null;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
             sipWsPort: number | null;
-            isDepartmentAccount: boolean;
-            pin: string | null;
-            pinLookup: string | null;
         } | null;
-        status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        status: import(".prisma/client").$Enums.QualityStatus;
         notes: string | null;
         productId: string;
-        photoUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         checkedAt: Date | null;
+        photoUrl: string | null;
         checkedById: string | null;
     }[]>;
     acceptDefectRework(productId: string, userId: string): Promise<{
         product: {
-            order: {
-                status: import(".prisma/client").$Enums.OrderStatus;
-                description: string | null;
+            productType: {
                 id: string;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
+                name: string;
+                requiresSewing: boolean;
+                productionTimeHours: number | null;
+            };
+            order: {
+                id: string;
+                description: string | null;
+                status: import(".prisma/client").$Enums.OrderStatus;
                 priority: import(".prisma/client").$Enums.OrderPriority;
                 notes: string | null;
+                createdAt: Date;
+                updatedAt: Date;
                 orderNumber: string;
                 customerName: string;
                 customerPhone: string | null;
@@ -461,42 +564,31 @@ export declare class TasksService {
                 totalAmount: number | null;
                 createdById: string;
             };
-            productType: {
-                description: string | null;
-                name: string;
-                isActive: boolean;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                requiresSewing: boolean;
-                productionTimeHours: number | null;
-            };
         } & {
-            description: string | null;
-            name: string;
             id: string;
-            color: string | null;
-            createdAt: Date;
-            updatedAt: Date;
+            description: string | null;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
-            productTypeId: string;
-            orderId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            color: string | null;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            productTypeId: string;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+            orderId: string;
             nomenclatureId: string | null;
         };
     } & {
-        status: import(".prisma/client").$Enums.TaskStatus;
-        description: string | null;
-        title: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        title: string;
+        description: string | null;
+        status: import(".prisma/client").$Enums.TaskStatus;
         stage: import(".prisma/client").$Enums.ProductionStage;
         quantity: number;
         priority: import(".prisma/client").$Enums.TaskPriority;
@@ -511,63 +603,64 @@ export declare class TasksService {
         productId: string;
         assignedToId: string;
         workflowStageId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     getUnacceptedDefectsCount(userId: string): Promise<{
         count: number;
     }>;
     updateTaskQuantity(taskId: string, userId: string, quantity: number): Promise<{
         product: {
+            productType: {
+                id: string;
+                description: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                isActive: boolean;
+                name: string;
+                requiresSewing: boolean;
+                productionTimeHours: number | null;
+            };
             order: {
                 id: string;
                 priority: import(".prisma/client").$Enums.OrderPriority;
                 orderNumber: string;
                 customerName: string;
             };
-            productType: {
-                description: string | null;
-                name: string;
-                isActive: boolean;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                requiresSewing: boolean;
-                productionTimeHours: number | null;
-            };
         } & {
-            description: string | null;
-            name: string;
             id: string;
-            color: string | null;
-            createdAt: Date;
-            updatedAt: Date;
+            description: string | null;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
-            productTypeId: string;
-            orderId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            color: string | null;
             dimensions: string | null;
             schemaImageUrl: string | null;
             deadline: Date | null;
+            productTypeId: string;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+            orderId: string;
             nomenclatureId: string | null;
         };
         assignedTo: {
+            id: string;
+            firstName: string;
+            lastName: string;
             role: {
                 name: string;
                 code: string;
             };
-            firstName: string;
-            lastName: string;
-            id: string;
         };
     } & {
-        status: import(".prisma/client").$Enums.TaskStatus;
-        description: string | null;
-        title: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        title: string;
+        description: string | null;
+        status: import(".prisma/client").$Enums.TaskStatus;
         stage: import(".prisma/client").$Enums.ProductionStage;
         quantity: number;
         priority: import(".prisma/client").$Enums.TaskPriority;
@@ -582,5 +675,7 @@ export declare class TasksService {
         productId: string;
         assignedToId: string;
         workflowStageId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ordersApi, productsApi, productTypesApi, uploadApi, orderSourcesApi, nomenclatureApi, usersApi } from '@/lib/api';
+import { ordersApi, productsApi, productTypesApi, uploadApi, orderSourcesApi, nomenclatureApi, usersApi, inventoryApi } from '@/lib/api';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { AddressInput } from './AddressInput';
@@ -13,6 +13,60 @@ interface CreateOrderModalProps {
   onClose: () => void;
 }
 
+interface InventoryStockIndicatorProps {
+  productTypeId: string;
+  name: string;
+  quantity: number;
+  onAvailabilityChange: (available: boolean) => void;
+}
+
+const InventoryStockIndicator = ({
+  productTypeId,
+  name,
+  quantity,
+  onAvailabilityChange,
+}: InventoryStockIndicatorProps) => {
+  const trimmedName = name.trim();
+  const enabled = !!productTypeId && trimmedName.length > 0;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['inventory-availability', productTypeId, trimmedName],
+    queryFn: () => inventoryApi.getAvailability(productTypeId, trimmedName),
+    enabled,
+    staleTime: 5000,
+  });
+
+  const stock = data?.quantity ?? 0;
+  const sufficient = enabled && stock >= quantity && quantity > 0;
+
+  useEffect(() => {
+    onAvailabilityChange(sufficient);
+  }, [sufficient, onAvailabilityChange]);
+
+  if (!enabled) {
+    return (
+      <div className="text-xs text-muted-foreground">
+        Укажите тип и название, чтобы проверить склад
+      </div>
+    );
+  }
+  if (isLoading) {
+    return <div className="text-xs text-muted-foreground">Проверяем склад…</div>;
+  }
+  return (
+    <div
+      className={`text-xs font-medium ${
+        sufficient ? 'text-emerald-700' : 'text-amber-700'
+      }`}
+    >
+      📦 На складе: {stock} шт.{' '}
+      {sufficient
+        ? '— позиция будет списана со склада'
+        : '— недостаточно, позиция уйдёт в производство'}
+    </div>
+  );
+};
+
 interface ProductFormData {
   nomenclatureId?: string; // ID из каталога (номенклатуры)
   name: string;
@@ -24,6 +78,9 @@ interface ProductFormData {
   requiresSewing?: boolean | null; // null = берётся из типа продукта
   color?: string; // Цвет/покрытие (для маляра)
   upholsteryMaterial?: string; // Материал обшивки (для швеи)
+  description?: string; // Комментарий к позиции
+  isCustom?: boolean; // Индивидуальная позиция
+  useInventory?: boolean; // Списать со склада вместо производства (внутренний заказ)
   stageAssignments?: Record<string, string>; // {PREPARATION: userId, PAINTING: userId, ...}
 }
 
@@ -113,7 +170,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             }
           }
 
-          await productsApi.create({
+          const payload = {
             name: product.name,
             productTypeId: product.productTypeId,
             quantity: product.quantity,
@@ -123,8 +180,23 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             requiresSewing: product.requiresSewing,
             color: product.color || undefined,
             upholsteryMaterial: product.upholsteryMaterial || undefined,
+            description: product.description || undefined,
+            isCustom: product.isCustom || undefined,
             stageAssignments: product.stageAssignments && Object.keys(product.stageAssignments).length > 0 ? product.stageAssignments : undefined,
-          });
+          };
+
+          // Обычный заказ: если на складе есть остаток — списываем оттуда.
+          // Внутренний заказ всегда уходит в производство (наполнение склада).
+          if (!orderData.isInternalOrder && product.useInventory) {
+            try {
+              await productsApi.createFromInventory(payload);
+              continue;
+            } catch (err) {
+              console.warn('Не удалось списать со склада, позиция пойдёт в производство:', err);
+            }
+          }
+
+          await productsApi.create(payload);
         }
       }
 
@@ -170,12 +242,13 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
       priority,
       sourceId: sourceId || undefined,
       totalAmount: totalAmount ? parseFloat(totalAmount) : undefined,
+      isInternalOrder,
       products: products.filter((p) => p.name.trim() !== '' && p.productTypeId),
     });
   };
 
   const addProduct = () => {
-    setProducts([{ nomenclatureId: '', name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '', requiresSewing: null, color: '', upholsteryMaterial: '', stageAssignments: {} }, ...products]);
+    setProducts([{ nomenclatureId: '', name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '', requiresSewing: null, color: '', upholsteryMaterial: '', description: '', isCustom: false, stageAssignments: {} }, ...products]);
   };
 
   // Обработчик выбора из номенклатуры
@@ -219,6 +292,16 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     setProducts(updated);
   };
 
+  const handleAvailabilityChange = useCallback((index: number, available: boolean) => {
+    setProducts((prev) => {
+      if (!prev[index]) return prev;
+      if (!!prev[index].useInventory === available) return prev;
+      const updated = [...prev];
+      updated[index] = { ...updated[index], useInventory: available };
+      return updated;
+    });
+  }, []);
+
   const handleFileChange = (index: number, file: File | null) => {
     if (file) {
       const updated = [...products];
@@ -249,7 +332,15 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
               type="checkbox"
               id="internalOrder"
               checked={isInternalOrder}
-              onChange={(e) => setIsInternalOrder(e.target.checked)}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsInternalOrder(checked);
+                // При переключении в/из внутреннего сбрасываем useInventory,
+                // чтобы случайно не списать со склада.
+                if (checked) {
+                  setProducts((prev) => prev.map((p) => ({ ...p, useInventory: false })));
+                }
+              }}
               className="w-4 h-4 text-primary rounded focus:ring-2 focus:ring-ring"
             />
             <label htmlFor="internalOrder" className="text-sm font-medium text-blue-900 cursor-pointer">
@@ -421,10 +512,22 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             )}
 
             {products.map((product, index) => (
-              <div key={index} className="p-4 border border-border rounded-lg space-y-3">
+              <div
+                key={index}
+                className={`p-4 border rounded-lg space-y-3 ${
+                  product.isCustom
+                    ? 'border-pink-400 bg-pink-50/40 ring-1 ring-pink-300'
+                    : 'border-border'
+                }`}
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">
                     Продукт {index + 1}
+                    {product.isCustom && (
+                      <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-pink-500 text-white text-[10px] font-semibold uppercase">
+                        ★ Индивидуальный
+                      </span>
+                    )}
                   </span>
                   <button
                     type="button"
@@ -434,6 +537,21 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     Удалить
                   </button>
                 </div>
+
+                <label className="flex items-center gap-2 p-2 bg-pink-50 border border-pink-200 rounded-md cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!product.isCustom}
+                    onChange={(e) => updateProduct(index, 'isCustom', e.target.checked)}
+                    className="w-4 h-4 accent-pink-500"
+                  />
+                  <span className="text-sm font-medium text-pink-900">
+                    ★ Индивидуальный заказ
+                  </span>
+                  <span className="text-xs text-pink-700/80">
+                    Позиция делается под клиента — выделяется в заказе
+                  </span>
+                </label>
 
                 {/* Выбор из каталога */}
                 <div>
@@ -505,6 +623,24 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     ))}
                   </select>
                 </div>
+
+                {/* Склад — только для обычных заказов. Внутренний заказ = производство для пополнения склада */}
+                {!isInternalOrder ? (
+                  <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-md">
+                    <InventoryStockIndicator
+                      productTypeId={product.productTypeId}
+                      name={product.name}
+                      quantity={product.quantity}
+                      onAvailabilityChange={(available) =>
+                        handleAvailabilityChange(index, available)
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div className="p-2 bg-sky-50 border border-sky-200 rounded-md text-xs text-sky-800">
+                    📦 Внутренний заказ — позиция уйдёт в производство для пополнения склада
+                  </div>
+                )}
 
                 {/* Цвет/покрытие для маляра */}
                 <div className="p-2 bg-amber-50 border border-amber-200 rounded-md space-y-2">
@@ -582,6 +718,19 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     value={product.dimensions || ''}
                     onChange={(e) => updateProduct(index, 'dimensions', e.target.value)}
                     placeholder="180x90x75 см"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Комментарий к позиции
+                  </label>
+                  <textarea
+                    value={product.description || ''}
+                    onChange={(e) => updateProduct(index, 'description', e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    rows={2}
+                    placeholder="Особенности изделия, пожелания клиента, детали..."
                   />
                 </div>
 

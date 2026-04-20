@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { TaskTimer } from './TaskTimer';
 import { taskStatusLabels, getTaskStatusColor } from '@/lib/labels';
 import { TaskCardInfo } from './task-card/TaskCardInfo';
+import { TaskCardManagerActions } from './task-card/TaskCardManagerActions';
 import { TaskCardWarehouseActions } from './task-card/TaskCardWarehouseActions';
 import { TaskCardWorkerActions } from './task-card/TaskCardWorkerActions';
 
@@ -21,6 +22,10 @@ export const TaskCard = ({ task }: TaskCardProps) => {
   const isSewer = user?.role?.code === 'SEWER';
   const isSimplifiedRole = isPreparer || isPainter || isAssembler || isSewer;
   const needsWorkerSelection = isPreparer || isPainter || isAssembler || isSewer;
+  const canReassignTask =
+    user?.role?.code === 'OWNER' ||
+    user?.role?.code === 'SUPER_ADMIN' ||
+    user?.role?.code === 'MANAGER';
 
   return (
     <Card className="mb-1.5">
@@ -75,6 +80,8 @@ export const TaskCard = ({ task }: TaskCardProps) => {
               needsWorkerSelection={needsWorkerSelection}
             />
           )}
+
+          {canReassignTask && <TaskCardManagerActions task={task} />}
 
           {task.status === TaskStatus.PASSED && (
             <div className="text-center p-1.5 bg-purple-50 border border-purple-200 rounded text-[10px] text-purple-800 font-medium">

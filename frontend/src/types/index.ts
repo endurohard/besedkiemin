@@ -273,6 +273,7 @@ export interface User {
 export interface Product {
   id: string;
   name: string;
+  description?: string;
   productTypeId: string;
   productType?: ProductType;
   quantity: number;
@@ -284,10 +285,22 @@ export interface Product {
   requiresSewing?: boolean | null; // null = берётся из типа продукта
   color?: string; // Цвет/покрытие (для маляра)
   upholsteryMaterial?: string; // Материал обшивки (ткань/кожа) - если указан, автоматически включается пошив
+  isCustom?: boolean; // Индивидуальный заказ
   createdAt: string;
   updatedAt: string;
   order?: Order;
   history?: ProductHistory[];
+  tasks?: Array<{
+    id: string;
+    stage: ProductionStage;
+    status: string;
+    assignedTo?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      role?: { code: string; name: string } | string | null;
+    };
+  }>;
 }
 
 // Product history interface
@@ -356,6 +369,7 @@ export interface Order {
   status: OrderStatus;
   priority: OrderPriority;
   description?: string;
+  notes?: string;
   sourceId?: string;
   source?: OrderSource;
   totalAmount?: number;
@@ -400,12 +414,14 @@ export interface CreateProductDto {
   productTypeId: string;
   quantity: number;
   orderId: string;
+  description?: string;
   deadline?: string;
   dimensions?: string;
   schemaImageUrl?: string;
   requiresSewing?: boolean | null;
   color?: string; // Цвет/покрытие (для маляра)
   upholsteryMaterial?: string; // Материал обшивки (для швеи)
+  isCustom?: boolean; // Индивидуальный заказ
   assignedWorkerId?: string;
   stageAssignments?: Record<string, string>;
 }
@@ -485,6 +501,7 @@ export interface Task {
   notes?: string;
   defectPhotos: string[]; // Массив URL фото брака
   quantityProcessed: number; // Количество уже обработанное
+  isDefect?: boolean; // Задача-доработка брака
   productId: string;
   assignedToId: string;
   createdAt: string;

@@ -16,6 +16,8 @@ exports.TasksController = void 0;
 const common_1 = require("@nestjs/common");
 const tasks_service_1 = require("./tasks.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const roles_guard_1 = require("../auth/guards/roles.guard");
+const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const swagger_1 = require("@nestjs/swagger");
 let TasksController = class TasksController {
     constructor(tasksService) {
@@ -57,6 +59,12 @@ let TasksController = class TasksController {
     }
     async updateTaskQuantity(id, quantity, req) {
         return this.tasksService.updateTaskQuantity(id, req.user.userId, quantity);
+    }
+    async getReassignableWorkers(id) {
+        return this.tasksService.getReassignableWorkers(id);
+    }
+    async reassignTask(id, workerId, req) {
+        return this.tasksService.reassignTask(id, workerId, req.user.userId);
     }
 };
 exports.TasksController = TasksController;
@@ -179,6 +187,32 @@ __decorate([
     __metadata("design:paramtypes", [String, Number, Object]),
     __metadata("design:returntype", Promise)
 ], TasksController.prototype, "updateTaskQuantity", null);
+__decorate([
+    (0, common_1.Get)(":id/reassignable-workers"),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("MANAGER"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Получить сотрудников, которым можно переназначить задачу",
+    }),
+    __param(0, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TasksController.prototype, "getReassignableWorkers", null);
+__decorate([
+    (0, common_1.Patch)(":id/reassign"),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("MANAGER"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Переназначить задачу другому сотруднику того же отдела",
+    }),
+    __param(0, (0, common_1.Param)("id")),
+    __param(1, (0, common_1.Body)("workerId")),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], TasksController.prototype, "reassignTask", null);
 exports.TasksController = TasksController = __decorate([
     (0, swagger_1.ApiTags)("tasks"),
     (0, swagger_1.ApiBearerAuth)(),

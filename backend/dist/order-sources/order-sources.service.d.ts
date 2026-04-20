@@ -8,9 +8,9 @@ export declare class OrderSourcesService {
             orders: number;
         };
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -20,9 +20,9 @@ export declare class OrderSourcesService {
         icon: string | null;
     })[]>;
     findActive(): Promise<{
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -36,9 +36,9 @@ export declare class OrderSourcesService {
             orders: number;
         };
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -48,9 +48,9 @@ export declare class OrderSourcesService {
         icon: string | null;
     }>;
     findByCode(code: string): Promise<{
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -60,9 +60,9 @@ export declare class OrderSourcesService {
         icon: string | null;
     } | null>;
     create(dto: CreateOrderSourceDto): Promise<{
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -72,9 +72,9 @@ export declare class OrderSourcesService {
         icon: string | null;
     }>;
     update(id: string, dto: UpdateOrderSourceDto): Promise<{
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;

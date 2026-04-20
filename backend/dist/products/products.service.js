@@ -14,12 +14,65 @@ exports.ProductsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const telegram_service_1 = require("../telegram/telegram.service");
+const inventory_service_1 = require("../inventory/inventory.service");
 const client_1 = require("@prisma/client");
 let ProductsService = ProductsService_1 = class ProductsService {
-    constructor(prisma, telegramService) {
+    constructor(prisma, telegramService, inventoryService) {
         this.prisma = prisma;
         this.telegramService = telegramService;
+        this.inventoryService = inventoryService;
         this.logger = new common_1.Logger(ProductsService_1.name);
+    }
+    async createFromInventory(dto) {
+        const order = await this.prisma.order.findUnique({
+            where: { id: dto.orderId },
+        });
+        if (!order) {
+            throw new common_1.NotFoundException("Заказ не найден");
+        }
+        return this.prisma.$transaction(async (tx) => {
+            await this.inventoryService.consumeInventoryTx(tx, {
+                productTypeId: dto.productTypeId,
+                name: dto.name,
+                quantity: dto.quantity,
+            });
+            const product = await tx.product.create({
+                data: {
+                    name: dto.name,
+                    productTypeId: dto.productTypeId,
+                    description: dto.description,
+                    quantity: dto.quantity,
+                    dimensions: dto.dimensions,
+                    schemaImageUrl: dto.schemaImageUrl,
+                    orderId: dto.orderId,
+                    deadline: dto.deadline,
+                    stage: client_1.ProductionStage.COMPLETED,
+                    color: dto.color,
+                    upholsteryMaterial: dto.upholsteryMaterial,
+                    requiresSewing: dto.requiresSewing,
+                    nomenclatureId: dto.nomenclatureId,
+                    isCustom: dto.isCustom ?? false,
+                },
+                include: { order: true, productType: true },
+            });
+            const siblings = await tx.product.findMany({
+                where: { orderId: dto.orderId },
+            });
+            const allCompleted = siblings.every((p) => p.stage === client_1.ProductionStage.COMPLETED);
+            if (allCompleted) {
+                await tx.order.update({
+                    where: { id: dto.orderId },
+                    data: { status: client_1.OrderStatus.COMPLETED },
+                });
+            }
+            else {
+                await tx.order.update({
+                    where: { id: dto.orderId },
+                    data: { status: client_1.OrderStatus.IN_PRODUCTION },
+                });
+            }
+            return product;
+        });
     }
     async create(createProductDto) {
         const order = await this.prisma.order.findUnique({
@@ -71,6 +124,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                     upholsteryMaterial: createProductDto.upholsteryMaterial,
                     requiresSewing: createProductDto.requiresSewing,
                     nomenclatureId: createProductDto.nomenclatureId,
+                    isCustom: createProductDto.isCustom ?? false,
                     stageAssignments: createProductDto.stageAssignments || undefined,
                 },
                 include: {
@@ -408,6 +462,7 @@ exports.ProductsService = ProductsService;
 exports.ProductsService = ProductsService = ProductsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        telegram_service_1.TelegramService])
+        telegram_service_1.TelegramService,
+        inventory_service_1.InventoryService])
 ], ProductsService);
 //# sourceMappingURL=products.service.js.map

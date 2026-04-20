@@ -9,8 +9,8 @@ export declare class PayrollService {
     constructor(prisma: PrismaService, telegramService: TelegramService);
     findAllWorkRates(): Promise<({
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -19,8 +19,8 @@ export declare class PayrollService {
             productionTimeHours: number | null;
         } | null;
         nomenclature: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             color: string | null;
@@ -38,9 +38,9 @@ export declare class PayrollService {
             discontinuedAt: Date | null;
         } | null;
         workflowStage: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -61,8 +61,8 @@ export declare class PayrollService {
     })[]>;
     findActiveWorkRates(): Promise<({
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -71,8 +71,8 @@ export declare class PayrollService {
             productionTimeHours: number | null;
         } | null;
         nomenclature: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             color: string | null;
@@ -90,9 +90,9 @@ export declare class PayrollService {
             discontinuedAt: Date | null;
         } | null;
         workflowStage: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -113,8 +113,8 @@ export declare class PayrollService {
     })[]>;
     findWorkRate(productTypeId: string, stage: ProductionStage, nomenclatureId?: string): Promise<({
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -123,9 +123,9 @@ export declare class PayrollService {
             productionTimeHours: number | null;
         } | null;
         workflowStage: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -146,8 +146,8 @@ export declare class PayrollService {
     }) | null>;
     createWorkRate(dto: CreateWorkRateDto): Promise<{
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -156,8 +156,8 @@ export declare class PayrollService {
             productionTimeHours: number | null;
         } | null;
         nomenclature: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             color: string | null;
@@ -175,9 +175,9 @@ export declare class PayrollService {
             discontinuedAt: Date | null;
         } | null;
         workflowStage: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -198,8 +198,8 @@ export declare class PayrollService {
     }>;
     updateWorkRate(id: string, dto: UpdateWorkRateDto): Promise<{
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -208,9 +208,9 @@ export declare class PayrollService {
             productionTimeHours: number | null;
         } | null;
         workflowStage: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -240,9 +240,9 @@ export declare class PayrollService {
     }): Promise<({
         user: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -258,8 +258,8 @@ export declare class PayrollService {
         };
         product: {
             productType: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -294,9 +294,9 @@ export declare class PayrollService {
     createPenalty(dto: CreatePenaltyDto, createdById: string): Promise<{
         user: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -311,8 +311,8 @@ export declare class PayrollService {
             id: string;
         };
         product: {
-            description: string | null;
             name: string;
+            description: string | null;
             id: string;
             color: string | null;
             createdAt: Date;
@@ -326,6 +326,7 @@ export declare class PayrollService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         } | null;
@@ -374,8 +375,8 @@ export declare class PayrollService {
             pinLookup: string | null;
         };
         product: {
-            description: string | null;
             name: string;
+            description: string | null;
             id: string;
             color: string | null;
             createdAt: Date;
@@ -389,6 +390,7 @@ export declare class PayrollService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         } | null;
@@ -448,9 +450,9 @@ export declare class PayrollService {
     }>;
     findAllManagerCommissions(): Promise<({
         role: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -462,9 +464,9 @@ export declare class PayrollService {
         } | null;
         user: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -491,9 +493,9 @@ export declare class PayrollService {
     })[]>;
     findManagerCommission(userId: string): Promise<({
         role: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -538,9 +540,9 @@ export declare class PayrollService {
     }) | null>;
     createManagerCommission(dto: CreateManagerCommissionDto): Promise<{
         role: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -585,9 +587,9 @@ export declare class PayrollService {
     }>;
     updateManagerCommission(id: string, dto: UpdateManagerCommissionDto): Promise<{
         role: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -641,9 +643,9 @@ export declare class PayrollService {
     }): Promise<({
         user: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -659,8 +661,8 @@ export declare class PayrollService {
         };
         workLogs: ({
             productType: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -669,8 +671,8 @@ export declare class PayrollService {
                 productionTimeHours: number | null;
             };
             product: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: string;
                 color: string | null;
                 createdAt: Date;
@@ -684,6 +686,7 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                isCustom: boolean;
                 stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             };
@@ -721,10 +724,10 @@ export declare class PayrollService {
             payrollPeriodId: string | null;
         }[];
     } & {
-        status: import(".prisma/client").$Enums.PayrollStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayrollStatus;
         notes: string | null;
         totalAmount: number;
         userId: string;
@@ -743,9 +746,9 @@ export declare class PayrollService {
     findPayrollPeriod(id: string): Promise<{
         user: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -761,8 +764,8 @@ export declare class PayrollService {
         };
         workLogs: ({
             productType: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -772,11 +775,11 @@ export declare class PayrollService {
             };
             product: {
                 order: {
-                    status: import(".prisma/client").$Enums.OrderStatus;
                     description: string | null;
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    status: import(".prisma/client").$Enums.OrderStatus;
                     priority: import(".prisma/client").$Enums.OrderPriority;
                     notes: string | null;
                     orderNumber: string;
@@ -788,8 +791,8 @@ export declare class PayrollService {
                     createdById: string;
                 };
             } & {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: string;
                 color: string | null;
                 createdAt: Date;
@@ -803,16 +806,17 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                isCustom: boolean;
                 stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             };
             task: {
-                status: import(".prisma/client").$Enums.TaskStatus;
                 description: string | null;
                 title: string;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                status: import(".prisma/client").$Enums.TaskStatus;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 quantity: number;
                 priority: import(".prisma/client").$Enums.TaskPriority;
@@ -847,8 +851,8 @@ export declare class PayrollService {
         })[];
         penalties: ({
             product: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: string;
                 color: string | null;
                 createdAt: Date;
@@ -862,6 +866,7 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                isCustom: boolean;
                 stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             } | null;
@@ -887,10 +892,10 @@ export declare class PayrollService {
             payrollPeriodId: string | null;
         })[];
     } & {
-        status: import(".prisma/client").$Enums.PayrollStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayrollStatus;
         notes: string | null;
         totalAmount: number;
         userId: string;
@@ -909,9 +914,9 @@ export declare class PayrollService {
     calculatePayrollForUser(userId: string, periodStart: Date, periodEnd: Date): Promise<{
         user: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -927,8 +932,8 @@ export declare class PayrollService {
         };
         workLogs: ({
             productType: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -938,11 +943,11 @@ export declare class PayrollService {
             };
             product: {
                 order: {
-                    status: import(".prisma/client").$Enums.OrderStatus;
                     description: string | null;
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    status: import(".prisma/client").$Enums.OrderStatus;
                     priority: import(".prisma/client").$Enums.OrderPriority;
                     notes: string | null;
                     orderNumber: string;
@@ -954,8 +959,8 @@ export declare class PayrollService {
                     createdById: string;
                 };
             } & {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: string;
                 color: string | null;
                 createdAt: Date;
@@ -969,16 +974,17 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                isCustom: boolean;
                 stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             };
             task: {
-                status: import(".prisma/client").$Enums.TaskStatus;
                 description: string | null;
                 title: string;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                status: import(".prisma/client").$Enums.TaskStatus;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 quantity: number;
                 priority: import(".prisma/client").$Enums.TaskPriority;
@@ -1013,8 +1019,8 @@ export declare class PayrollService {
         })[];
         penalties: ({
             product: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: string;
                 color: string | null;
                 createdAt: Date;
@@ -1028,6 +1034,7 @@ export declare class PayrollService {
                 deadline: Date | null;
                 requiresSewing: boolean | null;
                 upholsteryMaterial: string | null;
+                isCustom: boolean;
                 stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                 nomenclatureId: string | null;
             } | null;
@@ -1053,10 +1060,10 @@ export declare class PayrollService {
             payrollPeriodId: string | null;
         })[];
     } & {
-        status: import(".prisma/client").$Enums.PayrollStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayrollStatus;
         notes: string | null;
         totalAmount: number;
         userId: string;
@@ -1097,10 +1104,10 @@ export declare class PayrollService {
             pinLookup: string | null;
         };
     } & {
-        status: import(".prisma/client").$Enums.PayrollStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayrollStatus;
         notes: string | null;
         totalAmount: number;
         userId: string;
@@ -1140,10 +1147,10 @@ export declare class PayrollService {
             pinLookup: string | null;
         };
     } & {
-        status: import(".prisma/client").$Enums.PayrollStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.PayrollStatus;
         notes: string | null;
         totalAmount: number;
         userId: string;
@@ -1203,9 +1210,9 @@ export declare class PayrollService {
     }): Promise<({
         user: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -1220,8 +1227,8 @@ export declare class PayrollService {
             id: string;
         };
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -1236,8 +1243,8 @@ export declare class PayrollService {
                 customerName: string;
             };
         } & {
-            description: string | null;
             name: string;
+            description: string | null;
             id: string;
             color: string | null;
             createdAt: Date;
@@ -1251,16 +1258,17 @@ export declare class PayrollService {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         task: {
-            status: import(".prisma/client").$Enums.TaskStatus;
             description: string | null;
             title: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.TaskStatus;
             stage: import(".prisma/client").$Enums.ProductionStage;
             quantity: number;
             priority: import(".prisma/client").$Enums.TaskPriority;

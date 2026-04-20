@@ -45,6 +45,9 @@ let InventoryController = class InventoryController {
     getInventoryByOrder(orderId) {
         return this.inventoryService.getInventoryByOrder(orderId);
     }
+    getAvailability(productTypeId, name) {
+        return this.inventoryService.getAvailability(productTypeId, name);
+    }
     getInventoryItem(id) {
         return this.inventoryService.getInventoryItem(id);
     }
@@ -105,6 +108,20 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], InventoryController.prototype, "getInventoryByOrder", null);
+__decorate([
+    (0, common_1.Get)("availability/lookup"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Проверить доступное количество на складе по типу и названию",
+    }),
+    (0, swagger_1.ApiQuery)({ name: "productTypeId", required: true }),
+    (0, swagger_1.ApiQuery)({ name: "name", required: true }),
+    __param(0, (0, common_1.Query)("productTypeId")),
+    __param(1, (0, common_1.Query)("name")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], InventoryController.prototype, "getAvailability", null);
 __decorate([
     (0, common_1.Get)(":id"),
     (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),

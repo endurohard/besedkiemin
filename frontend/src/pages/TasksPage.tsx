@@ -1,11 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { tasksApi } from '@/lib/api';
 import { TaskCard } from '@/components/TaskCard';
+import { SchemaImageViewer } from '@/components/SchemaImageViewer';
 import { TaskStatus, OrderPriority, Task } from '@/types';
 import { useAuthStore } from '@/store/authStore';
-import { Loader2, Package, AlertTriangle, Flame, User, CheckCircle, ArrowRight } from 'lucide-react';
+import { Loader2, Package, AlertTriangle, Flame, User, CheckCircle, ArrowRight, Image as ImageIcon } from 'lucide-react';
 
 export const TasksPage = () => {
   const { user } = useAuthStore();
@@ -321,10 +322,30 @@ const WorkerTaskCard = ({
   onComplete: () => void;
   isCompleting: boolean;
 }) => {
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const schemaUrl = task.product?.schemaImageUrl;
+
+  const isCustom = !!task.product?.isCustom;
+
   return (
-    <div className={`p-4 rounded-lg border ${isCurrentUser ? 'bg-primary/10 border-blue-200' : 'bg-white border-gray-200'}`}>
+    <div
+      className={`p-4 rounded-lg border ${
+        isCustom
+          ? 'bg-pink-50 border-pink-400 ring-1 ring-pink-300'
+          : isCurrentUser
+            ? 'bg-primary/10 border-blue-200'
+            : 'bg-white border-gray-200'
+      }`}
+    >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="font-semibold text-gray-800">{task.title}</h3>
+        <div className="flex items-center gap-2 min-w-0">
+          <h3 className="font-semibold text-gray-800">{task.title}</h3>
+          {isCustom && (
+            <span className="shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-pink-500 text-white text-[10px] font-semibold uppercase">
+              ★ Индивидуальный
+            </span>
+          )}
+        </div>
         <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
           В работе
         </span>
@@ -344,7 +365,38 @@ const WorkerTaskCard = ({
             <span className="text-gray-400">Кол-во:</span>
             <span className="font-medium">{task.quantity || task.product.quantity} шт.</span>
           </div>
+          {task.product.dimensions && (
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Размеры:</span>
+              <span className="font-medium">{task.product.dimensions}</span>
+            </div>
+          )}
         </div>
+      )}
+
+      {task.product?.description && (
+        <div className="mb-3 p-2 bg-muted/50 border-l-4 border-primary rounded text-xs">
+          <div className="font-medium text-muted-foreground mb-0.5">Комментарий к товару:</div>
+          <p className="whitespace-pre-wrap text-gray-700">{task.product.description}</p>
+        </div>
+      )}
+
+      {schemaUrl && (
+        <button
+          type="button"
+          onClick={() => setViewerOpen(true)}
+          className="mb-3 w-full flex items-center gap-2 rounded-md border border-border bg-card p-2 hover:border-primary transition-colors cursor-zoom-in"
+        >
+          <img
+            src={schemaUrl}
+            alt="Схема"
+            className="w-14 h-14 object-cover rounded border border-border"
+          />
+          <div className="flex items-center gap-1 text-xs text-primary">
+            <ImageIcon className="w-4 h-4" />
+            <span>Посмотреть схему</span>
+          </div>
+        </button>
       )}
 
       {task.notes && (
@@ -381,6 +433,10 @@ const WorkerTaskCard = ({
         <div className="text-center text-[10px] text-gray-400 mt-1">
           Задача сотрудника отдела
         </div>
+      )}
+
+      {viewerOpen && schemaUrl && (
+        <SchemaImageViewer src={schemaUrl} onClose={() => setViewerOpen(false)} />
       )}
     </div>
   );

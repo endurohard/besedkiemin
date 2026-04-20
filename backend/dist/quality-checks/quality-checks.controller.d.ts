@@ -10,11 +10,11 @@ export declare class QualityChecksController {
     create(createQualityCheckDto: CreateQualityCheckDto, file: Express.Multer.File, req: any): Promise<{
         product: {
             order: {
-                status: import(".prisma/client").$Enums.OrderStatus;
                 description: string | null;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                status: import(".prisma/client").$Enums.OrderStatus;
                 priority: import(".prisma/client").$Enums.OrderPriority;
                 notes: string | null;
                 orderNumber: string;
@@ -26,8 +26,8 @@ export declare class QualityChecksController {
                 createdById: string;
             };
         } & {
-            description: string | null;
             name: string;
+            description: string | null;
             id: string;
             color: string | null;
             createdAt: Date;
@@ -41,14 +41,15 @@ export declare class QualityChecksController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         checkedBy: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -63,10 +64,10 @@ export declare class QualityChecksController {
             id: string;
         } | null;
     } & {
-        status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.QualityStatus;
         notes: string | null;
         productId: string;
         photoUrl: string | null;
@@ -76,8 +77,8 @@ export declare class QualityChecksController {
     findAll(productId?: string, status?: QualityStatus): Promise<({
         product: {
             productType: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -91,9 +92,9 @@ export declare class QualityChecksController {
         };
         checkedBy: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -108,10 +109,10 @@ export declare class QualityChecksController {
             id: string;
         } | null;
     } & {
-        status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.QualityStatus;
         notes: string | null;
         productId: string;
         photoUrl: string | null;
@@ -121,8 +122,8 @@ export declare class QualityChecksController {
     getRejected(): Promise<({
         product: {
             productType: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -136,9 +137,9 @@ export declare class QualityChecksController {
         };
         checkedBy: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -153,10 +154,10 @@ export declare class QualityChecksController {
             id: string;
         } | null;
     } & {
-        status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.QualityStatus;
         notes: string | null;
         productId: string;
         photoUrl: string | null;
@@ -166,8 +167,8 @@ export declare class QualityChecksController {
     getByProduct(productId: string): Promise<({
         product: {
             productType: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -181,9 +182,9 @@ export declare class QualityChecksController {
         };
         checkedBy: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -198,10 +199,10 @@ export declare class QualityChecksController {
             id: string;
         } | null;
     } & {
-        status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.QualityStatus;
         notes: string | null;
         productId: string;
         photoUrl: string | null;
@@ -211,11 +212,11 @@ export declare class QualityChecksController {
     findOne(id: string): Promise<{
         product: {
             order: {
-                status: import(".prisma/client").$Enums.OrderStatus;
                 description: string | null;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                status: import(".prisma/client").$Enums.OrderStatus;
                 priority: import(".prisma/client").$Enums.OrderPriority;
                 notes: string | null;
                 orderNumber: string;
@@ -227,8 +228,8 @@ export declare class QualityChecksController {
                 createdById: string;
             };
         } & {
-            description: string | null;
             name: string;
+            description: string | null;
             id: string;
             color: string | null;
             createdAt: Date;
@@ -242,14 +243,15 @@ export declare class QualityChecksController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         checkedBy: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -264,10 +266,10 @@ export declare class QualityChecksController {
             id: string;
         } | null;
     } & {
-        status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.QualityStatus;
         notes: string | null;
         productId: string;
         photoUrl: string | null;
@@ -276,8 +278,8 @@ export declare class QualityChecksController {
     }>;
     update(id: string, updateQualityCheckDto: UpdateQualityCheckDto, file: Express.Multer.File): Promise<{
         product: {
-            description: string | null;
             name: string;
+            description: string | null;
             id: string;
             color: string | null;
             createdAt: Date;
@@ -291,14 +293,15 @@ export declare class QualityChecksController {
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
+            isCustom: boolean;
             stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
             nomenclatureId: string | null;
         };
         checkedBy: {
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -313,10 +316,10 @@ export declare class QualityChecksController {
             id: string;
         } | null;
     } & {
-        status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.QualityStatus;
         notes: string | null;
         productId: string;
         photoUrl: string | null;
@@ -324,10 +327,10 @@ export declare class QualityChecksController {
         checkedById: string | null;
     }>;
     remove(id: string): Promise<{
-        status: import(".prisma/client").$Enums.QualityStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.QualityStatus;
         notes: string | null;
         productId: string;
         photoUrl: string | null;

@@ -4,10 +4,15 @@ import { OrderStatus, ProductionStage } from '@prisma/client';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
+import { InventoryService } from '../inventory/inventory.service';
 
 const mockTelegram = () => ({
   sendMessage: jest.fn(),
   requestDefectPhoto: jest.fn(),
+});
+
+const mockInventory = () => ({
+  consumeInventoryTx: jest.fn(),
 });
 
 const buildPrisma = () => ({
@@ -37,6 +42,7 @@ describe('ProductsService', () => {
         ProductsService,
         { provide: PrismaService, useFactory: buildPrisma },
         { provide: TelegramService, useFactory: mockTelegram },
+        { provide: InventoryService, useFactory: mockInventory },
       ],
     }).compile();
 

@@ -38,6 +38,16 @@ export class ProductsController {
     return this.productsService.create(createProductDto);
   }
 
+  @Post("from-inventory")
+  @Roles("MANAGER", "OWNER")
+  @ApiOperation({
+    summary:
+      "Создать позицию заказа, списав её со склада (для внутренних заказов)",
+  })
+  createFromInventory(@Body() createProductDto: CreateProductDto) {
+    return this.productsService.createFromInventory(createProductDto);
+  }
+
   @Get()
   @ApiOperation({ summary: "Получить все продукты с фильтрами" })
   @ApiQuery({

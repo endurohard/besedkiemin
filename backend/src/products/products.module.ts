@@ -3,9 +3,10 @@ import { ProductsService } from "./products.service";
 import { ProductsController } from "./products.controller";
 import { PrismaModule } from "../prisma/prisma.module";
 import { TelegramModule } from "../telegram/telegram.module";
+import { InventoryModule } from "../inventory/inventory.module";
 
 @Module({
-  imports: [PrismaModule, TelegramModule],
+  imports: [PrismaModule, TelegramModule, InventoryModule],
   controllers: [ProductsController],
   providers: [ProductsService],
   exports: [ProductsService],

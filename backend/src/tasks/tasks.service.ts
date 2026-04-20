@@ -419,6 +419,164 @@ export class TasksService {
     });
   }
 
+  // Переназначить задачу другому сотруднику того же отдела (для менеджеров/владельцев)
+  async reassignTask(
+    taskId: string,
+    newWorkerId: string,
+    requesterId: string,
+  ) {
+    const requester = await this.prisma.user.findUnique({
+      where: { id: requesterId },
+      include: { role: true },
+    });
+    if (!requester) {
+      throw new NotFoundException("Пользователь не найден");
+    }
+    const requesterRole = requester.role?.code;
+    const canReassign =
+      requesterRole === "OWNER" ||
+      requesterRole === "SUPER_ADMIN" ||
+      requesterRole === "MANAGER";
+    if (!canReassign) {
+      throw new ForbiddenException(
+        "Переназначать задачи могут только менеджер или владелец",
+      );
+    }
+
+    const { updatedTask, newWorker } = await this.prisma.$transaction(
+      async (tx) => {
+        const task = await tx.task.findUnique({
+          where: { id: taskId },
+          include: {
+            product: {
+              include: { order: true, productType: true },
+            },
+            assignedTo: { include: { role: true } },
+          },
+        });
+        if (!task) {
+          throw new NotFoundException("Задача не найдена");
+        }
+        if (
+          task.status === TaskStatus.COMPLETED ||
+          task.status === TaskStatus.PASSED ||
+          task.status === TaskStatus.REJECTED
+        ) {
+          throw new BadRequestException(
+            "Нельзя переназначить завершенную или забракованную задачу",
+          );
+        }
+        if (task.isDefect) {
+          throw new BadRequestException(
+            "Задачу брака нельзя переназначить",
+          );
+        }
+        if (task.assignedToId === newWorkerId) {
+          throw new BadRequestException(
+            "Задача уже назначена этому сотруднику",
+          );
+        }
+
+        const newWorker = await tx.user.findUnique({
+          where: { id: newWorkerId },
+          include: { role: true },
+        });
+        if (!newWorker || !newWorker.isActive) {
+          throw new NotFoundException("Работник не найден или неактивен");
+        }
+        if (newWorker.roleId !== task.assignedTo?.roleId) {
+          throw new BadRequestException(
+            "Новый сотрудник должен быть из того же отдела",
+          );
+        }
+
+        // Для NEW — удалим дубликаты задачи у остальных работников отдела,
+        // чтобы задача ушла только выбранному исполнителю
+        if (task.status === TaskStatus.NEW) {
+          await tx.task.deleteMany({
+            where: {
+              productId: task.productId,
+              stage: task.stage,
+              status: TaskStatus.NEW,
+              id: { not: taskId },
+            },
+          });
+        }
+
+        const updatedTask = await tx.task.update({
+          where: { id: taskId },
+          data: { assignedToId: newWorkerId },
+          include: {
+            product: {
+              include: { order: true, productType: true },
+            },
+            assignedTo: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                role: { select: { code: true, name: true } },
+              },
+            },
+          },
+        });
+
+        return { updatedTask, newWorker };
+      },
+    );
+
+    this.logger.log(
+      `Task ${taskId} reassigned by ${requester.email} to ${newWorker.email}`,
+    );
+
+    if (newWorker.telegramId) {
+      const statusLabel =
+        updatedTask.status === TaskStatus.ACCEPTED ? "в работе" : "новая";
+      const message =
+        `🔁 *ЗАДАЧА ПЕРЕДАНА ВАМ*\n\n` +
+        `*Продукт:* ${updatedTask.product?.name || "Н/Д"}\n` +
+        `*Заказ:* ${updatedTask.product?.order?.orderNumber || "Н/Д"}\n` +
+        `*Количество:* ${updatedTask.quantity} шт.\n` +
+        `*Статус:* ${statusLabel}\n\n` +
+        `✅ Откройте раздел "Мои задачи"`;
+      try {
+        await this.telegramService.sendMessage(newWorker.telegramId, message);
+      } catch (error) {
+        this.logger.error(
+          `Ошибка отправки уведомления о переназначении работнику ${newWorker.email}:`,
+          error,
+        );
+      }
+    }
+
+    return updatedTask;
+  }
+
+  // Получить список сотрудников, которым можно переназначить задачу
+  async getReassignableWorkers(taskId: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      include: { assignedTo: { include: { role: true } } },
+    });
+    if (!task) {
+      throw new NotFoundException("Задача не найдена");
+    }
+    const roleId = task.assignedTo?.roleId;
+    if (!roleId) {
+      return [];
+    }
+    return this.prisma.user.findMany({
+      where: { roleId, isActive: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        role: { select: { code: true, name: true } },
+      },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    });
+  }
+
   // Завершить задачу
   async completeTask(
     taskId: string,

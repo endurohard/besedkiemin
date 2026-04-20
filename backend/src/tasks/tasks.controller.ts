@@ -10,6 +10,8 @@ import {
 } from "@nestjs/common";
 import { TasksService } from "./tasks.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { ApiBearerAuth, ApiTags, ApiOperation } from "@nestjs/swagger";
 
 @ApiTags("tasks")
@@ -136,5 +138,29 @@ export class TasksController {
     @Req() req,
   ) {
     return this.tasksService.updateTaskQuantity(id, req.user.userId, quantity);
+  }
+
+  @Get(":id/reassignable-workers")
+  @UseGuards(RolesGuard)
+  @Roles("MANAGER")
+  @ApiOperation({
+    summary: "Получить сотрудников, которым можно переназначить задачу",
+  })
+  async getReassignableWorkers(@Param("id") id: string) {
+    return this.tasksService.getReassignableWorkers(id);
+  }
+
+  @Patch(":id/reassign")
+  @UseGuards(RolesGuard)
+  @Roles("MANAGER")
+  @ApiOperation({
+    summary: "Переназначить задачу другому сотруднику того же отдела",
+  })
+  async reassignTask(
+    @Param("id") id: string,
+    @Body("workerId") workerId: string,
+    @Req() req,
+  ) {
+    return this.tasksService.reassignTask(id, workerId, req.user.userId);
   }
 }

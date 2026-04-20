@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { OrderStatus, ProductionStage, Product, Order, Nomenclature, User } from '@/types';
 import { useAuthStore } from '@/store/authStore';
-import { Package, Clock, CheckCircle, ArrowRight, Plus, Search, Calendar, X, Trash2, Pencil, Eye } from 'lucide-react';
+import { Package, Clock, CheckCircle, ArrowRight, Plus, Search, Calendar, X, Trash2, Pencil, Eye, ChevronDown, ChevronRight, User as UserIcon } from 'lucide-react';
 import { CreateOrderModal } from '@/components/CreateOrderModal';
+import { SchemaImageViewer } from '@/components/SchemaImageViewer';
 import { getPriorityLabel, getPriorityColor, getPrioritySortOrder } from '@/lib/priority-utils';
 
 // Product form for adding/editing products in order
@@ -20,8 +21,10 @@ interface ProductEditForm {
   dimensions?: string;
   color?: string;
   upholsteryMaterial?: string;
+  description?: string;
   schemaImageUrl?: string;
   schemaFile?: File;
+  isCustom?: boolean;
   stageAssignments?: Record<string, string>;
   isNew?: boolean; // flag for new products
   stage?: ProductionStage; // track current stage for safety checks
@@ -36,10 +39,12 @@ export const KanbanPage = () => {
   const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '' });
   const [editProducts, setEditProducts] = useState<ProductEditForm[]>([]);
   const [productsToDelete, setProductsToDelete] = useState<string[]>([]);
+  const [expandedProductIds, setExpandedProductIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [viewerImage, setViewerImage] = useState<string | null>(null);
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders'],
@@ -188,7 +193,9 @@ export const KanbanPage = () => {
       dimensions: p.dimensions || '',
       color: p.color || '',
       upholsteryMaterial: p.upholsteryMaterial || '',
+      description: p.description || '',
       schemaImageUrl: p.schemaImageUrl || '',
+      isCustom: !!p.isCustom,
       isNew: false,
       stage: p.stage,
     }));
@@ -213,7 +220,9 @@ export const KanbanPage = () => {
         dimensions: '',
         color: '',
         upholsteryMaterial: '',
+        description: '',
         schemaImageUrl: '',
+        isCustom: false,
         stageAssignments: {},
         isNew: true,
       },
@@ -308,11 +317,22 @@ export const KanbanPage = () => {
               orderId: selectedOrder.id,
               color: product.color || undefined,
               upholsteryMaterial: product.upholsteryMaterial || undefined,
+              description: product.description || undefined,
               schemaImageUrl: schemaImageUrl || undefined,
+              isCustom: product.isCustom || undefined,
               stageAssignments: product.stageAssignments && Object.keys(product.stageAssignments).length > 0 ? product.stageAssignments : undefined,
             });
           }
         } else if (product.id) {
+          let schemaImageUrl = product.schemaImageUrl;
+          if (product.schemaFile) {
+            try {
+              const uploadResult = await uploadApi.uploadSchemaImage(product.schemaFile);
+              schemaImageUrl = uploadResult.url;
+            } catch (err) {
+              console.warn('Не удалось загрузить фото схемы:', err);
+            }
+          }
           await updateProductMutation.mutateAsync({
             id: product.id,
             data: {
@@ -322,6 +342,9 @@ export const KanbanPage = () => {
               dimensions: product.dimensions || undefined,
               color: product.color || undefined,
               upholsteryMaterial: product.upholsteryMaterial || undefined,
+              description: product.description || undefined,
+              schemaImageUrl: schemaImageUrl || undefined,
+              isCustom: product.isCustom ?? false,
             },
           });
         }
@@ -1007,7 +1030,13 @@ export const KanbanPage = () => {
                     {selectedOrder.description && (
                       <div className="col-span-2">
                         <span className="font-medium text-muted-foreground">Описание:</span>
-                        <p>{selectedOrder.description}</p>
+                        <p className="whitespace-pre-wrap">{selectedOrder.description}</p>
+                      </div>
+                    )}
+                    {selectedOrder.notes && (
+                      <div className="col-span-2 bg-muted/40 rounded-md p-2 border-l-4 border-primary">
+                        <span className="font-medium text-muted-foreground">Заметки:</span>
+                        <p className="whitespace-pre-wrap">{selectedOrder.notes}</p>
                       </div>
                     )}
                     {selectedOrder.totalAmount && (
@@ -1046,37 +1075,192 @@ export const KanbanPage = () => {
                         )}
                       </div>
                     ) : (
-                      <div className="border rounded-lg overflow-hidden">
-                        <table className="w-full text-sm">
-                          <thead className="bg-muted/50">
-                            <tr>
-                              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Название</th>
-                              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Тип</th>
-                              <th className="px-3 py-2 text-center font-medium text-muted-foreground">Кол-во</th>
-                              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Этап</th>
-                              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Доп. инфо</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedOrder.products.map((product) => (
-                              <tr key={product.id} className="border-t hover:bg-muted/50">
-                                <td className="px-3 py-2 font-medium">{product.name}</td>
-                                <td className="px-3 py-2 text-muted-foreground">{product.productType?.name || '—'}</td>
-                                <td className="px-3 py-2 text-center">{product.quantity}</td>
-                                <td className="px-3 py-2">
+                      <div className="space-y-2">
+                        {selectedOrder.products.map((product) => {
+                          const isExpanded = expandedProductIds.has(product.id);
+                          const activeTask = product.tasks?.find((t) => t.status === 'ACCEPTED' || t.status === 'NEW');
+                          const completedTasks = product.tasks?.filter((t) => t.status === 'COMPLETED') || [];
+                          return (
+                            <div
+                              key={product.id}
+                              className={`border rounded-lg overflow-hidden ${
+                                product.isCustom
+                                  ? 'border-pink-400 ring-1 ring-pink-300 bg-pink-50/30'
+                                  : ''
+                              }`}
+                            >
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setExpandedProductIds((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(product.id)) next.delete(product.id);
+                                    else next.add(product.id);
+                                    return next;
+                                  })
+                                }
+                                className="w-full flex items-center justify-between gap-3 px-3 py-2 hover:bg-muted/50 text-left"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                  <div className="min-w-0">
+                                    <div className="font-medium truncate flex items-center gap-2">
+                                      {product.name}
+                                      {product.isCustom && (
+                                        <span className="shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-pink-500 text-white text-[10px] font-semibold uppercase">
+                                          ★ Индивидуальный
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground truncate">
+                                      {product.productType?.name || '—'} · Кол-во: {product.quantity}
+                                      {product.color && ` · Цвет: ${product.color}`}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {activeTask?.assignedTo && (
+                                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                      <UserIcon size={12} />
+                                      {activeTask.assignedTo.firstName} {activeTask.assignedTo.lastName}
+                                    </span>
+                                  )}
                                   <span className={`inline-block px-2 py-0.5 rounded text-xs ${getStageColor(product.stage)}`}>
                                     {getStageName(product.stage)}
                                   </span>
-                                </td>
-                                <td className="px-3 py-2 text-xs text-muted-foreground">
-                                  {product.dimensions && <div>Размеры: {product.dimensions}</div>}
-                                  {product.color && <div>Цвет: {product.color}</div>}
-                                  {product.upholsteryMaterial && <div>Обшивка: {product.upholsteryMaterial}</div>}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                </div>
+                              </button>
+
+                              {isExpanded && (
+                                <div className="border-t bg-muted/20 p-3 space-y-3">
+                                  {product.description && (
+                                    <div className="bg-card rounded-md p-2 border-l-4 border-primary">
+                                      <div className="text-xs font-medium text-muted-foreground mb-0.5">Комментарий к позиции:</div>
+                                      <p className="text-sm whitespace-pre-wrap">{product.description}</p>
+                                    </div>
+                                  )}
+
+                                  {product.schemaImageUrl && (
+                                    <div>
+                                      <div className="text-xs font-medium text-muted-foreground mb-1">Схема / фото:</div>
+                                      <button
+                                        type="button"
+                                        onClick={() => setViewerImage(product.schemaImageUrl!)}
+                                        className="block cursor-zoom-in"
+                                      >
+                                        <img
+                                          src={product.schemaImageUrl}
+                                          alt="Схема"
+                                          className="max-h-48 rounded-md border border-border object-contain bg-card hover:border-primary transition-colors"
+                                        />
+                                      </button>
+                                    </div>
+                                  )}
+
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                    {product.dimensions && (
+                                      <div>
+                                        <span className="text-muted-foreground">Размеры:</span>{' '}
+                                        <span className="font-medium">{product.dimensions}</span>
+                                      </div>
+                                    )}
+                                    {product.color && (
+                                      <div>
+                                        <span className="text-muted-foreground">Цвет:</span>{' '}
+                                        <span className="font-medium">{product.color}</span>
+                                      </div>
+                                    )}
+                                    {product.upholsteryMaterial && (
+                                      <div className="col-span-2">
+                                        <span className="text-muted-foreground">Обшивка:</span>{' '}
+                                        <span className="font-medium">{product.upholsteryMaterial}</span>
+                                      </div>
+                                    )}
+                                    {product.deadline && (
+                                      <div>
+                                        <span className="text-muted-foreground">Дедлайн:</span>{' '}
+                                        <span className="font-medium">
+                                          {new Date(product.deadline).toLocaleDateString('ru-RU')}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div>
+                                    <div className="text-xs font-medium text-muted-foreground mb-1">
+                                      Кто взял в производство:
+                                    </div>
+                                    {activeTask?.assignedTo ? (
+                                      <div className="text-sm">
+                                        <span className="font-medium">
+                                          {activeTask.assignedTo.firstName} {activeTask.assignedTo.lastName}
+                                        </span>
+                                        {activeTask.assignedTo.role && (
+                                          <span className="text-xs text-muted-foreground ml-2">
+                                            (
+                                            {typeof activeTask.assignedTo.role === 'object'
+                                              ? activeTask.assignedTo.role.name
+                                              : activeTask.assignedTo.role}
+                                            )
+                                          </span>
+                                        )}
+                                        <span className="text-xs text-muted-foreground ml-2">
+                                          · этап: {getStageName(activeTask.stage)} · {activeTask.status}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground">Нет активных задач по этапу</p>
+                                    )}
+                                  </div>
+
+                                  {completedTasks.length > 0 && (
+                                    <div>
+                                      <div className="text-xs font-medium text-muted-foreground mb-1">
+                                        Выполнили этапы:
+                                      </div>
+                                      <ul className="text-xs space-y-0.5">
+                                        {completedTasks.map((t) => (
+                                          <li key={t.id}>
+                                            {getStageName(t.stage)} —{' '}
+                                            <span className="font-medium">
+                                              {t.assignedTo?.firstName} {t.assignedTo?.lastName}
+                                            </span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                  {product.history && product.history.length > 0 && (
+                                    <div>
+                                      <div className="text-xs font-medium text-muted-foreground mb-1">
+                                        История этапов:
+                                      </div>
+                                      <ul className="text-xs space-y-0.5">
+                                        {product.history.map((h) => (
+                                          <li key={h.id}>
+                                            {getStageName(h.stage)} —{' '}
+                                            {h.user && (
+                                              <span className="font-medium">
+                                                {h.user.firstName} {h.user.lastName}
+                                              </span>
+                                            )}
+                                            {h.completedAt && (
+                                              <span className="text-muted-foreground">
+                                                {' '}
+                                                · завершён {new Date(h.completedAt).toLocaleDateString('ru-RU')}
+                                              </span>
+                                            )}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1172,12 +1356,26 @@ export const KanbanPage = () => {
                     )}
 
                     {editProducts.map((product, index) => (
-                      <div key={product.id || `new-${index}`} className={`p-3 border rounded-lg space-y-2 ${product.stage && product.stage !== ProductionStage.PENDING && !product.isNew ? 'border-amber-300 bg-amber-50/30' : 'border-border'}`}>
+                      <div
+                        key={product.id || `new-${index}`}
+                        className={`p-3 border rounded-lg space-y-2 ${
+                          product.isCustom
+                            ? 'border-pink-400 bg-pink-50/40 ring-1 ring-pink-300'
+                            : product.stage && product.stage !== ProductionStage.PENDING && !product.isNew
+                              ? 'border-amber-300 bg-amber-50/30'
+                              : 'border-border'
+                        }`}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-foreground">
                               {product.isNew ? 'Новая позиция' : product.name}
                             </span>
+                            {product.isCustom && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-pink-500 text-white font-semibold uppercase">
+                                ★ Индивидуальный
+                              </span>
+                            )}
                             {product.stage && !product.isNew && (
                               <span className={`text-[10px] px-1.5 py-0.5 rounded ${getStageColor(product.stage)}`}>
                                 {getStageName(product.stage)}
@@ -1193,6 +1391,16 @@ export const KanbanPage = () => {
                             Удалить
                           </button>
                         </div>
+
+                        <label className="flex items-center gap-2 p-1.5 bg-pink-50 border border-pink-200 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={!!product.isCustom}
+                            onChange={(e) => handleUpdateProductField(index, 'isCustom', e.target.checked)}
+                            className="w-4 h-4 accent-pink-500"
+                          />
+                          <span className="text-xs font-medium text-pink-900">★ Индивидуальный заказ</span>
+                        </label>
 
                         {/* Nomenclature selector for new products */}
                         {product.isNew && (
@@ -1285,6 +1493,57 @@ export const KanbanPage = () => {
                           </div>
                         </div>
 
+                        <div>
+                          <label className="block text-xs font-medium text-foreground mb-1">Комментарий к позиции</label>
+                          <textarea
+                            value={product.description || ''}
+                            onChange={(e) => handleUpdateProductField(index, 'description', e.target.value)}
+                            className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                            rows={2}
+                            placeholder="Особенности изделия, пожелания клиента, детали..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-foreground mb-1">Фото / схема</label>
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-1 px-3 py-1.5 border border-dashed rounded-md text-xs cursor-pointer hover:bg-muted/50">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleUpdateProductField(index, 'schemaFile', file);
+                                }}
+                              />
+                              {product.schemaFile ? product.schemaFile.name : 'Загрузить файл'}
+                            </label>
+                            {product.schemaImageUrl && !product.schemaFile && (
+                              <a
+                                href={product.schemaImageUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-primary hover:underline"
+                              >
+                                Текущее фото
+                              </a>
+                            )}
+                            {(product.schemaFile || product.schemaImageUrl) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleUpdateProductField(index, 'schemaFile', undefined);
+                                  handleUpdateProductField(index, 'schemaImageUrl', '');
+                                }}
+                                className="text-xs text-red-500 hover:underline"
+                              >
+                                Убрать
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
                         {/* Stage assignments for new products */}
                         {product.isNew && (
                           <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-md space-y-2">
@@ -1351,6 +1610,10 @@ export const KanbanPage = () => {
         isOpen={isCreateOrderModalOpen}
         onClose={() => setIsCreateOrderModalOpen(false)}
       />
+
+      {viewerImage && (
+        <SchemaImageViewer src={viewerImage} onClose={() => setViewerImage(null)} />
+      )}
     </>
   );
 };

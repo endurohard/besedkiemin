@@ -231,4 +231,130 @@ describe('TasksService', () => {
       );
     });
   });
+
+  describe('reassignTask', () => {
+    const managerId = 'manager-1';
+    const taskId = 'task-1';
+    const currentWorkerId = 'worker-current';
+    const newWorkerId = 'worker-new';
+
+    const manager = {
+      id: managerId,
+      email: 'manager@x',
+      role: { code: 'MANAGER', name: 'Manager' },
+    };
+
+    const task = {
+      id: taskId,
+      status: TaskStatus.ACCEPTED,
+      stage: ProductionStage.PAINTING,
+      productId: 'prod-1',
+      assignedToId: currentWorkerId,
+      isDefect: false,
+      quantity: 3,
+      assignedTo: { id: currentWorkerId, roleId: 'role-painter', role: { code: 'PAINTER' } },
+      product: {
+        id: 'prod-1',
+        name: 'Беседка',
+        order: { id: 'order-1', orderNumber: 'ORD-1' },
+        productType: { name: 'Беседка' },
+      },
+    };
+
+    const newWorker = {
+      id: newWorkerId,
+      email: 'new@x',
+      isActive: true,
+      roleId: 'role-painter',
+      telegramId: null,
+      role: { code: 'PAINTER', name: 'Painter' },
+    };
+
+    const setupTx = (overrides: Record<string, any> = {}, worker = newWorker) => {
+      const currentTask = { ...task, ...overrides };
+      const txMock = {
+        task: {
+          findUnique: jest.fn().mockResolvedValue(currentTask),
+          update: jest.fn().mockResolvedValue({ ...currentTask, assignedToId: worker.id }),
+          deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+        },
+        user: { findUnique: jest.fn().mockResolvedValue(worker) },
+      };
+      prisma.$transaction.mockImplementation(async (fn: any) => fn(txMock));
+      return txMock;
+    };
+
+    it('forbids non-manager/owner roles', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...manager,
+        role: { code: 'PAINTER', name: 'Painter' },
+      });
+
+      await expect(service.reassignTask(taskId, newWorkerId, managerId))
+        .rejects.toThrow(ForbiddenException);
+    });
+
+    it('rejects reassign of COMPLETED tasks', async () => {
+      prisma.user.findUnique.mockResolvedValue(manager);
+      setupTx({ status: TaskStatus.COMPLETED });
+
+      await expect(service.reassignTask(taskId, newWorkerId, managerId))
+        .rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects reassign of defect tasks', async () => {
+      prisma.user.findUnique.mockResolvedValue(manager);
+      setupTx({ isDefect: true });
+
+      await expect(service.reassignTask(taskId, newWorkerId, managerId))
+        .rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects worker from different department', async () => {
+      prisma.user.findUnique.mockResolvedValue(manager);
+      setupTx({}, { ...newWorker, roleId: 'role-sewer' });
+
+      await expect(service.reassignTask(taskId, newWorkerId, managerId))
+        .rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects reassigning to the same worker', async () => {
+      prisma.user.findUnique.mockResolvedValue(manager);
+      setupTx({ assignedToId: newWorkerId });
+
+      await expect(service.reassignTask(taskId, newWorkerId, managerId))
+        .rejects.toThrow(BadRequestException);
+    });
+
+    it('updates assignedToId for ACCEPTED tasks without deleting copies', async () => {
+      prisma.user.findUnique.mockResolvedValue(manager);
+      const txMock = setupTx();
+
+      await service.reassignTask(taskId, newWorkerId, managerId);
+
+      expect(txMock.task.deleteMany).not.toHaveBeenCalled();
+      expect(txMock.task.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: taskId },
+          data: { assignedToId: newWorkerId },
+        }),
+      );
+    });
+
+    it('deletes NEW copies for other workers when reassigning NEW task', async () => {
+      prisma.user.findUnique.mockResolvedValue(manager);
+      const txMock = setupTx({ status: TaskStatus.NEW });
+
+      await service.reassignTask(taskId, newWorkerId, managerId);
+
+      expect(txMock.task.deleteMany).toHaveBeenCalledWith({
+        where: {
+          productId: 'prod-1',
+          stage: ProductionStage.PAINTING,
+          status: TaskStatus.NEW,
+          id: { not: taskId },
+        },
+      });
+    });
+  });
 });

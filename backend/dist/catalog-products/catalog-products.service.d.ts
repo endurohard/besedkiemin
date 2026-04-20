@@ -6,9 +6,9 @@ export declare class CatalogProductsService {
     constructor(prisma: PrismaService);
     create(createDto: CreateCatalogProductDto): Promise<{
         category: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -17,9 +17,9 @@ export declare class CatalogProductsService {
             imageUrl: string | null;
         };
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -44,9 +44,9 @@ export declare class CatalogProductsService {
         includeInactive?: boolean;
     }): Promise<({
         category: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -55,9 +55,9 @@ export declare class CatalogProductsService {
             imageUrl: string | null;
         };
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -78,9 +78,9 @@ export declare class CatalogProductsService {
     })[]>;
     findOne(id: string): Promise<{
         category: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -89,9 +89,9 @@ export declare class CatalogProductsService {
             imageUrl: string | null;
         };
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -112,9 +112,9 @@ export declare class CatalogProductsService {
     }>;
     findBySlug(slug: string): Promise<{
         category: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -123,9 +123,9 @@ export declare class CatalogProductsService {
             imageUrl: string | null;
         };
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -146,9 +146,9 @@ export declare class CatalogProductsService {
     }>;
     update(id: string, updateDto: UpdateCatalogProductDto): Promise<{
         category: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -157,9 +157,9 @@ export declare class CatalogProductsService {
             imageUrl: string | null;
         };
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -179,9 +179,9 @@ export declare class CatalogProductsService {
         isFeatured: boolean;
     }>;
     remove(id: string): Promise<{
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -202,9 +202,9 @@ export declare class CatalogProductsService {
     }>;
     getFeatured(limit?: number): Promise<({
         category: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -213,9 +213,9 @@ export declare class CatalogProductsService {
             imageUrl: string | null;
         };
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;

@@ -87,6 +87,15 @@ export class CreateProductDto {
   nomenclatureId?: string;
 
   @ApiProperty({
+    example: false,
+    required: false,
+    description: "Индивидуальный заказ (помечает позицию как сделанную под клиента)",
+  })
+  @IsBoolean()
+  @IsOptional()
+  isCustom?: boolean;
+
+  @ApiProperty({
     example: "uuid-worker-id",
     required: false,
     description: "ID работника для назначения на первый этап",

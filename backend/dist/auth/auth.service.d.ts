@@ -31,9 +31,9 @@ export declare class AuthService {
             firstName: string;
             lastName: string;
             role: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -53,9 +53,9 @@ export declare class AuthService {
     findUserById(userId: string): Promise<import("../users/entities/user.entity").UserEntity>;
     validatePin(pin: string): Promise<({
         role: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             code: string;

@@ -32,9 +32,9 @@ export declare class UsersService {
     } | null>;
     findByEmailWithRole(email: string): Promise<({
         role: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -72,9 +72,9 @@ export declare class UsersService {
     setPin(id: string, pin: string): Promise<void>;
     findByPin(pin: string): Promise<({
         role: {
-            description: string | null;
             order: number;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             code: string;

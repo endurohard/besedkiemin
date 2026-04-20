@@ -92,6 +92,32 @@ export class AnalyticsController {
     return this.analyticsService.getFullCycleAnalytics(start, end);
   }
 
+  @Get("orders/production-report")
+  @ApiOperation({
+    summary:
+      "Детальный отчёт по заказам: кто из сотрудников участвовал в производстве каждого этапа продукта (только OWNER)",
+  })
+  @ApiQuery({
+    name: "startDate",
+    required: false,
+    type: String,
+    description: "Дата начала периода (ISO 8601)",
+  })
+  @ApiQuery({
+    name: "endDate",
+    required: false,
+    type: String,
+    description: "Дата окончания периода (ISO 8601)",
+  })
+  getOrderProductionReport(
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
+  ) {
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.analyticsService.getOrderProductionReport(start, end);
+  }
+
   @Get("productivity")
   @ApiOperation({
     summary:

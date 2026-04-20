@@ -5,8 +5,8 @@ export declare class FeatureFlagsService {
     constructor(prisma: PrismaService);
     initializeDefaults(): Promise<void>;
     findAll(): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -15,8 +15,8 @@ export declare class FeatureFlagsService {
         isEnabled: boolean;
     }[]>;
     findByKey(key: string): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -27,8 +27,8 @@ export declare class FeatureFlagsService {
     isEnabled(key: string): Promise<boolean>;
     getEnabledFlags(): Promise<Record<string, boolean>>;
     update(key: string, updateDto: UpdateFeatureFlagDto): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -37,8 +37,8 @@ export declare class FeatureFlagsService {
         isEnabled: boolean;
     }>;
     toggle(key: string): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -50,8 +50,8 @@ export declare class FeatureFlagsService {
         key: string;
         isEnabled: boolean;
     }[]): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;

@@ -254,10 +254,10 @@ async function main() {
     where: { order: 2 },
     update: {},
     create: {
-      name: 'Сборка',
-      description: 'Сборка изделий',
+      name: 'Покраска',
+      description: 'Покраска и финишная обработка',
       order: 2,
-      legacyStage: ProductionStage.ASSEMBLY,
+      legacyStage: ProductionStage.PAINTING,
       isActive: true,
     },
   });
@@ -266,10 +266,10 @@ async function main() {
     where: { order: 3 },
     update: {},
     create: {
-      name: 'Покраска',
-      description: 'Покраска и финишная обработка',
+      name: 'Пошив',
+      description: 'Пошив и обивка изделий',
       order: 3,
-      legacyStage: ProductionStage.PAINTING,
+      legacyStage: ProductionStage.SEWING,
       isActive: true,
     },
   });
@@ -278,10 +278,10 @@ async function main() {
     where: { order: 4 },
     update: {},
     create: {
-      name: 'Пошив',
-      description: 'Пошив и обивка изделий',
+      name: 'Сборка',
+      description: 'Сборка изделий',
       order: 4,
-      legacyStage: ProductionStage.SEWING,
+      legacyStage: ProductionStage.ASSEMBLY,
       isActive: true,
     },
   });
@@ -436,67 +436,118 @@ async function main() {
     },
   });
 
-  const preparer = await prisma.user.upsert({
+  // =============================================
+  // УЧЁТНЫЕ ЗАПИСИ ОТДЕЛОВ (общий вход для цеха)
+  // =============================================
+
+  const preparerDept = await prisma.user.upsert({
     where: { email: 'preparer@example.com' },
-    update: {},
+    update: { isDepartmentAccount: true, firstName: 'Отдел', lastName: 'Заготовка' },
     create: {
       email: 'preparer@example.com',
       password: hashedPassword,
-      firstName: 'Сергей',
-      lastName: 'Заготовщик',
+      firstName: 'Отдел',
+      lastName: 'Заготовка',
       roleId: preparerRole.id,
+      isDepartmentAccount: true,
     },
   });
 
-  const painter = await prisma.user.upsert({
+  const painterDept = await prisma.user.upsert({
     where: { email: 'painter@example.com' },
-    update: {},
+    update: { isDepartmentAccount: true, firstName: 'Отдел', lastName: 'Малярка' },
     create: {
       email: 'painter@example.com',
       password: hashedPassword,
-      firstName: 'Мария',
-      lastName: 'Маляр',
+      firstName: 'Отдел',
+      lastName: 'Малярка',
       roleId: painterRole.id,
+      isDepartmentAccount: true,
     },
   });
 
-  const sewer = await prisma.user.upsert({
+  const sewerDept = await prisma.user.upsert({
     where: { email: 'sewer@example.com' },
-    update: {},
+    update: { isDepartmentAccount: true, firstName: 'Отдел', lastName: 'Пошив' },
     create: {
       email: 'sewer@example.com',
       password: hashedPassword,
-      firstName: 'Елена',
-      lastName: 'Швея',
+      firstName: 'Отдел',
+      lastName: 'Пошив',
       roleId: sewerRole.id,
+      isDepartmentAccount: true,
     },
   });
 
-  const assembler = await prisma.user.upsert({
+  const assemblerDept = await prisma.user.upsert({
     where: { email: 'assembler@example.com' },
-    update: {},
+    update: { isDepartmentAccount: true, firstName: 'Отдел', lastName: 'Сборка' },
     create: {
       email: 'assembler@example.com',
       password: hashedPassword,
-      firstName: 'Николай',
-      lastName: 'Сборщик',
+      firstName: 'Отдел',
+      lastName: 'Сборка',
       roleId: assemblerRole.id,
+      isDepartmentAccount: true,
     },
   });
 
-  const warehouse = await prisma.user.upsert({
+  const warehouseDept = await prisma.user.upsert({
     where: { email: 'warehouse@example.com' },
-    update: {},
+    update: { isDepartmentAccount: true, firstName: 'Отдел', lastName: 'Склад' },
     create: {
       email: 'warehouse@example.com',
       password: hashedPassword,
-      firstName: 'Петр',
-      lastName: 'Складист',
+      firstName: 'Отдел',
+      lastName: 'Склад',
       roleId: warehouseRole.id,
+      isDepartmentAccount: true,
     },
   });
 
-  console.log('✅ Пользователи созданы');
+  // =============================================
+  // ИНДИВИДУАЛЬНЫЕ СОТРУДНИКИ ЦЕХА
+  // =============================================
+
+  const createWorker = async (
+    email: string,
+    firstName: string,
+    lastName: string,
+    roleId: string,
+  ) =>
+    prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        roleId,
+        isDepartmentAccount: false,
+      },
+    });
+
+  const preparer1 = await createWorker('111@mail.ru', 'Ариф', 'Махкомов', preparerRole.id);
+  const preparer2 = await createWorker('112@mail.ru', 'Нариман', 'Гасанов', preparerRole.id);
+  const preparer3 = await createWorker('113@mail.ru', 'Альберт', 'Алиев', preparerRole.id);
+
+  const painter1 = await createWorker('117@mail.ru', 'Диля', 'Таирова', painterRole.id);
+  const painter2 = await createWorker('124@mail.ru', 'Ханум', 'Алиева', painterRole.id);
+
+  const sewer1 = await createWorker('123@mail.ru', 'Магомед', 'Магомедов', sewerRole.id);
+
+  const assembler1 = await createWorker('118@mail.ru', 'Мурад', 'Алигаджиев', assemblerRole.id);
+  const assembler2 = await createWorker('119@mail.ru', 'Хасбулла', 'Ибрагимов', assemblerRole.id);
+
+  // Алиасы для обратной совместимости со сценариями ниже
+  const preparer = preparer1;
+  const painter = painter1;
+  const sewer = sewer1;
+  const assembler = assembler1;
+  const warehouse = warehouseDept;
+
+  console.log('✅ Пользователи созданы (отделы + сотрудники)');
 
   // =============================================
   // СОЗДАНИЕ ЗАКАЗОВ
@@ -660,6 +711,60 @@ async function main() {
     order2: order2.orderNumber,
     order3: order3.orderNumber,
   });
+
+  // =============================================
+  // СОЗДАНИЕ НАЧАЛЬНЫХ ЗАДАЧ НА ОТДЕЛЫ
+  // Товар в стадии PAINTING/PREPARATION/... требует Task для отдела,
+  // чтобы сотрудник, войдя под учёткой отдела, увидел работу и принял её.
+  // =============================================
+
+  const stageToDeptId: Record<string, string> = {
+    [ProductionStage.PREPARATION]: preparerDept.id,
+    [ProductionStage.PAINTING]: painterDept.id,
+    [ProductionStage.SEWING]: sewerDept.id,
+    [ProductionStage.ASSEMBLY]: assemblerDept.id,
+    [ProductionStage.QUALITY_CHECK]: warehouseDept.id,
+  };
+
+  const stageLabels: Record<string, string> = {
+    [ProductionStage.PREPARATION]: 'Заготовка',
+    [ProductionStage.PAINTING]: 'Покраска',
+    [ProductionStage.SEWING]: 'Пошив',
+    [ProductionStage.ASSEMBLY]: 'Сборка',
+    [ProductionStage.QUALITY_CHECK]: 'Приёмка',
+  };
+
+  const inProgressProducts = await prisma.product.findMany({
+    where: {
+      stage: {
+        in: [
+          ProductionStage.PREPARATION,
+          ProductionStage.PAINTING,
+          ProductionStage.SEWING,
+          ProductionStage.ASSEMBLY,
+          ProductionStage.QUALITY_CHECK,
+        ],
+      },
+      tasks: { none: { status: { in: ['NEW', 'ACCEPTED'] } } },
+    },
+  });
+
+  for (const product of inProgressProducts) {
+    const deptId = stageToDeptId[product.stage];
+    if (!deptId) continue;
+    await prisma.task.create({
+      data: {
+        productId: product.id,
+        stage: product.stage,
+        status: 'NEW',
+        assignedToId: deptId,
+        title: `${stageLabels[product.stage] ?? product.stage}: ${product.name}`,
+        quantity: product.quantity,
+      },
+    });
+  }
+
+  console.log(`✅ Задачи для отделов созданы: ${inProgressProducts.length}`);
 
   // =============================================
   // СОЗДАНИЕ КАТЕГОРИЙ КАТАЛОГА
@@ -919,14 +1024,20 @@ async function main() {
   console.log('\n🎉 База данных успешно заполнена!');
   console.log('\n📧 Учетные данные для входа:');
   console.log('   Супер-админ: admin@example.com / password123');
-  console.log('   Владелец: owner@example.com / password123');
-  console.log('   Менеджер: manager@example.com / password123');
+  console.log('   Владелец:    owner@example.com / password123');
+  console.log('   Менеджер:    manager@example.com / password123');
   console.log('   Проектировщик: designer@example.com / password123');
-  console.log('   Заготовщик: preparer@example.com / password123');
-  console.log('   Маляр: painter@example.com / password123');
-  console.log('   Швея: sewer@example.com / password123');
-  console.log('   Сборщик: assembler@example.com / password123');
-  console.log('   Складист: warehouse@example.com / password123');
+  console.log('\n🏭 Учётные записи отделов (общий вход цеха):');
+  console.log('   Заготовка: preparer@example.com / password123');
+  console.log('   Малярка:   painter@example.com / password123');
+  console.log('   Пошив:     sewer@example.com / password123');
+  console.log('   Сборка:    assembler@example.com / password123');
+  console.log('   Склад:     warehouse@example.com / password123');
+  console.log('\n👷 Индивидуальные сотрудники (пароль: password123):');
+  console.log('   Заготовка: 111@mail.ru, 112@mail.ru, 113@mail.ru');
+  console.log('   Малярка:   117@mail.ru, 124@mail.ru');
+  console.log('   Пошив:     123@mail.ru');
+  console.log('   Сборка:    118@mail.ru, 119@mail.ru');
 }
 
 main()

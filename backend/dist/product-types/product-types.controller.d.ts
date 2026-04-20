@@ -5,8 +5,8 @@ export declare class ProductTypesController {
     private readonly productTypesService;
     constructor(productTypesService: ProductTypesService);
     create(createProductTypeDto: CreateProductTypeDto): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -15,8 +15,8 @@ export declare class ProductTypesController {
         productionTimeHours: number | null;
     }>;
     findAll(includeInactive?: string): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -29,8 +29,8 @@ export declare class ProductTypesController {
             products: number;
         };
     } & {
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -39,8 +39,8 @@ export declare class ProductTypesController {
         productionTimeHours: number | null;
     }>;
     update(id: string, updateProductTypeDto: UpdateProductTypeDto): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -49,8 +49,8 @@ export declare class ProductTypesController {
         productionTimeHours: number | null;
     }>;
     toggleActive(id: string): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -59,8 +59,8 @@ export declare class ProductTypesController {
         productionTimeHours: number | null;
     }>;
     remove(id: string): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;

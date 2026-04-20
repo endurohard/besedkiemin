@@ -9,9 +9,9 @@ export declare class RolesService {
         };
         workflowStages: ({
             workflowStage: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -24,9 +24,9 @@ export declare class RolesService {
             workflowStageId: string;
         })[];
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -42,9 +42,9 @@ export declare class RolesService {
         };
         workflowStages: ({
             workflowStage: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -57,9 +57,9 @@ export declare class RolesService {
             workflowStageId: string;
         })[];
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -72,9 +72,9 @@ export declare class RolesService {
     findByCode(code: string): Promise<({
         workflowStages: ({
             workflowStage: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -87,9 +87,9 @@ export declare class RolesService {
             workflowStageId: string;
         })[];
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -105,9 +105,9 @@ export declare class RolesService {
         };
         workflowStages: ({
             workflowStage: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -120,9 +120,9 @@ export declare class RolesService {
             workflowStageId: string;
         })[];
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -138,9 +138,9 @@ export declare class RolesService {
         };
         workflowStages: ({
             workflowStage: {
-                description: string | null;
                 order: number;
                 name: string;
+                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -153,9 +153,9 @@ export declare class RolesService {
             workflowStageId: string;
         })[];
     } & {
-        description: string | null;
         order: number;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         code: string;

@@ -153,5 +153,37 @@ export declare class AnalyticsService {
             };
         }[];
     }>;
+    getOrderProductionReport(start?: Date, end?: Date): Promise<{
+        id: string;
+        orderNumber: string;
+        customerName: string;
+        status: import(".prisma/client").$Enums.OrderStatus;
+        createdAt: Date;
+        totalAmount: number | null;
+        createdBy: string | null;
+        products: {
+            id: string;
+            name: string;
+            productType: string | null;
+            quantity: number;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            color: string | null;
+            dimensions: string | null;
+            stages: {
+                stage: string;
+                stageName: string;
+                stageOrder: number | null;
+                workers: Array<{
+                    id: string;
+                    name: string;
+                    role: string | null;
+                    status: string;
+                    startedAt: Date;
+                    completedAt: Date | null;
+                    durationHours: number | null;
+                }>;
+            }[];
+        }[];
+    }[]>;
     private countWorkingDays;
 }

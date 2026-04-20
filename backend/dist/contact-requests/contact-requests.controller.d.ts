@@ -5,12 +5,12 @@ export declare class ContactRequestsController {
     private readonly contactRequestsService;
     constructor(contactRequestsService: ContactRequestsService);
     create(createDto: CreateContactRequestDto): Promise<{
-        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;
@@ -18,12 +18,12 @@ export declare class ContactRequestsController {
         isProcessed: boolean;
     }>;
     findAll(onlyUnprocessed?: string): Promise<{
-        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;
@@ -31,12 +31,12 @@ export declare class ContactRequestsController {
         isProcessed: boolean;
     }[]>;
     findOne(id: string): Promise<{
-        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;
@@ -44,12 +44,12 @@ export declare class ContactRequestsController {
         isProcessed: boolean;
     }>;
     update(id: string, updateDto: UpdateContactRequestDto): Promise<{
-        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;
@@ -57,12 +57,12 @@ export declare class ContactRequestsController {
         isProcessed: boolean;
     }>;
     remove(id: string): Promise<{
-        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;

@@ -13,6 +13,9 @@ import {
   Clock,
   Zap,
   Timer,
+  FileText,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 
 export const AnalyticsPage = () => {
@@ -49,6 +52,21 @@ export const AnalyticsPage = () => {
     queryKey: ['analytics', 'full-cycle', startDate, endDate],
     queryFn: () => analyticsApi.getFullCycleAnalytics({ startDate, endDate }),
   });
+
+  const { data: orderReport = [] } = useQuery({
+    queryKey: ['analytics', 'order-production-report', startDate, endDate],
+    queryFn: () => analyticsApi.getOrderProductionReport({ startDate, endDate }),
+  });
+
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const toggleOrder = (id: string) => {
+    setExpandedOrders((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const getStageLabel = (stage: ProductionStage): string => {
     const labels: Record<ProductionStage, string> = {
@@ -693,6 +711,108 @@ export const AnalyticsPage = () => {
             </CardContent>
           </Card>
         )}
+      </div>
+
+      {/* Детальный отчёт по заказам: кто из сотрудников делал какой этап */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <FileText size={24} />
+          Детальный отчёт по заказам
+        </h2>
+        <p className="text-sm text-muted-foreground mb-3">
+          Период фильтра берётся из секции выше. Нажмите на заказ, чтобы увидеть продукты и сотрудников по этапам.
+        </p>
+        <Card>
+          <CardContent className="p-4">
+            {orderReport.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Нет заказов за выбранный период</p>
+            ) : (
+              <div className="space-y-2">
+                {orderReport.map((order) => {
+                  const expanded = expandedOrders.has(order.id);
+                  return (
+                    <div key={order.id} className="border rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => toggleOrder(order.id)}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 text-left"
+                      >
+                        <div className="flex items-center gap-3">
+                          {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                          <div>
+                            <div className="font-semibold">{order.orderNumber} · {order.customerName}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(order.createdAt).toLocaleDateString('ru-RU')} · позиций: {order.products.length}
+                              {order.createdBy && ` · менеджер: ${order.createdBy}`}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary">
+                          {order.status}
+                        </span>
+                      </button>
+
+                      {expanded && (
+                        <div className="border-t bg-muted/20 p-4 space-y-4">
+                          {order.products.map((product) => (
+                            <div key={product.id} className="border rounded-md bg-card p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <div>
+                                  <div className="font-medium">{product.name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {product.productType && `${product.productType} · `}
+                                    Кол-во: {product.quantity}
+                                    {product.color && ` · Цвет: ${product.color}`}
+                                    {product.dimensions && ` · ${product.dimensions}`}
+                                  </div>
+                                </div>
+                                <span className="text-xs px-2 py-0.5 rounded bg-muted">
+                                  {getStageLabel(product.stage as ProductionStage)}
+                                </span>
+                              </div>
+
+                              {product.stages.length === 0 ? (
+                                <p className="text-xs text-muted-foreground">Этапы ещё не начаты</p>
+                              ) : (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="border-b text-muted-foreground">
+                                        <th className="text-left px-2 py-1 font-medium">Этап</th>
+                                        <th className="text-left px-2 py-1 font-medium">Сотрудник</th>
+                                        <th className="text-left px-2 py-1 font-medium">Роль</th>
+                                        <th className="text-left px-2 py-1 font-medium">Статус</th>
+                                        <th className="text-left px-2 py-1 font-medium">Длительность</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {product.stages.flatMap((stg) =>
+                                        stg.workers.map((w, idx) => (
+                                          <tr key={`${stg.stage}-${w.id}-${idx}`} className="border-b last:border-0">
+                                            <td className="px-2 py-1">{stg.stageName}</td>
+                                            <td className="px-2 py-1 font-medium">{w.name}</td>
+                                            <td className="px-2 py-1 text-xs text-muted-foreground">{w.role || '—'}</td>
+                                            <td className="px-2 py-1 text-xs">{w.status}</td>
+                                            <td className="px-2 py-1 text-xs">
+                                              {w.durationHours != null ? formatDuration(w.durationHours) : 'в работе'}
+                                            </td>
+                                          </tr>
+                                        ))
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

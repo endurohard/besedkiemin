@@ -81,6 +81,20 @@ export class InventoryController {
     return this.inventoryService.getInventoryByOrder(orderId);
   }
 
+  @Get("availability/lookup")
+  @Roles("OWNER", "MANAGER", "WAREHOUSE")
+  @ApiOperation({
+    summary: "Проверить доступное количество на складе по типу и названию",
+  })
+  @ApiQuery({ name: "productTypeId", required: true })
+  @ApiQuery({ name: "name", required: true })
+  getAvailability(
+    @Query("productTypeId") productTypeId: string,
+    @Query("name") name: string,
+  ) {
+    return this.inventoryService.getAvailability(productTypeId, name);
+  }
+
   @Get(":id")
   @Roles("OWNER", "MANAGER", "WAREHOUSE")
   @ApiOperation({ summary: "Получить детали складского остатка" })

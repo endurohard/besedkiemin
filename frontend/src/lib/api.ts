@@ -233,6 +233,11 @@ export const productsApi = {
     return response.data;
   },
 
+  createFromInventory: async (data: CreateProductDto): Promise<Product> => {
+    const response = await api.post<Product>('/products/from-inventory', data);
+    return response.data;
+  },
+
   update: async (id: string, data: UpdateProductDto): Promise<Product> => {
     const response = await api.patch<Product>(`/products/${id}`, data);
     return response.data;
@@ -498,6 +503,25 @@ export const tasksApi = {
     const response = await api.post<T>(`/tasks/defects/${productId}/accept`);
     return response.data;
   },
+
+  getReassignableWorkers: async (
+    taskId: string,
+  ): Promise<Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    role?: { code: string; name: string } | null;
+  }>> => {
+    const response = await api.get(`/tasks/${taskId}/reassignable-workers`);
+    return response.data;
+  },
+
+  reassignTask: async (taskId: string, workerId: string): Promise<Task> => {
+    const response = await api.patch<Task>(`/tasks/${taskId}/reassign`, {
+      workerId,
+    });
+    return response.data;
+  },
 };
 
 // Analytics API (только для OWNER)
@@ -541,7 +565,52 @@ export const analyticsApi = {
     });
     return response.data;
   },
+
+  getOrderProductionReport: async (params?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<OrderProductionReport[]> => {
+    const response = await api.get<OrderProductionReport[]>(
+      '/analytics/orders/production-report',
+      { params },
+    );
+    return response.data;
+  },
 };
+
+// Детальный отчёт по заказам — кто из сотрудников выполнял какой этап
+export interface OrderProductionReport {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  status: string;
+  createdAt: string;
+  totalAmount: number | null;
+  createdBy: string | null;
+  products: Array<{
+    id: string;
+    name: string;
+    productType: string | null;
+    quantity: number;
+    stage: string;
+    color: string | null;
+    dimensions: string | null;
+    stages: Array<{
+      stage: string;
+      stageName: string;
+      stageOrder: number | null;
+      workers: Array<{
+        id: string;
+        name: string;
+        role: string | null;
+        status: string;
+        startedAt: string;
+        completedAt: string | null;
+        durationHours: number | null;
+      }>;
+    }>;
+  }>;
+}
 
 // Upload API
 export const uploadApi = {
@@ -572,6 +641,13 @@ export const inventoryApi = {
 
   getByType: async (productTypeId: string): Promise<InventoryItem[]> => {
     const response = await api.get<InventoryItem[]>(`/inventory/type/${productTypeId}`);
+    return response.data;
+  },
+
+  getAvailability: async (productTypeId: string, name: string): Promise<{ quantity: number }> => {
+    const response = await api.get<{ quantity: number }>('/inventory/availability/lookup', {
+      params: { productTypeId, name },
+    });
     return response.data;
   },
 

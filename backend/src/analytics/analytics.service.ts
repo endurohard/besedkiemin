@@ -724,6 +724,129 @@ export class AnalyticsService {
     };
   }
 
+  // Детальный отчёт по заказам: для каждого заказа — продукты и сотрудники, которые
+  // участвовали в производстве каждого этапа (из ProductHistory)
+  async getOrderProductionReport(start?: Date, end?: Date) {
+    const where: any = {};
+    if (start || end) {
+      where.createdAt = {};
+      if (start) where.createdAt.gte = start;
+      if (end) where.createdAt.lte = end;
+    }
+
+    const orders = await this.prisma.order.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        createdBy: {
+          select: { id: true, firstName: true, lastName: true },
+        },
+        products: {
+          include: {
+            productType: { select: { id: true, name: true } },
+            history: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    role: { select: { code: true, name: true } },
+                  },
+                },
+                workflowStage: { select: { id: true, name: true, order: true } },
+              },
+              orderBy: { startedAt: "asc" },
+            },
+          },
+        },
+      },
+    });
+
+    return orders.map((order) => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      status: order.status,
+      createdAt: order.createdAt,
+      totalAmount: order.totalAmount,
+      createdBy: order.createdBy
+        ? `${order.createdBy.firstName} ${order.createdBy.lastName}`
+        : null,
+      products: order.products.map((product) => {
+        const stagesMap = new Map<
+          string,
+          {
+            stage: string;
+            stageName: string;
+            stageOrder: number | null;
+            workers: Array<{
+              id: string;
+              name: string;
+              role: string | null;
+              status: string;
+              startedAt: Date;
+              completedAt: Date | null;
+              durationHours: number | null;
+            }>;
+          }
+        >();
+
+        for (const entry of product.history) {
+          const key = entry.workflowStage
+            ? `wf:${entry.workflowStage.id}`
+            : `legacy:${entry.stage}`;
+          if (!stagesMap.has(key)) {
+            stagesMap.set(key, {
+              stage: entry.stage,
+              stageName: entry.workflowStage?.name || entry.stage,
+              stageOrder: entry.workflowStage?.order ?? null,
+              workers: [],
+            });
+          }
+          const bucket = stagesMap.get(key)!;
+          const durationHours =
+            entry.completedAt && entry.startedAt
+              ? Math.round(
+                  ((entry.completedAt.getTime() -
+                    entry.startedAt.getTime()) /
+                    3600000) *
+                    10,
+                ) / 10
+              : null;
+          bucket.workers.push({
+            id: entry.user.id,
+            name: `${entry.user.firstName} ${entry.user.lastName}`.trim(),
+            role:
+              (entry.user.role as any)?.name ||
+              (typeof entry.user.role === "string" ? entry.user.role : null),
+            status: entry.status,
+            startedAt: entry.startedAt,
+            completedAt: entry.completedAt,
+            durationHours,
+          });
+        }
+
+        const stages = Array.from(stagesMap.values()).sort((a, b) => {
+          const ao = a.stageOrder ?? 999;
+          const bo = b.stageOrder ?? 999;
+          return ao - bo;
+        });
+
+        return {
+          id: product.id,
+          name: product.name,
+          productType: product.productType?.name || null,
+          quantity: product.quantity,
+          stage: product.stage,
+          color: product.color,
+          dimensions: product.dimensions,
+          stages,
+        };
+      }),
+    }));
+  }
+
   // Подсчёт рабочих дней (пн-пт) в периоде
   private countWorkingDays(start: Date, end: Date): number {
     let count = 0;

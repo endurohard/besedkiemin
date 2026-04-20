@@ -1,57 +1,107 @@
 import { PrismaService } from "../prisma/prisma.service";
 import { TelegramService } from "../telegram/telegram.service";
+import { InventoryService } from "../inventory/inventory.service";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { ProductionStage } from "@prisma/client";
 export declare class ProductsService {
     private prisma;
     private telegramService;
+    private inventoryService;
     private readonly logger;
-    constructor(prisma: PrismaService, telegramService: TelegramService);
-    create(createProductDto: CreateProductDto): Promise<{
+    constructor(prisma: PrismaService, telegramService: TelegramService, inventoryService: InventoryService);
+    createFromInventory(dto: CreateProductDto): Promise<{
         order: {
-            status: import(".prisma/client").$Enums.OrderStatus;
-            description: string | null;
             id: string;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            notes: string | null;
             orderNumber: string;
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            status: import(".prisma/client").$Enums.OrderStatus;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
             sourceId: string | null;
             totalAmount: number | null;
             createdById: string;
         };
         productType: {
-            description: string | null;
-            name: string;
-            isActive: boolean;
             id: string;
+            name: string;
+            description: string | null;
+            requiresSewing: boolean;
             createdAt: Date;
             updatedAt: Date;
-            requiresSewing: boolean;
+            isActive: boolean;
             productionTimeHours: number | null;
         };
     } & {
-        description: string | null;
-        name: string;
         id: string;
-        color: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        stage: import(".prisma/client").$Enums.ProductionStage;
+        name: string;
+        description: string | null;
         quantity: number;
-        productTypeId: string;
-        orderId: string;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
+        color: string | null;
         upholsteryMaterial: string | null;
+        isCustom: boolean;
         stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        productTypeId: string;
+        orderId: string;
+        nomenclatureId: string | null;
+    }>;
+    create(createProductDto: CreateProductDto): Promise<{
+        order: {
+            id: string;
+            description: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            orderNumber: string;
+            customerName: string;
+            customerPhone: string | null;
+            customerAddress: string | null;
+            status: import(".prisma/client").$Enums.OrderStatus;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
+            sourceId: string | null;
+            totalAmount: number | null;
+            createdById: string;
+        };
+        productType: {
+            id: string;
+            name: string;
+            description: string | null;
+            requiresSewing: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            isActive: boolean;
+            productionTimeHours: number | null;
+        };
+    } & {
+        id: string;
+        name: string;
+        description: string | null;
+        quantity: number;
+        dimensions: string | null;
+        schemaImageUrl: string | null;
+        stage: import(".prisma/client").$Enums.ProductionStage;
+        deadline: Date | null;
+        requiresSewing: boolean | null;
+        color: string | null;
+        upholsteryMaterial: string | null;
+        isCustom: boolean;
+        stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        productTypeId: string;
+        orderId: string;
         nomenclatureId: string | null;
     }>;
     findAll(filters?: {
@@ -61,184 +111,186 @@ export declare class ProductsService {
         limit?: number;
     }): Promise<({
         order: {
-            status: import(".prisma/client").$Enums.OrderStatus;
             id: string;
-            priority: import(".prisma/client").$Enums.OrderPriority;
             orderNumber: string;
             customerName: string;
+            status: import(".prisma/client").$Enums.OrderStatus;
+            priority: import(".prisma/client").$Enums.OrderPriority;
         };
         productType: {
-            name: string;
             id: string;
+            name: string;
         };
-        qualityChecks: ({
-            checkedBy: {
+        history: ({
+            user: {
+                role: {
+                    order: number;
+                    id: string;
+                    name: string;
+                    description: string | null;
+                    color: string | null;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    isActive: boolean;
+                    code: string;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
+                };
+                id: string;
                 firstName: string;
                 lastName: string;
+            };
+        } & {
+            id: string;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.TaskStatus;
+            notes: string | null;
+            startedAt: Date;
+            completedAt: Date | null;
+            passedAt: Date | null;
+            productId: string;
+            userId: string;
+            workflowStageId: string | null;
+        })[];
+        qualityChecks: ({
+            checkedBy: {
                 id: string;
+                firstName: string;
+                lastName: string;
             } | null;
         } & {
-            status: import(".prisma/client").$Enums.QualityStatus;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.QualityStatus;
             notes: string | null;
             productId: string;
             photoUrl: string | null;
             checkedAt: Date | null;
             checkedById: string | null;
         })[];
-        history: ({
-            user: {
-                role: {
-                    description: string | null;
-                    order: number;
-                    name: string;
-                    isActive: boolean;
-                    id: string;
-                    code: string;
-                    color: string | null;
-                    isSystem: boolean;
-                    permissions: import("@prisma/client/runtime/library").JsonValue;
-                    createdAt: Date;
-                    updatedAt: Date;
-                };
-                firstName: string;
-                lastName: string;
-                id: string;
-            };
-        } & {
-            status: import(".prisma/client").$Enums.TaskStatus;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            stage: import(".prisma/client").$Enums.ProductionStage;
-            completedAt: Date | null;
-            passedAt: Date | null;
-            notes: string | null;
-            productId: string;
-            workflowStageId: string | null;
-            userId: string;
-            startedAt: Date;
-        })[];
     } & {
-        description: string | null;
-        name: string;
         id: string;
-        color: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        stage: import(".prisma/client").$Enums.ProductionStage;
+        name: string;
+        description: string | null;
         quantity: number;
-        productTypeId: string;
-        orderId: string;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
+        color: string | null;
         upholsteryMaterial: string | null;
+        isCustom: boolean;
         stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        productTypeId: string;
+        orderId: string;
         nomenclatureId: string | null;
     })[]>;
     findOne(id: string): Promise<{
         order: {
-            status: import(".prisma/client").$Enums.OrderStatus;
-            description: string | null;
             id: string;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            notes: string | null;
             orderNumber: string;
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            status: import(".prisma/client").$Enums.OrderStatus;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
             sourceId: string | null;
             totalAmount: number | null;
             createdById: string;
         };
-        qualityChecks: ({
-            checkedBy: {
+        history: ({
+            user: {
+                role: {
+                    order: number;
+                    id: string;
+                    name: string;
+                    description: string | null;
+                    color: string | null;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    isActive: boolean;
+                    code: string;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
+                };
+                id: string;
                 firstName: string;
                 lastName: string;
+            };
+        } & {
+            id: string;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.TaskStatus;
+            notes: string | null;
+            startedAt: Date;
+            completedAt: Date | null;
+            passedAt: Date | null;
+            productId: string;
+            userId: string;
+            workflowStageId: string | null;
+        })[];
+        qualityChecks: ({
+            checkedBy: {
                 id: string;
+                firstName: string;
+                lastName: string;
             } | null;
         } & {
-            status: import(".prisma/client").$Enums.QualityStatus;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.QualityStatus;
             notes: string | null;
             productId: string;
             photoUrl: string | null;
             checkedAt: Date | null;
             checkedById: string | null;
         })[];
-        history: ({
-            user: {
-                role: {
-                    description: string | null;
-                    order: number;
-                    name: string;
-                    isActive: boolean;
-                    id: string;
-                    code: string;
-                    color: string | null;
-                    isSystem: boolean;
-                    permissions: import("@prisma/client/runtime/library").JsonValue;
-                    createdAt: Date;
-                    updatedAt: Date;
-                };
-                firstName: string;
-                lastName: string;
-                id: string;
-            };
-        } & {
-            status: import(".prisma/client").$Enums.TaskStatus;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            stage: import(".prisma/client").$Enums.ProductionStage;
-            completedAt: Date | null;
-            passedAt: Date | null;
-            notes: string | null;
-            productId: string;
-            workflowStageId: string | null;
-            userId: string;
-            startedAt: Date;
-        })[];
     } & {
-        description: string | null;
-        name: string;
         id: string;
-        color: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        stage: import(".prisma/client").$Enums.ProductionStage;
+        name: string;
+        description: string | null;
         quantity: number;
-        productTypeId: string;
-        orderId: string;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
+        color: string | null;
         upholsteryMaterial: string | null;
+        isCustom: boolean;
         stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        productTypeId: string;
+        orderId: string;
         nomenclatureId: string | null;
     }>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<{
         order: {
-            status: import(".prisma/client").$Enums.OrderStatus;
-            description: string | null;
             id: string;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            notes: string | null;
             orderNumber: string;
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            status: import(".prisma/client").$Enums.OrderStatus;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
             sourceId: string | null;
             totalAmount: number | null;
             createdById: string;
@@ -246,87 +298,89 @@ export declare class ProductsService {
         history: ({
             user: {
                 role: {
-                    description: string | null;
                     order: number;
-                    name: string;
-                    isActive: boolean;
                     id: string;
-                    code: string;
+                    name: string;
+                    description: string | null;
                     color: string | null;
-                    isSystem: boolean;
-                    permissions: import("@prisma/client/runtime/library").JsonValue;
                     createdAt: Date;
                     updatedAt: Date;
+                    isActive: boolean;
+                    code: string;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
                 };
+                id: string;
                 firstName: string;
                 lastName: string;
-                id: string;
             };
         } & {
-            status: import(".prisma/client").$Enums.TaskStatus;
             id: string;
+            stage: import(".prisma/client").$Enums.ProductionStage;
             createdAt: Date;
             updatedAt: Date;
-            stage: import(".prisma/client").$Enums.ProductionStage;
+            status: import(".prisma/client").$Enums.TaskStatus;
+            notes: string | null;
+            startedAt: Date;
             completedAt: Date | null;
             passedAt: Date | null;
-            notes: string | null;
             productId: string;
-            workflowStageId: string | null;
             userId: string;
-            startedAt: Date;
+            workflowStageId: string | null;
         })[];
     } & {
-        description: string | null;
-        name: string;
         id: string;
-        color: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        stage: import(".prisma/client").$Enums.ProductionStage;
+        name: string;
+        description: string | null;
         quantity: number;
-        productTypeId: string;
-        orderId: string;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
+        color: string | null;
         upholsteryMaterial: string | null;
+        isCustom: boolean;
         stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        productTypeId: string;
+        orderId: string;
         nomenclatureId: string | null;
     }>;
     remove(id: string): Promise<{
-        description: string | null;
-        name: string;
         id: string;
-        color: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        stage: import(".prisma/client").$Enums.ProductionStage;
+        name: string;
+        description: string | null;
         quantity: number;
-        productTypeId: string;
-        orderId: string;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
+        color: string | null;
         upholsteryMaterial: string | null;
+        isCustom: boolean;
         stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        productTypeId: string;
+        orderId: string;
         nomenclatureId: string | null;
     }>;
     moveToStage(productId: string, newStage: ProductionStage, userId: string, notes?: string): Promise<{
         order: {
-            status: import(".prisma/client").$Enums.OrderStatus;
-            description: string | null;
             id: string;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            priority: import(".prisma/client").$Enums.OrderPriority;
-            notes: string | null;
             orderNumber: string;
             customerName: string;
             customerPhone: string | null;
             customerAddress: string | null;
+            status: import(".prisma/client").$Enums.OrderStatus;
+            priority: import(".prisma/client").$Enums.OrderPriority;
+            notes: string | null;
             sourceId: string | null;
             totalAmount: number | null;
             createdById: string;
@@ -334,168 +388,170 @@ export declare class ProductsService {
         history: ({
             user: {
                 role: {
-                    description: string | null;
                     order: number;
-                    name: string;
-                    isActive: boolean;
                     id: string;
-                    code: string;
+                    name: string;
+                    description: string | null;
                     color: string | null;
-                    isSystem: boolean;
-                    permissions: import("@prisma/client/runtime/library").JsonValue;
                     createdAt: Date;
                     updatedAt: Date;
+                    isActive: boolean;
+                    code: string;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
                 };
+                id: string;
                 firstName: string;
                 lastName: string;
-                id: string;
             };
         } & {
-            status: import(".prisma/client").$Enums.TaskStatus;
             id: string;
+            stage: import(".prisma/client").$Enums.ProductionStage;
             createdAt: Date;
             updatedAt: Date;
-            stage: import(".prisma/client").$Enums.ProductionStage;
+            status: import(".prisma/client").$Enums.TaskStatus;
+            notes: string | null;
+            startedAt: Date;
             completedAt: Date | null;
             passedAt: Date | null;
-            notes: string | null;
             productId: string;
-            workflowStageId: string | null;
             userId: string;
-            startedAt: Date;
+            workflowStageId: string | null;
         })[];
     } & {
-        description: string | null;
-        name: string;
         id: string;
-        color: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        stage: import(".prisma/client").$Enums.ProductionStage;
+        name: string;
+        description: string | null;
         quantity: number;
-        productTypeId: string;
-        orderId: string;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
+        color: string | null;
         upholsteryMaterial: string | null;
+        isCustom: boolean;
         stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        productTypeId: string;
+        orderId: string;
         nomenclatureId: string | null;
     }>;
     getProductsByStage(stage: ProductionStage): Promise<({
         order: {
-            status: import(".prisma/client").$Enums.OrderStatus;
             id: string;
-            priority: import(".prisma/client").$Enums.OrderPriority;
             orderNumber: string;
             customerName: string;
+            status: import(".prisma/client").$Enums.OrderStatus;
+            priority: import(".prisma/client").$Enums.OrderPriority;
         };
         productType: {
-            name: string;
             id: string;
+            name: string;
         };
-        qualityChecks: ({
-            checkedBy: {
+        history: ({
+            user: {
+                role: {
+                    order: number;
+                    id: string;
+                    name: string;
+                    description: string | null;
+                    color: string | null;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    isActive: boolean;
+                    code: string;
+                    isSystem: boolean;
+                    permissions: import("@prisma/client/runtime/library").JsonValue;
+                };
+                id: string;
                 firstName: string;
                 lastName: string;
+            };
+        } & {
+            id: string;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.TaskStatus;
+            notes: string | null;
+            startedAt: Date;
+            completedAt: Date | null;
+            passedAt: Date | null;
+            productId: string;
+            userId: string;
+            workflowStageId: string | null;
+        })[];
+        qualityChecks: ({
+            checkedBy: {
                 id: string;
+                firstName: string;
+                lastName: string;
             } | null;
         } & {
-            status: import(".prisma/client").$Enums.QualityStatus;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.QualityStatus;
             notes: string | null;
             productId: string;
             photoUrl: string | null;
             checkedAt: Date | null;
             checkedById: string | null;
         })[];
-        history: ({
-            user: {
-                role: {
-                    description: string | null;
-                    order: number;
-                    name: string;
-                    isActive: boolean;
-                    id: string;
-                    code: string;
-                    color: string | null;
-                    isSystem: boolean;
-                    permissions: import("@prisma/client/runtime/library").JsonValue;
-                    createdAt: Date;
-                    updatedAt: Date;
-                };
-                firstName: string;
-                lastName: string;
-                id: string;
-            };
-        } & {
-            status: import(".prisma/client").$Enums.TaskStatus;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            stage: import(".prisma/client").$Enums.ProductionStage;
-            completedAt: Date | null;
-            passedAt: Date | null;
-            notes: string | null;
-            productId: string;
-            workflowStageId: string | null;
-            userId: string;
-            startedAt: Date;
-        })[];
     } & {
-        description: string | null;
-        name: string;
         id: string;
-        color: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        stage: import(".prisma/client").$Enums.ProductionStage;
+        name: string;
+        description: string | null;
         quantity: number;
-        productTypeId: string;
-        orderId: string;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
+        color: string | null;
         upholsteryMaterial: string | null;
+        isCustom: boolean;
         stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        productTypeId: string;
+        orderId: string;
         nomenclatureId: string | null;
     })[]>;
     getProductHistory(productId: string): Promise<({
         user: {
             role: {
-                description: string | null;
                 order: number;
-                name: string;
-                isActive: boolean;
                 id: string;
-                code: string;
+                name: string;
+                description: string | null;
                 color: string | null;
-                isSystem: boolean;
-                permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
+                code: string;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
             };
+            id: string;
             firstName: string;
             lastName: string;
-            id: string;
         };
     } & {
-        status: import(".prisma/client").$Enums.TaskStatus;
         id: string;
+        stage: import(".prisma/client").$Enums.ProductionStage;
         createdAt: Date;
         updatedAt: Date;
-        stage: import(".prisma/client").$Enums.ProductionStage;
+        status: import(".prisma/client").$Enums.TaskStatus;
+        notes: string | null;
+        startedAt: Date;
         completedAt: Date | null;
         passedAt: Date | null;
-        notes: string | null;
         productId: string;
-        workflowStageId: string | null;
         userId: string;
-        startedAt: Date;
+        workflowStageId: string | null;
     })[]>;
     private validateStageTransition;
     private updateOrderStatus;

@@ -6,8 +6,8 @@ export declare class NomenclatureService {
     constructor(prisma: PrismaService);
     create(createDto: CreateNomenclatureDto): Promise<{
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -16,8 +16,8 @@ export declare class NomenclatureService {
             productionTimeHours: number | null;
         };
     } & {
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         color: string | null;
@@ -36,8 +36,8 @@ export declare class NomenclatureService {
     }>;
     findAll(includeInactive?: boolean): Promise<({
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -46,8 +46,8 @@ export declare class NomenclatureService {
             productionTimeHours: number | null;
         };
     } & {
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         color: string | null;
@@ -66,8 +66,8 @@ export declare class NomenclatureService {
     })[]>;
     findByProductType(productTypeId: string, includeInactive?: boolean): Promise<({
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -76,8 +76,8 @@ export declare class NomenclatureService {
             productionTimeHours: number | null;
         };
     } & {
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         color: string | null;
@@ -96,8 +96,8 @@ export declare class NomenclatureService {
     })[]>;
     findOne(id: string): Promise<{
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -106,8 +106,8 @@ export declare class NomenclatureService {
             productionTimeHours: number | null;
         };
     } & {
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         color: string | null;
@@ -126,8 +126,8 @@ export declare class NomenclatureService {
     }>;
     update(id: string, updateDto: UpdateNomenclatureDto): Promise<{
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -136,8 +136,8 @@ export declare class NomenclatureService {
             productionTimeHours: number | null;
         };
     } & {
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         color: string | null;
@@ -155,8 +155,8 @@ export declare class NomenclatureService {
         discontinuedAt: Date | null;
     }>;
     remove(id: string): Promise<{
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         color: string | null;
@@ -175,8 +175,8 @@ export declare class NomenclatureService {
     }>;
     toggleActive(id: string): Promise<{
         productType: {
-            description: string | null;
             name: string;
+            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -185,8 +185,8 @@ export declare class NomenclatureService {
             productionTimeHours: number | null;
         };
     } & {
-        description: string | null;
         name: string;
+        description: string | null;
         isActive: boolean;
         id: string;
         color: string | null;

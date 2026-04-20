@@ -25,6 +25,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      '/uploads': {
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
   },
 })
