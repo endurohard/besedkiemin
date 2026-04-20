@@ -1,6 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { ProductionStage } from "@prisma/client";
 import {
   IsBoolean,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -111,4 +113,14 @@ export class CreateProductDto {
   })
   @IsOptional()
   stageAssignments?: Record<string, string>;
+
+  @ApiProperty({
+    enum: ProductionStage,
+    required: false,
+    description:
+      "Стартовая стадия (напр. PAINTING для готовых заготовок). По умолчанию — первая активная стадия workflow.",
+  })
+  @IsEnum(ProductionStage)
+  @IsOptional()
+  startStage?: ProductionStage;
 }

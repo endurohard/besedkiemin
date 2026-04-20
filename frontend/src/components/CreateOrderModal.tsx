@@ -82,6 +82,7 @@ interface ProductFormData {
   isCustom?: boolean; // Индивидуальная позиция
   useInventory?: boolean; // Списать со склада вместо производства (внутренний заказ)
   stageAssignments?: Record<string, string>; // {PREPARATION: userId, PAINTING: userId, ...}
+  startStage?: string; // Стартовая стадия (если пропускаем предыдущие этапы, напр. готовая заготовка)
 }
 
 export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => {
@@ -183,6 +184,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             description: product.description || undefined,
             isCustom: product.isCustom || undefined,
             stageAssignments: product.stageAssignments && Object.keys(product.stageAssignments).length > 0 ? product.stageAssignments : undefined,
+            startStage: product.startStage || undefined,
           };
 
           // Обычный заказ: если на складе есть остаток — списываем оттуда.
@@ -668,6 +670,28 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                   />
                   <p className="text-xs text-muted-foreground">
                     Если указан материал - этап пошива включается автоматически
+                  </p>
+                </div>
+
+                {/* Стартовая стадия (для готовых заготовок и пр.) */}
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-md space-y-1.5">
+                  <label className="block text-xs font-medium text-amber-900">
+                    🚦 Начать со стадии
+                  </label>
+                  <select
+                    value={product.startStage || ''}
+                    onChange={(e) =>
+                      updateProduct(index, 'startStage', e.target.value || undefined)
+                    }
+                    className="w-full px-2 py-1.5 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-ring bg-card"
+                  >
+                    <option value="">С начала (Заготовка)</option>
+                    <option value="PAINTING">🎨 Малярка (заготовки готовы)</option>
+                    <option value="SEWING">🧵 Пошив</option>
+                    <option value="ASSEMBLY">🔧 Сборка (всё готово)</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Пропустить предыдущие этапы, если комплектующие уже есть
                   </p>
                 </div>
 

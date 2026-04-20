@@ -1,3 +1,4 @@
+import { ProductionStage } from "@prisma/client";
 export declare class CreateProductDto {
     name: string;
     productTypeId: string;
@@ -14,4 +15,5 @@ export declare class CreateProductDto {
     isCustom?: boolean;
     assignedWorkerId?: string;
     stageAssignments?: Record<string, string>;
+    startStage?: ProductionStage;
 }

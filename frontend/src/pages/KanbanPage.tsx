@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Package, Clock, CheckCircle, ArrowRight, Plus, Search, Calendar, X, Trash2, Pencil, Eye, ChevronDown, ChevronRight, User as UserIcon } from 'lucide-react';
 import { CreateOrderModal } from '@/components/CreateOrderModal';
 import { SchemaImageViewer } from '@/components/SchemaImageViewer';
+import { ReassignTaskControl } from '@/components/ReassignTaskControl';
 import { getPriorityLabel, getPriorityColor, getPrioritySortOrder } from '@/lib/priority-utils';
 
 // Product form for adding/editing products in order
@@ -859,6 +860,12 @@ export const KanbanPage = () => {
                                       <span className="font-medium">Тел:</span> {order.customerPhone}
                                     </div>
                                   )}
+                                  {order.createdBy && (
+                                    <div>
+                                      <span className="font-medium">Создал:</span>{' '}
+                                      {`${order.createdBy.lastName ?? ''} ${order.createdBy.firstName ?? ''}`.trim() || order.createdBy.email}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -1051,6 +1058,15 @@ export const KanbanPage = () => {
                         <p>{selectedOrder.source.name}</p>
                       </div>
                     )}
+                    {selectedOrder.createdBy && (
+                      <div>
+                        <span className="font-medium text-muted-foreground">Создал:</span>
+                        <p>
+                          {`${selectedOrder.createdBy.lastName ?? ''} ${selectedOrder.createdBy.firstName ?? ''}`.trim() || selectedOrder.createdBy.email}
+                          {selectedOrder.createdBy.role?.name ? ` · ${selectedOrder.createdBy.role.name}` : ''}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Список позиций (продуктов) */}
@@ -1191,22 +1207,34 @@ export const KanbanPage = () => {
                                       Кто взял в производство:
                                     </div>
                                     {activeTask?.assignedTo ? (
-                                      <div className="text-sm">
-                                        <span className="font-medium">
-                                          {activeTask.assignedTo.firstName} {activeTask.assignedTo.lastName}
-                                        </span>
-                                        {activeTask.assignedTo.role && (
-                                          <span className="text-xs text-muted-foreground ml-2">
-                                            (
-                                            {typeof activeTask.assignedTo.role === 'object'
-                                              ? activeTask.assignedTo.role.name
-                                              : activeTask.assignedTo.role}
-                                            )
+                                      <div className="space-y-1.5">
+                                        <div className="text-sm">
+                                          <span className="font-medium">
+                                            {activeTask.assignedTo.firstName} {activeTask.assignedTo.lastName}
                                           </span>
-                                        )}
-                                        <span className="text-xs text-muted-foreground ml-2">
-                                          · этап: {getStageName(activeTask.stage)} · {activeTask.status}
-                                        </span>
+                                          {activeTask.assignedTo.role && (
+                                            <span className="text-xs text-muted-foreground ml-2">
+                                              (
+                                              {typeof activeTask.assignedTo.role === 'object'
+                                                ? activeTask.assignedTo.role.name
+                                                : activeTask.assignedTo.role}
+                                              )
+                                            </span>
+                                          )}
+                                          <span className="text-xs text-muted-foreground ml-2">
+                                            · этап: {getStageName(activeTask.stage)} · {activeTask.status}
+                                          </span>
+                                        </div>
+                                        {!activeTask.isDefect &&
+                                          (activeTask.status === 'NEW' || activeTask.status === 'ACCEPTED') &&
+                                          (user?.role?.code === 'OWNER' ||
+                                            user?.role?.code === 'SUPER_ADMIN' ||
+                                            user?.role?.code === 'MANAGER') && (
+                                            <ReassignTaskControl
+                                              taskId={activeTask.id}
+                                              currentAssigneeId={activeTask.assignedTo.id}
+                                            />
+                                          )}
                                       </div>
                                     ) : (
                                       <p className="text-xs text-muted-foreground">Нет активных задач по этапу</p>

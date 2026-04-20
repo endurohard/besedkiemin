@@ -294,6 +294,7 @@ export interface Product {
     id: string;
     stage: ProductionStage;
     status: string;
+    isDefect?: boolean;
     assignedTo?: {
       id: string;
       firstName: string;

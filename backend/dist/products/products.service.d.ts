@@ -147,12 +147,12 @@ export declare class ProductsService {
             updatedAt: Date;
             status: import(".prisma/client").$Enums.TaskStatus;
             notes: string | null;
+            workflowStageId: string | null;
             startedAt: Date;
             completedAt: Date | null;
             passedAt: Date | null;
             productId: string;
             userId: string;
-            workflowStageId: string | null;
         })[];
         qualityChecks: ({
             checkedBy: {
@@ -234,12 +234,12 @@ export declare class ProductsService {
             updatedAt: Date;
             status: import(".prisma/client").$Enums.TaskStatus;
             notes: string | null;
+            workflowStageId: string | null;
             startedAt: Date;
             completedAt: Date | null;
             passedAt: Date | null;
             productId: string;
             userId: string;
-            workflowStageId: string | null;
         })[];
         qualityChecks: ({
             checkedBy: {
@@ -321,12 +321,12 @@ export declare class ProductsService {
             updatedAt: Date;
             status: import(".prisma/client").$Enums.TaskStatus;
             notes: string | null;
+            workflowStageId: string | null;
             startedAt: Date;
             completedAt: Date | null;
             passedAt: Date | null;
             productId: string;
             userId: string;
-            workflowStageId: string | null;
         })[];
     } & {
         id: string;
@@ -411,12 +411,12 @@ export declare class ProductsService {
             updatedAt: Date;
             status: import(".prisma/client").$Enums.TaskStatus;
             notes: string | null;
+            workflowStageId: string | null;
             startedAt: Date;
             completedAt: Date | null;
             passedAt: Date | null;
             productId: string;
             userId: string;
-            workflowStageId: string | null;
         })[];
     } & {
         id: string;
@@ -476,12 +476,12 @@ export declare class ProductsService {
             updatedAt: Date;
             status: import(".prisma/client").$Enums.TaskStatus;
             notes: string | null;
+            workflowStageId: string | null;
             startedAt: Date;
             completedAt: Date | null;
             passedAt: Date | null;
             productId: string;
             userId: string;
-            workflowStageId: string | null;
         })[];
         qualityChecks: ({
             checkedBy: {
@@ -546,12 +546,12 @@ export declare class ProductsService {
         updatedAt: Date;
         status: import(".prisma/client").$Enums.TaskStatus;
         notes: string | null;
+        workflowStageId: string | null;
         startedAt: Date;
         completedAt: Date | null;
         passedAt: Date | null;
         productId: string;
         userId: string;
-        workflowStageId: string | null;
     })[]>;
     private validateStageTransition;
     private updateOrderStatus;

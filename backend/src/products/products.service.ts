@@ -89,17 +89,25 @@ export class ProductsService {
       throw new NotFoundException("Заказ не найден");
     }
 
-    // Получаем первую активную стадию workflow
-    const firstWorkflowStage = await this.prisma.workflowStage.findFirst({
-      where: { isActive: true },
-      orderBy: { order: "asc" },
-      include: {
-        roles: { include: { role: true } },
-      },
-    });
+    // Получаем стартовую стадию: либо заданную явно (для готовых заготовок),
+    // либо первую активную стадию workflow.
+    const firstWorkflowStage = createProductDto.startStage
+      ? await this.prisma.workflowStage.findFirst({
+          where: { isActive: true, legacyStage: createProductDto.startStage },
+          include: { roles: { include: { role: true } } },
+        })
+      : await this.prisma.workflowStage.findFirst({
+          where: { isActive: true },
+          orderBy: { order: "asc" },
+          include: { roles: { include: { role: true } } },
+        });
 
     if (!firstWorkflowStage) {
-      throw new NotFoundException("Не найдены активные стадии workflow");
+      throw new NotFoundException(
+        createProductDto.startStage
+          ? `Стадия ${createProductDto.startStage} не найдена или неактивна`
+          : "Не найдены активные стадии workflow",
+      );
     }
 
     // Получаем работников первой стадии

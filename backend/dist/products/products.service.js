@@ -81,15 +81,20 @@ let ProductsService = ProductsService_1 = class ProductsService {
         if (!order) {
             throw new common_1.NotFoundException("Заказ не найден");
         }
-        const firstWorkflowStage = await this.prisma.workflowStage.findFirst({
-            where: { isActive: true },
-            orderBy: { order: "asc" },
-            include: {
-                roles: { include: { role: true } },
-            },
-        });
+        const firstWorkflowStage = createProductDto.startStage
+            ? await this.prisma.workflowStage.findFirst({
+                where: { isActive: true, legacyStage: createProductDto.startStage },
+                include: { roles: { include: { role: true } } },
+            })
+            : await this.prisma.workflowStage.findFirst({
+                where: { isActive: true },
+                orderBy: { order: "asc" },
+                include: { roles: { include: { role: true } } },
+            });
         if (!firstWorkflowStage) {
-            throw new common_1.NotFoundException("Не найдены активные стадии workflow");
+            throw new common_1.NotFoundException(createProductDto.startStage
+                ? `Стадия ${createProductDto.startStage} не найдена или неактивна`
+                : "Не найдены активные стадии workflow");
         }
         const roleIds = firstWorkflowStage.roles.map((r) => r.roleId) || [];
         const workers = roleIds.length > 0
