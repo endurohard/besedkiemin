@@ -31,6 +31,7 @@ import { RolesModule } from "./roles/roles.module";
 import { OrderSourcesModule } from "./order-sources/order-sources.module";
 import { PayrollModule } from "./payroll/payroll.module";
 import { NotificationsModule } from "./notifications/notifications.module";
+import { DepartmentPresetsModule } from "./department-presets/department-presets.module";
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { NotificationsModule } from "./notifications/notifications.module";
     OrderSourcesModule,
     PayrollModule,
     NotificationsModule,
+    DepartmentPresetsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

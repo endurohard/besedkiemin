@@ -323,7 +323,12 @@ const WorkerTaskCard = ({
   isCompleting: boolean;
 }) => {
   const [viewerOpen, setViewerOpen] = useState(false);
-  const schemaUrl = task.product?.schemaImageUrl;
+  const schemaGallery = task.product?.schemaImageUrls && task.product.schemaImageUrls.length > 0
+    ? task.product.schemaImageUrls
+    : task.product?.schemaImageUrl
+      ? [task.product.schemaImageUrl]
+      : [];
+  const schemaUrl = schemaGallery[0];
 
   const isCustom = !!task.product?.isCustom;
 
@@ -435,8 +440,8 @@ const WorkerTaskCard = ({
         </div>
       )}
 
-      {viewerOpen && schemaUrl && (
-        <SchemaImageViewer src={schemaUrl} onClose={() => setViewerOpen(false)} />
+      {viewerOpen && schemaGallery.length > 0 && (
+        <SchemaImageViewer images={schemaGallery} onClose={() => setViewerOpen(false)} />
       )}
     </div>
   );

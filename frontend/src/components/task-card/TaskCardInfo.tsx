@@ -54,28 +54,37 @@ export const TaskCardInfo = ({ task, isPainter, isSewer }: TaskCardInfoProps) =>
         </div>
       )}
 
-      {task.product.schemaImageUrl && (
-        <div className="mt-1 pt-1 border-t">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setViewerOpen(true);
-            }}
-            className="text-[10px] text-primary hover:text-blue-800 underline flex items-center gap-0.5"
-          >
-            <Package size={10} />
-            Схема
-          </button>
-        </div>
-      )}
-
-      {viewerOpen && task.product.schemaImageUrl && (
-        <SchemaImageViewer
-          src={task.product.schemaImageUrl}
-          onClose={() => setViewerOpen(false)}
-        />
-      )}
+      {(() => {
+        const gallery = (task.product.schemaImageUrls && task.product.schemaImageUrls.length > 0
+          ? task.product.schemaImageUrls
+          : task.product.schemaImageUrl
+            ? [task.product.schemaImageUrl]
+            : []);
+        if (gallery.length === 0) return null;
+        return (
+          <>
+            <div className="mt-1 pt-1 border-t">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewerOpen(true);
+                }}
+                className="text-[10px] text-primary hover:text-blue-800 underline flex items-center gap-0.5"
+              >
+                <Package size={10} />
+                Схема{gallery.length > 1 ? ` (${gallery.length})` : ''}
+              </button>
+            </div>
+            {viewerOpen && (
+              <SchemaImageViewer
+                images={gallery}
+                onClose={() => setViewerOpen(false)}
+              />
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 };

@@ -53,6 +53,18 @@ __decorate([
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "schemaImageUrl", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        type: [String],
+        required: false,
+        description: "Галерея фото схем (до 10 штук)",
+    }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayMaxSize)(10),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], CreateProductDto.prototype, "schemaImageUrls", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ example: "uuid-order-id" }),
     (0, class_validator_1.IsUUID)(),
     (0, class_validator_1.IsNotEmpty)(),

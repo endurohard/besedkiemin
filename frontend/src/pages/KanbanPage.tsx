@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi, productsApi, tasksApi, productTypesApi, nomenclatureApi, uploadApi, usersApi } from '@/lib/api';
+import { resizeImageFiles } from '@/lib/image-resize';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -24,7 +25,9 @@ interface ProductEditForm {
   upholsteryMaterial?: string;
   description?: string;
   schemaImageUrl?: string;
+  schemaImageUrls?: string[];
   schemaFile?: File;
+  schemaFiles?: File[];
   isCustom?: boolean;
   stageAssignments?: Record<string, string>;
   isNew?: boolean; // flag for new products
@@ -45,7 +48,8 @@ export const KanbanPage = () => {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [viewerImage, setViewerImage] = useState<string | null>(null);
+  const [viewerImages, setViewerImages] = useState<{ images: string[]; index: number } | null>(null);
+  const [stageDetailsFor, setStageDetailsFor] = useState<ProductionStage | null>(null);
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders'],
@@ -196,6 +200,7 @@ export const KanbanPage = () => {
       upholsteryMaterial: p.upholsteryMaterial || '',
       description: p.description || '',
       schemaImageUrl: p.schemaImageUrl || '',
+      schemaImageUrls: p.schemaImageUrls ?? [],
       isCustom: !!p.isCustom,
       isNew: false,
       stage: p.stage,
@@ -223,6 +228,7 @@ export const KanbanPage = () => {
         upholsteryMaterial: '',
         description: '',
         schemaImageUrl: '',
+        schemaImageUrls: [],
         isCustom: false,
         stageAssignments: {},
         isNew: true,
@@ -299,17 +305,25 @@ export const KanbanPage = () => {
 
       // 3. Update existing products and create new ones
       for (const product of editProducts) {
+        let schemaImageUrls: string[] = product.schemaImageUrls ?? [];
+        const filesToUpload = product.schemaFiles && product.schemaFiles.length > 0
+          ? product.schemaFiles
+          : product.schemaFile
+            ? [product.schemaFile]
+            : [];
+        if (filesToUpload.length > 0) {
+          try {
+            const resized = await resizeImageFiles(filesToUpload);
+            const uploaded = await uploadApi.uploadSchemaImages(resized);
+            schemaImageUrls = [...schemaImageUrls, ...uploaded.urls];
+          } catch (err) {
+            console.warn('Не удалось загрузить фото схем:', err);
+          }
+        }
+        const schemaImageUrl = schemaImageUrls[0] || product.schemaImageUrl || undefined;
+
         if (product.isNew) {
           if (product.name.trim() && product.productTypeId) {
-            let schemaImageUrl = product.schemaImageUrl;
-            if (product.schemaFile) {
-              try {
-                const uploadResult = await uploadApi.uploadSchemaImage(product.schemaFile);
-                schemaImageUrl = uploadResult.url;
-              } catch (err) {
-                console.warn('Не удалось загрузить фото схемы, продукт будет создан без неё:', err);
-              }
-            }
             await createProductMutation.mutateAsync({
               name: product.name,
               productTypeId: product.productTypeId,
@@ -319,21 +333,13 @@ export const KanbanPage = () => {
               color: product.color || undefined,
               upholsteryMaterial: product.upholsteryMaterial || undefined,
               description: product.description || undefined,
-              schemaImageUrl: schemaImageUrl || undefined,
+              schemaImageUrl,
+              schemaImageUrls,
               isCustom: product.isCustom || undefined,
               stageAssignments: product.stageAssignments && Object.keys(product.stageAssignments).length > 0 ? product.stageAssignments : undefined,
             });
           }
         } else if (product.id) {
-          let schemaImageUrl = product.schemaImageUrl;
-          if (product.schemaFile) {
-            try {
-              const uploadResult = await uploadApi.uploadSchemaImage(product.schemaFile);
-              schemaImageUrl = uploadResult.url;
-            } catch (err) {
-              console.warn('Не удалось загрузить фото схемы:', err);
-            }
-          }
           await updateProductMutation.mutateAsync({
             id: product.id,
             data: {
@@ -344,7 +350,8 @@ export const KanbanPage = () => {
               color: product.color || undefined,
               upholsteryMaterial: product.upholsteryMaterial || undefined,
               description: product.description || undefined,
-              schemaImageUrl: schemaImageUrl || undefined,
+              schemaImageUrl,
+              schemaImageUrls,
               isCustom: product.isCustom ?? false,
             },
           });
@@ -949,9 +956,11 @@ export const KanbanPage = () => {
             {allowedStages.map((stage) => {
               const stageProducts = getProductsByStage(stage);
               return (
-                <div
+                <button
                   key={stage}
-                  className={`p-2 rounded-lg ${getStageColor(stage)} transition-all`}
+                  type="button"
+                  onClick={() => setStageDetailsFor(stage)}
+                  className={`w-full text-left p-2 rounded-lg ${getStageColor(stage)} transition-all hover:ring-2 hover:ring-primary/40 cursor-pointer`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-xs">{getStageName(stage)}</span>
@@ -974,7 +983,7 @@ export const KanbanPage = () => {
                       )}
                     </div>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -1156,22 +1165,37 @@ export const KanbanPage = () => {
                                     </div>
                                   )}
 
-                                  {product.schemaImageUrl && (
-                                    <div>
-                                      <div className="text-xs font-medium text-muted-foreground mb-1">Схема / фото:</div>
-                                      <button
-                                        type="button"
-                                        onClick={() => setViewerImage(product.schemaImageUrl!)}
-                                        className="block cursor-zoom-in"
-                                      >
-                                        <img
-                                          src={product.schemaImageUrl}
-                                          alt="Схема"
-                                          className="max-h-48 rounded-md border border-border object-contain bg-card hover:border-primary transition-colors"
-                                        />
-                                      </button>
-                                    </div>
-                                  )}
+                                  {(() => {
+                                    const gallery = (product.schemaImageUrls && product.schemaImageUrls.length > 0
+                                      ? product.schemaImageUrls
+                                      : product.schemaImageUrl
+                                        ? [product.schemaImageUrl]
+                                        : []);
+                                    if (gallery.length === 0) return null;
+                                    return (
+                                      <div>
+                                        <div className="text-xs font-medium text-muted-foreground mb-1">
+                                          Схема / фото {gallery.length > 1 ? `(${gallery.length})` : ''}:
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                          {gallery.map((url, i) => (
+                                            <button
+                                              key={i}
+                                              type="button"
+                                              onClick={() => setViewerImages({ images: gallery, index: i })}
+                                              className="block cursor-zoom-in"
+                                            >
+                                              <img
+                                                src={url}
+                                                alt={`Схема ${i + 1}`}
+                                                className="h-24 rounded-md border border-border object-cover bg-card hover:border-primary transition-colors"
+                                              />
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
 
                                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                                     {product.dimensions && (
@@ -1532,45 +1556,86 @@ export const KanbanPage = () => {
                           />
                         </div>
 
-                        <div>
-                          <label className="block text-xs font-medium text-foreground mb-1">Фото / схема</label>
-                          <div className="flex items-center gap-2">
-                            <label className="flex items-center gap-1 px-3 py-1.5 border border-dashed rounded-md text-xs cursor-pointer hover:bg-muted/50">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleUpdateProductField(index, 'schemaFile', file);
-                                }}
-                              />
-                              {product.schemaFile ? product.schemaFile.name : 'Загрузить файл'}
-                            </label>
-                            {product.schemaImageUrl && !product.schemaFile && (
-                              <a
-                                href={product.schemaImageUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-xs text-primary hover:underline"
-                              >
-                                Текущее фото
-                              </a>
-                            )}
-                            {(product.schemaFile || product.schemaImageUrl) && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  handleUpdateProductField(index, 'schemaFile', undefined);
-                                  handleUpdateProductField(index, 'schemaImageUrl', '');
-                                }}
-                                className="text-xs text-red-500 hover:underline"
-                              >
-                                Убрать
-                              </button>
-                            )}
-                          </div>
-                        </div>
+                        {(() => {
+                          const existingUrls = product.schemaImageUrls ?? [];
+                          const pendingFiles = product.schemaFiles ?? [];
+                          const totalCount = existingUrls.length + pendingFiles.length;
+                          const canAddMore = totalCount < 10;
+                          return (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="block text-xs font-medium text-foreground">Фото / схемы (до 10)</label>
+                                <span className="text-xs text-muted-foreground">{totalCount}/10</span>
+                              </div>
+                              {totalCount > 0 && (
+                                <div className="grid grid-cols-5 gap-2 mb-2">
+                                  {existingUrls.map((url, urlIdx) => (
+                                    <div key={`url-${urlIdx}`} className="relative group aspect-square">
+                                      <img
+                                        src={url}
+                                        alt=""
+                                        className="w-full h-full object-cover rounded-md border border-border cursor-zoom-in"
+                                        onClick={() => setViewerImages({ images: existingUrls, index: urlIdx })}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = existingUrls.filter((_, i) => i !== urlIdx);
+                                          handleUpdateProductField(index, 'schemaImageUrls', next);
+                                          if (product.schemaImageUrl === url) {
+                                            handleUpdateProductField(index, 'schemaImageUrl', next[0] || '');
+                                          }
+                                        }}
+                                        className="absolute top-1 right-1 px-1 py-0.5 text-[10px] bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  ))}
+                                  {pendingFiles.map((file, fileIdx) => (
+                                    <div key={`file-${fileIdx}`} className="relative group aspect-square">
+                                      <img
+                                        src={URL.createObjectURL(file)}
+                                        alt=""
+                                        className="w-full h-full object-cover rounded-md border-2 border-amber-400"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = pendingFiles.filter((_, i) => i !== fileIdx);
+                                          handleUpdateProductField(index, 'schemaFiles', next);
+                                        }}
+                                        className="absolute top-1 right-1 px-1 py-0.5 text-[10px] bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {canAddMore && (
+                                <label className="flex items-center justify-center gap-2 px-3 py-1.5 border border-dashed rounded-md text-xs cursor-pointer hover:bg-muted/50">
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const incoming = Array.from(e.target.files ?? []);
+                                      if (incoming.length === 0) return;
+                                      const slotsLeft = Math.max(0, 10 - totalCount);
+                                      const next = [...pendingFiles, ...incoming.slice(0, slotsLeft)];
+                                      handleUpdateProductField(index, 'schemaFiles', next);
+                                      e.target.value = '';
+                                    }}
+                                  />
+                                  {totalCount === 0 ? 'Загрузить фото' : 'Добавить ещё'}
+                                </label>
+                              )}
+                              <p className="text-[10px] text-muted-foreground mt-1">Сжатие до 1024×768, макс. 5MB каждое</p>
+                            </div>
+                          );
+                        })()}
 
                         {/* Stage assignments for new products */}
                         {product.isNew && (
@@ -1639,8 +1704,104 @@ export const KanbanPage = () => {
         onClose={() => setIsCreateOrderModalOpen(false)}
       />
 
-      {viewerImage && (
-        <SchemaImageViewer src={viewerImage} onClose={() => setViewerImage(null)} />
+      {viewerImages && (
+        <SchemaImageViewer
+          images={viewerImages.images}
+          initialIndex={viewerImages.index}
+          onClose={() => setViewerImages(null)}
+        />
+      )}
+
+      {stageDetailsFor && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setStageDetailsFor(null)}
+        >
+          <div
+            className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
+              <div>
+                <h2 className="text-lg font-bold">{getStageName(stageDetailsFor)}</h2>
+                <p className="text-xs text-muted-foreground">
+                  В работе: {getProductsByStage(stageDetailsFor).length} поз.
+                </p>
+              </div>
+              <button
+                onClick={() => setStageDetailsFor(null)}
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="Закрыть"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4">
+              {getProductsByStage(stageDetailsFor).length === 0 ? (
+                <div className="text-center text-sm text-muted-foreground py-8">
+                  Нет позиций на этом этапе
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {getProductsByStage(stageDetailsFor).map((product) => {
+                    const activeTask = product.tasks?.find(
+                      (t) => t.stage === stageDetailsFor && !t.isDefect,
+                    );
+                    const worker = activeTask?.assignedTo;
+                    const orderNumber = product.order?.orderNumber;
+                    const customerName = product.order?.customerName;
+                    const isAccepted = activeTask?.status === 'ACCEPTED';
+                    return (
+                      <div
+                        key={product.id}
+                        className="p-3 rounded-lg border hover:bg-muted/40 flex items-start justify-between gap-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium truncate">{product.name}</span>
+                            {product.quantity > 1 && (
+                              <span className="text-xs text-muted-foreground">
+                                × {product.quantity}
+                              </span>
+                            )}
+                            <span
+                              className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                                isAccepted
+                                  ? 'bg-primary/15 text-primary'
+                                  : 'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              {isAccepted ? 'В работе' : 'Ожидает'}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {orderNumber && <span className="font-mono">{orderNumber}</span>}
+                            {customerName && <span> · {customerName}</span>}
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          {worker ? (
+                            <div className="flex items-center gap-1.5 text-sm">
+                              <UserIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span className="truncate">
+                                {worker.lastName} {worker.firstName}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">
+                              Не назначен
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

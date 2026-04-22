@@ -40,6 +40,7 @@ const roles_module_1 = require("./roles/roles.module");
 const order_sources_module_1 = require("./order-sources/order-sources.module");
 const payroll_module_1 = require("./payroll/payroll.module");
 const notifications_module_1 = require("./notifications/notifications.module");
+const department_presets_module_1 = require("./department-presets/department-presets.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -83,6 +84,7 @@ exports.AppModule = AppModule = __decorate([
             order_sources_module_1.OrderSourcesModule,
             payroll_module_1.PayrollModule,
             notifications_module_1.NotificationsModule,
+            department_presets_module_1.DepartmentPresetsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

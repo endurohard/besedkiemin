@@ -279,6 +279,7 @@ export interface Product {
   quantity: number;
   dimensions?: string;
   schemaImageUrl?: string;
+  schemaImageUrls?: string[];
   stage: ProductionStage;
   orderId: string;
   deadline?: string;
@@ -419,6 +420,7 @@ export interface CreateProductDto {
   deadline?: string;
   dimensions?: string;
   schemaImageUrl?: string;
+  schemaImageUrls?: string[];
   requiresSewing?: boolean | null;
   color?: string; // Цвет/покрытие (для маляра)
   upholsteryMaterial?: string; // Материал обшивки (для швеи)

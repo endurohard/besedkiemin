@@ -1,6 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { ProductionStage } from "@prisma/client";
 import {
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
   IsEnum,
   IsInt,
@@ -41,6 +43,17 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   schemaImageUrl?: string;
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description: "Галерея фото схем (до 10 штук)",
+  })
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  @IsOptional()
+  schemaImageUrls?: string[];
 
   @ApiProperty({ example: "uuid-order-id" })
   @IsUUID()

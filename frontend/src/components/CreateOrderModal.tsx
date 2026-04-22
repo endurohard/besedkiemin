@@ -5,8 +5,9 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { AddressInput } from './AddressInput';
 import { CustomerNameInput } from './CustomerNameInput';
-import { X, Upload, Image as ImageIcon } from 'lucide-react';
+import { X, Upload, Trash2 } from 'lucide-react';
 import { OrderPriority, Nomenclature, User } from '@/types';
+import { resizeImageFiles } from '@/lib/image-resize';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
@@ -74,7 +75,8 @@ interface ProductFormData {
   quantity: number;
   dimensions?: string;
   schemaImageUrl?: string;
-  schemaFile?: File;
+  schemaImageUrls?: string[];
+  schemaFiles?: File[];
   requiresSewing?: boolean | null; // null = берётся из типа продукта
   color?: string; // Цвет/покрытие (для маляра)
   upholsteryMaterial?: string; // Материал обшивки (для швеи)
@@ -160,16 +162,18 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
       // Создаем продукты для заказа (если есть)
       if (orderData.products && orderData.products.length > 0) {
         for (const product of orderData.products) {
-          // Загружаем фото схемы, если есть
-          let schemaImageUrl = product.schemaImageUrl;
-          if (product.schemaFile) {
+          // Загружаем фото схем (галерея до 10), если есть
+          let schemaImageUrls: string[] = product.schemaImageUrls ?? [];
+          if (product.schemaFiles && product.schemaFiles.length > 0) {
             try {
-              const uploadResult = await uploadApi.uploadSchemaImage(product.schemaFile);
-              schemaImageUrl = uploadResult.url;
+              const resized = await resizeImageFiles(product.schemaFiles);
+              const uploaded = await uploadApi.uploadSchemaImages(resized);
+              schemaImageUrls = [...schemaImageUrls, ...uploaded.urls];
             } catch (err) {
-              console.warn('Не удалось загрузить фото схемы, продукт будет создан без неё:', err);
+              console.warn('Не удалось загрузить фото схем, позиция будет создана без них:', err);
             }
           }
+          const schemaImageUrl = schemaImageUrls[0] ?? product.schemaImageUrl;
 
           const payload = {
             name: product.name,
@@ -177,6 +181,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             quantity: product.quantity,
             dimensions: product.dimensions,
             schemaImageUrl,
+            schemaImageUrls,
             orderId: order.id,
             requiresSewing: product.requiresSewing,
             color: product.color || undefined,
@@ -304,12 +309,35 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     });
   }, []);
 
-  const handleFileChange = (index: number, file: File | null) => {
-    if (file) {
-      const updated = [...products];
-      updated[index] = { ...updated[index], schemaFile: file };
-      setProducts(updated);
-    }
+  const handleFilesAdd = (index: number, fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    setProducts((prev) => {
+      const updated = [...prev];
+      const current = updated[index].schemaFiles ?? [];
+      const existingUrls = updated[index].schemaImageUrls ?? [];
+      const slotsLeft = Math.max(0, 10 - current.length - existingUrls.length);
+      const incoming = Array.from(fileList).slice(0, slotsLeft);
+      updated[index] = { ...updated[index], schemaFiles: [...current, ...incoming] };
+      return updated;
+    });
+  };
+
+  const handleFileRemove = (index: number, fileIdx: number) => {
+    setProducts((prev) => {
+      const updated = [...prev];
+      const current = updated[index].schemaFiles ?? [];
+      updated[index] = { ...updated[index], schemaFiles: current.filter((_, i) => i !== fileIdx) };
+      return updated;
+    });
+  };
+
+  const handleExistingRemove = (index: number, urlIdx: number) => {
+    setProducts((prev) => {
+      const updated = [...prev];
+      const urls = updated[index].schemaImageUrls ?? [];
+      updated[index] = { ...updated[index], schemaImageUrls: urls.filter((_, i) => i !== urlIdx) };
+      return updated;
+    });
   };
 
   if (!isOpen) return null;
@@ -759,34 +787,83 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Фото схемы
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
-                      <Upload size={16} />
-                      <span className="text-sm">
-                        {product.schemaFile ? product.schemaFile.name : 'Выбрать файл'}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileChange(index, file);
-                        }}
-                      />
-                    </label>
-                    {product.schemaFile && (
-                      <div className="text-green-600">
-                        <ImageIcon size={20} />
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Загрузите фото схемы для производственников (макс. 5MB)
-                  </p>
+                  {(() => {
+                    const existingUrls = product.schemaImageUrls ?? [];
+                    const pendingFiles = product.schemaFiles ?? [];
+                    const totalCount = existingUrls.length + pendingFiles.length;
+                    const canAddMore = totalCount < 10;
+                    return (
+                      <>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-medium text-gray-700">
+                            Фото схемы (до 10)
+                          </label>
+                          <span className="text-xs text-muted-foreground">{totalCount}/10</span>
+                        </div>
+
+                        {totalCount > 0 && (
+                          <div className="grid grid-cols-5 gap-2 mb-2">
+                            {existingUrls.map((url, urlIdx) => (
+                              <div key={`url-${urlIdx}`} className="relative group aspect-square">
+                                <img
+                                  src={url}
+                                  alt=""
+                                  className="w-full h-full object-cover rounded-md border border-border"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleExistingRemove(index, urlIdx)}
+                                  className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                  aria-label="Удалить фото"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            ))}
+                            {pendingFiles.map((file, fileIdx) => (
+                              <div key={`file-${fileIdx}`} className="relative group aspect-square">
+                                <img
+                                  src={URL.createObjectURL(file)}
+                                  alt=""
+                                  className="w-full h-full object-cover rounded-md border-2 border-amber-400"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleFileRemove(index, fileIdx)}
+                                  className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                  aria-label="Удалить фото"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {canAddMore && (
+                          <label className="flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-border rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+                            <Upload size={16} />
+                            <span className="text-sm">
+                              {totalCount === 0 ? 'Выбрать фото' : 'Добавить ещё'}
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => {
+                                handleFilesAdd(index, e.target.files);
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Фото сжимаются до 1024×768 перед загрузкой (макс. 5MB каждое)
+                        </p>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             ))}

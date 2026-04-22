@@ -8,4 +8,13 @@ export declare class UploadController {
         originalName: string;
         size: number;
     }>;
+    uploadSchemaImages(files: Express.Multer.File[]): Promise<{
+        urls: string[];
+        files: {
+            url: string;
+            filename: string;
+            originalName: string;
+            size: number;
+        }[];
+    }>;
 }

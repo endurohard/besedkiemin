@@ -6,6 +6,7 @@ export declare class CreateProductDto {
     quantity: number;
     dimensions?: string;
     schemaImageUrl?: string;
+    schemaImageUrls?: string[];
     orderId: string;
     deadline?: Date;
     requiresSewing?: boolean | null;

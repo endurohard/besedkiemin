@@ -16,6 +16,7 @@ const auth_controller_1 = require("./auth.controller");
 const users_module_1 = require("../users/users.module");
 const telegram_module_1 = require("../telegram/telegram.module");
 const prisma_module_1 = require("../prisma/prisma.module");
+const department_presets_module_1 = require("../department-presets/department-presets.module");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const local_strategy_1 = require("./strategies/local.strategy");
 const roles_guard_1 = require("./guards/roles.guard");
@@ -29,6 +30,7 @@ exports.AuthModule = AuthModule = __decorate([
             users_module_1.UsersModule,
             telegram_module_1.TelegramModule,
             prisma_module_1.PrismaModule,
+            department_presets_module_1.DepartmentPresetsModule,
             passport_1.PassportModule,
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],

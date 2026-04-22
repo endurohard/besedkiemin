@@ -21,6 +21,7 @@ import { Roles } from "./decorators/roles.decorator";
 import { CurrentUser } from "./decorators/current-user.decorator";
 import { TelegramService } from "../telegram/telegram.service";
 import { UsersService } from "../users/users.service";
+import { DepartmentPresetsService } from "../department-presets/department-presets.service";
 import { AuthenticatedUser } from "./strategies/jwt.strategy";
 
 @ApiTags("Auth")
@@ -30,6 +31,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly telegramService: TelegramService,
     private readonly usersService: UsersService,
+    private readonly departmentPresetsService: DepartmentPresetsService,
   ) {}
 
   @UseGuards(ThrottlerGuard, LocalAuthGuard)
@@ -38,6 +40,27 @@ export class AuthController {
   @ApiOperation({ summary: "Вход в систему" })
   async login(@Body() loginDto: LoginDto, @Request() req) {
     return this.authService.login(req.user);
+  }
+
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @Post("quick-login")
+  @ApiOperation({
+    summary: "Быстрый вход по коду кнопки отдела (публичный)",
+  })
+  async quickLogin(@Body() body: { code: string }) {
+    if (!body?.code) {
+      throw new BadRequestException("Код пресета обязателен");
+    }
+    const preset = await this.departmentPresetsService.findByCodeActive(
+      body.code,
+    );
+    if (!preset || !preset.user || !preset.user.isActive) {
+      throw new UnauthorizedException(
+        "Быстрый вход для этого отдела недоступен",
+      );
+    }
+    return this.authService.login(preset.user);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1087,6 +1087,7 @@ export class TasksService {
           orderId: task.product.orderId,
           dimensions: task.product.dimensions,
           schemaImageUrl: task.product.schemaImageUrl,
+          schemaImageUrls: task.product.schemaImageUrls ?? [],
           deadline: task.product.deadline,
           requiresSewing: task.product.requiresSewing,
           upholsteryMaterial: task.product.upholsteryMaterial,

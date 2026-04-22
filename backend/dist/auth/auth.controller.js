@@ -26,14 +26,26 @@ const roles_decorator_1 = require("./decorators/roles.decorator");
 const current_user_decorator_1 = require("./decorators/current-user.decorator");
 const telegram_service_1 = require("../telegram/telegram.service");
 const users_service_1 = require("../users/users.service");
+const department_presets_service_1 = require("../department-presets/department-presets.service");
 let AuthController = class AuthController {
-    constructor(authService, telegramService, usersService) {
+    constructor(authService, telegramService, usersService, departmentPresetsService) {
         this.authService = authService;
         this.telegramService = telegramService;
         this.usersService = usersService;
+        this.departmentPresetsService = departmentPresetsService;
     }
     async login(loginDto, req) {
         return this.authService.login(req.user);
+    }
+    async quickLogin(body) {
+        if (!body?.code) {
+            throw new common_1.BadRequestException("Код пресета обязателен");
+        }
+        const preset = await this.departmentPresetsService.findByCodeActive(body.code);
+        if (!preset || !preset.user || !preset.user.isActive) {
+            throw new common_1.UnauthorizedException("Быстрый вход для этого отдела недоступен");
+        }
+        return this.authService.login(preset.user);
     }
     getProfile(user) {
         return user;
@@ -111,6 +123,18 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 20, ttl: 60000 } }),
+    (0, common_1.Post)("quick-login"),
+    (0, swagger_1.ApiOperation)({
+        summary: "Быстрый вход по коду кнопки отдела (публичный)",
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "quickLogin", null);
+__decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)("profile"),
     (0, swagger_1.ApiBearerAuth)(),
@@ -184,6 +208,7 @@ exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)("auth"),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
         telegram_service_1.TelegramService,
-        users_service_1.UsersService])
+        users_service_1.UsersService,
+        department_presets_service_1.DepartmentPresetsService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

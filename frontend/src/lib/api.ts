@@ -137,6 +137,75 @@ export const authApi = {
   setUserPin: async (userId: string, pin: string): Promise<void> => {
     await api.post(`/auth/set-pin/${userId}`, { pin });
   },
+
+  quickLogin: async (code: string): Promise<LoginResponse> => {
+    const response = await api.post<LoginResponse>('/auth/quick-login', { code });
+    return response.data;
+  },
+};
+
+// Department login presets (кнопки на странице входа)
+export interface PublicDepartmentPreset {
+  code: string;
+  label: string;
+  color: string;
+  sortOrder: number;
+}
+
+export interface DepartmentPreset {
+  id: string;
+  code: string;
+  label: string;
+  color: string;
+  sortOrder: number;
+  isActive: boolean;
+  userId: string;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    isActive: boolean;
+    role?: { code: string; name: string } | null;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DepartmentPresetPayload {
+  code: string;
+  label: string;
+  userId: string;
+  color?: string;
+  sortOrder?: number;
+  isActive?: boolean;
+  newPassword?: string;
+}
+
+export const departmentPresetsApi = {
+  getPublic: async (): Promise<PublicDepartmentPreset[]> => {
+    const response = await api.get<PublicDepartmentPreset[]>('/department-presets/public');
+    return response.data;
+  },
+
+  getAll: async (): Promise<DepartmentPreset[]> => {
+    const response = await api.get<DepartmentPreset[]>('/department-presets');
+    return response.data;
+  },
+
+  create: async (payload: DepartmentPresetPayload): Promise<DepartmentPreset> => {
+    const response = await api.post<DepartmentPreset>('/department-presets', payload);
+    return response.data;
+  },
+
+  update: async (id: string, payload: Partial<DepartmentPresetPayload>): Promise<DepartmentPreset> => {
+    const response = await api.patch<DepartmentPreset>(`/department-presets/${id}`, payload);
+    return response.data;
+  },
+
+  remove: async (id: string): Promise<void> => {
+    await api.delete(`/department-presets/${id}`);
+  },
 };
 
 // Paginated response type
@@ -619,6 +688,19 @@ export const uploadApi = {
     formData.append('file', file);
 
     const response = await api.post<{ url: string; filename: string }>('/upload/schema-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  uploadSchemaImages: async (files: File[]): Promise<{ urls: string[] }> => {
+    if (files.length === 0) return { urls: [] };
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+
+    const response = await api.post<{ urls: string[] }>('/upload/schema-images', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

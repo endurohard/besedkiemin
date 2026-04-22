@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Eye, EyeOff } from 'lucide-react';
+import { departmentPresetsApi, PublicDepartmentPreset } from '@/lib/api';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [showTelegramLogin, setShowTelegramLogin] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
 
   const {
     login,
+    quickLogin,
     isLoading,
     error,
     isTelegramAuth,
@@ -23,6 +28,13 @@ export const LoginPage = () => {
     resetTelegramAuth,
     user,
   } = useAuthStore();
+
+  const { data: departmentPresets = [] } = useQuery({
+    queryKey: ['department-presets-public'],
+    queryFn: () => departmentPresetsApi.getPublic(),
+    staleTime: 60_000,
+    retry: 1,
+  });
 
   const navigate = useNavigate();
 
@@ -68,15 +80,26 @@ export const LoginPage = () => {
     }
   };
 
-  const handleDepartmentLogin = async (deptEmail: string, deptPassword: string) => {
-    setEmail(deptEmail);
-    setPassword(deptPassword);
+  const handleDepartmentLogin = async (code: string) => {
     try {
-      await login(deptEmail, deptPassword);
+      await quickLogin(code);
     } catch (err) {
       // Ошибка уже обработана в store
     }
   };
+
+  const colorStyles: Record<string, string> = {
+    orange: 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200',
+    green: 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200',
+    blue: 'bg-primary/10 hover:bg-primary/20 text-primary border-blue-200',
+    teal: 'bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200',
+    red: 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200',
+    purple: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200',
+    amber: 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200',
+    gray: 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200',
+  };
+  const getPresetClass = (preset: PublicDepartmentPreset) =>
+    colorStyles[preset.color] ?? colorStyles.blue;
 
   const handleTelegramLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,15 +153,27 @@ export const LoginPage = () => {
                 <label htmlFor="password" className="block text-sm font-medium mb-2">
                   Пароль
                 </label>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               {error && (
@@ -188,45 +223,26 @@ export const LoginPage = () => {
               </div>
 
               {/* Быстрый вход в отдел */}
-              <div className="mt-6 pt-4 border-t">
-                <p className="text-xs text-muted-foreground text-center mb-3">
-                  Выберите отдел
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleDepartmentLogin('preparer@example.com', 'password123')}
-                    disabled={isLoading}
-                    className="p-3 bg-orange-50 hover:bg-orange-100 rounded-lg text-orange-700 font-medium transition-colors border border-orange-200 disabled:opacity-50"
-                  >
-                    Заготовка
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDepartmentLogin('painter@example.com', 'password123')}
-                    disabled={isLoading}
-                    className="p-3 bg-green-50 hover:bg-green-100 rounded-lg text-green-700 font-medium transition-colors border border-green-200 disabled:opacity-50"
-                  >
-                    Малярка
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDepartmentLogin('assembler@example.com', 'password123')}
-                    disabled={isLoading}
-                    className="p-3 bg-primary/10 hover:bg-primary/20 rounded-lg text-primary font-medium transition-colors border border-blue-200 disabled:opacity-50"
-                  >
-                    Сборка
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDepartmentLogin('warehouse@example.com', 'password123')}
-                    disabled={isLoading}
-                    className="p-3 bg-teal-50 hover:bg-teal-100 rounded-lg text-teal-700 font-medium transition-colors border border-teal-200 disabled:opacity-50"
-                  >
-                    Склад
-                  </button>
+              {departmentPresets.length > 0 && (
+                <div className="mt-6 pt-4 border-t">
+                  <p className="text-xs text-muted-foreground text-center mb-3">
+                    Выберите отдел
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {departmentPresets.map((preset) => (
+                      <button
+                        key={preset.code}
+                        type="button"
+                        onClick={() => handleDepartmentLogin(preset.code)}
+                        disabled={isLoading}
+                        className={`p-3 rounded-lg font-medium transition-colors border disabled:opacity-50 ${getPresetClass(preset)}`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </form>
           ) : (
             // Отображение кода Telegram

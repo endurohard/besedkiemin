@@ -548,6 +548,7 @@ export default function ProductionWorkersPage() {
                   if (!q) return true;
                   return (
                     (rate.nomenclature?.name || '').toLowerCase().includes(q) ||
+                    (rate.nomenclature?.sku || '').toLowerCase().includes(q) ||
                     (rate.productType?.name || '').toLowerCase().includes(q) ||
                     (rate.description || '').toLowerCase().includes(q)
                   );
@@ -570,7 +571,14 @@ export default function ProductionWorkersPage() {
                     }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">{title}</div>
+                      <div className="font-medium truncate flex items-center gap-2">
+                        <span className="truncate">{title}</span>
+                        {rate.nomenclature?.sku && (
+                          <span className="shrink-0 text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                            {rate.nomenclature.sku}
+                          </span>
+                        )}
+                      </div>
                       {subtitle && (
                         <div className="text-xs text-muted-foreground">{subtitle}</div>
                       )}

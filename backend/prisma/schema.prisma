@@ -179,6 +179,9 @@ model User {
   payrollPeriods    PayrollPeriod[]
   managerCommission ManagerCommission?
 
+  // Пресеты быстрого входа на LoginPage
+  departmentLoginPresets DepartmentLoginPreset[]
+
   @@index([roleId])
   @@index([isActive])
   @@index([pinLookup])
@@ -348,8 +351,9 @@ model Product {
   description    String?
   quantity       Int             @default(1) // Количество
   dimensions     String? // Размеры продукта (например, "100x50x75 см")
-  schemaImageUrl String?         @map("schema_image_url") // URL к фото схемы для производственников
-  stage          ProductionStage @default(PENDING)
+  schemaImageUrl  String?  @map("schema_image_url") // Legacy: одиночное фото (оставлено для совместимости)
+  schemaImageUrls String[] @default([]) @map("schema_image_urls") // Галерея фото схем (до 10)
+  stage           ProductionStage @default(PENDING)
 
   // Дедлайн
   deadline DateTime?
@@ -1122,4 +1126,32 @@ model ManagerCommission {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("manager_commissions")
+}
+
+// Пресеты быстрого входа для кнопок на странице логина ("Заготовка", "Малярка" и т.д.)
+model DepartmentLoginPreset {
+  id String @id @default(uuid())
+
+  // Уникальный код кнопки (PREPARATION, PAINTING, ASSEMBLY, WAREHOUSE или кастомный)
+  code String @unique
+
+  // Человекочитаемая подпись кнопки
+  label String
+
+  // Пользователь, под которым будет выполнен вход при клике
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  // Цветовая тема (tailwind-подобный идентификатор: orange, green, blue, teal и т.д.)
+  color String @default("blue")
+
+  // Порядок отображения
+  sortOrder Int @default(0) @map("sort_order")
+
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("department_login_presets")
 }

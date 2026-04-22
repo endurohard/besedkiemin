@@ -86,6 +86,7 @@ export declare class OrdersController {
             orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
+            schemaImageUrls: string[];
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
@@ -306,6 +307,7 @@ export declare class OrdersController {
             orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
+            schemaImageUrls: string[];
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
@@ -374,6 +376,7 @@ export declare class OrdersController {
             orderId: string;
             dimensions: string | null;
             schemaImageUrl: string | null;
+            schemaImageUrls: string[];
             deadline: Date | null;
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;

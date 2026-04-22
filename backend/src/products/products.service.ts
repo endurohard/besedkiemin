@@ -44,6 +44,7 @@ export class ProductsService {
           quantity: dto.quantity,
           dimensions: dto.dimensions,
           schemaImageUrl: dto.schemaImageUrl,
+          schemaImageUrls: dto.schemaImageUrls ?? [],
           orderId: dto.orderId,
           deadline: dto.deadline,
           stage: ProductionStage.COMPLETED,
@@ -144,6 +145,7 @@ export class ProductsService {
           quantity: createProductDto.quantity,
           dimensions: createProductDto.dimensions,
           schemaImageUrl: createProductDto.schemaImageUrl,
+          schemaImageUrls: createProductDto.schemaImageUrls ?? [],
           orderId: createProductDto.orderId,
           deadline: createProductDto.deadline,
           stage: firstWorkflowStage.legacyStage!,
@@ -294,6 +296,23 @@ export class ProductsService {
               createdAt: "desc",
             },
             take: 3, // Только последние 3 проверки для списка
+          },
+          tasks: {
+            where: { status: { in: ["NEW", "ACCEPTED"] } },
+            select: {
+              id: true,
+              stage: true,
+              status: true,
+              isDefect: true,
+              assignedTo: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  role: { select: { code: true, name: true } },
+                },
+              },
+            },
           },
         },
         orderBy: {

@@ -7,6 +7,7 @@ import { AuthController } from "./auth.controller";
 import { UsersModule } from "../users/users.module";
 import { TelegramModule } from "../telegram/telegram.module";
 import { PrismaModule } from "../prisma/prisma.module";
+import { DepartmentPresetsModule } from "../department-presets/department-presets.module";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { LocalStrategy } from "./strategies/local.strategy";
 import { RolesGuard } from "./guards/roles.guard";
@@ -17,6 +18,7 @@ import { PermissionsGuard } from "./guards/permissions.guard";
     UsersModule,
     TelegramModule,
     PrismaModule,
+    DepartmentPresetsModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

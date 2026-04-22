@@ -39,6 +39,7 @@ export declare class ProductsController {
         quantity: number;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        schemaImageUrls: string[];
         stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
@@ -86,6 +87,7 @@ export declare class ProductsController {
         quantity: number;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        schemaImageUrls: string[];
         stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
@@ -161,6 +163,21 @@ export declare class ProductsController {
             checkedAt: Date | null;
             checkedById: string | null;
         })[];
+        tasks: {
+            id: string;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            status: import(".prisma/client").$Enums.TaskStatus;
+            isDefect: boolean;
+            assignedTo: {
+                role: {
+                    name: string;
+                    code: string;
+                };
+                id: string;
+                firstName: string;
+                lastName: string;
+            };
+        }[];
     } & {
         id: string;
         name: string;
@@ -168,6 +185,7 @@ export declare class ProductsController {
         quantity: number;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        schemaImageUrls: string[];
         stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
@@ -243,6 +261,21 @@ export declare class ProductsController {
             checkedAt: Date | null;
             checkedById: string | null;
         })[];
+        tasks: {
+            id: string;
+            stage: import(".prisma/client").$Enums.ProductionStage;
+            status: import(".prisma/client").$Enums.TaskStatus;
+            isDefect: boolean;
+            assignedTo: {
+                role: {
+                    name: string;
+                    code: string;
+                };
+                id: string;
+                firstName: string;
+                lastName: string;
+            };
+        }[];
     } & {
         id: string;
         name: string;
@@ -250,6 +283,7 @@ export declare class ProductsController {
         quantity: number;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        schemaImageUrls: string[];
         stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
@@ -337,6 +371,7 @@ export declare class ProductsController {
         quantity: number;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        schemaImageUrls: string[];
         stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
@@ -440,6 +475,7 @@ export declare class ProductsController {
         quantity: number;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        schemaImageUrls: string[];
         stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
@@ -513,6 +549,7 @@ export declare class ProductsController {
         quantity: number;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        schemaImageUrls: string[];
         stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;
@@ -533,6 +570,7 @@ export declare class ProductsController {
         quantity: number;
         dimensions: string | null;
         schemaImageUrl: string | null;
+        schemaImageUrls: string[];
         stage: import(".prisma/client").$Enums.ProductionStage;
         deadline: Date | null;
         requiresSewing: boolean | null;

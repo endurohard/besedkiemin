@@ -44,6 +44,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                     quantity: dto.quantity,
                     dimensions: dto.dimensions,
                     schemaImageUrl: dto.schemaImageUrl,
+                    schemaImageUrls: dto.schemaImageUrls ?? [],
                     orderId: dto.orderId,
                     deadline: dto.deadline,
                     stage: client_1.ProductionStage.COMPLETED,
@@ -122,6 +123,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                     quantity: createProductDto.quantity,
                     dimensions: createProductDto.dimensions,
                     schemaImageUrl: createProductDto.schemaImageUrl,
+                    schemaImageUrls: createProductDto.schemaImageUrls ?? [],
                     orderId: createProductDto.orderId,
                     deadline: createProductDto.deadline,
                     stage: firstWorkflowStage.legacyStage,
@@ -239,6 +241,23 @@ let ProductsService = ProductsService_1 = class ProductsService {
                             createdAt: "desc",
                         },
                         take: 3,
+                    },
+                    tasks: {
+                        where: { status: { in: ["NEW", "ACCEPTED"] } },
+                        select: {
+                            id: true,
+                            stage: true,
+                            status: true,
+                            isDefect: true,
+                            assignedTo: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    role: { select: { code: true, name: true } },
+                                },
+                            },
+                        },
                     },
                 },
                 orderBy: {

@@ -35,6 +35,20 @@ let UploadController = class UploadController {
             size: file.size,
         };
     }
+    async uploadSchemaImages(files) {
+        if (!files || files.length === 0) {
+            throw new common_1.BadRequestException("Файлы не предоставлены");
+        }
+        return {
+            urls: files.map((file) => `/uploads/${file.filename}`),
+            files: files.map((file) => ({
+                url: `/uploads/${file.filename}`,
+                filename: file.filename,
+                originalName: file.originalname,
+                size: file.size,
+            })),
+        };
+    }
 };
 exports.UploadController = UploadController;
 __decorate([
@@ -48,6 +62,17 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UploadController.prototype, "uploadSchemaImage", null);
+__decorate([
+    (0, common_1.Post)("schema-images"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER", "WAREHOUSE"),
+    (0, swagger_1.ApiOperation)({ summary: "Загрузить пачку фото схем (до 10)" }),
+    (0, swagger_1.ApiConsumes)("multipart/form-data"),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)("files", 10)),
+    __param(0, (0, common_1.UploadedFiles)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Array]),
+    __metadata("design:returntype", Promise)
+], UploadController.prototype, "uploadSchemaImages", null);
 exports.UploadController = UploadController = __decorate([
     (0, swagger_1.ApiTags)("Upload"),
     (0, common_1.Controller)("upload"),

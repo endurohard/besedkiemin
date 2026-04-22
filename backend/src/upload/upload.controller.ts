@@ -2,11 +2,12 @@ import {
   Controller,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
   UseGuards,
   BadRequestException,
 } from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import {
   ApiTags,
   ApiOperation,
@@ -42,6 +43,27 @@ export class UploadController {
       filename: file.filename,
       originalName: file.originalname,
       size: file.size,
+    };
+  }
+
+  @Post("schema-images")
+  @Roles("OWNER", "MANAGER", "WAREHOUSE")
+  @ApiOperation({ summary: "Загрузить пачку фото схем (до 10)" })
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FilesInterceptor("files", 10))
+  async uploadSchemaImages(@UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException("Файлы не предоставлены");
+    }
+
+    return {
+      urls: files.map((file) => `/uploads/${file.filename}`),
+      files: files.map((file) => ({
+        url: `/uploads/${file.filename}`,
+        filename: file.filename,
+        originalName: file.originalname,
+        size: file.size,
+      })),
     };
   }
 }

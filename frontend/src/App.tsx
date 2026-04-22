@@ -29,6 +29,7 @@ const RolesPage = lazy(() => import('./pages/RolesPage'));
 const PayrollPage = lazy(() => import('./pages/PayrollPage'));
 const ProductionWorkersPage = lazy(() => import('./pages/ProductionWorkersPage'));
 const MyEarningsPage = lazy(() => import('./pages/MyEarningsPage').then(m => ({ default: m.MyEarningsPage })));
+const DepartmentPresetsPage = lazy(() => import('./pages/DepartmentPresetsPage').then(m => ({ default: m.DepartmentPresetsPage })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -275,6 +276,14 @@ function App() {
                 <OwnerRoute>
                   <ProductionWorkersPage />
                 </OwnerRoute>
+              }
+            />
+            <Route
+              path="/app/department-presets"
+              element={
+                <ManagerOwnerRoute>
+                  <DepartmentPresetsPage />
+                </ManagerOwnerRoute>
               }
             />
           </Routes>

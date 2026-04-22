@@ -25,6 +25,7 @@ import {
   Globe,
   User,
   KeyRound,
+  DoorOpen,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -327,6 +328,11 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
         )}
         {hasPermission('settings:view') && (
           <NavLink to="/app/company-settings" icon={Settings} label="Настройки" />
+        )}
+
+        {/* Быстрый вход отделов — OWNER/SUPER_ADMIN/MANAGER */}
+        {(userRole === 'OWNER' || userRole === 'SUPER_ADMIN' || userRole === 'MANAGER') && (
+          <NavLink to="/app/department-presets" icon={DoorOpen} label="Вход отделов" />
         )}
 
         {/* Feature Flags - только SUPER_ADMIN */}
