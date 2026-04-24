@@ -116,8 +116,6 @@ export class AnalyticsService {
 
   // Производительность по сотрудникам (оптимизированный)
   async getUserPerformance() {
-    // Получаем пользователей с агрегированной статистикой productHistory
-    // Исключаем SUPER_ADMIN - это технический аккаунт
     const users = await this.prisma.user.findMany({
       where: {
         isActive: true,
@@ -136,28 +134,45 @@ export class AnalyticsService {
             product: {
               select: {
                 name: true,
-                order: {
-                  select: {
-                    orderNumber: true,
-                  },
-                },
+                order: { select: { orderNumber: true } },
               },
             },
           },
         },
+        // Активные задачи из Task-системы
+        tasks: {
+          where: {
+            status: { in: ["ACCEPTED", "NEW"] },
+            isDefect: false,
+          },
+          select: {
+            stage: true,
+            acceptedAt: true,
+            product: {
+              select: {
+                name: true,
+                order: { select: { orderNumber: true } },
+              },
+            },
+          },
+          take: 1,
+          orderBy: { acceptedAt: "desc" },
+        },
       },
     });
 
-    // Обрабатываем данные в памяти без дополнительных запросов
     const userStats = users.map((user) => {
       const completedHistory = user.productHistory.filter(
         (h) => h.completedAt !== null,
       );
+
+      // Активная задача: сначала ищем незакрытую productHistory (старый flow),
+      // затем ищем Task со статусом ACCEPTED/NEW (новый flow)
       const activeHistory = user.productHistory.find(
         (h) => h.completedAt === null,
       );
+      const activeTask = user.tasks[0] ?? null;
 
-      // Среднее время выполнения
       let avgTaskDuration = 0;
       if (completedHistory.length > 0) {
         const totalDuration = completedHistory.reduce((sum, task) => {
@@ -169,6 +184,8 @@ export class AnalyticsService {
         );
       }
 
+      const resolvedActive = activeHistory ?? activeTask;
+
       return {
         user: {
           id: user.id,
@@ -178,13 +195,16 @@ export class AnalyticsService {
         stats: {
           completedTasks: completedHistory.length,
           avgTaskDurationHours: avgTaskDuration,
-          hasActiveTask: !!activeHistory,
-          activeTask: activeHistory
+          hasActiveTask: !!resolvedActive,
+          activeTask: resolvedActive
             ? {
-                productName: activeHistory.product.name,
-                orderNumber: activeHistory.product.order.orderNumber,
-                stage: activeHistory.stage,
-                startedAt: activeHistory.startedAt,
+                productName: resolvedActive.product.name,
+                orderNumber: resolvedActive.product.order.orderNumber,
+                stage: resolvedActive.stage,
+                startedAt:
+                  "startedAt" in resolvedActive
+                    ? resolvedActive.startedAt
+                    : (resolvedActive.acceptedAt ?? new Date()),
               }
             : null,
         },
