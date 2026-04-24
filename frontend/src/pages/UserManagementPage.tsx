@@ -5,12 +5,21 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { User, Role, CreateUserDto, UpdateUserDto, PaymentType } from '@/types';
-import { Pencil, Trash2, Plus, X, Check } from 'lucide-react';
+import { Pencil, Trash2, Plus, X, Check, Eye, EyeOff } from 'lucide-react';
 
 export const UserManagementPage = () => {
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
+
+  const togglePasswordVisibility = (userId: string) => {
+    setVisiblePasswords((prev) => {
+      const next = new Set(prev);
+      next.has(userId) ? next.delete(userId) : next.add(userId);
+      return next;
+    });
+  };
   const [formData, setFormData] = useState<CreateUserDto & { sipServer?: string; sipUser?: string; sipPassword?: string; sipPort?: number }>({
     email: '',
     password: '',
@@ -46,6 +55,10 @@ export const UserManagementPage = () => {
       setIsCreating(false);
       resetForm();
     },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message;
+      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Ошибка создания пользователя'));
+    },
   });
 
   // Обновление пользователя
@@ -56,6 +69,10 @@ export const UserManagementPage = () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setEditingUser(null);
       resetForm();
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message;
+      alert(Array.isArray(msg) ? msg.join('\n') : (msg || 'Ошибка сохранения пользователя'));
     },
   });
 
@@ -399,6 +416,7 @@ export const UserManagementPage = () => {
                   <th className="text-left p-2">ФИО</th>
                   <th className="text-left p-2">Email</th>
                   <th className="text-left p-2">Роль</th>
+                  <th className="text-center p-2">Пароль</th>
                   <th className="text-center p-2">Тип оплаты</th>
                   <th className="text-center p-2">Статус</th>
                   <th className="text-center p-2">Дата создания</th>
@@ -419,6 +437,23 @@ export const UserManagementPage = () => {
                       >
                         {user.role?.name || 'Не указана'}
                       </span>
+                    </td>
+                    <td className="p-2 text-center">
+                      {user.adminPassword ? (
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="font-mono text-sm">
+                            {visiblePasswords.has(user.id) ? user.adminPassword : '••••••'}
+                          </span>
+                          <button
+                            onClick={() => togglePasswordVisibility(user.id)}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            {visiblePasswords.has(user.id) ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className="p-2 text-center">
                       {user.paymentType === 'SALARY' ? (

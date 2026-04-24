@@ -38,6 +38,13 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get("production-workers")
+  @Roles("OWNER", "MANAGER")
+  @ApiOperation({ summary: "Получить производственных рабочих (OWNER, MANAGER)" })
+  findProductionWorkers(): Promise<UserEntity[]> {
+    return this.usersService.findProductionWorkers();
+  }
+
   @Get(":id")
   @Roles("OWNER")
   @ApiOperation({ summary: "Получить пользователя по ID (только OWNER)" })

@@ -15,7 +15,7 @@ import { PaymentType } from "@prisma/client";
 
 export class UpdateUserDto {
   @ApiProperty({ example: "user@example.com", required: false })
-  @IsEmail()
+  @IsEmail({ require_tld: false })
   @IsOptional()
   email?: string;
 

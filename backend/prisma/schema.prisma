@@ -125,10 +125,11 @@ enum ShipmentStatus {
 
 // Пользователи системы
 model User {
-  id        String  @id @default(uuid())
-  email     String  @unique
-  password  String
-  firstName String  @map("first_name")
+  id            String  @id @default(uuid())
+  email         String  @unique
+  password      String
+  adminPassword String? @map("admin_password")
+  firstName     String  @map("first_name")
   lastName  String  @map("last_name")
   isActive            Boolean @default(true) @map("is_active")
   isDepartmentAccount Boolean @default(false) @map("is_department_account")

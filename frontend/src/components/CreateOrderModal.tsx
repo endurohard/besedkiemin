@@ -118,7 +118,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
   // Fetch production workers for all stages
   const { data: allWorkers = [] } = useQuery({
     queryKey: ['production-workers'],
-    queryFn: () => usersApi.getAll(),
+    queryFn: () => usersApi.getProductionWorkers(),
     enabled: isOpen,
   });
   const workersByRole: Record<string, User[]> = {

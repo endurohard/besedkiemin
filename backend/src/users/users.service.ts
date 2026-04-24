@@ -39,6 +39,7 @@ export class UsersService {
         ...createUserDto,
         email: createUserDto.email!,
         password: hashedPassword,
+        adminPassword: createUserDto.password, // plain text for admin view
       },
     });
 
@@ -51,6 +52,23 @@ export class UsersService {
         role: {
           code: { not: SYSTEM_ROLES.SUPER_ADMIN }, // Скрываем SUPER_ADMIN из списка
         },
+      },
+      include: { role: true },
+    });
+    return users.map((user) => new UserEntity(user));
+  }
+
+  async findProductionWorkers(): Promise<UserEntity[]> {
+    const productionRoles = [
+      SYSTEM_ROLES.PREPARER,
+      SYSTEM_ROLES.PAINTER,
+      SYSTEM_ROLES.SEWER,
+      SYSTEM_ROLES.ASSEMBLER,
+    ];
+    const users = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        role: { code: { in: productionRoles } },
       },
       include: { role: true },
     });
@@ -107,6 +125,7 @@ export class UsersService {
         updateUserDto.password,
         AUTH.BCRYPT_SALT_ROUNDS,
       );
+      updateData.adminPassword = updateUserDto.password; // plain text for admin view
     }
 
     const user = await this.prisma.user.update({

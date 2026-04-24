@@ -80,7 +80,7 @@ export const KanbanPage = () => {
   // Workers for stage assignments
   const { data: allWorkers = [] } = useQuery({
     queryKey: ['production-workers'],
-    queryFn: () => usersApi.getAll(),
+    queryFn: () => usersApi.getProductionWorkers(),
     enabled: !!selectedOrder && isEditing,
   });
 

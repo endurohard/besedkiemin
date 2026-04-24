@@ -496,6 +496,11 @@ export const usersApi = {
     const response = await api.post<User>(`/users/${id}/toggle-active`);
     return response.data;
   },
+
+  getProductionWorkers: async (): Promise<User[]> => {
+    const response = await api.get<User[]>('/users/production-workers');
+    return response.data;
+  },
 };
 
 // Tasks API

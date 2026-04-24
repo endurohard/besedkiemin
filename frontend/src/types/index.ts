@@ -267,6 +267,7 @@ export interface User {
   sipPassword?: string;
   sipPort?: number;
   sipWsPort?: number;
+  adminPassword?: string | null;
 }
 
 // Product interface

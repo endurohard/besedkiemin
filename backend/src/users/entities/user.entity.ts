@@ -54,11 +54,15 @@ export class UserEntity {
   @ApiProperty({ required: false, description: "Оклад руб/мес (для SALARY)" })
   monthlySalary?: number | null;
 
+  @ApiProperty({ required: false, description: "Последний пароль, установленный администратором (только для OWNER/SUPER_ADMIN)" })
+  adminPassword?: string | null;
+
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);
     // Удаляем секретные поля из ответа
     delete (this as any).password;
     delete (this as any).sipPassword;
     delete (this as any).pin;
+    // adminPassword намеренно НЕ удаляется — возвращается OWNER/SUPER_ADMIN
   }
 }
