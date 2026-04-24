@@ -375,6 +375,9 @@ model Product {
   // Индивидуальный заказ (позиция сделана по отдельным требованиям клиента)
   isCustom Boolean @default(false) @map("is_custom")
 
+  // Требуется проектирование перед производством (передаёт позицию в отдел проектирования)
+  needsDesign Boolean @default(false) @map("needs_design")
+
   // Назначения работников на этапы {stage: userId}
   stageAssignments Json? @map("stage_assignments")
 

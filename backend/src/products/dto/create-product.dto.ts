@@ -111,6 +111,15 @@ export class CreateProductDto {
   isCustom?: boolean;
 
   @ApiProperty({
+    example: false,
+    required: false,
+    description: "Требуется проектирование — позиция стартует на этапе DESIGN перед производством",
+  })
+  @IsBoolean()
+  @IsOptional()
+  needsDesign?: boolean;
+
+  @ApiProperty({
     example: "uuid-worker-id",
     required: false,
     description: "ID работника для назначения на первый этап",

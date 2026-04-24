@@ -82,6 +82,7 @@ interface ProductFormData {
   upholsteryMaterial?: string; // Материал обшивки (для швеи)
   description?: string; // Комментарий к позиции
   isCustom?: boolean; // Индивидуальная позиция
+  needsDesign?: boolean; // Требуется проектирование перед производством
   useInventory?: boolean; // Списать со склада вместо производства (внутренний заказ)
   stageAssignments?: Record<string, string>; // {PREPARATION: userId, PAINTING: userId, ...}
   startStage?: string; // Стартовая стадия (если пропускаем предыдущие этапы, напр. готовая заготовка)
@@ -122,16 +123,18 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     enabled: isOpen,
   });
   const workersByRole: Record<string, User[]> = {
+    DESIGNER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'DESIGNER'),
     PREPARER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PREPARER'),
     PAINTER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PAINTER'),
     SEWER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'SEWER'),
     ASSEMBLER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'ASSEMBLER'),
   };
   const stageConfig = [
-    { stage: 'PREPARATION', role: 'PREPARER', label: 'Заготовщик', icon: '🪚' },
-    { stage: 'PAINTING', role: 'PAINTER', label: 'Маляр', icon: '🎨' },
-    { stage: 'SEWING', role: 'SEWER', label: 'Швея', icon: '🧵' },
-    { stage: 'ASSEMBLY', role: 'ASSEMBLER', label: 'Сборщик', icon: '🔧' },
+    { stage: 'DESIGN', role: 'DESIGNER', label: 'Проектировщик', icon: '📐', designOnly: true },
+    { stage: 'PREPARATION', role: 'PREPARER', label: 'Заготовщик', icon: '🪚', designOnly: false },
+    { stage: 'PAINTING', role: 'PAINTER', label: 'Маляр', icon: '🎨', designOnly: false },
+    { stage: 'SEWING', role: 'SEWER', label: 'Швея', icon: '🧵', designOnly: false },
+    { stage: 'ASSEMBLY', role: 'ASSEMBLER', label: 'Сборщик', icon: '🔧', designOnly: false },
   ];
 
   const [isInternalOrder, setIsInternalOrder] = useState(false);
@@ -188,6 +191,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             upholsteryMaterial: product.upholsteryMaterial || undefined,
             description: product.description || undefined,
             isCustom: product.isCustom || undefined,
+            needsDesign: product.needsDesign || undefined,
             stageAssignments: product.stageAssignments && Object.keys(product.stageAssignments).length > 0 ? product.stageAssignments : undefined,
             startStage: product.startStage || undefined,
           };
@@ -255,7 +259,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
   };
 
   const addProduct = () => {
-    setProducts([{ nomenclatureId: '', name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '', requiresSewing: null, color: '', upholsteryMaterial: '', description: '', isCustom: false, stageAssignments: {} }, ...products]);
+    setProducts([{ nomenclatureId: '', name: '', productTypeId: '', quantity: 1, dimensions: '', schemaImageUrl: '', requiresSewing: null, color: '', upholsteryMaterial: '', description: '', isCustom: false, needsDesign: false, stageAssignments: {} }, ...products]);
   };
 
   // Обработчик выбора из номенклатуры
@@ -572,7 +576,10 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                   <input
                     type="checkbox"
                     checked={!!product.isCustom}
-                    onChange={(e) => updateProduct(index, 'isCustom', e.target.checked)}
+                    onChange={(e) => {
+                      updateProduct(index, 'isCustom', e.target.checked);
+                      if (!e.target.checked) updateProduct(index, 'needsDesign', false);
+                    }}
                     className="w-4 h-4 accent-pink-500"
                   />
                   <span className="text-sm font-medium text-pink-900">
@@ -582,6 +589,23 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     Позиция делается под клиента — выделяется в заказе
                   </span>
                 </label>
+
+                {product.isCustom && (
+                  <label className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded-md cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!product.needsDesign}
+                      onChange={(e) => updateProduct(index, 'needsDesign', e.target.checked)}
+                      className="w-4 h-4 accent-blue-600"
+                    />
+                    <span className="text-sm font-medium text-blue-900">
+                      📐 Требуется проектирование
+                    </span>
+                    <span className="text-xs text-blue-700/80">
+                      Позиция сначала пройдёт через отдел проектирования
+                    </span>
+                  </label>
+                )}
 
                 {/* Выбор из каталога */}
                 <div>
@@ -714,6 +738,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     className="w-full px-2 py-1.5 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-ring bg-card"
                   >
                     <option value="">С начала (Заготовка)</option>
+                    <option value="DESIGN">📐 Проектирование</option>
                     <option value="PAINTING">🎨 Малярка (заготовки готовы)</option>
                     <option value="SEWING">🧵 Пошив</option>
                     <option value="ASSEMBLY">🔧 Сборка (всё готово)</option>
@@ -729,7 +754,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                     👷 Назначить работников на этапы
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {stageConfig.map(({ stage, role, label, icon }) => {
+                    {stageConfig.map(({ stage, role, label, icon, designOnly }) => {
+                      if (designOnly && !product.needsDesign) return null;
                       const workers = workersByRole[role] || [];
                       if (workers.length === 0) return null;
                       return (
