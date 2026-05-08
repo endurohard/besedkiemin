@@ -4,9 +4,21 @@ import { useSearchParams } from 'react-router-dom';
 import { tasksApi } from '@/lib/api';
 import { TaskCard } from '@/components/TaskCard';
 import { SchemaImageViewer } from '@/components/SchemaImageViewer';
-import { TaskStatus, OrderPriority, Task } from '@/types';
+import { TaskStatus, OrderPriority, Task, ProductionStage } from '@/types';
 import { useAuthStore } from '@/store/authStore';
+import { stageLabels } from '@/lib/labels';
 import { Loader2, Package, AlertTriangle, Flame, User, CheckCircle, ArrowRight, Image as ImageIcon } from 'lucide-react';
+
+const getNextStageName = (stage: ProductionStage, requiresSewing?: boolean | null): string => {
+  switch (stage) {
+    case ProductionStage.DESIGN: return stageLabels[ProductionStage.PREPARATION];
+    case ProductionStage.PREPARATION: return stageLabels[ProductionStage.PAINTING];
+    case ProductionStage.PAINTING: return requiresSewing ? stageLabels[ProductionStage.SEWING] : stageLabels[ProductionStage.ASSEMBLY];
+    case ProductionStage.SEWING: return stageLabels[ProductionStage.ASSEMBLY];
+    case ProductionStage.ASSEMBLY: return stageLabels[ProductionStage.QUALITY_CHECK];
+    default: return 'Следующий отдел';
+  }
+};
 
 export const TasksPage = () => {
   const { user } = useAuthStore();
@@ -323,6 +335,7 @@ const WorkerTaskCard = ({
   isCompleting: boolean;
 }) => {
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const schemaGallery = task.product?.schemaImageUrls && task.product.schemaImageUrls.length > 0
     ? task.product.schemaImageUrls
     : task.product?.schemaImageUrl
@@ -410,30 +423,62 @@ const WorkerTaskCard = ({
         </div>
       )}
 
-      {/* Кнопка завершить - доступна для всех сотрудников отдела */}
-      <button
-        onClick={onComplete}
-        disabled={isCompleting}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 ${
-          isCurrentUser
-            ? 'bg-green-500 hover:bg-green-600 disabled:bg-green-300'
-            : 'bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300'
-        } text-white font-medium rounded-lg transition-colors`}
-      >
-        {isCompleting ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Завершение...
-          </>
-        ) : (
-          <>
-            <CheckCircle className="w-4 h-4" />
-            Завершить
-            <ArrowRight className="w-4 h-4" />
-            Передать
-          </>
-        )}
-      </button>
+      {/* Кнопка завершить или блок подтверждения */}
+      {!showConfirm ? (
+        <button
+          onClick={() => setShowConfirm(true)}
+          disabled={isCompleting}
+          className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 ${
+            isCurrentUser
+              ? 'bg-green-500 hover:bg-green-600 disabled:bg-green-300'
+              : 'bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300'
+          } text-white font-medium rounded-lg transition-colors`}
+        >
+          <CheckCircle className="w-4 h-4" />
+          Завершить
+          <ArrowRight className="w-4 h-4" />
+          Передать
+        </button>
+      ) : (
+        <div className="space-y-2 p-3 border border-green-200 rounded-lg bg-green-50">
+          <p className="text-sm font-semibold text-green-900">Завершить и передать далее?</p>
+          <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-100 px-2 py-1 rounded">
+            <span>{stageLabels[task.stage] || task.stage}</span>
+            <ArrowRight className="w-3 h-3" />
+            <span className="font-medium">{getNextStageName(task.stage, task.product?.requiresSewing)}</span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onComplete}
+              disabled={isCompleting}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 ${
+                isCurrentUser
+                  ? 'bg-green-500 hover:bg-green-600 disabled:bg-green-300'
+                  : 'bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300'
+              } text-white font-medium rounded-lg transition-colors text-sm`}
+            >
+              {isCompleting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Завершение...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Подтвердить
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => setShowConfirm(false)}
+              disabled={isCompleting}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-colors text-sm"
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
       {!isCurrentUser && (
         <div className="text-center text-[10px] text-gray-400 mt-1">
           Задача сотрудника отдела

@@ -74,8 +74,8 @@ export class PayrollService {
       if (byNomenclature) return byNomenclature;
     }
 
-    // Если не найдено по номенклатуре - ищем по типу продукта
-    return this.prisma.workRate.findFirst({
+    // Ищем по типу продукта (без привязки к номенклатуре)
+    const byType = await this.prisma.workRate.findFirst({
       where: {
         productTypeId,
         stage,
@@ -86,6 +86,20 @@ export class PayrollService {
         workflowStage: true,
       },
     });
+    if (byType) return byType;
+
+    // Fallback: если расценок без номенклатуры нет — берём среднюю по всем расценкам
+    // для данного типа продукта и этапа (продукт не привязан к конкретной номенклатуре)
+    const allRates = await this.prisma.workRate.findMany({
+      where: { productTypeId, stage, isActive: true },
+      include: { productType: true, workflowStage: true },
+    });
+    if (allRates.length === 0) return null;
+    if (allRates.length === 1) return allRates[0];
+    const avgPrice = Math.round(
+      allRates.reduce((sum, r) => sum + r.pricePerUnit, 0) / allRates.length,
+    );
+    return { ...allRates[0], pricePerUnit: avgPrice };
   }
 
   async createWorkRate(dto: CreateWorkRateDto) {
@@ -839,6 +853,49 @@ export class PayrollService {
     });
   }
 
+  // Пересчёт work_logs с нулевой ценой (разовая операция исправления данных)
+  async recalculateZeroWorkLogs(): Promise<{ fixed: number; skipped: number }> {
+    const zeroLogs = await this.prisma.workLog.findMany({
+      where: { pricePerUnit: 0 },
+      include: {
+        user: { select: { paymentType: true } },
+      },
+    });
+
+    let fixed = 0;
+    let skipped = 0;
+
+    for (const log of zeroLogs) {
+      // Окладники — price=0 корректно
+      if (log.user?.paymentType === 'SALARY') {
+        skipped++;
+        continue;
+      }
+
+      const rate = await this.findWorkRate(
+        log.productTypeId,
+        log.stage,
+        undefined,
+      );
+
+      if (!rate || rate.pricePerUnit === 0) {
+        skipped++;
+        continue;
+      }
+
+      await this.prisma.workLog.update({
+        where: { id: log.id },
+        data: {
+          pricePerUnit: rate.pricePerUnit,
+          totalAmount: log.quantity * rate.pricePerUnit,
+        },
+      });
+      fixed++;
+    }
+
+    return { fixed, skipped };
+  }
+
   // Получение журнала работ
   async findWorkLogs(filters?: {
     userId?: string;
@@ -937,7 +994,7 @@ export class PayrollService {
     const todayEnd = new Date(now);
     todayEnd.setHours(23, 59, 59, 999);
 
-    const [workLogs, todayLogs, penalties, todayPenalties] = await Promise.all([
+    const [workLogs, todayLogs, penalties, todayPenalties, paidPeriods, allTimeEarnings, allTimePenalties] = await Promise.all([
       // Все работы за период
       this.prisma.workLog.findMany({
         where: {
@@ -983,6 +1040,21 @@ export class PayrollService {
           isCancelled: false,
         },
       }),
+      // Все выдачи (PAID периоды) — для баланса
+      this.prisma.payrollPeriod.findMany({
+        where: { userId, status: PayrollStatus.PAID },
+        orderBy: { paidAt: "desc" },
+      }),
+      // Весь заработок за всё время (для баланса)
+      this.prisma.workLog.aggregate({
+        where: { userId },
+        _sum: { totalAmount: true },
+      }),
+      // Все штрафы за всё время (для баланса)
+      this.prisma.penalty.aggregate({
+        where: { userId, isCancelled: false },
+        _sum: { amount: true },
+      }),
     ]);
 
     const periodTotal = workLogs.reduce((sum, log) => sum + log.totalAmount, 0);
@@ -992,6 +1064,12 @@ export class PayrollService {
       (sum, p) => sum + p.amount,
       0,
     );
+
+    // Накопленный баланс (всё время)
+    const totalEarnedAllTime = allTimeEarnings._sum.totalAmount || 0;
+    const totalPenaltiesAllTime = allTimePenalties._sum.amount || 0;
+    const totalPaid = paidPeriods.reduce((sum, p) => sum + p.totalAmount, 0);
+    const accumulatedBalance = totalEarnedAllTime - totalPenaltiesAllTime - totalPaid;
 
     return {
       user: {
@@ -1041,6 +1119,23 @@ export class PayrollService {
         reason: p.reason,
         date: p.date,
       })),
+      // Выдачи (PAID периоды) — история списаний
+      paidPeriods: paidPeriods.map((p) => ({
+        id: p.id,
+        amount: p.totalAmount,
+        paidAt: p.paidAt,
+        paidBy: null,
+        periodStart: p.periodStart,
+        periodEnd: p.periodEnd,
+        notes: p.notes,
+      })),
+      // Накопленный баланс (за всё время)
+      balance: {
+        totalEarned: totalEarnedAllTime,
+        totalPenalties: totalPenaltiesAllTime,
+        totalPaid,
+        accumulated: accumulatedBalance,
+      },
     };
   }
 

@@ -115,6 +115,9 @@ let PayrollController = class PayrollController {
     deletePayrollPeriod(id) {
         return this.payrollService.deletePayrollPeriod(id);
     }
+    recalculateZeroWorkLogs() {
+        return this.payrollService.recalculateZeroWorkLogs();
+    }
     findWorkLogs(userId, productTypeId, stage, startDate, endDate, unassigned) {
         return this.payrollService.findWorkLogs({
             userId,
@@ -345,6 +348,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "deletePayrollPeriod", null);
+__decorate([
+    (0, common_1.Post)("work-logs/recalculate-zero"),
+    (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "recalculateZeroWorkLogs", null);
 __decorate([
     (0, common_1.Get)("work-logs"),
     (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),

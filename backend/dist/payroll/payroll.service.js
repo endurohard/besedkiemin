@@ -57,7 +57,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             if (byNomenclature)
                 return byNomenclature;
         }
-        return this.prisma.workRate.findFirst({
+        const byType = await this.prisma.workRate.findFirst({
             where: {
                 productTypeId,
                 stage,
@@ -68,6 +68,18 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 workflowStage: true,
             },
         });
+        if (byType)
+            return byType;
+        const allRates = await this.prisma.workRate.findMany({
+            where: { productTypeId, stage, isActive: true },
+            include: { productType: true, workflowStage: true },
+        });
+        if (allRates.length === 0)
+            return null;
+        if (allRates.length === 1)
+            return allRates[0];
+        const avgPrice = Math.round(allRates.reduce((sum, r) => sum + r.pricePerUnit, 0) / allRates.length);
+        return { ...allRates[0], pricePerUnit: avgPrice };
     }
     async createWorkRate(dto) {
         const existing = await this.prisma.workRate.findFirst({
@@ -651,6 +663,36 @@ let PayrollService = PayrollService_1 = class PayrollService {
             },
         });
     }
+    async recalculateZeroWorkLogs() {
+        const zeroLogs = await this.prisma.workLog.findMany({
+            where: { pricePerUnit: 0 },
+            include: {
+                user: { select: { paymentType: true } },
+            },
+        });
+        let fixed = 0;
+        let skipped = 0;
+        for (const log of zeroLogs) {
+            if (log.user?.paymentType === 'SALARY') {
+                skipped++;
+                continue;
+            }
+            const rate = await this.findWorkRate(log.productTypeId, log.stage, undefined);
+            if (!rate || rate.pricePerUnit === 0) {
+                skipped++;
+                continue;
+            }
+            await this.prisma.workLog.update({
+                where: { id: log.id },
+                data: {
+                    pricePerUnit: rate.pricePerUnit,
+                    totalAmount: log.quantity * rate.pricePerUnit,
+                },
+            });
+            fixed++;
+        }
+        return { fixed, skipped };
+    }
     async findWorkLogs(filters) {
         const where = {};
         if (filters?.userId) {
@@ -725,7 +767,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
         todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date(now);
         todayEnd.setHours(23, 59, 59, 999);
-        const [workLogs, todayLogs, penalties, todayPenalties] = await Promise.all([
+        const [workLogs, todayLogs, penalties, todayPenalties, paidPeriods, allTimeEarnings, allTimePenalties] = await Promise.all([
             this.prisma.workLog.findMany({
                 where: {
                     userId,
@@ -767,11 +809,27 @@ let PayrollService = PayrollService_1 = class PayrollService {
                     isCancelled: false,
                 },
             }),
+            this.prisma.payrollPeriod.findMany({
+                where: { userId, status: client_1.PayrollStatus.PAID },
+                orderBy: { paidAt: "desc" },
+            }),
+            this.prisma.workLog.aggregate({
+                where: { userId },
+                _sum: { totalAmount: true },
+            }),
+            this.prisma.penalty.aggregate({
+                where: { userId, isCancelled: false },
+                _sum: { amount: true },
+            }),
         ]);
         const periodTotal = workLogs.reduce((sum, log) => sum + log.totalAmount, 0);
         const todayTotal = todayLogs.reduce((sum, log) => sum + log.totalAmount, 0);
         const penaltyTotal = penalties.reduce((sum, p) => sum + p.amount, 0);
         const todayPenaltyTotal = todayPenalties.reduce((sum, p) => sum + p.amount, 0);
+        const totalEarnedAllTime = allTimeEarnings._sum.totalAmount || 0;
+        const totalPenaltiesAllTime = allTimePenalties._sum.amount || 0;
+        const totalPaid = paidPeriods.reduce((sum, p) => sum + p.totalAmount, 0);
+        const accumulatedBalance = totalEarnedAllTime - totalPenaltiesAllTime - totalPaid;
         return {
             user: {
                 id: user.id,
@@ -820,6 +878,21 @@ let PayrollService = PayrollService_1 = class PayrollService {
                 reason: p.reason,
                 date: p.date,
             })),
+            paidPeriods: paidPeriods.map((p) => ({
+                id: p.id,
+                amount: p.totalAmount,
+                paidAt: p.paidAt,
+                paidBy: null,
+                periodStart: p.periodStart,
+                periodEnd: p.periodEnd,
+                notes: p.notes,
+            })),
+            balance: {
+                totalEarned: totalEarnedAllTime,
+                totalPenalties: totalPenaltiesAllTime,
+                totalPaid,
+                accumulated: accumulatedBalance,
+            },
         };
     }
     async getPayrollSummary(periodStart, periodEnd) {

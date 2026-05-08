@@ -255,6 +255,12 @@ export class PayrollController {
 
   // ==================== ЖУРНАЛ РАБОТ ====================
 
+  @Post("work-logs/recalculate-zero")
+  @Roles("SUPER_ADMIN", "OWNER")
+  recalculateZeroWorkLogs() {
+    return this.payrollService.recalculateZeroWorkLogs();
+  }
+
   @Get("work-logs")
   @Roles("SUPER_ADMIN", "OWNER")
   findWorkLogs(

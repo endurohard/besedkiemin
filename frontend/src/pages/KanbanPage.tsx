@@ -7,11 +7,15 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { OrderStatus, ProductionStage, Product, Order, Nomenclature, User } from '@/types';
 import { useAuthStore } from '@/store/authStore';
-import { Package, Clock, CheckCircle, ArrowRight, Plus, Search, Calendar, X, Trash2, Pencil, Eye, ChevronDown, ChevronRight, User as UserIcon } from 'lucide-react';
+import { Package, Clock, CheckCircle, ArrowRight, Plus, Search, Calendar, X, Trash2, Pencil, Eye, ChevronDown, ChevronRight, User as UserIcon, GripVertical } from 'lucide-react';
 import { CreateOrderModal } from '@/components/CreateOrderModal';
 import { SchemaImageViewer } from '@/components/SchemaImageViewer';
 import { ReassignTaskControl } from '@/components/ReassignTaskControl';
 import { getPriorityLabel, getPriorityColor, getPrioritySortOrder } from '@/lib/priority-utils';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Product form for adding/editing products in order
 interface ProductEditForm {
@@ -33,6 +37,66 @@ interface ProductEditForm {
   isNew?: boolean; // flag for new products
   stage?: ProductionStage; // track current stage for safety checks
 }
+
+// ── Sortable stage card (outside KanbanPage to avoid React hook rules violation) ──
+interface SortableStageItemProps {
+  stage: string;
+  stageProducts: any[];
+  getStageColor: (stage: string) => string;
+  getStageName: (stage: string) => string;
+  onStageClick: (stage: any) => void;
+}
+
+const SortableStageItem = ({ stage, stageProducts, getStageColor, getStageName, onStageClick }: SortableStageItemProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stage });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: isDragging ? 'relative' as const : undefined,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <button
+        type="button"
+        onClick={() => onStageClick(stage)}
+        className={`w-full text-left p-2 rounded-lg ${getStageColor(stage)} transition-all hover:ring-2 hover:ring-primary/40 cursor-pointer`}
+      >
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1 min-w-0">
+            <span
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 shrink-0 touch-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GripVertical size={12} />
+            </span>
+            <span className="font-medium text-xs truncate">{getStageName(stage)}</span>
+          </div>
+          <span className="text-xs font-bold shrink-0">{stageProducts.length}</span>
+        </div>
+        {stageProducts.length > 0 && (
+          <div className="mt-1 space-y-0.5 ml-4">
+            {stageProducts.slice(0, 2).map((product: any) => (
+              <div key={product.id} className="text-[10px] opacity-80 truncate">
+                • {product.name}
+              </div>
+            ))}
+            {stageProducts.length > 2 && (
+              <div className="text-[10px] opacity-60">
+                +{stageProducts.length - 2} еще
+              </div>
+            )}
+          </div>
+        )}
+      </button>
+    </div>
+  );
+};
+// ────────────────────────────────────────────────────────────────────────────────
 
 export const KanbanPage = () => {
   const { user } = useAuthStore();
@@ -484,6 +548,39 @@ export const KanbanPage = () => {
   }, [products, myOrderIds]);
 
   const allowedStages = user ? getRoleStages(user.role?.code) : [];
+
+  // Drag-and-drop порядок этапов, сохраняется в localStorage
+  const [stagesOrder, setStagesOrder] = useState<ProductionStage[]>(() => {
+    try {
+      const saved = localStorage.getItem('kanban-stages-order');
+      if (saved) return JSON.parse(saved) as ProductionStage[];
+    } catch {}
+    return [];
+  });
+
+  const orderedStages = useMemo(() => {
+    if (!stagesOrder.length) return allowedStages;
+    return [...allowedStages].sort((a, b) => {
+      const ia = stagesOrder.indexOf(a);
+      const ib = stagesOrder.indexOf(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }, [allowedStages, stagesOrder]);
+
+  const handleStagesDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = orderedStages.indexOf(active.id as ProductionStage);
+    const newIndex = orderedStages.indexOf(over.id as ProductionStage);
+    const newOrder = arrayMove(orderedStages, oldIndex, newIndex);
+    setStagesOrder(newOrder);
+    localStorage.setItem('kanban-stages-order', JSON.stringify(newOrder));
+  };
+
+  const stagesSensors = useSensors(useSensor(PointerSensor));
+
   const myProducts = filteredProducts.filter((p) => allowedStages.includes(p.stage));
 
   const getProductsByStage = (stage: ProductionStage) => {
@@ -952,41 +1049,22 @@ export const KanbanPage = () => {
           <h3 className="text-sm font-semibold text-gray-900 mb-3">
             Этапы
           </h3>
-          <div className="space-y-2">
-            {allowedStages.map((stage) => {
-              const stageProducts = getProductsByStage(stage);
-              return (
-                <button
-                  key={stage}
-                  type="button"
-                  onClick={() => setStageDetailsFor(stage)}
-                  className={`w-full text-left p-2 rounded-lg ${getStageColor(stage)} transition-all hover:ring-2 hover:ring-primary/40 cursor-pointer`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-xs">{getStageName(stage)}</span>
-                    <span className="text-xs font-bold">{stageProducts.length}</span>
-                  </div>
-                  {stageProducts.length > 0 && (
-                    <div className="mt-1 space-y-0.5">
-                      {stageProducts.slice(0, 2).map((product) => (
-                        <div
-                          key={product.id}
-                          className="text-[10px] opacity-80 truncate"
-                        >
-                          • {product.name}
-                        </div>
-                      ))}
-                      {stageProducts.length > 2 && (
-                        <div className="text-[10px] opacity-60">
-                          +{stageProducts.length - 2} еще
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <DndContext sensors={stagesSensors} collisionDetection={closestCenter} onDragEnd={handleStagesDragEnd}>
+            <SortableContext items={orderedStages} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2">
+                {orderedStages.map((stage) => (
+                  <SortableStageItem
+                    key={stage}
+                    stage={stage}
+                    stageProducts={getProductsByStage(stage)}
+                    getStageColor={getStageColor}
+                    getStageName={getStageName}
+                    onStageClick={setStageDetailsFor}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         </div>
       </div>
 

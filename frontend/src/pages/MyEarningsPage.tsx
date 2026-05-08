@@ -27,7 +27,9 @@ export const MyEarningsPage = () => {
     new Date(dateStr).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
   const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    new Date(dateStr).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const balance = earnings?.balance;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-4">
@@ -51,6 +53,34 @@ export const MyEarningsPage = () => {
             ← В отдел
           </Button>
         </div>
+
+        {/* Накопленный баланс (всегда виден) */}
+        {balance && (
+          <Card className={`border-2 ${balance.accumulated >= 0 ? 'border-green-400 bg-green-50' : 'border-red-300 bg-red-50'}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-gray-700">Накопленный баланс</p>
+                <p className={`text-2xl font-bold ${balance.accumulated >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+                  {formatMoney(balance.accumulated)}
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs text-gray-500 border-t pt-2 mt-1">
+                <div>
+                  <p className="font-medium text-green-700">{formatMoney(balance.totalEarned)}</p>
+                  <p>Заработано</p>
+                </div>
+                <div>
+                  <p className="font-medium text-red-600">−{formatMoney(balance.totalPenalties)}</p>
+                  <p>Штрафы</p>
+                </div>
+                <div>
+                  <p className="font-medium text-orange-600">−{formatMoney(balance.totalPaid)}</p>
+                  <p>Выдано</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Period toggle */}
         <div className="flex gap-2">
@@ -107,7 +137,7 @@ export const MyEarningsPage = () => {
             {/* Net earnings */}
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground">Итого к выплате</p>
+                <p className="text-sm text-muted-foreground">Итого к выплате за период</p>
                 <p className="text-3xl font-bold">
                   {formatMoney(
                     period === 'today'
@@ -171,6 +201,41 @@ export const MyEarningsPage = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Выдачи (история выплат) */}
+            {earnings.paidPeriods?.length > 0 && (
+              <Card>
+                <CardHeader className="p-3 pb-2">
+                  <CardTitle className="text-sm text-orange-700">История выдач</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0">
+                  <div className="space-y-2">
+                    {earnings.paidPeriods.map((payout: any) => (
+                      <div
+                        key={payout.id}
+                        className="flex items-center justify-between py-2 border-b last:border-0"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">
+                            {payout.paidAt ? formatDate(payout.paidAt) : '—'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(payout.periodStart)} — {formatDate(payout.periodEnd)}
+                            {payout.paidBy && <span> · {payout.paidBy}</span>}
+                          </p>
+                          {payout.notes && (
+                            <p className="text-xs text-gray-500 truncate">{payout.notes}</p>
+                          )}
+                        </div>
+                        <p className="text-sm font-semibold text-orange-600 ml-2">
+                          −{formatMoney(payout.amount)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Penalties */}
             {earnings.penalties?.length > 0 && (

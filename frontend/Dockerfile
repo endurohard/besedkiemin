@@ -10,7 +10,7 @@ RUN npm install --no-audit --no-fund
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN npx vite build
 
 # Production with express server
 FROM base AS production
