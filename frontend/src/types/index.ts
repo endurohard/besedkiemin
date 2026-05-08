@@ -288,6 +288,7 @@ export interface Product {
   color?: string; // Цвет/покрытие (для маляра)
   upholsteryMaterial?: string; // Материал обшивки (ткань/кожа) - если указан, автоматически включается пошив
   isCustom?: boolean; // Индивидуальный заказ
+  needsDesign?: boolean; // Требуется проектирование перед производством
   createdAt: string;
   updatedAt: string;
   order?: Order;
@@ -426,6 +427,7 @@ export interface CreateProductDto {
   color?: string; // Цвет/покрытие (для маляра)
   upholsteryMaterial?: string; // Материал обшивки (для швеи)
   isCustom?: boolean; // Индивидуальный заказ
+  needsDesign?: boolean; // Требуется проектирование перед производством
   assignedWorkerId?: string;
   stageAssignments?: Record<string, string>;
 }
