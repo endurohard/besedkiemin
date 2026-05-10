@@ -7,6 +7,9 @@ import { LoginPage } from './pages/LoginPage';
 import { PinLoginPage } from './pages/PinLoginPage';
 
 // Lazy-loaded pages
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const OfertaPage = lazy(() => import('./pages/OfertaPage'));
+const ReturnsPage = lazy(() => import('./pages/ReturnsPage'));
 const KanbanPage = lazy(() => import('./pages/KanbanPage').then(m => ({ default: m.KanbanPage })));
 const TasksPage = lazy(() => import('./pages/TasksPage').then(m => ({ default: m.TasksPage })));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
@@ -117,6 +120,9 @@ function App() {
             <Route path="/" element={<CatalogPage />} />
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/catalog/:slug" element={<ProductDetailPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/oferta" element={<OfertaPage />} />
+            <Route path="/returns" element={<ReturnsPage />} />
 
             {/* Вход в систему управления */}
             <Route path="/app/login" element={<LoginPage />} />

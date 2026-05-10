@@ -34,12 +34,15 @@ services:
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: '0.0.0.0:8001'
       KONG_PROXY_LISTEN: '0.0.0.0:80, 0.0.0.0:443 ssl'
+      KONG_SSL_CERT: /etc/letsencrypt/live/www.besedkiemin.ru/fullchain.pem
+      KONG_SSL_CERT_KEY: /etc/letsencrypt/live/www.besedkiemin.ru/privkey.pem
     ports:
       - '80:80'     # HTTP на стандартном порту (без :8000 в URL)
       - '443:443'   # HTTPS на стандартном порту
       - '127.0.0.1:8001:8001' # Kong Admin API (read-only in DB-less mode)
     volumes:
       - ./kong.yml:/usr/local/kong/declarative/kong.yml:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     healthcheck:
       test: ['CMD', 'kong', 'health']
       interval: 10s

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { CustomerChatWidget } from '../components/chat/CustomerChatWidget';
+import { CookieBanner } from '../components/CookieBanner';
 import {
   TreePine, Hammer, Award, HeartHandshake, ArrowRight,
   Phone, Mail, MapPin, X, Truck, PenTool, Factory,
@@ -37,6 +38,7 @@ const CatalogPage: React.FC = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', message: '' });
+  const [formConsent, setFormConsent] = useState(false);
   const [formSuccess, setFormSuccess] = useState(false);
 
   const { data: featureFlags, isLoading: flagsLoading } = useQuery<FeatureFlagsMap>({
@@ -313,6 +315,10 @@ const CatalogPage: React.FC = () => {
             <input type="tel" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="Телефон" className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded text-white placeholder-gray-600 focus:border-[#C5A55A] outline-none transition-colors" />
             <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="Email (необязательно)" className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded text-white placeholder-gray-600 focus:border-[#C5A55A] outline-none transition-colors" />
             <textarea rows={3} value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} placeholder="Сообщение" className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded text-white placeholder-gray-600 focus:border-[#C5A55A] outline-none transition-colors resize-none" />
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" required checked={formConsent} onChange={e => setFormConsent(e.target.checked)} className="mt-0.5 accent-[#C5A55A]" />
+              <span className="text-xs text-gray-500">Я согласен(а) с <Link to="/privacy" className="text-[#C5A55A] hover:underline">политикой конфиденциальности</Link> и даю согласие на обработку персональных данных</span>
+            </label>
             <button type="submit" className="w-full py-3 bg-[#C5A55A] text-[#111] font-semibold tracking-wider hover:bg-[#D4AF37] transition-colors">ОТПРАВИТЬ ЗАЯВКУ</button>
           </form>
         </div>
@@ -324,6 +330,12 @@ const CatalogPage: React.FC = () => {
           <div>
             <h3 className="text-lg font-bold text-[#C5A55A] tracking-wider mb-3">BESEDKI EMIN</h3>
             <p className="text-sm text-gray-500">Изысканная мебель из натурального дерева для вашего дома и сада.</p>
+            <div className="mt-3 text-xs text-gray-600 space-y-0.5">
+              <p>ООО «Беседки Эмин»</p>
+              <p>ИНН: 0548013990 | ОГРН: 1220500011621</p>
+              <p>368501, Респ. Дагестан, г. Избербаш,</p>
+              <p>ул. Муса Манарова, д. 62</p>
+            </div>
           </div>
           <div>
             <h3 className="text-sm font-bold text-[#C5A55A] tracking-wider mb-3 uppercase">Навигация</h3>
@@ -337,14 +349,22 @@ const CatalogPage: React.FC = () => {
               <li className="flex items-center gap-2"><Phone size={13} />+7 (964) 377-77-76</li>
               <li className="flex items-center gap-2"><Mail size={13} />besedkiemin.ru@yandex.ru</li>
             </ul>
+            <div className="mt-4">
+              <h3 className="text-sm font-bold text-[#C5A55A] tracking-wider mb-2 uppercase">Соцсети</h3>
+              <a href="https://instagram.com/besedki_emin" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#C5A55A] transition-colors"><Instagram size={22} /></a>
+            </div>
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#C5A55A] tracking-wider mb-3 uppercase">Соцсети</h3>
-            <a href="https://instagram.com/besedki_emin" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#C5A55A] transition-colors"><Instagram size={22} /></a>
+            <h3 className="text-sm font-bold text-[#C5A55A] tracking-wider mb-3 uppercase">Документы</h3>
+            <ul className="space-y-1.5 text-sm">
+              <li><Link to="/privacy" className="text-gray-500 hover:text-[#C5A55A] transition-colors">Политика конфиденциальности</Link></li>
+              <li><Link to="/oferta" className="text-gray-500 hover:text-[#C5A55A] transition-colors">Публичная оферта</Link></li>
+              <li><Link to="/returns" className="text-gray-500 hover:text-[#C5A55A] transition-colors">Правила возврата</Link></li>
+            </ul>
           </div>
         </div>
         <div className="text-center text-gray-600 text-xs mt-8 border-t border-[#C5A55A]/10 pt-6 max-w-7xl mx-auto px-4">
-          &copy; {new Date().getFullYear()} BESEDKI EMIN. Все права защищены.
+          &copy; {new Date().getFullYear()} ООО «Беседки Эмин». Все права защищены.
         </div>
       </footer>
 
@@ -377,6 +397,10 @@ const CatalogPage: React.FC = () => {
                   <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ваше имя" className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded text-white placeholder-gray-600 focus:border-[#C5A55A] outline-none" />
                   <input type="tel" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="Телефон" className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded text-white placeholder-gray-600 focus:border-[#C5A55A] outline-none" />
                   <textarea rows={2} value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} placeholder="Комментарий" className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded text-white placeholder-gray-600 focus:border-[#C5A55A] outline-none resize-none" />
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" required checked={formConsent} onChange={e => setFormConsent(e.target.checked)} className="mt-0.5 accent-[#C5A55A]" />
+                    <span className="text-xs text-gray-500">Согласен(а) с <Link to="/privacy" className="text-[#C5A55A] hover:underline">политикой конфиденциальности</Link> и даю согласие на обработку персональных данных</span>
+                  </label>
                   <button type="submit" className="w-full py-3 bg-[#C5A55A] text-[#111] font-semibold tracking-wider hover:bg-[#D4AF37] transition-colors">ОТПРАВИТЬ</button>
                 </form>
               </>
@@ -386,6 +410,7 @@ const CatalogPage: React.FC = () => {
       )}
 
       <CustomerChatWidget />
+      <CookieBanner />
     </div>
   );
 };
