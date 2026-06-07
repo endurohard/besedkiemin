@@ -4,11 +4,14 @@ node_modules/
 .pnp.js
 
 # Testing
-/coverage
+coverage/
+test-results/
+playwright-report/
 
-# Production
-/build
-/dist
+# Production / build artifacts
+build/
+dist/
+*.tsbuildinfo
 
 # Env files
 .env
