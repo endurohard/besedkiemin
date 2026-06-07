@@ -23,6 +23,7 @@ const mockPrisma = () => ({
     create: jest.fn(),
     updateMany: jest.fn(),
     groupBy: jest.fn(),
+    aggregate: jest.fn(),
   },
   penalty: {
     findMany: jest.fn(),
@@ -30,6 +31,7 @@ const mockPrisma = () => ({
     update: jest.fn(),
     updateMany: jest.fn(),
     groupBy: jest.fn(),
+    aggregate: jest.fn(),
   },
   payrollPeriod: {
     findUnique: jest.fn(),
@@ -167,6 +169,7 @@ describe('PayrollService', () => {
 
     it('should use 0 price when no work rate found', async () => {
       prisma.workRate.findFirst.mockResolvedValue(null);
+      prisma.workRate.findMany.mockResolvedValue([]); // findWorkRate использует findMany
       prisma.workLog.create.mockResolvedValue({
         id: 'wl-2',
         quantity: 5,
@@ -315,6 +318,11 @@ describe('PayrollService', () => {
       prisma.penalty.findMany
         .mockResolvedValueOnce([])  // period penalties
         .mockResolvedValueOnce([]); // today penalties
+
+      // Баланс за всё время (добавлено в payroll balance feature)
+      prisma.payrollPeriod.findMany.mockResolvedValue([]); // выданные периоды
+      prisma.workLog.aggregate.mockResolvedValue({ _sum: { totalAmount: 500 } });
+      prisma.penalty.aggregate.mockResolvedValue({ _sum: { amount: 0 } });
 
       const result = await service.getWorkerEarnings('user-1');
 

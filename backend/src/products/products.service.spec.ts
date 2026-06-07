@@ -253,6 +253,10 @@ describe('ProductsService', () => {
         { legacyStage: ProductionStage.QUALITY_CHECK, order: 1 },
       ]);
       prisma.product.findMany.mockResolvedValue([{ stage: ProductionStage.COMPLETED }]);
+      // updateOrderStatus читает текущий статус заказа (защита ручной воронки)
+      prisma.order.findUnique.mockResolvedValue({
+        status: OrderStatus.IN_PRODUCTION, productionStartedAt: new Date(),
+      });
 
       await service.moveToStage('p1', ProductionStage.COMPLETED, 'u1');
 
@@ -284,6 +288,10 @@ describe('ProductsService', () => {
       prisma.product.findUnique.mockResolvedValueOnce({
         id: 'p1', orderId: 'o1', stage: ProductionStage.PENDING,
         order: {}, history: [], qualityChecks: [],
+      });
+      // updateOrderStatus читает текущий статус заказа (не вороночный → сбрасывается в NEW)
+      prisma.order.findUnique.mockResolvedValue({
+        status: OrderStatus.IN_PRODUCTION, productionStartedAt: new Date(),
       });
 
       await service.moveToStage('p1', ProductionStage.DESIGN, 'u1');

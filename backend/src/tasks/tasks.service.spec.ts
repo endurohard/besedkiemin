@@ -357,4 +357,131 @@ describe('TasksService', () => {
       });
     });
   });
+
+  describe('passTask — частичная передача (сплит продукта)', () => {
+    const userId = 'worker-1';
+    const taskId = 'task-prep';
+
+    const baseTask = {
+      id: taskId,
+      status: TaskStatus.COMPLETED,
+      stage: ProductionStage.PREPARATION,
+      assignedToId: userId,
+      productId: 'product-1',
+      quantity: 10,
+      title: 'Беседка - Заготовка',
+      description: 'Количество: 10 шт.',
+      priority: 'NORMAL',
+      acceptedAt: new Date(),
+      workflowStageId: 'ws-prep',
+      isDefect: false,
+      product: {
+        id: 'product-1',
+        name: 'Беседка',
+        description: null,
+        quantity: 10,
+        dimensions: null,
+        schemaImageUrl: null,
+        schemaImageUrls: [],
+        deadline: null,
+        productTypeId: 'pt-1',
+        requiresSewing: false,
+        color: null,
+        upholsteryMaterial: null,
+        isCustom: false,
+        needsDesign: false,
+        stageAssignments: null,
+        orderId: 'order-1',
+        nomenclatureId: null,
+        productType: { id: 'pt-1', requiresSewing: false },
+      },
+      assignedTo: { id: userId, roleId: 'role-prep', role: { id: 'role-prep' } },
+    };
+
+    beforeEach(() => {
+      prisma.task.findUnique.mockResolvedValue(baseTask);
+      // currentWorkflowStage, затем nextWorkflowStage
+      prisma.workflowStage.findFirst = jest
+        .fn()
+        .mockResolvedValueOnce({ id: 'ws-prep', legacyStage: ProductionStage.PREPARATION, order: 2 })
+        .mockResolvedValueOnce({ id: 'ws-paint', legacyStage: ProductionStage.PAINTING, order: 3, roles: [] });
+      // транзакция выполняется на том же mock-объекте prisma
+      prisma.$transaction.mockImplementation((fn: any) => fn(prisma));
+      prisma.product.create = jest.fn().mockResolvedValue({ id: 'product-2' });
+      prisma.product.update = jest.fn().mockResolvedValue({});
+      prisma.task.update.mockResolvedValue({ id: taskId, status: TaskStatus.COMPLETED, quantity: 6 });
+      prisma.task.create = jest.fn().mockResolvedValue({ id: 'task-new' });
+      prisma.productHistory = { create: jest.fn() };
+      // updateOrderStatus: производство уже идёт
+      prisma.product.findMany.mockResolvedValue([{ stage: ProductionStage.PREPARATION }]);
+      prisma.order.findUnique = jest
+        .fn()
+        .mockResolvedValue({ status: 'IN_PRODUCTION', productionStartedAt: new Date() });
+      prisma.user.findMany = jest.fn().mockResolvedValue([]); // нет работников следующего этапа
+    });
+
+    it('выделяет переданное кол-во в новый продукт на следующем этапе', async () => {
+      await service.passTask(taskId, userId, 4);
+
+      expect(prisma.product.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            quantity: 4,
+            stage: ProductionStage.PAINTING,
+            orderId: 'order-1',
+            productTypeId: 'pt-1',
+          }),
+        }),
+      );
+    });
+
+    it('оставляет остаток на исходном продукте и исходной задаче (COMPLETED)', async () => {
+      await service.passTask(taskId, userId, 4);
+
+      // оригинал уменьшен до 6
+      expect(prisma.product.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'product-1' }, data: { quantity: 6 } }),
+      );
+      // исходная задача остаётся с остатком (не переводится в PASSED)
+      expect(prisma.task.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: taskId }, data: { quantity: 6 } }),
+      );
+    });
+
+    it('создаёт PASSED-задачу стадии для клон-продукта (для оплаты при приёмке)', async () => {
+      await service.passTask(taskId, userId, 4);
+
+      expect(prisma.task.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            productId: 'product-2',
+            status: TaskStatus.PASSED,
+            quantity: 4,
+            stage: ProductionStage.PREPARATION,
+          }),
+        }),
+      );
+    });
+
+    it('полная передача (без указания кол-ва) двигает весь продукт, без сплита', async () => {
+      await service.passTask(taskId, userId);
+
+      // продукт не клонируется
+      expect(prisma.product.create).not.toHaveBeenCalled();
+      // исходная задача переводится в PASSED
+      expect(prisma.task.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: taskId },
+          data: expect.objectContaining({ status: TaskStatus.PASSED }),
+        }),
+      );
+      // продукт двигается на следующий этап
+      expect(prisma.product.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'product-1' },
+          data: { stage: ProductionStage.PAINTING },
+        }),
+      );
+    });
+  });
 });
