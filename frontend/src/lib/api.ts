@@ -543,8 +543,8 @@ export const tasksApi = {
     return response.data;
   },
 
-  passTask: async (id: string): Promise<Task> => {
-    const response = await api.post<Task>(`/tasks/${id}/pass`);
+  passTask: async (id: string, quantity?: number): Promise<Task> => {
+    const response = await api.post<Task>(`/tasks/${id}/pass`, quantity != null ? { quantity } : {});
     return response.data;
   },
 

@@ -55,6 +55,7 @@ export const TaskCardWorkerActions = ({
   const [showAcceptConfirm, setShowAcceptConfirm] = useState(false);
   const [showPassConfirm, setShowPassConfirm] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [passQuantity, setPassQuantity] = useState(task.quantity || task.product?.quantity || 1);
 
   const isDefectTask = task.title?.includes('БРАК');
   const isSingleQty = (task.product?.quantity ?? task.quantity) === 1;
@@ -92,7 +93,7 @@ export const TaskCardWorkerActions = ({
   });
 
   const passMutation = useMutation({
-    mutationFn: () => tasksApi.passTask(task.id),
+    mutationFn: (qty?: number) => tasksApi.passTask(task.id, qty),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setShowPassConfirm(false);
@@ -332,9 +333,29 @@ export const TaskCardWorkerActions = ({
             <ArrowRight size={10} />
             <span className="font-medium">{nextStageName}</span>
           </div>
+          {!isSingleQty && (task.quantity || 0) > 1 && (
+            <div>
+              <label className="block text-xs font-medium mb-1">
+                Сколько передать (из {task.quantity} шт.)
+              </label>
+              <Input
+                type="number"
+                min={1}
+                max={task.quantity}
+                value={passQuantity}
+                onChange={(e) => setPassQuantity(Math.min(task.quantity || 1, Math.max(1, parseInt(e.target.value) || 1)))}
+                className="h-8 text-xs"
+              />
+              {passQuantity < (task.quantity || 0) && (
+                <p className="text-[10px] text-purple-700 mt-1">
+                  Остаток {(task.quantity || 0) - passQuantity} шт. продолжит работу на этапе «{currentStageName}»
+                </p>
+              )}
+            </div>
+          )}
           <div className="flex gap-1.5">
             <Button
-              onClick={() => passMutation.mutate()}
+              onClick={() => passMutation.mutate(!isSingleQty && (task.quantity || 0) > 1 ? passQuantity : undefined)}
               disabled={passMutation.isPending}
               className="flex-1 text-xs py-1.5"
               size="sm"

@@ -673,7 +673,7 @@ export class TasksService {
   }
 
   // Передать задачу дальше (следующей роли)
-  async passTask(taskId: string, userId: string) {
+  async passTask(taskId: string, userId: string, passQuantity?: number) {
     const task = await this.prisma.task.findUnique({
       where: { id: taskId },
       include: {
@@ -760,11 +760,99 @@ export class TasksService {
       }
     }
 
-    const completedQuantity = task.quantity || task.product.quantity;
+    const totalQuantity = task.quantity || task.product.quantity;
 
-    // Атомарная транзакция: обновляем задачу, историю и стадию продукта
+    // Частичная передача: передаём часть выполненного, остаток продолжает работу
+    // на текущем этапе. Поскольку у продукта одно поле stage, переданную часть
+    // выделяем в отдельный продукт (клон), а оригинал остаётся на текущем этапе
+    // с уменьшенным количеством. WorkLog на момент передачи ещё не существует
+    // (оплата только при приёмке складом), поэтому разделение безопасно для расчёта.
+    const isPartial =
+      passQuantity != null &&
+      Number.isFinite(passQuantity) &&
+      passQuantity > 0 &&
+      passQuantity < totalQuantity;
+    const completedQuantity = isPartial ? passQuantity! : totalQuantity;
+    const remainingQuantity = totalQuantity - completedQuantity;
+
+    // ID продукта, который реально движется на следующий этап
+    let targetProductId = task.productId;
+
     const updatedTask = await this.prisma.$transaction(async (tx) => {
-      // Обновляем задачу
+      if (isPartial) {
+        const p = task.product;
+        // 1. Клон продукта для переданной части — он уходит на следующий этап
+        const passedProduct = await tx.product.create({
+          data: {
+            name: p.name,
+            description: p.description,
+            quantity: completedQuantity,
+            dimensions: p.dimensions,
+            schemaImageUrl: p.schemaImageUrl,
+            schemaImageUrls: p.schemaImageUrls,
+            stage: nextWorkflowStage.legacyStage!,
+            deadline: p.deadline,
+            productTypeId: p.productTypeId,
+            requiresSewing: p.requiresSewing,
+            color: p.color,
+            upholsteryMaterial: p.upholsteryMaterial,
+            isCustom: p.isCustom,
+            needsDesign: p.needsDesign,
+            stageAssignments: p.stageAssignments ?? undefined,
+            orderId: p.orderId,
+            nomenclatureId: p.nomenclatureId,
+          },
+        });
+        targetProductId = passedProduct.id;
+
+        // 2. Оригинал остаётся на текущем этапе с остатком
+        await tx.product.update({
+          where: { id: p.id },
+          data: { quantity: remainingQuantity },
+        });
+
+        // 3. Текущая задача остаётся на оригинале с остатком (готова к передаче позже)
+        const updated = await tx.task.update({
+          where: { id: taskId },
+          data: { quantity: remainingQuantity },
+        });
+
+        // 4. Задача стадии для переданной части (PASSED) — оплата начислится
+        //    при приёмке нового продукта складом
+        await tx.task.create({
+          data: {
+            title: task.title,
+            description: task.description,
+            stage: task.stage,
+            productId: passedProduct.id,
+            assignedToId: task.assignedToId,
+            quantity: completedQuantity,
+            priority: task.priority,
+            status: TaskStatus.PASSED,
+            acceptedAt: task.acceptedAt,
+            completedAt: new Date(),
+            passedAt: new Date(),
+            workflowStageId: task.workflowStageId,
+            isDefect: task.isDefect,
+          },
+        });
+
+        // 5. История для переданной части
+        await tx.productHistory.create({
+          data: {
+            productId: passedProduct.id,
+            userId: userId,
+            stage: task.stage,
+            status: TaskStatus.PASSED,
+            completedAt: new Date(),
+            passedAt: new Date(),
+          },
+        });
+
+        return updated;
+      }
+
+      // Полная передача: весь продукт уходит на следующий этап
       const updated = await tx.task.update({
         where: { id: taskId },
         data: {
@@ -773,7 +861,6 @@ export class TasksService {
         },
       });
 
-      // Создаем запись в истории
       await tx.productHistory.create({
         data: {
           productId: task.productId,
@@ -788,7 +875,6 @@ export class TasksService {
       // WorkLog НЕ создаётся здесь - оплата начисляется только когда склад принимает изделие
       // См. метод approveTask
 
-      // Обновляем стадию продукта
       await tx.product.update({
         where: { id: task.productId },
         data: {
@@ -846,7 +932,7 @@ export class TasksService {
           title: `${task.product.name} - ${nextWorkflowStage.name}`,
           description: `Количество: ${completedQuantity} шт.`,
           stage: nextWorkflowStage.legacyStage!,
-          productId: task.productId,
+          productId: targetProductId, // переданная часть (клон) или исходный продукт
           assignedToId: worker.id,
           quantity: completedQuantity, // Устанавливаем переданное количество
         },

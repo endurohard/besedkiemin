@@ -91,9 +91,13 @@ export class TasksController {
   }
 
   @Post(":id/pass")
-  @ApiOperation({ summary: "Передать задачу дальше" })
-  async passTask(@Param("id") id: string, @Req() req) {
-    return this.tasksService.passTask(id, req.user.userId);
+  @ApiOperation({ summary: "Передать задачу дальше (опц. частичное количество)" })
+  async passTask(
+    @Param("id") id: string,
+    @Body("quantity") quantity: number,
+    @Req() req,
+  ) {
+    return this.tasksService.passTask(id, req.user.userId, quantity);
   }
 
   @Post(":id/reject")
