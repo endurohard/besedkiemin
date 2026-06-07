@@ -38,6 +38,9 @@ export enum UserRole {
 // Order statuses
 export enum OrderStatus {
   NEW = 'NEW',
+  MEASUREMENT = 'MEASUREMENT',
+  DESIGN = 'DESIGN',
+  WAITING = 'WAITING',
   IN_PRODUCTION = 'IN_PRODUCTION',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
@@ -378,6 +381,10 @@ export interface Order {
   source?: OrderSource;
   totalAmount?: number;
   deadline?: string | null; // Плановая дата завершения заказа
+  acceptedAt?: string | null; // Подтверждение принятия заказа
+  productionStartedAt?: string | null; // Дата принятия в производство/отдел
+  callbackAt?: string | null; // Планируемая дата повторного обзвона (WAITING)
+  callbackNote?: string | null; // Причина ожидания / отказа клиента
   createdById: string;
   createdAt: string;
   updatedAt: string;
@@ -412,6 +419,9 @@ export interface CreateOrderDto {
 export interface UpdateOrderDto extends Partial<CreateOrderDto> {
   status?: OrderStatus;
   priority?: OrderPriority;
+  acceptedAt?: string | null;
+  callbackAt?: string | null;
+  callbackNote?: string | null;
 }
 
 // Product DTOs

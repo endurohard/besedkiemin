@@ -106,7 +106,7 @@ export const KanbanPage = () => {
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '', deadline: '' });
+  const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '', deadline: '', status: 'NEW' as string, callbackAt: '', callbackNote: '' });
   const [editProducts, setEditProducts] = useState<ProductEditForm[]>([]);
   const [productsToDelete, setProductsToDelete] = useState<string[]>([]);
   const [expandedProductIds, setExpandedProductIds] = useState<Set<string>>(new Set());
@@ -200,8 +200,14 @@ export const KanbanPage = () => {
 
   const updateOrderMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => ordersApi.update(id, data),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      // Обновляем открытую модалку (сохраняя детальные позиции из findOne)
+      setSelectedOrder((prev) =>
+        prev && updated && prev.id === updated.id
+          ? { ...prev, ...updated, products: prev.products }
+          : prev,
+      );
     },
   });
 
@@ -255,6 +261,9 @@ export const KanbanPage = () => {
       priority: selectedOrder.priority || 'NORMAL',
       sourceId: selectedOrder.sourceId || '',
       deadline: selectedOrder.deadline ? new Date(selectedOrder.deadline).toISOString().slice(0, 10) : '',
+      status: selectedOrder.status || 'NEW',
+      callbackAt: selectedOrder.callbackAt ? new Date(selectedOrder.callbackAt).toISOString().slice(0, 10) : '',
+      callbackNote: selectedOrder.callbackNote || '',
     });
     // Load existing products into edit form
     const existingProducts: ProductEditForm[] = (selectedOrder.products || []).map((p) => ({
@@ -363,6 +372,9 @@ export const KanbanPage = () => {
           priority: editOrderForm.priority,
           sourceId: editOrderForm.sourceId || undefined,
           deadline: editOrderForm.deadline || null,
+          status: editOrderForm.status,
+          callbackAt: editOrderForm.status === 'WAITING' ? (editOrderForm.callbackAt || null) : null,
+          callbackNote: editOrderForm.status === 'WAITING' ? (editOrderForm.callbackNote || null) : null,
         },
       });
 
@@ -853,6 +865,30 @@ export const KanbanPage = () => {
                     Новые ({orders.filter(o => o.status === OrderStatus.NEW).length})
                   </Button>
                   <Button
+                    variant={statusFilter === OrderStatus.MEASUREMENT ? 'default' : 'outline'}
+                    onClick={() => setStatusFilter(OrderStatus.MEASUREMENT)}
+                    size="sm"
+                    className="h-8 text-xs px-2"
+                  >
+                    Замеры ({orders.filter(o => o.status === OrderStatus.MEASUREMENT).length})
+                  </Button>
+                  <Button
+                    variant={statusFilter === OrderStatus.DESIGN ? 'default' : 'outline'}
+                    onClick={() => setStatusFilter(OrderStatus.DESIGN)}
+                    size="sm"
+                    className="h-8 text-xs px-2"
+                  >
+                    Проектирование ({orders.filter(o => o.status === OrderStatus.DESIGN).length})
+                  </Button>
+                  <Button
+                    variant={statusFilter === OrderStatus.WAITING ? 'default' : 'outline'}
+                    onClick={() => setStatusFilter(OrderStatus.WAITING)}
+                    size="sm"
+                    className="h-8 text-xs px-2"
+                  >
+                    Ожидание ({orders.filter(o => o.status === OrderStatus.WAITING).length})
+                  </Button>
+                  <Button
                     variant={statusFilter === OrderStatus.IN_PRODUCTION ? 'default' : 'outline'}
                     onClick={() => setStatusFilter(OrderStatus.IN_PRODUCTION)}
                     size="sm"
@@ -925,6 +961,9 @@ export const KanbanPage = () => {
                     const progress = getOrderProgress(order);
                     const statusConfig: Record<OrderStatus, { label: string; color: string; icon: typeof Clock }> = {
                       [OrderStatus.NEW]: { label: 'Новый', color: 'bg-muted/500', icon: Clock },
+                      [OrderStatus.MEASUREMENT]: { label: 'Замеры', color: 'bg-cyan-500', icon: Calendar },
+                      [OrderStatus.DESIGN]: { label: 'Проектирование', color: 'bg-indigo-500', icon: Pencil },
+                      [OrderStatus.WAITING]: { label: 'Ожидание клиента', color: 'bg-amber-500', icon: Clock },
                       [OrderStatus.IN_PRODUCTION]: { label: 'В производстве', color: 'bg-primary/100', icon: Package },
                       [OrderStatus.COMPLETED]: { label: 'Завершён', color: 'bg-green-500', icon: CheckCircle },
                       [OrderStatus.CANCELLED]: { label: 'Отменён', color: 'bg-red-500', icon: Clock },
@@ -1017,6 +1056,25 @@ export const KanbanPage = () => {
                           </div>
                         </CardHeader>
                         <CardContent className="py-2 px-3">
+                          {/* Ожидание клиента: дата обзвона и причина (#10) */}
+                          {order.status === OrderStatus.WAITING && (order.callbackAt || order.callbackNote) && (() => {
+                            const overdue = order.callbackAt
+                              ? new Date(order.callbackAt).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0)
+                              : false;
+                            return (
+                              <div className={`mb-2 p-1.5 rounded text-[11px] border ${overdue ? 'bg-red-50 border-red-300' : 'bg-amber-50 border-amber-200'}`}>
+                                {order.callbackAt && (
+                                  <div className={`flex items-center gap-1 font-medium ${overdue ? 'text-red-800' : 'text-amber-900'}`}>
+                                    <Clock className="w-3 h-3" />
+                                    {overdue ? 'Пора обзвонить!' : 'Обзвон:'} {new Date(order.callbackAt).toLocaleDateString('ru-RU')}
+                                  </div>
+                                )}
+                                {order.callbackNote && (
+                                  <div className="text-muted-foreground mt-0.5 break-words">{order.callbackNote}</div>
+                                )}
+                              </div>
+                            );
+                          })()}
                           {/* Прогресс */}
                           {order.products && order.products.length > 0 && (
                             <div className="mb-2">
@@ -1489,6 +1547,80 @@ export const KanbanPage = () => {
                         className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       />
                       <p className="text-[11px] text-muted-foreground mt-1">За 4 дня до срока заказ мигает красным 🔴</p>
+                    </div>
+
+                    {/* Статус заказа (воронка) */}
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Статус заказа (воронка)</label>
+                      <select
+                        value={editOrderForm.status}
+                        onChange={(e) => setEditOrderForm({ ...editOrderForm, status: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      >
+                        <option value="NEW">Новый</option>
+                        <option value="MEASUREMENT">Замеры</option>
+                        <option value="DESIGN">Проектирование</option>
+                        <option value="WAITING">Ожидание клиента</option>
+                        <option value="IN_PRODUCTION">В производстве</option>
+                        <option value="COMPLETED">Завершён</option>
+                        <option value="CANCELLED">Отменён</option>
+                      </select>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        В производстве/Завершён обычно проставляются автоматически по этапам позиций
+                      </p>
+                    </div>
+
+                    {/* Поля ожидания клиента (статус WAITING) */}
+                    {editOrderForm.status === 'WAITING' && (
+                      <div className="p-3 border border-amber-300 rounded-md bg-amber-50 space-y-2">
+                        <p className="text-xs font-semibold text-amber-900">⏳ Ожидание подтверждения клиента</p>
+                        <div>
+                          <label className="block text-xs font-medium text-foreground mb-1">Дата повторного обзвона</label>
+                          <input
+                            type="date"
+                            value={editOrderForm.callbackAt}
+                            onChange={(e) => setEditOrderForm({ ...editOrderForm, callbackAt: e.target.value })}
+                            className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-foreground mb-1">Причина ожидания / отказа</label>
+                          <textarea
+                            value={editOrderForm.callbackNote}
+                            onChange={(e) => setEditOrderForm({ ...editOrderForm, callbackNote: e.target.value })}
+                            rows={2}
+                            placeholder="Например: клиент думает, перезвонить через 3 дня"
+                            className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Подтверждение принятия заказа (#6) и даты воронки */}
+                    <div className="p-3 border rounded-md bg-muted/30 space-y-2 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground">Принятие заказа:</span>
+                        {selectedOrder?.acceptedAt ? (
+                          <span className="font-medium text-green-700">
+                            ✓ {new Date(selectedOrder.acceptedAt).toLocaleDateString('ru-RU')}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => updateOrderMutation.mutate({ id: selectedOrder!.id, data: { acceptedAt: new Date().toISOString() } })}
+                            disabled={updateOrderMutation.isPending}
+                            className="px-2 py-1 rounded bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50"
+                          >
+                            Подтвердить принятие
+                          </button>
+                        )}
+                      </div>
+                      {selectedOrder?.productionStartedAt && (
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-muted-foreground">Принят в производство:</span>
+                          <span className="font-medium">{new Date(selectedOrder.productionStartedAt).toLocaleDateString('ru-RU')}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

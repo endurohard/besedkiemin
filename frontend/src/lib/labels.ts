@@ -22,6 +22,9 @@ export const stageLabels: Record<string, string> = {
 
 export const orderStatusLabels: Record<string, string> = {
   [OrderStatus.NEW]: 'Новый',
+  [OrderStatus.MEASUREMENT]: 'Замеры',
+  [OrderStatus.DESIGN]: 'Проектирование',
+  [OrderStatus.WAITING]: 'Ожидание клиента',
   [OrderStatus.IN_PRODUCTION]: 'В производстве',
   [OrderStatus.COMPLETED]: 'Завершен',
   [OrderStatus.CANCELLED]: 'Отменен',

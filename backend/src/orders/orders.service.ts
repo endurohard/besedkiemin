@@ -123,6 +123,10 @@ export class OrdersService {
           description: true,
           totalAmount: true,
           deadline: true,
+          acceptedAt: true,
+          productionStartedAt: true,
+          callbackAt: true,
+          callbackNote: true,
           sourceId: true,
           source: {
             select: {
@@ -253,16 +257,26 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {
-    await this.findOne(id); // Проверка существования
+    const existing = await this.findOne(id); // Проверка существования
 
-    const { deadline, ...restDto } = updateOrderDto;
+    const { deadline, acceptedAt, callbackAt, status, ...restDto } =
+      updateOrderDto;
+
+    // Хелпер: преобразование ISO-строки/null в Date/null, undefined — не трогаем
+    const toDate = (v?: string | null) =>
+      v !== undefined ? (v ? new Date(v) : null) : undefined;
 
     return this.prisma.order.update({
       where: { id },
       data: {
         ...restDto,
-        ...(deadline !== undefined
-          ? { deadline: deadline ? new Date(deadline) : null }
+        ...(status !== undefined ? { status } : {}),
+        ...(deadline !== undefined ? { deadline: toDate(deadline) } : {}),
+        ...(acceptedAt !== undefined ? { acceptedAt: toDate(acceptedAt) } : {}),
+        ...(callbackAt !== undefined ? { callbackAt: toDate(callbackAt) } : {}),
+        // При переводе в производство фиксируем дату принятия в отдел (один раз)
+        ...(status === "IN_PRODUCTION" && !existing.productionStartedAt
+          ? { productionStartedAt: new Date() }
           : {}),
       },
       include: {
@@ -410,6 +424,9 @@ export class OrdersService {
   private translateStatus(status: OrderStatus): string {
     const translations = {
       [OrderStatus.NEW]: "Новый",
+      [OrderStatus.MEASUREMENT]: "Замеры",
+      [OrderStatus.DESIGN]: "Проектирование",
+      [OrderStatus.WAITING]: "Ожидание клиента",
       [OrderStatus.IN_PRODUCTION]: "В производстве",
       [OrderStatus.COMPLETED]: "Завершен",
       [OrderStatus.CANCELLED]: "Отменен",

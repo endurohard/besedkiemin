@@ -586,12 +586,26 @@ export class ProductsService {
 
     if (products.length === 0) return;
 
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { status: true, productionStartedAt: true },
+    });
+    if (!order) return;
+
+    // Ручные статусы воронки до производства — не сбрасываем их автоматически,
+    // пока производство реально не началось.
+    const FUNNEL_STATUSES: OrderStatus[] = [
+      OrderStatus.MEASUREMENT,
+      OrderStatus.DESIGN,
+      OrderStatus.WAITING,
+    ];
+
     // Если все продукты завершены
     const allCompleted = products.every(
       (p) => p.stage === ProductionStage.COMPLETED,
     );
 
-    // Если все продукты в PENDING — возвращаем заказ в NEW
+    // Если все продукты в PENDING
     const allPending = products.every(
       (p) => p.stage === ProductionStage.PENDING,
     );
@@ -606,6 +620,9 @@ export class ProductsService {
     if (allCompleted) {
       newStatus = OrderStatus.COMPLETED;
     } else if (allPending) {
+      // Производство ещё не началось: сохраняем ручной статус воронки,
+      // иначе откатываем в NEW.
+      if (FUNNEL_STATUSES.includes(order.status)) return;
       newStatus = OrderStatus.NEW;
     } else if (hasStarted) {
       newStatus = OrderStatus.IN_PRODUCTION;
@@ -613,9 +630,17 @@ export class ProductsService {
       return;
     }
 
+    if (newStatus === order.status) return;
+
     await this.prisma.order.update({
       where: { id: orderId },
-      data: { status: newStatus },
+      data: {
+        status: newStatus,
+        // Фиксируем дату старта производства один раз (дата принятия в отдел)
+        ...(newStatus === OrderStatus.IN_PRODUCTION && !order.productionStartedAt
+          ? { productionStartedAt: new Date() }
+          : {}),
+      },
     });
   }
 }

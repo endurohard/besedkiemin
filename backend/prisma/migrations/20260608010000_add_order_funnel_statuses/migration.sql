@@ -1,0 +1,10 @@
+-- AlterEnum
+ALTER TYPE "OrderStatus" ADD VALUE IF NOT EXISTS 'MEASUREMENT';
+ALTER TYPE "OrderStatus" ADD VALUE IF NOT EXISTS 'DESIGN';
+ALTER TYPE "OrderStatus" ADD VALUE IF NOT EXISTS 'WAITING';
+
+-- AlterTable
+ALTER TABLE "orders" ADD COLUMN "accepted_at" TIMESTAMP(3);
+ALTER TABLE "orders" ADD COLUMN "production_started_at" TIMESTAMP(3);
+ALTER TABLE "orders" ADD COLUMN "callback_at" TIMESTAMP(3);
+ALTER TABLE "orders" ADD COLUMN "callback_note" TEXT;

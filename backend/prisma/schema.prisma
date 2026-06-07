@@ -59,6 +59,9 @@ model RoleWorkflowStage {
 // Статусы заказа
 enum OrderStatus {
   NEW // Новый заказ
+  MEASUREMENT // Замеры (выезд на замер перед производством)
+  DESIGN // Проектирование
+  WAITING // Ожидание подтверждения клиента (нужен повторный обзвон)
   IN_PRODUCTION // В производстве
   COMPLETED // Завершен
   CANCELLED // Отменен
@@ -230,6 +233,12 @@ model Order {
 
   // Плановая дата завершения заказа (для контроля сроков, мигание при приближении дедлайна)
   deadline DateTime?
+
+  // Воронка до производства
+  acceptedAt          DateTime? @map("accepted_at") // Подтверждение принятия заказа менеджером
+  productionStartedAt DateTime? @map("production_started_at") // Дата принятия заказа в производство/отдел
+  callbackAt          DateTime? @map("callback_at") // Планируемая дата повторного обзвона (статус WAITING)
+  callbackNote        String?   @map("callback_note") // Причина ожидания / отказа клиента
 
   createdById String @map("created_by_id")
   createdBy   User   @relation(fields: [createdById], references: [id])
