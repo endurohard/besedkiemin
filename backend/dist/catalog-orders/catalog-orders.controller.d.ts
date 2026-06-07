@@ -7,9 +7,9 @@ export declare class CatalogOrdersController {
     create(createDto: CreateCatalogOrderDto): Promise<{
         items: ({
             product: {
+                description: string | null;
                 order: number;
                 name: string;
-                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -38,17 +38,17 @@ export declare class CatalogOrdersController {
             comment: string | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         orderNumber: string;
         customerName: string;
         customerPhone: string;
         totalAmount: number | null;
         deliveryAddress: string | null;
-        customerEmail: string | null;
         comment: string | null;
+        customerEmail: string | null;
         cancellationReason: string | null;
         contactedAt: Date | null;
         contactedBy: string | null;
@@ -59,9 +59,9 @@ export declare class CatalogOrdersController {
         data: ({
             items: ({
                 product: {
+                    description: string | null;
                     order: number;
                     name: string;
-                    description: string | null;
                     isActive: boolean;
                     id: string;
                     createdAt: Date;
@@ -90,17 +90,17 @@ export declare class CatalogOrdersController {
                 comment: string | null;
             })[];
         } & {
+            status: import(".prisma/client").$Enums.CatalogOrderStatus;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.CatalogOrderStatus;
             orderNumber: string;
             customerName: string;
             customerPhone: string;
             totalAmount: number | null;
             deliveryAddress: string | null;
-            customerEmail: string | null;
             comment: string | null;
+            customerEmail: string | null;
             cancellationReason: string | null;
             contactedAt: Date | null;
             contactedBy: string | null;
@@ -117,9 +117,9 @@ export declare class CatalogOrdersController {
     findOne(id: string): Promise<{
         items: ({
             product: {
+                description: string | null;
                 order: number;
                 name: string;
-                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -148,17 +148,17 @@ export declare class CatalogOrdersController {
             comment: string | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         orderNumber: string;
         customerName: string;
         customerPhone: string;
         totalAmount: number | null;
         deliveryAddress: string | null;
-        customerEmail: string | null;
         comment: string | null;
+        customerEmail: string | null;
         cancellationReason: string | null;
         contactedAt: Date | null;
         contactedBy: string | null;
@@ -168,9 +168,9 @@ export declare class CatalogOrdersController {
     update(id: string, updateDto: UpdateCatalogOrderDto): Promise<{
         items: ({
             product: {
+                description: string | null;
                 order: number;
                 name: string;
-                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -199,17 +199,17 @@ export declare class CatalogOrdersController {
             comment: string | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         orderNumber: string;
         customerName: string;
         customerPhone: string;
         totalAmount: number | null;
         deliveryAddress: string | null;
-        customerEmail: string | null;
         comment: string | null;
+        customerEmail: string | null;
         cancellationReason: string | null;
         contactedAt: Date | null;
         contactedBy: string | null;
@@ -217,17 +217,17 @@ export declare class CatalogOrdersController {
         processedBy: string | null;
     }>;
     remove(id: string): Promise<{
+        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         orderNumber: string;
         customerName: string;
         customerPhone: string;
         totalAmount: number | null;
         deliveryAddress: string | null;
-        customerEmail: string | null;
         comment: string | null;
+        customerEmail: string | null;
         cancellationReason: string | null;
         contactedAt: Date | null;
         contactedBy: string | null;
@@ -237,9 +237,9 @@ export declare class CatalogOrdersController {
     markContacted(id: string, req: any): Promise<{
         items: ({
             product: {
+                description: string | null;
                 order: number;
                 name: string;
-                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -268,17 +268,17 @@ export declare class CatalogOrdersController {
             comment: string | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         orderNumber: string;
         customerName: string;
         customerPhone: string;
         totalAmount: number | null;
         deliveryAddress: string | null;
-        customerEmail: string | null;
         comment: string | null;
+        customerEmail: string | null;
         cancellationReason: string | null;
         contactedAt: Date | null;
         contactedBy: string | null;
@@ -288,9 +288,9 @@ export declare class CatalogOrdersController {
     markProcessed(id: string, req: any): Promise<{
         items: ({
             product: {
+                description: string | null;
                 order: number;
                 name: string;
-                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -319,17 +319,17 @@ export declare class CatalogOrdersController {
             comment: string | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         orderNumber: string;
         customerName: string;
         customerPhone: string;
         totalAmount: number | null;
         deliveryAddress: string | null;
-        customerEmail: string | null;
         comment: string | null;
+        customerEmail: string | null;
         cancellationReason: string | null;
         contactedAt: Date | null;
         contactedBy: string | null;
@@ -339,9 +339,9 @@ export declare class CatalogOrdersController {
     cancelOrder(id: string, cancellationReason: string, req: any): Promise<{
         items: ({
             product: {
+                description: string | null;
                 order: number;
                 name: string;
-                description: string | null;
                 isActive: boolean;
                 id: string;
                 createdAt: Date;
@@ -370,17 +370,17 @@ export declare class CatalogOrdersController {
             comment: string | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.CatalogOrderStatus;
         orderNumber: string;
         customerName: string;
         customerPhone: string;
         totalAmount: number | null;
         deliveryAddress: string | null;
-        customerEmail: string | null;
         comment: string | null;
+        customerEmail: string | null;
         cancellationReason: string | null;
         contactedAt: Date | null;
         contactedBy: string | null;

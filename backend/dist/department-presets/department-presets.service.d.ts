@@ -5,113 +5,114 @@ export declare class DepartmentPresetsService {
     constructor(prisma: PrismaService);
     findAll(): Promise<({
         user: {
-            id: string;
-            isActive: boolean;
+            role: {
+                name: string;
+                code: string;
+            };
             email: string;
             firstName: string;
             lastName: string;
-            role: {
-                code: string;
-                name: string;
-            };
+            isActive: boolean;
+            id: string;
         };
     } & {
+        isActive: boolean;
         id: string;
         code: string;
-        label: string;
-        userId: string;
         color: string;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+        label: string;
+        userId: string;
+        sortOrder: number;
     })[]>;
     findPublic(): Promise<{
         code: string;
-        label: string;
         color: string;
+        label: string;
         sortOrder: number;
     }[]>;
     findByCodeActive(code: string): Promise<({
         user: {
             role: {
+                description: string | null;
+                order: number;
+                name: string;
+                isActive: boolean;
                 id: string;
                 code: string;
                 color: string | null;
-                isActive: boolean;
+                isSystem: boolean;
+                permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
-                name: string;
-                description: string | null;
-                isSystem: boolean;
-                order: number;
-                permissions: import("@prisma/client/runtime/library").JsonValue;
             };
         } & {
-            id: string;
-            isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             email: string;
             password: string;
             firstName: string;
             lastName: string;
-            isDepartmentAccount: boolean;
             roleId: string;
-            paymentType: import(".prisma/client").$Enums.PaymentType;
-            monthlySalary: number | null;
-            pin: string | null;
-            pinLookup: string | null;
-            telegramId: string | null;
             sipServer: string | null;
             sipUser: string | null;
             sipPassword: string | null;
             sipPort: number | null;
+            paymentType: import(".prisma/client").$Enums.PaymentType;
+            monthlySalary: number | null;
+            isActive: boolean;
+            telegramId: string | null;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
             sipWsPort: number | null;
+            adminPassword: string | null;
+            isDepartmentAccount: boolean;
+            pin: string | null;
+            pinLookup: string | null;
         };
     } & {
+        isActive: boolean;
         id: string;
         code: string;
-        label: string;
-        userId: string;
         color: string;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+        label: string;
+        userId: string;
+        sortOrder: number;
     }) | null>;
     findOne(id: string): Promise<{
+        isActive: boolean;
         id: string;
         code: string;
-        label: string;
-        userId: string;
         color: string;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+        label: string;
+        userId: string;
+        sortOrder: number;
     }>;
     create(dto: CreateDepartmentPresetDto): Promise<{
+        isActive: boolean;
         id: string;
         code: string;
-        label: string;
-        userId: string;
         color: string;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+        label: string;
+        userId: string;
+        sortOrder: number;
     }>;
     update(id: string, dto: UpdateDepartmentPresetDto): Promise<{
+        isActive: boolean;
         id: string;
         code: string;
-        label: string;
-        userId: string;
         color: string;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+        label: string;
+        userId: string;
+        sortOrder: number;
     }>;
     remove(id: string): Promise<{
         success: boolean;

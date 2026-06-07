@@ -6,9 +6,9 @@ export declare class CatalogProductsController {
     constructor(productsService: CatalogProductsService);
     create(createDto: CreateCatalogProductDto): Promise<{
         category: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -17,9 +17,9 @@ export declare class CatalogProductsController {
             imageUrl: string | null;
         };
     } & {
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -40,9 +40,9 @@ export declare class CatalogProductsController {
     }>;
     findAll(categoryId?: string, isFeatured?: string, includeInactive?: string): Promise<({
         category: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -51,9 +51,9 @@ export declare class CatalogProductsController {
             imageUrl: string | null;
         };
     } & {
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -74,9 +74,9 @@ export declare class CatalogProductsController {
     })[]>;
     getFeatured(limit?: string): Promise<({
         category: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -85,9 +85,9 @@ export declare class CatalogProductsController {
             imageUrl: string | null;
         };
     } & {
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -108,9 +108,9 @@ export declare class CatalogProductsController {
     })[]>;
     findOne(id: string): Promise<{
         category: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -119,9 +119,9 @@ export declare class CatalogProductsController {
             imageUrl: string | null;
         };
     } & {
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -142,9 +142,9 @@ export declare class CatalogProductsController {
     }>;
     findBySlug(slug: string): Promise<{
         category: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -153,9 +153,9 @@ export declare class CatalogProductsController {
             imageUrl: string | null;
         };
     } & {
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -176,9 +176,9 @@ export declare class CatalogProductsController {
     }>;
     update(id: string, updateDto: UpdateCatalogProductDto): Promise<{
         category: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             createdAt: Date;
@@ -187,9 +187,9 @@ export declare class CatalogProductsController {
             imageUrl: string | null;
         };
     } & {
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -209,9 +209,9 @@ export declare class CatalogProductsController {
         isFeatured: boolean;
     }>;
     remove(id: string): Promise<{
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         createdAt: Date;

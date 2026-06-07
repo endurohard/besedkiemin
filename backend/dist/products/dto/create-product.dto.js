@@ -127,6 +127,16 @@ __decorate([
 ], CreateProductDto.prototype, "isCustom", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
+        example: false,
+        required: false,
+        description: "Требуется проектирование — позиция стартует на этапе DESIGN перед производством",
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], CreateProductDto.prototype, "needsDesign", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
         example: "uuid-worker-id",
         required: false,
         description: "ID работника для назначения на первый этап",

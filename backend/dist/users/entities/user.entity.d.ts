@@ -17,5 +17,6 @@ export declare class UserEntity {
     sipWsPort?: number | null;
     paymentType: PaymentType;
     monthlySalary?: number | null;
+    adminPassword?: string | null;
     constructor(partial: Partial<UserEntity>);
 }

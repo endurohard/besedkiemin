@@ -104,20 +104,35 @@ let AnalyticsService = class AnalyticsService {
                         product: {
                             select: {
                                 name: true,
-                                order: {
-                                    select: {
-                                        orderNumber: true,
-                                    },
-                                },
+                                order: { select: { orderNumber: true } },
                             },
                         },
                     },
+                },
+                tasks: {
+                    where: {
+                        status: { in: ["ACCEPTED", "NEW"] },
+                        isDefect: false,
+                    },
+                    select: {
+                        stage: true,
+                        acceptedAt: true,
+                        product: {
+                            select: {
+                                name: true,
+                                order: { select: { orderNumber: true } },
+                            },
+                        },
+                    },
+                    take: 1,
+                    orderBy: { acceptedAt: "desc" },
                 },
             },
         });
         const userStats = users.map((user) => {
             const completedHistory = user.productHistory.filter((h) => h.completedAt !== null);
             const activeHistory = user.productHistory.find((h) => h.completedAt === null);
+            const activeTask = user.tasks[0] ?? null;
             let avgTaskDuration = 0;
             if (completedHistory.length > 0) {
                 const totalDuration = completedHistory.reduce((sum, task) => {
@@ -127,6 +142,7 @@ let AnalyticsService = class AnalyticsService {
                 }, 0);
                 avgTaskDuration = Math.round(totalDuration / completedHistory.length / 1000 / 60 / 60);
             }
+            const resolvedActive = activeHistory ?? activeTask;
             return {
                 user: {
                     id: user.id,
@@ -136,13 +152,15 @@ let AnalyticsService = class AnalyticsService {
                 stats: {
                     completedTasks: completedHistory.length,
                     avgTaskDurationHours: avgTaskDuration,
-                    hasActiveTask: !!activeHistory,
-                    activeTask: activeHistory
+                    hasActiveTask: !!resolvedActive,
+                    activeTask: resolvedActive
                         ? {
-                            productName: activeHistory.product.name,
-                            orderNumber: activeHistory.product.order.orderNumber,
-                            stage: activeHistory.stage,
-                            startedAt: activeHistory.startedAt,
+                            productName: resolvedActive.product.name,
+                            orderNumber: resolvedActive.product.order.orderNumber,
+                            stage: resolvedActive.stage,
+                            startedAt: "startedAt" in resolvedActive
+                                ? resolvedActive.startedAt
+                                : (resolvedActive.acceptedAt ?? new Date()),
                         }
                         : null,
                 },

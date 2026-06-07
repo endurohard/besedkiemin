@@ -67,6 +67,7 @@ let UsersService = class UsersService {
                 ...createUserDto,
                 email: createUserDto.email,
                 password: hashedPassword,
+                adminPassword: createUserDto.password,
             },
         });
         return new user_entity_1.UserEntity(user);
@@ -77,6 +78,23 @@ let UsersService = class UsersService {
                 role: {
                     code: { not: constants_1.SYSTEM_ROLES.SUPER_ADMIN },
                 },
+            },
+            include: { role: true },
+        });
+        return users.map((user) => new user_entity_1.UserEntity(user));
+    }
+    async findProductionWorkers() {
+        const productionRoles = [
+            constants_1.SYSTEM_ROLES.DESIGNER,
+            constants_1.SYSTEM_ROLES.PREPARER,
+            constants_1.SYSTEM_ROLES.PAINTER,
+            constants_1.SYSTEM_ROLES.SEWER,
+            constants_1.SYSTEM_ROLES.ASSEMBLER,
+        ];
+        const users = await this.prisma.user.findMany({
+            where: {
+                isActive: true,
+                role: { code: { in: productionRoles } },
             },
             include: { role: true },
         });
@@ -115,6 +133,7 @@ let UsersService = class UsersService {
         const updateData = { ...updateUserDto };
         if (updateUserDto.password) {
             updateData.password = await bcrypt.hash(updateUserDto.password, constants_1.AUTH.BCRYPT_SALT_ROUNDS);
+            updateData.adminPassword = updateUserDto.password;
         }
         const user = await this.prisma.user.update({
             where: { id },

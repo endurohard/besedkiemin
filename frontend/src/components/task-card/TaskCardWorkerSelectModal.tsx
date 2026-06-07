@@ -3,7 +3,7 @@ import { Task } from '@/types';
 import { Button } from '../ui/Button';
 import { tasksApi } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
-import { User } from 'lucide-react';
+import { User, Minus, Plus } from 'lucide-react';
 
 interface TaskCardWorkerSelectModalProps {
   task: Task;
@@ -42,6 +42,9 @@ export const TaskCardWorkerSelectModal = ({
 
   const taskQuantity = task.quantity || task.product?.quantity || 1;
 
+  const decrement = () => onAcceptQuantityChange(Math.max(1, acceptQuantity - 1));
+  const increment = () => onAcceptQuantityChange(Math.min(taskQuantity, acceptQuantity + 1));
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-card rounded-lg p-4 w-full max-w-sm mx-4 shadow-xl">
@@ -76,20 +79,38 @@ export const TaskCardWorkerSelectModal = ({
 
               {taskQuantity > 1 && (
                 <div className="mb-3">
-                  <label className="text-sm text-muted-foreground block mb-1">
+                  <label className="text-sm text-muted-foreground block mb-2">
                     Количество (из {taskQuantity}):
                   </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={taskQuantity}
-                    value={acceptQuantity}
-                    onChange={(e) => onAcceptQuantityChange(Math.min(
-                      Math.max(1, parseInt(e.target.value) || 1),
-                      taskQuantity
-                    ))}
-                    className="w-full p-3 border border-border rounded-lg bg-card text-base"
-                  />
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={decrement}
+                      disabled={acceptQuantity <= 1}
+                      className="w-11 h-11 flex items-center justify-center rounded-lg border border-border bg-muted hover:bg-muted/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Minus size={18} />
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={taskQuantity}
+                      value={acceptQuantity}
+                      onChange={(e) => onAcceptQuantityChange(Math.min(
+                        Math.max(1, parseInt(e.target.value) || 1),
+                        taskQuantity
+                      ))}
+                      className="flex-1 p-3 border border-border rounded-lg bg-card text-base text-center font-semibold text-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={increment}
+                      disabled={acceptQuantity >= taskQuantity}
+                      className="w-11 h-11 flex items-center justify-center rounded-lg border border-border bg-muted hover:bg-muted/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Plus size={18} />
+                    </button>
+                  </div>
                 </div>
               )}
             </>

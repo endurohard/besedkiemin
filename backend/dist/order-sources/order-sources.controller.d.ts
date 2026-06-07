@@ -8,9 +8,9 @@ export declare class OrderSourcesController {
             orders: number;
         };
     } & {
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -20,9 +20,9 @@ export declare class OrderSourcesController {
         icon: string | null;
     })[]>;
     findActive(): Promise<{
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -40,9 +40,9 @@ export declare class OrderSourcesController {
             orders: number;
         };
     } & {
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -52,9 +52,9 @@ export declare class OrderSourcesController {
         icon: string | null;
     }>;
     create(dto: CreateOrderSourceDto): Promise<{
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         code: string;
@@ -64,9 +64,9 @@ export declare class OrderSourcesController {
         icon: string | null;
     }>;
     update(id: string, dto: UpdateOrderSourceDto): Promise<{
+        description: string | null;
         order: number;
         name: string;
-        description: string | null;
         isActive: boolean;
         id: string;
         code: string;

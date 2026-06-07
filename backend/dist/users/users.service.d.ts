@@ -7,6 +7,7 @@ export declare class UsersService {
     constructor(prisma: PrismaService);
     create(createUserDto: CreateUserDto): Promise<UserEntity>;
     findAll(): Promise<UserEntity[]>;
+    findProductionWorkers(): Promise<UserEntity[]>;
     findOne(id: string): Promise<UserEntity>;
     findByEmail(email: string): Promise<{
         email: string;
@@ -26,15 +27,16 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
         sipWsPort: number | null;
+        adminPassword: string | null;
         isDepartmentAccount: boolean;
         pin: string | null;
         pinLookup: string | null;
     } | null>;
     findByEmailWithRole(email: string): Promise<({
         role: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -62,6 +64,7 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
         sipWsPort: number | null;
+        adminPassword: string | null;
         isDepartmentAccount: boolean;
         pin: string | null;
         pinLookup: string | null;
@@ -72,9 +75,9 @@ export declare class UsersService {
     setPin(id: string, pin: string): Promise<void>;
     findByPin(pin: string): Promise<({
         role: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -102,6 +105,7 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
         sipWsPort: number | null;
+        adminPassword: string | null;
         isDepartmentAccount: boolean;
         pin: string | null;
         pinLookup: string | null;

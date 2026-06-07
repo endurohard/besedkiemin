@@ -5,12 +5,12 @@ export declare class ContactRequestsService {
     private prisma;
     constructor(prisma: PrismaService);
     create(createDto: CreateContactRequestDto): Promise<{
+        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;
@@ -18,12 +18,12 @@ export declare class ContactRequestsService {
         isProcessed: boolean;
     }>;
     findAll(onlyUnprocessed?: boolean): Promise<{
+        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;
@@ -31,12 +31,12 @@ export declare class ContactRequestsService {
         isProcessed: boolean;
     }[]>;
     findOne(id: string): Promise<{
+        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;
@@ -44,12 +44,12 @@ export declare class ContactRequestsService {
         isProcessed: boolean;
     }>;
     update(id: string, updateDto: UpdateContactRequestDto): Promise<{
+        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;
@@ -57,12 +57,12 @@ export declare class ContactRequestsService {
         isProcessed: boolean;
     }>;
     remove(id: string): Promise<{
+        message: string;
         name: string;
         email: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string;
         notes: string | null;
         productId: string | null;
         phone: string;

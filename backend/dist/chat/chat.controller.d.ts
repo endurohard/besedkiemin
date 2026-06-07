@@ -68,8 +68,8 @@ export declare class ChatController {
     }>;
     getAllRooms(): Promise<{
         catalogOrder: {
-            id: string;
             status: import(".prisma/client").$Enums.CatalogOrderStatus;
+            id: string;
             orderNumber: string;
             customerPhone: string;
             customerEmail: string | null;
@@ -106,17 +106,17 @@ export declare class ChatController {
     }[]>;
     getRoom(roomId: string): Promise<{
         catalogOrder: {
+            status: import(".prisma/client").$Enums.CatalogOrderStatus;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.CatalogOrderStatus;
             orderNumber: string;
             customerName: string;
             customerPhone: string;
             totalAmount: number | null;
             deliveryAddress: string | null;
-            customerEmail: string | null;
             comment: string | null;
+            customerEmail: string | null;
             cancellationReason: string | null;
             contactedAt: Date | null;
             contactedBy: string | null;

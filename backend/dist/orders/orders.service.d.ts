@@ -10,9 +10,9 @@ export declare class OrdersService {
     constructor(prisma: PrismaService, notifications: NotificationsGateway);
     create(createOrderDto: CreateOrderDto, userId: string): Promise<{
         source: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -23,9 +23,9 @@ export declare class OrdersService {
         } | null;
         createdBy: {
             role: {
+                description: string | null;
                 order: number;
                 name: string;
-                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -44,9 +44,9 @@ export declare class OrdersService {
             history: ({
                 user: {
                     role: {
+                        description: string | null;
                         order: number;
                         name: string;
-                        description: string | null;
                         isActive: boolean;
                         id: string;
                         code: string;
@@ -61,10 +61,10 @@ export declare class OrdersService {
                     id: string;
                 };
             } & {
+                status: import(".prisma/client").$Enums.TaskStatus;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import(".prisma/client").$Enums.TaskStatus;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 completedAt: Date | null;
                 passedAt: Date | null;
@@ -75,8 +75,8 @@ export declare class OrdersService {
                 startedAt: Date;
             })[];
         } & {
-            name: string;
             description: string | null;
+            name: string;
             id: string;
             color: string | null;
             createdAt: Date;
@@ -92,15 +92,16 @@ export declare class OrdersService {
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
             isCustom: boolean;
+            needsDesign: boolean;
             stageAssignments: Prisma.JsonValue | null;
             nomenclatureId: string | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.OrderStatus;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.OrderStatus;
         priority: import(".prisma/client").$Enums.OrderPriority;
         notes: string | null;
         orderNumber: string;
@@ -119,6 +120,7 @@ export declare class OrdersService {
         limit?: number;
     }): Promise<{
         data: {
+            status: import(".prisma/client").$Enums.OrderStatus;
             description: string | null;
             id: string;
             createdAt: Date;
@@ -126,7 +128,6 @@ export declare class OrdersService {
             _count: {
                 products: number;
             };
-            status: import(".prisma/client").$Enums.OrderStatus;
             priority: import(".prisma/client").$Enums.OrderPriority;
             orderNumber: string;
             customerName: string;
@@ -166,9 +167,9 @@ export declare class OrdersService {
     }>;
     findOne(id: string): Promise<{
         source: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -179,9 +180,9 @@ export declare class OrdersService {
         } | null;
         createdBy: {
             role: {
+                description: string | null;
                 order: number;
                 name: string;
-                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -213,10 +214,10 @@ export declare class OrdersService {
                     id: string;
                 } | null;
             } & {
+                status: import(".prisma/client").$Enums.QualityStatus;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import(".prisma/client").$Enums.QualityStatus;
                 notes: string | null;
                 productId: string;
                 photoUrl: string | null;
@@ -234,12 +235,12 @@ export declare class OrdersService {
                     id: string;
                 };
             } & {
+                status: import(".prisma/client").$Enums.TaskStatus;
                 description: string | null;
                 title: string;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import(".prisma/client").$Enums.TaskStatus;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 quantity: number;
                 priority: import(".prisma/client").$Enums.TaskPriority;
@@ -258,9 +259,9 @@ export declare class OrdersService {
             history: ({
                 user: {
                     role: {
+                        description: string | null;
                         order: number;
                         name: string;
-                        description: string | null;
                         isActive: boolean;
                         id: string;
                         code: string;
@@ -280,10 +281,10 @@ export declare class OrdersService {
                     id: string;
                 } | null;
             } & {
+                status: import(".prisma/client").$Enums.TaskStatus;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import(".prisma/client").$Enums.TaskStatus;
                 stage: import(".prisma/client").$Enums.ProductionStage;
                 completedAt: Date | null;
                 passedAt: Date | null;
@@ -294,8 +295,8 @@ export declare class OrdersService {
                 startedAt: Date;
             })[];
         } & {
-            name: string;
             description: string | null;
+            name: string;
             id: string;
             color: string | null;
             createdAt: Date;
@@ -311,15 +312,16 @@ export declare class OrdersService {
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
             isCustom: boolean;
+            needsDesign: boolean;
             stageAssignments: Prisma.JsonValue | null;
             nomenclatureId: string | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.OrderStatus;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.OrderStatus;
         priority: import(".prisma/client").$Enums.OrderPriority;
         notes: string | null;
         orderNumber: string;
@@ -332,9 +334,9 @@ export declare class OrdersService {
     }>;
     update(id: string, updateOrderDto: UpdateOrderDto): Promise<{
         source: {
+            description: string | null;
             order: number;
             name: string;
-            description: string | null;
             isActive: boolean;
             id: string;
             code: string;
@@ -345,9 +347,9 @@ export declare class OrdersService {
         } | null;
         createdBy: {
             role: {
+                description: string | null;
                 order: number;
                 name: string;
-                description: string | null;
                 isActive: boolean;
                 id: string;
                 code: string;
@@ -363,8 +365,8 @@ export declare class OrdersService {
             id: string;
         };
         products: {
-            name: string;
             description: string | null;
+            name: string;
             id: string;
             color: string | null;
             createdAt: Date;
@@ -380,15 +382,16 @@ export declare class OrdersService {
             requiresSewing: boolean | null;
             upholsteryMaterial: string | null;
             isCustom: boolean;
+            needsDesign: boolean;
             stageAssignments: Prisma.JsonValue | null;
             nomenclatureId: string | null;
         }[];
     } & {
+        status: import(".prisma/client").$Enums.OrderStatus;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.OrderStatus;
         priority: import(".prisma/client").$Enums.OrderPriority;
         notes: string | null;
         orderNumber: string;
@@ -400,11 +403,11 @@ export declare class OrdersService {
         createdById: string;
     }>;
     remove(id: string): Promise<{
+        status: import(".prisma/client").$Enums.OrderStatus;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.OrderStatus;
         priority: import(".prisma/client").$Enums.OrderPriority;
         notes: string | null;
         orderNumber: string;

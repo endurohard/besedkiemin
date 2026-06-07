@@ -31,10 +31,10 @@ export declare class ShipmentsController {
             id: string;
         };
     } & {
+        status: import(".prisma/client").$Enums.ShipmentStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.ShipmentStatus;
         notes: string | null;
         orderNumber: string | null;
         customerName: string;
@@ -44,6 +44,7 @@ export declare class ShipmentsController {
         shippedById: string;
     }>;
     getAllShipments(req: any, status?: ShipmentStatus): Promise<{
+        status: import(".prisma/client").$Enums.ShipmentStatus;
         items: {
             inventoryItem: {
                 productType: {
@@ -61,7 +62,6 @@ export declare class ShipmentsController {
         _count: {
             items: number;
         };
-        status: import(".prisma/client").$Enums.ShipmentStatus;
         notes: string | null;
         orderNumber: string | null;
         customerName: string;
@@ -78,11 +78,11 @@ export declare class ShipmentsController {
         items: ({
             inventoryItem: {
                 order: {
+                    status: import(".prisma/client").$Enums.OrderStatus;
                     description: string | null;
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    status: import(".prisma/client").$Enums.OrderStatus;
                     priority: import(".prisma/client").$Enums.OrderPriority;
                     notes: string | null;
                     orderNumber: string;
@@ -94,8 +94,8 @@ export declare class ShipmentsController {
                     createdById: string;
                 } | null;
                 productType: {
-                    name: string;
                     description: string | null;
+                    name: string;
                     isActive: boolean;
                     id: string;
                     createdAt: Date;
@@ -104,8 +104,8 @@ export declare class ShipmentsController {
                     productionTimeHours: number | null;
                 };
                 product: {
-                    name: string;
                     description: string | null;
+                    name: string;
                     id: string;
                     color: string | null;
                     createdAt: Date;
@@ -121,6 +121,7 @@ export declare class ShipmentsController {
                     requiresSewing: boolean | null;
                     upholsteryMaterial: string | null;
                     isCustom: boolean;
+                    needsDesign: boolean;
                     stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                     nomenclatureId: string | null;
                 } | null;
@@ -150,10 +151,10 @@ export declare class ShipmentsController {
             id: string;
         };
     } & {
+        status: import(".prisma/client").$Enums.ShipmentStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.ShipmentStatus;
         notes: string | null;
         orderNumber: string | null;
         customerName: string;
@@ -166,11 +167,11 @@ export declare class ShipmentsController {
         items: ({
             inventoryItem: {
                 order: {
+                    status: import(".prisma/client").$Enums.OrderStatus;
                     description: string | null;
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    status: import(".prisma/client").$Enums.OrderStatus;
                     priority: import(".prisma/client").$Enums.OrderPriority;
                     notes: string | null;
                     orderNumber: string;
@@ -182,8 +183,8 @@ export declare class ShipmentsController {
                     createdById: string;
                 } | null;
                 productType: {
-                    name: string;
                     description: string | null;
+                    name: string;
                     isActive: boolean;
                     id: string;
                     createdAt: Date;
@@ -192,8 +193,8 @@ export declare class ShipmentsController {
                     productionTimeHours: number | null;
                 };
                 product: {
-                    name: string;
                     description: string | null;
+                    name: string;
                     id: string;
                     color: string | null;
                     createdAt: Date;
@@ -209,6 +210,7 @@ export declare class ShipmentsController {
                     requiresSewing: boolean | null;
                     upholsteryMaterial: string | null;
                     isCustom: boolean;
+                    needsDesign: boolean;
                     stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                     nomenclatureId: string | null;
                 } | null;
@@ -239,10 +241,10 @@ export declare class ShipmentsController {
             id: string;
         };
     } & {
+        status: import(".prisma/client").$Enums.ShipmentStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.ShipmentStatus;
         notes: string | null;
         orderNumber: string | null;
         customerName: string;
@@ -255,11 +257,11 @@ export declare class ShipmentsController {
         items: ({
             inventoryItem: {
                 order: {
+                    status: import(".prisma/client").$Enums.OrderStatus;
                     description: string | null;
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    status: import(".prisma/client").$Enums.OrderStatus;
                     priority: import(".prisma/client").$Enums.OrderPriority;
                     notes: string | null;
                     orderNumber: string;
@@ -271,8 +273,8 @@ export declare class ShipmentsController {
                     createdById: string;
                 } | null;
                 productType: {
-                    name: string;
                     description: string | null;
+                    name: string;
                     isActive: boolean;
                     id: string;
                     createdAt: Date;
@@ -281,8 +283,8 @@ export declare class ShipmentsController {
                     productionTimeHours: number | null;
                 };
                 product: {
-                    name: string;
                     description: string | null;
+                    name: string;
                     id: string;
                     color: string | null;
                     createdAt: Date;
@@ -298,6 +300,7 @@ export declare class ShipmentsController {
                     requiresSewing: boolean | null;
                     upholsteryMaterial: string | null;
                     isCustom: boolean;
+                    needsDesign: boolean;
                     stageAssignments: import("@prisma/client/runtime/library").JsonValue | null;
                     nomenclatureId: string | null;
                 } | null;
@@ -327,10 +330,10 @@ export declare class ShipmentsController {
             id: string;
         };
     } & {
+        status: import(".prisma/client").$Enums.ShipmentStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.ShipmentStatus;
         notes: string | null;
         orderNumber: string | null;
         customerName: string;
@@ -340,10 +343,10 @@ export declare class ShipmentsController {
         shippedById: string;
     }>;
     cancelShipment(id: string, req: any): Promise<{
+        status: import(".prisma/client").$Enums.ShipmentStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.ShipmentStatus;
         notes: string | null;
         orderNumber: string | null;
         customerName: string;

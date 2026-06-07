@@ -12,6 +12,7 @@ import { CreateOrderModal } from '@/components/CreateOrderModal';
 import { SchemaImageViewer } from '@/components/SchemaImageViewer';
 import { ReassignTaskControl } from '@/components/ReassignTaskControl';
 import { getPriorityLabel, getPriorityColor, getPrioritySortOrder } from '@/lib/priority-utils';
+import { taskStatusLabels } from '@/lib/labels';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -1324,7 +1325,7 @@ export const KanbanPage = () => {
                                             </span>
                                           )}
                                           <span className="text-xs text-muted-foreground ml-2">
-                                            · этап: {getStageName(activeTask.stage)} · {activeTask.status}
+                                            · этап: {getStageName(activeTask.stage)} · {taskStatusLabels[activeTask.status] || activeTask.status}
                                           </span>
                                         </div>
                                         {!activeTask.isDefect &&

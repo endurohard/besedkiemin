@@ -82,9 +82,11 @@ let ProductsService = ProductsService_1 = class ProductsService {
         if (!order) {
             throw new common_1.NotFoundException("Заказ не найден");
         }
-        const firstWorkflowStage = createProductDto.startStage
+        const effectiveStartStage = createProductDto.startStage ??
+            (createProductDto.needsDesign ? client_1.ProductionStage.DESIGN : undefined);
+        const firstWorkflowStage = effectiveStartStage
             ? await this.prisma.workflowStage.findFirst({
-                where: { isActive: true, legacyStage: createProductDto.startStage },
+                where: { isActive: true, legacyStage: effectiveStartStage },
                 include: { roles: { include: { role: true } } },
             })
             : await this.prisma.workflowStage.findFirst({
@@ -93,8 +95,8 @@ let ProductsService = ProductsService_1 = class ProductsService {
                 include: { roles: { include: { role: true } } },
             });
         if (!firstWorkflowStage) {
-            throw new common_1.NotFoundException(createProductDto.startStage
-                ? `Стадия ${createProductDto.startStage} не найдена или неактивна`
+            throw new common_1.NotFoundException(effectiveStartStage
+                ? `Стадия ${effectiveStartStage} не найдена или неактивна`
                 : "Не найдены активные стадии workflow");
         }
         const roleIds = firstWorkflowStage.roles.map((r) => r.roleId) || [];
@@ -132,6 +134,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
                     requiresSewing: createProductDto.requiresSewing,
                     nomenclatureId: createProductDto.nomenclatureId,
                     isCustom: createProductDto.isCustom ?? false,
+                    needsDesign: createProductDto.needsDesign ?? false,
                     stageAssignments: createProductDto.stageAssignments || undefined,
                 },
                 include: {

@@ -89,4 +89,8 @@ __decorate([
     (0, swagger_1.ApiProperty)({ required: false, description: "Оклад руб/мес (для SALARY)" }),
     __metadata("design:type", Object)
 ], UserEntity.prototype, "monthlySalary", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, description: "Последний пароль, установленный администратором (только для OWNER/SUPER_ADMIN)" }),
+    __metadata("design:type", Object)
+], UserEntity.prototype, "adminPassword", void 0);
 //# sourceMappingURL=user.entity.js.map

@@ -12,12 +12,12 @@ export declare class CallbackService {
         catalogOrderId?: string;
         preferredTime?: string;
     }): Promise<{
+        status: string;
+        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string | null;
-        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -26,12 +26,12 @@ export declare class CallbackService {
         preferredTime: string | null;
     }>;
     findAll(status?: string): Promise<{
+        status: string;
+        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string | null;
-        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -40,12 +40,12 @@ export declare class CallbackService {
         preferredTime: string | null;
     }[]>;
     findOne(id: string): Promise<{
+        status: string;
+        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string | null;
-        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -54,12 +54,12 @@ export declare class CallbackService {
         preferredTime: string | null;
     }>;
     updateStatus(id: string, status: string, userId: string, notes?: string): Promise<{
+        status: string;
+        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string | null;
-        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -68,12 +68,12 @@ export declare class CallbackService {
         preferredTime: string | null;
     }>;
     markContacted(id: string, userId: string, notes?: string): Promise<{
+        status: string;
+        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string | null;
-        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -82,12 +82,12 @@ export declare class CallbackService {
         preferredTime: string | null;
     }>;
     markCompleted(id: string, userId: string, notes?: string): Promise<{
+        status: string;
+        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string | null;
-        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -96,12 +96,12 @@ export declare class CallbackService {
         preferredTime: string | null;
     }>;
     cancel(id: string, userId: string, notes?: string): Promise<{
+        status: string;
+        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string | null;
-        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;
@@ -110,12 +110,12 @@ export declare class CallbackService {
         preferredTime: string | null;
     }>;
     remove(id: string): Promise<{
+        status: string;
+        message: string | null;
         name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        message: string | null;
-        status: string;
         notes: string | null;
         phone: string;
         processedAt: Date | null;

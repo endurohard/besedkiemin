@@ -5,54 +5,54 @@ export declare class DepartmentPresetsController {
     constructor(service: DepartmentPresetsService);
     findPublic(): Promise<{
         code: string;
-        label: string;
         color: string;
+        label: string;
         sortOrder: number;
     }[]>;
     findAll(): Promise<({
         user: {
-            id: string;
-            isActive: boolean;
+            role: {
+                name: string;
+                code: string;
+            };
             email: string;
             firstName: string;
             lastName: string;
-            role: {
-                code: string;
-                name: string;
-            };
+            isActive: boolean;
+            id: string;
         };
     } & {
+        isActive: boolean;
         id: string;
         code: string;
-        label: string;
-        userId: string;
         color: string;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+        label: string;
+        userId: string;
+        sortOrder: number;
     })[]>;
     create(dto: CreateDepartmentPresetDto): Promise<{
+        isActive: boolean;
         id: string;
         code: string;
-        label: string;
-        userId: string;
         color: string;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+        label: string;
+        userId: string;
+        sortOrder: number;
     }>;
     update(id: string, dto: UpdateDepartmentPresetDto): Promise<{
+        isActive: boolean;
         id: string;
         code: string;
-        label: string;
-        userId: string;
         color: string;
-        sortOrder: number;
-        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+        label: string;
+        userId: string;
+        sortOrder: number;
     }>;
     remove(id: string): Promise<{
         success: boolean;

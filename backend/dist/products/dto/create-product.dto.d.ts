@@ -14,6 +14,7 @@ export declare class CreateProductDto {
     upholsteryMaterial?: string;
     nomenclatureId?: string;
     isCustom?: boolean;
+    needsDesign?: boolean;
     assignedWorkerId?: string;
     stageAssignments?: Record<string, string>;
     startStage?: ProductionStage;

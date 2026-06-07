@@ -5,8 +5,8 @@ export declare class ProductTypesService {
     private prisma;
     constructor(prisma: PrismaService);
     create(createProductTypeDto: CreateProductTypeDto): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -15,8 +15,8 @@ export declare class ProductTypesService {
         productionTimeHours: number | null;
     }>;
     findAll(includeInactive?: boolean): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -29,8 +29,8 @@ export declare class ProductTypesService {
             products: number;
         };
     } & {
-        name: string;
         description: string | null;
+        name: string;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -39,8 +39,8 @@ export declare class ProductTypesService {
         productionTimeHours: number | null;
     }>;
     update(id: string, updateProductTypeDto: UpdateProductTypeDto): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -49,8 +49,8 @@ export declare class ProductTypesService {
         productionTimeHours: number | null;
     }>;
     remove(id: string): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         isActive: boolean;
         id: string;
         createdAt: Date;
@@ -59,8 +59,8 @@ export declare class ProductTypesService {
         productionTimeHours: number | null;
     }>;
     toggleActive(id: string): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         isActive: boolean;
         id: string;
         createdAt: Date;

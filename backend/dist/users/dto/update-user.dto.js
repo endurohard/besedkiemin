@@ -18,7 +18,7 @@ class UpdateUserDto {
 exports.UpdateUserDto = UpdateUserDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ example: "user@example.com", required: false }),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsEmail)({ require_tld: false }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "email", void 0);

@@ -31,6 +31,9 @@ let UsersController = class UsersController {
     findAll() {
         return this.usersService.findAll();
     }
+    findProductionWorkers() {
+        return this.usersService.findProductionWorkers();
+    }
     findOne(id) {
         return this.usersService.findOne(id);
     }
@@ -63,6 +66,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)("production-workers"),
+    (0, roles_decorator_1.Roles)("OWNER", "MANAGER"),
+    (0, swagger_1.ApiOperation)({ summary: "Получить производственных рабочих (OWNER, MANAGER)" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "findProductionWorkers", null);
 __decorate([
     (0, common_1.Get)(":id"),
     (0, roles_decorator_1.Roles)("OWNER"),

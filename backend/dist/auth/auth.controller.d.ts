@@ -19,14 +19,14 @@ export declare class AuthController {
             firstName: string;
             lastName: string;
             role: {
+                description: string | null;
+                order: number;
                 name: string;
+                isActive: boolean;
                 id: string;
                 code: string;
-                description: string | null;
                 color: string | null;
                 isSystem: boolean;
-                isActive: boolean;
-                order: number;
                 permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
@@ -48,14 +48,14 @@ export declare class AuthController {
             firstName: string;
             lastName: string;
             role: {
+                description: string | null;
+                order: number;
                 name: string;
+                isActive: boolean;
                 id: string;
                 code: string;
-                description: string | null;
                 color: string | null;
                 isSystem: boolean;
-                isActive: boolean;
-                order: number;
                 permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
@@ -86,14 +86,14 @@ export declare class AuthController {
             firstName: string;
             lastName: string;
             role: {
+                description: string | null;
+                order: number;
                 name: string;
+                isActive: boolean;
                 id: string;
                 code: string;
-                description: string | null;
                 color: string | null;
                 isSystem: boolean;
-                isActive: boolean;
-                order: number;
                 permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
@@ -116,14 +116,14 @@ export declare class AuthController {
             firstName: string;
             lastName: string;
             role: {
+                description: string | null;
+                order: number;
                 name: string;
+                isActive: boolean;
                 id: string;
                 code: string;
-                description: string | null;
                 color: string | null;
                 isSystem: boolean;
-                isActive: boolean;
-                order: number;
                 permissions: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;

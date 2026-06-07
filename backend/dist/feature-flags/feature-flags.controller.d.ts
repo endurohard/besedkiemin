@@ -5,8 +5,8 @@ export declare class FeatureFlagsController {
     constructor(featureFlagsService: FeatureFlagsService);
     getPublicFlags(): Promise<Record<string, boolean>>;
     findAll(): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -15,8 +15,8 @@ export declare class FeatureFlagsController {
         isEnabled: boolean;
     }[]>;
     findByKey(key: string): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -25,8 +25,8 @@ export declare class FeatureFlagsController {
         isEnabled: boolean;
     }>;
     update(key: string, updateDto: UpdateFeatureFlagDto): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -35,8 +35,8 @@ export declare class FeatureFlagsController {
         isEnabled: boolean;
     }>;
     toggle(key: string): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -48,8 +48,8 @@ export declare class FeatureFlagsController {
         key: string;
         isEnabled: boolean;
     }[]): Promise<{
-        name: string;
         description: string | null;
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
