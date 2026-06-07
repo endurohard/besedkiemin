@@ -13,6 +13,7 @@ import { SchemaImageViewer } from '@/components/SchemaImageViewer';
 import { ReassignTaskControl } from '@/components/ReassignTaskControl';
 import { getPriorityLabel, getPriorityColor, getPrioritySortOrder } from '@/lib/priority-utils';
 import { taskStatusLabels } from '@/lib/labels';
+import { getDeadlineInfo } from '@/lib/deadline';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -105,7 +106,7 @@ export const KanbanPage = () => {
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '' });
+  const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '', deadline: '' });
   const [editProducts, setEditProducts] = useState<ProductEditForm[]>([]);
   const [productsToDelete, setProductsToDelete] = useState<string[]>([]);
   const [expandedProductIds, setExpandedProductIds] = useState<Set<string>>(new Set());
@@ -253,6 +254,7 @@ export const KanbanPage = () => {
       totalAmount: selectedOrder.totalAmount ? String(selectedOrder.totalAmount) : '',
       priority: selectedOrder.priority || 'NORMAL',
       sourceId: selectedOrder.sourceId || '',
+      deadline: selectedOrder.deadline ? new Date(selectedOrder.deadline).toISOString().slice(0, 10) : '',
     });
     // Load existing products into edit form
     const existingProducts: ProductEditForm[] = (selectedOrder.products || []).map((p) => ({
@@ -360,6 +362,7 @@ export const KanbanPage = () => {
           totalAmount: editOrderForm.totalAmount ? parseFloat(editOrderForm.totalAmount) : undefined,
           priority: editOrderForm.priority,
           sourceId: editOrderForm.sourceId || undefined,
+          deadline: editOrderForm.deadline || null,
         },
       });
 
@@ -928,11 +931,12 @@ export const KanbanPage = () => {
                     };
                     const config = statusConfig[order.status];
                     const Icon = config.icon;
+                    const deadlineInfo = getDeadlineInfo(order);
 
                     return (
                       <Card
                         key={order.id}
-                        className="hover:shadow-md transition-shadow cursor-pointer"
+                        className={`hover:shadow-md transition-shadow cursor-pointer ${deadlineInfo.blink ? 'deadline-blink' : ''}`}
                         onClick={() => handleOpenOrder(order)}
                       >
                         <CardHeader className="py-2 px-3">
@@ -947,6 +951,21 @@ export const KanbanPage = () => {
                                 {order.priority && (
                                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(order.priority)}`}>
                                     {getPriorityLabel(order.priority)}
+                                  </span>
+                                )}
+                                {deadlineInfo.level !== 'none' && (
+                                  <span
+                                    className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
+                                      deadlineInfo.level === 'overdue'
+                                        ? 'bg-red-100 text-red-800 border-red-300'
+                                        : deadlineInfo.level === 'soon'
+                                          ? 'bg-orange-100 text-orange-800 border-orange-300'
+                                          : 'bg-muted text-muted-foreground border-border'
+                                    }`}
+                                    title={`Дата завершения: ${new Date(order.deadline as string).toLocaleDateString('ru-RU')}`}
+                                  >
+                                    <Calendar className="w-3 h-3" />
+                                    {deadlineInfo.label}
                                   </span>
                                 )}
                                 <span className="text-xs text-muted-foreground ml-auto">
@@ -1460,6 +1479,16 @@ export const KanbanPage = () => {
                           <option value="URGENT">Срочный</option>
                         </select>
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">Дата завершения (плановая)</label>
+                      <input
+                        type="date"
+                        value={editOrderForm.deadline}
+                        onChange={(e) => setEditOrderForm({ ...editOrderForm, deadline: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">За 4 дня до срока заказ мигает красным 🔴</p>
                     </div>
                   </div>
 

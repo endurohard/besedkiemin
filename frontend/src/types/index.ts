@@ -377,6 +377,7 @@ export interface Order {
   sourceId?: string;
   source?: OrderSource;
   totalAmount?: number;
+  deadline?: string | null; // Плановая дата завершения заказа
   createdById: string;
   createdAt: string;
   updatedAt: string;
@@ -405,6 +406,7 @@ export interface CreateOrderDto {
   priority?: OrderPriority;
   sourceId?: string;
   totalAmount?: number;
+  deadline?: string | null;
 }
 
 export interface UpdateOrderDto extends Partial<CreateOrderDto> {

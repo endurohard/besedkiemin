@@ -228,6 +228,9 @@ model Order {
   // Сумма заказа (для расчета комиссии менеджера)
   totalAmount Float? @map("total_amount")
 
+  // Плановая дата завершения заказа (для контроля сроков, мигание при приближении дедлайна)
+  deadline DateTime?
+
   createdById String @map("created_by_id")
   createdBy   User   @relation(fields: [createdById], references: [id])
 

@@ -147,6 +147,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
   const [priority, setPriority] = useState<OrderPriority>(OrderPriority.NORMAL);
   const [sourceId, setSourceId] = useState<string>('');
   const [totalAmount, setTotalAmount] = useState<string>('');
+  const [deadline, setDeadline] = useState<string>('');
   const [products, setProducts] = useState<ProductFormData[]>([]);
 
   const createOrderMutation = useMutation({
@@ -160,6 +161,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
         priority: orderData.priority,
         sourceId: orderData.sourceId,
         totalAmount: orderData.totalAmount,
+        deadline: orderData.deadline,
       });
 
       // Создаем продукты для заказа (если есть)
@@ -231,6 +233,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     setPriority(OrderPriority.NORMAL);
     setSourceId('');
     setTotalAmount('');
+    setDeadline('');
     setProducts([]);
     onClose();
   };
@@ -253,6 +256,7 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
       priority,
       sourceId: sourceId || undefined,
       totalAmount: totalAmount ? parseFloat(totalAmount) : undefined,
+      deadline: deadline || undefined,
       isInternalOrder,
       products: products.filter((p) => p.name.trim() !== '' && p.productTypeId),
     });
@@ -523,6 +527,21 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             />
             <p className="text-xs text-muted-foreground mt-1">
               Используется для расчета комиссии менеджера
+            </p>
+          </div>
+
+          {/* Плановая дата завершения */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Дата завершения (плановая)
+            </label>
+            <Input
+              type="date"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              За 4 дня до срока заказ начнёт мигать красным 🔴
             </p>
           </div>
 

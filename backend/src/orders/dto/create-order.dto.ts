@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsNumber,
   IsUUID,
+  IsDateString,
 } from "class-validator";
 import { OrderPriority } from "@prisma/client";
 
@@ -74,4 +75,13 @@ export class CreateOrderDto {
   @IsNumber()
   @IsOptional()
   totalAmount?: number;
+
+  @ApiProperty({
+    example: "2026-06-20",
+    required: false,
+    description: "Плановая дата завершения заказа (ISO)",
+  })
+  @IsDateString()
+  @IsOptional()
+  deadline?: string;
 }

@@ -33,12 +33,15 @@ export class OrdersService {
       orderNumber = `ORD-${String(nextNum).padStart(3, "0")}`;
     }
 
-    // Извлекаем orderNumber из DTO чтобы не дублировать
-    const { orderNumber: _, ...restDto } = createOrderDto;
+    // Извлекаем orderNumber и deadline из DTO (deadline конвертируем в Date)
+    const { orderNumber: _, deadline, ...restDto } = createOrderDto;
 
     return this.prisma.order.create({
       data: {
         ...restDto,
+        ...(deadline !== undefined
+          ? { deadline: deadline ? new Date(deadline) : null }
+          : {}),
         orderNumber,
         status: OrderStatus.NEW,
         createdById: userId,
@@ -119,6 +122,7 @@ export class OrdersService {
           priority: true,
           description: true,
           totalAmount: true,
+          deadline: true,
           sourceId: true,
           source: {
             select: {
@@ -251,9 +255,16 @@ export class OrdersService {
   async update(id: string, updateOrderDto: UpdateOrderDto) {
     await this.findOne(id); // Проверка существования
 
+    const { deadline, ...restDto } = updateOrderDto;
+
     return this.prisma.order.update({
       where: { id },
-      data: updateOrderDto,
+      data: {
+        ...restDto,
+        ...(deadline !== undefined
+          ? { deadline: deadline ? new Date(deadline) : null }
+          : {}),
+      },
       include: {
         products: true,
         createdBy: {
