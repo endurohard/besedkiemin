@@ -16,11 +16,59 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
+  Activity,
+  Truck,
+  Factory,
 } from 'lucide-react';
+import {
+  KpiCard,
+  StageFunnelChart,
+  StagesDurationChart,
+  ProductTypeStackedChart,
+  CycleBreakdownChart,
+  QualityDonutChart,
+} from '@/components/analytics';
+
+type PeriodPreset = '7d' | '30d' | '90d' | '365d' | 'custom';
+
+const PRESET_LABELS: Record<PeriodPreset, string> = {
+  '7d': '7 дней',
+  '30d': '30 дней',
+  '90d': 'Квартал',
+  '365d': 'Год',
+  custom: 'Свой период',
+};
+
+const PRESET_DAYS: Record<Exclude<PeriodPreset, 'custom'>, number> = {
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+  '365d': 365,
+};
+
+const toISODate = (d: Date) => d.toISOString().slice(0, 10);
+
+const computePresetRange = (
+  preset: Exclude<PeriodPreset, 'custom'>,
+): { startDate: string; endDate: string } => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - PRESET_DAYS[preset]);
+  return { startDate: toISODate(start), endDate: toISODate(end) };
+};
 
 export const AnalyticsPage = () => {
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [preset, setPreset] = useState<PeriodPreset>('30d');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+
+  const range =
+    preset === 'custom'
+      ? { startDate: customStart, endDate: customEnd }
+      : computePresetRange(preset);
+
+  const startDate = range.startDate;
+  const endDate = range.endDate;
 
   // Получение всех аналитических данных
   const { data: productionOverview } = useQuery({
@@ -58,6 +106,11 @@ export const AnalyticsPage = () => {
     queryFn: () => analyticsApi.getOrderProductionReport({ startDate, endDate }),
   });
 
+  const { data: managerReport = [] } = useQuery({
+    queryKey: ['analytics', 'manager-report', startDate, endDate],
+    queryFn: () => analyticsApi.getManagerReport({ startDate, endDate }),
+  });
+
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const toggleOrder = (id: string) => {
     setExpandedOrders((prev) => {
@@ -68,8 +121,8 @@ export const AnalyticsPage = () => {
     });
   };
 
-  const getStageLabel = (stage: ProductionStage): string => {
-    const labels: Record<ProductionStage, string> = {
+  const getStageLabel = (stage: ProductionStage | string): string => {
+    const labels: Record<string, string> = {
       [ProductionStage.PENDING]: 'Ожидание',
       [ProductionStage.DESIGN]: 'Проектирование',
       [ProductionStage.PREPARATION]: 'Заготовка',
@@ -80,7 +133,7 @@ export const AnalyticsPage = () => {
       [ProductionStage.COMPLETED]: 'Завершено',
       [ProductionStage.REJECTED]: 'Брак',
     };
-    return labels[stage] || stage;
+    return labels[stage] || String(stage);
   };
 
   const formatDuration = (hours: number): string => {
@@ -95,212 +148,234 @@ export const AnalyticsPage = () => {
     return `${days} д ${remainingHours.toFixed(0)} ч`;
   };
 
-  return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Аналитика производства</h1>
+  const formatRange = () => {
+    if (!startDate || !endDate) return 'все данные';
+    const s = new Date(startDate).toLocaleDateString('ru-RU');
+    const e = new Date(endDate).toLocaleDateString('ru-RU');
+    return `${s} — ${e}`;
+  };
 
-      {/* Общая статистика производства */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <BarChart3 size={24} />
-          Общая статистика
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Всего заказов</p>
-              <p className="text-3xl font-bold mt-2">
-                {productionOverview?.orders.total || 0}
-              </p>
-              <p className="text-sm text-green-600 mt-1">
-                Завершено: {productionOverview?.orders.completionRate || 0}%
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Активные заказы</p>
-              <p className="text-3xl font-bold mt-2 text-primary">
-                {productionOverview?.orders.active || 0}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Всего продуктов</p>
-              <p className="text-3xl font-bold mt-2">
-                {productionOverview?.products.total || 0}
-              </p>
-              <p className="text-sm text-green-600 mt-1">
-                Завершено: {productionOverview?.products.completionRate || 0}%
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">В производстве</p>
-              <p className="text-3xl font-bold mt-2 text-yellow-600">
-                {productionOverview?.products.inProduction || 0}
-              </p>
-            </CardContent>
-          </Card>
+  return (
+    <div className="p-4 md:p-6 space-y-6">
+      {/* Шапка страницы с фильтром периода */}
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Activity size={28} className="text-primary" />
+            Аналитика производства
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Данные за период: <span className="font-medium">{formatRange()}</span>
+          </p>
         </div>
 
-        {/* Распределение по этапам */}
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap gap-1 bg-muted/50 p-1 rounded-lg">
+            {(Object.keys(PRESET_LABELS) as PeriodPreset[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPreset(p)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  preset === p
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {PRESET_LABELS[p]}
+              </button>
+            ))}
+          </div>
+          {preset === 'custom' && (
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="text-xs"
+              />
+              <Input
+                type="date"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="text-xs"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Главные KPI */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          label="Всего заказов"
+          value={productionOverview?.orders.total ?? 0}
+          hint={`завершено ${productionOverview?.orders.completionRate ?? 0}%`}
+          icon={BarChart3}
+        />
+        <KpiCard
+          label="Активных заказов"
+          value={productionOverview?.orders.active ?? 0}
+          hint="в работе сейчас"
+          icon={Factory}
+          tone="accent"
+        />
+        <KpiCard
+          label="Средний цикл"
+          value={
+            fullCycleAnalytics?.summary.avgFullCycleHours
+              ? formatDuration(fullCycleAnalytics.summary.avgFullCycleHours)
+              : '—'
+          }
+          hint="от заказа до доставки"
+          icon={Timer}
+        />
+        <KpiCard
+          label="% одобрения QC"
+          value={`${qualityStats?.approvalRate ?? 0}%`}
+          hint={`${qualityStats?.approved ?? 0} из ${qualityStats?.total ?? 0}`}
+          icon={CheckCircle2}
+          tone="success"
+        />
+      </div>
+
+      {/* Этапы: воронка + время */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Распределение продуктов по этапам</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 size={18} className="text-primary" />
+              Распределение изделий по этапам
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              сколько изделий сейчас на каждом этапе — видно, где затор
+            </p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-              {Object.entries(productionOverview?.stageDistribution || {}).map(
-                ([stage, count]) => (
-                  <div key={stage} className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-2xl font-bold text-primary">{count}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {getStageLabel(stage as ProductionStage)}
-                    </p>
-                  </div>
-                )
-              )}
-            </div>
+            <StageFunnelChart
+              data={productionOverview?.stageDistribution || {}}
+              labelFormatter={getStageLabel}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock size={18} className="text-primary" />
+              Среднее время по этапам
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              сколько в среднем изделие проводит на каждом этапе
+            </p>
+          </CardHeader>
+          <CardContent>
+            <StagesDurationChart
+              data={fullCycleAnalytics?.summary.avgStageHours || {}}
+              labelFormatter={getStageLabel}
+              durationFormatter={formatDuration}
+            />
           </CardContent>
         </Card>
       </div>
 
-      {/* Статистика качества */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <CheckCircle2 size={24} />
-          Контроль качества
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Всего проверок</p>
-              <p className="text-3xl font-bold mt-2">{qualityStats?.total || 0}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Одобрено</p>
-              <p className="text-3xl font-bold mt-2 text-green-600">
-                {qualityStats?.approved || 0}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Отклонено</p>
-              <p className="text-3xl font-bold mt-2 text-red-600">
-                {qualityStats?.rejected || 0}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Процент одобрения</p>
-              <p className="text-3xl font-bold mt-2 text-green-600">
-                {qualityStats?.approvalRate || 0}%
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Последние браки */}
-        {qualityStats && qualityStats.recentRejections.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Последние браки</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Продукт</th>
-                      <th className="text-left p-2">Заказ</th>
-                      <th className="text-left p-2">Клиент</th>
-                      <th className="text-left p-2">Причина</th>
-                      <th className="text-left p-2">Проверил</th>
-                      <th className="text-left p-2">Дата</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {qualityStats.recentRejections.map((rejection) => (
-                      <tr key={rejection.id} className="border-b hover:bg-muted/50">
-                        <td className="p-2">{rejection.productName}</td>
-                        <td className="p-2">{rejection.orderNumber}</td>
-                        <td className="p-2">{rejection.customerName}</td>
-                        <td className="p-2 text-sm">
-                          {rejection.reason || 'Не указана'}
-                        </td>
-                        <td className="p-2 text-sm">{rejection.checkedBy}</td>
-                        <td className="p-2 text-sm text-muted-foreground">
-                          {rejection.checkedAt
-                            ? new Date(rejection.checkedAt).toLocaleDateString()
-                            : '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      {/* Качество + типы продуктов */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle2 size={18} className="text-primary" />
+              Контроль качества
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <QualityDonutChart
+              approved={qualityStats?.approved ?? 0}
+              rejected={qualityStats?.rejected ?? 0}
+              pending={qualityStats?.pending ?? 0}
+              approvalRate={qualityStats?.approvalRate ?? '0'}
+            />
+            <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t text-center">
+              <div>
+                <p className="text-lg font-bold text-green-600">
+                  {qualityStats?.approved ?? 0}
+                </p>
+                <p className="text-xs text-muted-foreground">Одобрено</p>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div>
+                <p className="text-lg font-bold text-red-600">
+                  {qualityStats?.rejected ?? 0}
+                </p>
+                <p className="text-xs text-muted-foreground">Отклонено</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold text-yellow-600">
+                  {qualityStats?.pending ?? 0}
+                </p>
+                <p className="text-xs text-muted-foreground">На проверке</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package size={18} className="text-primary" />
+              Типы продуктов
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              структура по типам: завершено / в производстве / брак
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ProductTypeStackedChart data={productTypeStats} />
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Производительность сотрудников */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Users size={24} />
-          Производительность сотрудников
-        </h2>
+      {/* Последние браки — таблица */}
+      {qualityStats && qualityStats.recentRejections.length > 0 && (
         <Card>
-          <CardContent className="p-6">
+          <CardHeader>
+            <CardTitle className="text-base">Последние браки</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-2">Сотрудник</th>
-                    <th className="text-left p-2">Роль</th>
-                    <th className="text-center p-2">Выполнено задач</th>
-                    <th className="text-center p-2">Среднее время (часы)</th>
-                    <th className="text-left p-2">Текущая задача</th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">
+                      Продукт
+                    </th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">
+                      Заказ
+                    </th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">
+                      Клиент
+                    </th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">
+                      Причина
+                    </th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">
+                      Проверил
+                    </th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">
+                      Дата
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {userPerformance.map((perf) => (
-                    <tr key={perf.user.id} className="border-b hover:bg-muted/50">
-                      <td className="p-2 font-medium">{perf.user.name}</td>
-                      <td className="p-2">
-                        <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary/90">
-                          {typeof perf.user.role === 'object' ? perf.user.role.name : perf.user.role}
-                        </span>
-                      </td>
-                      <td className="p-2 text-center font-semibold">
-                        {perf.stats.completedTasks}
-                      </td>
-                      <td className="p-2 text-center">
-                        {perf.stats.avgTaskDurationHours}
-                      </td>
-                      <td className="p-2">
-                        {perf.stats.hasActiveTask && perf.stats.activeTask ? (
-                          <div className="text-sm">
-                            <div className="font-medium">
-                              {perf.stats.activeTask.productName}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Заказ: {perf.stats.activeTask.orderNumber} |{' '}
-                              {getStageLabel(perf.stats.activeTask.stage)}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">
-                            Нет активных задач
-                          </span>
-                        )}
+                  {qualityStats.recentRejections.map((rejection) => (
+                    <tr key={rejection.id} className="border-b hover:bg-muted/50">
+                      <td className="p-2">{rejection.productName}</td>
+                      <td className="p-2">{rejection.orderNumber}</td>
+                      <td className="p-2">{rejection.customerName}</td>
+                      <td className="p-2">{rejection.reason || 'Не указана'}</td>
+                      <td className="p-2">{rejection.checkedBy}</td>
+                      <td className="p-2 text-muted-foreground">
+                        {rejection.checkedAt
+                          ? new Date(rejection.checkedAt).toLocaleDateString()
+                          : '-'}
                       </td>
                     </tr>
                   ))}
@@ -309,353 +384,164 @@ export const AnalyticsPage = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
 
-      {/* Статистика по типам продуктов */}
-      <div className="mb-8">
+      {/* Отчёт по работе менеджеров */}
+      <div>
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Package size={24} />
-          Статистика по типам продуктов
+          <Users size={22} className="text-primary" />
+          Работа менеджеров
         </h2>
         <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {productTypeStats.map((stat) => (
-                <div
-                  key={stat.type}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
-                >
-                  <h3 className="font-semibold text-lg mb-3">{stat.type}</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Всего:</span>
-                      <span className="font-semibold">{stat.total}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Завершено:
-                      </span>
-                      <span className="font-semibold text-green-600">
-                        {stat.completed}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        В производстве:
-                      </span>
-                      <span className="font-semibold text-primary">
-                        {stat.inProduction}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Брак:</span>
-                      <span className="font-semibold text-red-600">
-                        {stat.rejected}
-                      </span>
-                    </div>
-                    <div className="mt-2 pt-2 border-t">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Процент выполнения:
-                        </span>
-                        <span className="text-lg font-bold text-green-600">
-                          {stat.completionRate}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Сводка производительности за период */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <TrendingUp size={24} />
-          Сводка производительности за период
-        </h2>
-
-        {/* Фильтры по датам */}
-        <Card className="mb-4">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Дата начала</label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Дата окончания
-                </label>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock size={20} className="text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Период</p>
-              </div>
-              <p className="text-2xl font-bold">
-                {performanceSummary?.period.days || 0} дней
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {performanceSummary?.period.start
-                  ? new Date(performanceSummary.period.start).toLocaleDateString()
-                  : '-'}{' '}
-                -{' '}
-                {performanceSummary?.period.end
-                  ? new Date(performanceSummary.period.end).toLocaleDateString()
-                  : '-'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Создано заказов</p>
-              <p className="text-3xl font-bold mt-2 text-primary">
-                {performanceSummary?.ordersCreated || 0}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Завершено заказов</p>
-              <p className="text-3xl font-bold mt-2 text-green-600">
-                {performanceSummary?.ordersCompleted || 0}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Завершено продуктов</p>
-              <p className="text-3xl font-bold mt-2 text-green-600">
-                {performanceSummary?.productsCompleted || 0}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Проверок качества</p>
-              <p className="text-3xl font-bold mt-2">
-                {performanceSummary?.qualityChecksPerformed || 0}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Продуктов в день</p>
-              <p className="text-3xl font-bold mt-2 text-purple-600">
-                {performanceSummary?.avgProductsPerDay.toFixed(1) || 0}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Полная аналитика цикла: от производства до доставки */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Zap size={24} />
-          Полный цикл: от производства до доставки
-        </h2>
-
-        {/* Средние показатели времени */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Timer size={20} className="text-primary" />
-                <p className="text-sm text-muted-foreground">Полный цикл</p>
-              </div>
-              <p className="text-3xl font-bold text-primary">
-                {fullCycleAnalytics?.summary.avgFullCycleHours
-                  ? formatDuration(fullCycleAnalytics.summary.avgFullCycleHours)
-                  : '0 ч'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                от заказа до доставки
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock size={20} className="text-purple-600" />
-                <p className="text-sm text-muted-foreground">Производство</p>
-              </div>
-              <p className="text-3xl font-bold text-purple-600">
-                {fullCycleAnalytics?.summary.avgProductionHours
-                  ? formatDuration(fullCycleAnalytics.summary.avgProductionHours)
-                  : '0 ч'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                все этапы производства
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Package size={20} className="text-orange-600" />
-                <p className="text-sm text-muted-foreground">На складе</p>
-              </div>
-              <p className="text-3xl font-bold text-orange-600">
-                {fullCycleAnalytics?.summary.avgWarehouseHours
-                  ? formatDuration(fullCycleAnalytics.summary.avgWarehouseHours)
-                  : '0 ч'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                до отгрузки
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp size={20} className="text-green-600" />
-                <p className="text-sm text-muted-foreground">Доставка</p>
-              </div>
-              <p className="text-3xl font-bold text-green-600">
-                {fullCycleAnalytics?.summary.avgDeliveryHours
-                  ? formatDuration(fullCycleAnalytics.summary.avgDeliveryHours)
-                  : '0 ч'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                до клиента
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Время по этапам производства */}
-        {fullCycleAnalytics?.summary.avgStageHours && (
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle className="text-lg">Среднее время по этапам производства</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(fullCycleAnalytics.summary.avgStageHours).map(
-                  ([stage, hours]) => (
-                    <div key={stage} className="text-center p-4 bg-muted rounded-lg">
-                      <p className="text-2xl font-bold text-purple-600">
-                        {formatDuration(hours)}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {getStageLabel(stage as ProductionStage)}
-                      </p>
-                    </div>
-                  )
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Доставленные заказы */}
-        {fullCycleAnalytics && fullCycleAnalytics.completedCycles.length > 0 && (
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Доставленные заказы ({fullCycleAnalytics.summary.totalDelivered})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Заказ</th>
-                      <th className="text-left p-2">Клиент</th>
-                      <th className="text-left p-2">Продукт</th>
-                      <th className="text-center p-2">Кол-во</th>
-                      <th className="text-center p-2">Полный цикл</th>
-                      <th className="text-center p-2">Производство</th>
-                      <th className="text-center p-2">Склад</th>
-                      <th className="text-center p-2">Доставка</th>
-                      <th className="text-left p-2">Дата доставки</th>
+          <CardContent className="p-0 overflow-x-auto">
+            {managerReport.length === 0 ? (
+              <p className="text-sm text-muted-foreground p-6 text-center">Нет данных за период</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-muted-foreground">
+                    <th className="p-3 font-medium">Менеджер</th>
+                    <th className="p-3 font-medium text-center">Всего</th>
+                    <th className="p-3 font-medium text-center">В работе</th>
+                    <th className="p-3 font-medium text-center">Выполнено</th>
+                    <th className="p-3 font-medium text-center">Отменено</th>
+                    <th className="p-3 font-medium text-right">Выручка (выполн.)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {managerReport.map((m) => (
+                    <tr key={m.managerId} className="border-b last:border-0 hover:bg-muted/40">
+                      <td className="p-3">
+                        <div className="font-medium">{m.managerName}</div>
+                        {m.role && <div className="text-[11px] text-muted-foreground">{m.role}</div>}
+                      </td>
+                      <td className="p-3 text-center font-medium">{m.total}</td>
+                      <td className="p-3 text-center">
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-medium">{m.inWork}</span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-xs font-medium">{m.completed}</span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">{m.cancelled}</span>
+                      </td>
+                      <td className="p-3 text-right font-medium">{m.revenue.toLocaleString('ru-RU')} ₽</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {fullCycleAnalytics.completedCycles.slice(0, 10).map((cycle, idx) => (
-                      <tr key={idx} className="border-b hover:bg-muted/50">
-                        <td className="p-2 font-medium">{cycle.orderNumber}</td>
-                        <td className="p-2">{cycle.customerName}</td>
-                        <td className="p-2">
-                          <div className="text-sm">
-                            <div>{cycle.productName}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {cycle.productType}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-2 text-center">{cycle.quantity}</td>
-                        <td className="p-2 text-center font-semibold text-primary">
-                          {formatDuration(cycle.durations.fullCycleHours)}
-                        </td>
-                        <td className="p-2 text-center text-purple-600">
-                          {formatDuration(cycle.durations.productionHours)}
-                        </td>
-                        <td className="p-2 text-center text-orange-600">
-                          {formatDuration(cycle.durations.warehouseHours)}
-                        </td>
-                        <td className="p-2 text-center text-green-600">
-                          {formatDuration(cycle.durations.deliveryHours)}
-                        </td>
-                        <td className="p-2 text-sm text-muted-foreground">
-                          {new Date(cycle.deliveredAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Заказы в работе */}
+      {/* Полный цикл: KPI + разбивка по заказам */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Zap size={22} className="text-primary" />
+          Полный цикл: производство → склад → доставка
+        </h2>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <KpiCard
+            label="Полный цикл"
+            value={
+              fullCycleAnalytics?.summary.avgFullCycleHours
+                ? formatDuration(fullCycleAnalytics.summary.avgFullCycleHours)
+                : '—'
+            }
+            hint="от заказа до клиента"
+            tone="accent"
+          />
+          <KpiCard
+            label="Производство"
+            value={
+              fullCycleAnalytics?.summary.avgProductionHours
+                ? formatDuration(fullCycleAnalytics.summary.avgProductionHours)
+                : '—'
+            }
+            hint="все этапы производства"
+            icon={Factory}
+          />
+          <KpiCard
+            label="На складе"
+            value={
+              fullCycleAnalytics?.summary.avgWarehouseHours
+                ? formatDuration(fullCycleAnalytics.summary.avgWarehouseHours)
+                : '—'
+            }
+            hint="до отгрузки"
+            icon={Package}
+            tone="warning"
+          />
+          <KpiCard
+            label="Доставка"
+            value={
+              fullCycleAnalytics?.summary.avgDeliveryHours
+                ? formatDuration(fullCycleAnalytics.summary.avgDeliveryHours)
+                : '—'
+            }
+            hint="до клиента"
+            icon={Truck}
+            tone="success"
+          />
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Разбивка цикла по последним заказам
+              {fullCycleAnalytics?.summary.totalDelivered
+                ? ` (всего доставлено: ${fullCycleAnalytics.summary.totalDelivered})`
+                : ''}
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              длина бара = полный цикл, сегменты показывают, где заказ провёл время
+            </p>
+          </CardHeader>
+          <CardContent>
+            {fullCycleAnalytics && fullCycleAnalytics.completedCycles.length > 0 ? (
+              <CycleBreakdownChart
+                cycles={fullCycleAnalytics.completedCycles}
+                durationFormatter={formatDuration}
+                limit={10}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Нет доставленных заказов за период.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Заказы в работе — таблица */}
         {fullCycleAnalytics && fullCycleAnalytics.ordersInProgress.length > 0 && (
-          <Card>
+          <Card className="mt-4">
             <CardHeader>
-              <CardTitle className="text-lg">
+              <CardTitle className="text-base">
                 Заказы в работе ({fullCycleAnalytics.ordersInProgress.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-2">Заказ</th>
-                      <th className="text-left p-2">Клиент</th>
-                      <th className="text-center p-2">Текущее время</th>
-                      <th className="text-center p-2">Прогресс</th>
-                      <th className="text-left p-2">Продукты</th>
+                      <th className="text-left p-2 font-medium text-muted-foreground">
+                        Заказ
+                      </th>
+                      <th className="text-left p-2 font-medium text-muted-foreground">
+                        Клиент
+                      </th>
+                      <th className="text-center p-2 font-medium text-muted-foreground">
+                        Текущее время
+                      </th>
+                      <th className="text-center p-2 font-medium text-muted-foreground">
+                        Прогресс
+                      </th>
+                      <th className="text-left p-2 font-medium text-muted-foreground">
+                        Продукты
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -667,24 +553,28 @@ export const AnalyticsPage = () => {
                           {formatDuration(order.currentDurationHours)}
                         </td>
                         <td className="p-2 text-center">
-                          <div className="text-sm">
-                            <div className="font-semibold">
-                              {order.completionPercent}%
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="h-full bg-primary transition-all"
+                                style={{ width: `${order.completionPercent}%` }}
+                              />
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {order.completedProducts} / {order.totalProducts}
-                            </div>
+                            <span className="text-xs">
+                              {order.completionPercent}% ({order.completedProducts}/
+                              {order.totalProducts})
+                            </span>
                           </div>
                         </td>
                         <td className="p-2">
-                          <div className="text-sm space-y-1">
+                          <div className="text-xs space-y-1">
                             {order.products.map((product, pIdx) => (
                               <div key={pIdx} className="flex items-center gap-2">
                                 <span>{product.name}</span>
-                                <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary/90">
+                                <span className="px-2 py-0.5 rounded bg-primary/20 text-primary/90">
                                   {getStageLabel(product.stage)}
                                 </span>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-muted-foreground">
                                   ({product.quantity} шт)
                                 </span>
                               </div>
@@ -699,33 +589,145 @@ export const AnalyticsPage = () => {
             </CardContent>
           </Card>
         )}
-
-        {/* Сообщение, если нет данных */}
-        {fullCycleAnalytics &&
-         fullCycleAnalytics.completedCycles.length === 0 &&
-         fullCycleAnalytics.ordersInProgress.length === 0 && (
-          <Card>
-            <CardContent className="p-6 text-center text-muted-foreground">
-              <p>Нет данных за выбранный период. Для анализа необходимы доставленные заказы.</p>
-              <p className="text-sm mt-2">Выберите другой период или дождитесь завершения заказов.</p>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
-      {/* Детальный отчёт по заказам: кто из сотрудников делал какой этап */}
-      <div className="mb-8">
+      {/* Производительность сотрудников — таблица */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Users size={18} className="text-primary" />
+            Производительность сотрудников
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2 font-medium text-muted-foreground">
+                    Сотрудник
+                  </th>
+                  <th className="text-left p-2 font-medium text-muted-foreground">
+                    Роль
+                  </th>
+                  <th className="text-center p-2 font-medium text-muted-foreground">
+                    Выполнено задач
+                  </th>
+                  <th className="text-center p-2 font-medium text-muted-foreground">
+                    Среднее время
+                  </th>
+                  <th className="text-left p-2 font-medium text-muted-foreground">
+                    Текущая задача
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {userPerformance.map((perf) => {
+                  const maxCompleted = Math.max(
+                    ...userPerformance.map((p) => p.stats.completedTasks),
+                    1,
+                  );
+                  const ratio = perf.stats.completedTasks / maxCompleted;
+                  return (
+                    <tr key={perf.user.id} className="border-b hover:bg-muted/50">
+                      <td className="p-2 font-medium">{perf.user.name}</td>
+                      <td className="p-2">
+                        <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary/90">
+                          {typeof perf.user.role === 'object'
+                            ? perf.user.role.name
+                            : perf.user.role}
+                        </span>
+                      </td>
+                      <td className="p-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 max-w-[120px] bg-muted rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${ratio * 100}%` }}
+                            />
+                          </div>
+                          <span className="font-semibold text-right min-w-[2ch]">
+                            {perf.stats.completedTasks}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-2 text-center">
+                        {perf.stats.avgTaskDurationHours
+                          ? formatDuration(perf.stats.avgTaskDurationHours)
+                          : '—'}
+                      </td>
+                      <td className="p-2">
+                        {perf.stats.hasActiveTask && perf.stats.activeTask ? (
+                          <div>
+                            <div className="font-medium">
+                              {perf.stats.activeTask.productName}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {perf.stats.activeTask.orderNumber} ·{' '}
+                              {getStageLabel(perf.stats.activeTask.stage)}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Сводка за период */}
+      <div>
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <FileText size={24} />
+          <TrendingUp size={22} className="text-primary" />
+          Сводка за период
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <KpiCard
+            label="Дней в периоде"
+            value={performanceSummary?.period.days ?? 0}
+          />
+          <KpiCard
+            label="Создано заказов"
+            value={performanceSummary?.ordersCreated ?? 0}
+            tone="accent"
+          />
+          <KpiCard
+            label="Завершено заказов"
+            value={performanceSummary?.ordersCompleted ?? 0}
+            tone="success"
+          />
+          <KpiCard
+            label="Завершено продуктов"
+            value={performanceSummary?.productsCompleted ?? 0}
+            tone="success"
+          />
+          <KpiCard
+            label="Продуктов в день"
+            value={performanceSummary?.avgProductsPerDay?.toFixed(1) ?? '0'}
+          />
+        </div>
+      </div>
+
+      {/* Детальный отчёт по заказам */}
+      <div>
+        <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+          <FileText size={22} className="text-primary" />
           Детальный отчёт по заказам
         </h2>
-        <p className="text-sm text-muted-foreground mb-3">
-          Период фильтра берётся из секции выше. Нажмите на заказ, чтобы увидеть продукты и сотрудников по этапам.
+        <p className="text-xs text-muted-foreground mb-3">
+          Нажмите на заказ, чтобы увидеть продукты и сотрудников по этапам.
         </p>
         <Card>
           <CardContent className="p-4">
             {orderReport.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Нет заказов за выбранный период</p>
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Нет заказов за выбранный период
+              </p>
             ) : (
               <div className="space-y-2">
                 {orderReport.map((order) => {
@@ -737,11 +739,18 @@ export const AnalyticsPage = () => {
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 text-left"
                       >
                         <div className="flex items-center gap-3">
-                          {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                          {expanded ? (
+                            <ChevronDown size={16} />
+                          ) : (
+                            <ChevronRight size={16} />
+                          )}
                           <div>
-                            <div className="font-semibold">{order.orderNumber} · {order.customerName}</div>
+                            <div className="font-semibold">
+                              {order.orderNumber} · {order.customerName}
+                            </div>
                             <div className="text-xs text-muted-foreground">
-                              {new Date(order.createdAt).toLocaleDateString('ru-RU')} · позиций: {order.products.length}
+                              {new Date(order.createdAt).toLocaleDateString('ru-RU')} ·
+                              позиций: {order.products.length}
                               {order.createdBy && ` · менеджер: ${order.createdBy}`}
                             </div>
                           </div>
@@ -754,7 +763,10 @@ export const AnalyticsPage = () => {
                       {expanded && (
                         <div className="border-t bg-muted/20 p-4 space-y-4">
                           {order.products.map((product) => (
-                            <div key={product.id} className="border rounded-md bg-card p-3">
+                            <div
+                              key={product.id}
+                              className="border rounded-md bg-card p-3"
+                            >
                               <div className="flex items-center justify-between mb-2">
                                 <div>
                                   <div className="font-medium">{product.name}</div>
@@ -771,32 +783,57 @@ export const AnalyticsPage = () => {
                               </div>
 
                               {product.stages.length === 0 ? (
-                                <p className="text-xs text-muted-foreground">Этапы ещё не начаты</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Этапы ещё не начаты
+                                </p>
                               ) : (
                                 <div className="overflow-x-auto">
                                   <table className="w-full text-sm">
                                     <thead>
                                       <tr className="border-b text-muted-foreground">
-                                        <th className="text-left px-2 py-1 font-medium">Этап</th>
-                                        <th className="text-left px-2 py-1 font-medium">Сотрудник</th>
-                                        <th className="text-left px-2 py-1 font-medium">Роль</th>
-                                        <th className="text-left px-2 py-1 font-medium">Статус</th>
-                                        <th className="text-left px-2 py-1 font-medium">Длительность</th>
+                                        <th className="text-left px-2 py-1 font-medium">
+                                          Этап
+                                        </th>
+                                        <th className="text-left px-2 py-1 font-medium">
+                                          Сотрудник
+                                        </th>
+                                        <th className="text-left px-2 py-1 font-medium">
+                                          Роль
+                                        </th>
+                                        <th className="text-left px-2 py-1 font-medium">
+                                          Статус
+                                        </th>
+                                        <th className="text-left px-2 py-1 font-medium">
+                                          Длительность
+                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {product.stages.flatMap((stg) =>
                                         stg.workers.map((w, idx) => (
-                                          <tr key={`${stg.stage}-${w.id}-${idx}`} className="border-b last:border-0">
-                                            <td className="px-2 py-1">{stg.stageName}</td>
-                                            <td className="px-2 py-1 font-medium">{w.name}</td>
-                                            <td className="px-2 py-1 text-xs text-muted-foreground">{w.role || '—'}</td>
-                                            <td className="px-2 py-1 text-xs">{w.status}</td>
+                                          <tr
+                                            key={`${stg.stage}-${w.id}-${idx}`}
+                                            className="border-b last:border-0"
+                                          >
+                                            <td className="px-2 py-1">
+                                              {stg.stageName}
+                                            </td>
+                                            <td className="px-2 py-1 font-medium">
+                                              {w.name}
+                                            </td>
+                                            <td className="px-2 py-1 text-xs text-muted-foreground">
+                                              {w.role || '—'}
+                                            </td>
                                             <td className="px-2 py-1 text-xs">
-                                              {w.durationHours != null ? formatDuration(w.durationHours) : 'в работе'}
+                                              {w.status}
+                                            </td>
+                                            <td className="px-2 py-1 text-xs">
+                                              {w.durationHours != null
+                                                ? formatDuration(w.durationHours)
+                                                : 'в работе'}
                                             </td>
                                           </tr>
-                                        ))
+                                        )),
                                       )}
                                     </tbody>
                                   </table>
