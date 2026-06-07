@@ -41,11 +41,11 @@ interface ProductEditForm {
 
 // ── Sortable stage card (outside KanbanPage to avoid React hook rules violation) ──
 interface SortableStageItemProps {
-  stage: string;
+  stage: ProductionStage;
   stageProducts: any[];
-  getStageColor: (stage: string) => string;
-  getStageName: (stage: string) => string;
-  onStageClick: (stage: any) => void;
+  getStageColor: (stage: ProductionStage) => string;
+  getStageName: (stage: ProductionStage) => string;
+  onStageClick: (stage: ProductionStage) => void;
 }
 
 const SortableStageItem = ({ stage, stageProducts, getStageColor, getStageName, onStageClick }: SortableStageItemProps) => {

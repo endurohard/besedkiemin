@@ -7,6 +7,7 @@ import { TaskCardInfo } from './task-card/TaskCardInfo';
 import { TaskCardManagerActions } from './task-card/TaskCardManagerActions';
 import { TaskCardWarehouseActions } from './task-card/TaskCardWarehouseActions';
 import { TaskCardWorkerActions } from './task-card/TaskCardWorkerActions';
+import { WarehouseOrderCard } from './task-card/WarehouseOrderCard';
 
 interface TaskCardProps {
   task: Task;
@@ -59,6 +60,8 @@ export const TaskCard = ({ task }: TaskCardProps) => {
         )}
 
         <TaskCardInfo task={task} isPainter={isPainter} isSewer={isSewer} />
+
+        {isWarehouse && <WarehouseOrderCard task={task} />}
 
         {task.notes && (
           <div className="mb-2 p-1.5 bg-yellow-50 border border-yellow-200 rounded text-[10px]">
