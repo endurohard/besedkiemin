@@ -112,6 +112,7 @@ export const KanbanPage = () => {
   const [expandedProductIds, setExpandedProductIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL');
+  const [productTypeFilter, setProductTypeFilter] = useState<string>('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [viewerImages, setViewerImages] = useState<{ images: string[]; index: number } | null>(null);
@@ -686,6 +687,9 @@ export const KanbanPage = () => {
 
       const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
 
+      const matchesProductType = productTypeFilter === 'ALL' ||
+        (order.products || []).some((p) => p.productType?.id === productTypeFilter || p.productTypeId === productTypeFilter);
+
       let matchesDateFrom = true;
       let matchesDateTo = true;
 
@@ -703,9 +707,9 @@ export const KanbanPage = () => {
         matchesDateTo = orderDate <= toDate;
       }
 
-      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+      return matchesSearch && matchesStatus && matchesProductType && matchesDateFrom && matchesDateTo;
     });
-  }, [orders, searchQuery, statusFilter, myOrderIds, dateFrom, dateTo]);
+  }, [orders, searchQuery, statusFilter, productTypeFilter, myOrderIds, dateFrom, dateTo]);
 
   // Сброс фильтров по датам
   const clearDateFilters = () => {
@@ -905,6 +909,29 @@ export const KanbanPage = () => {
                     Готово ({orders.filter(o => o.status === OrderStatus.COMPLETED).length})
                   </Button>
                 </div>
+              </div>
+
+              {/* Фильтр по категории продукции */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Package className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Категория:</span>
+                </div>
+                <select
+                  value={productTypeFilter}
+                  onChange={(e) => setProductTypeFilter(e.target.value)}
+                  className="h-8 text-xs px-2 border rounded-md bg-card focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="ALL">Все категории</option>
+                  {productTypes.map((pt) => (
+                    <option key={pt.id} value={pt.id}>{pt.name}</option>
+                  ))}
+                </select>
+                {productTypeFilter !== 'ALL' && (
+                  <Button variant="ghost" size="sm" onClick={() => setProductTypeFilter('ALL')} className="h-8 text-xs px-2">
+                    Сбросить
+                  </Button>
+                )}
               </div>
 
               {/* Фильтр по датам */}
@@ -1992,10 +2019,19 @@ export const KanbanPage = () => {
                     const orderNumber = product.order?.orderNumber;
                     const customerName = product.order?.customerName;
                     const isAccepted = activeTask?.status === 'ACCEPTED';
+                    const orderForProduct = product.order || orders.find((o) => o.id === product.orderId);
                     return (
                       <div
                         key={product.id}
-                        className="p-3 rounded-lg border hover:bg-muted/40 flex items-start justify-between gap-3"
+                        role={orderForProduct ? 'button' : undefined}
+                        tabIndex={orderForProduct ? 0 : undefined}
+                        onClick={() => {
+                          if (orderForProduct) {
+                            setStageDetailsFor(null);
+                            handleOpenOrder(orderForProduct as Order);
+                          }
+                        }}
+                        className={`p-3 rounded-lg border flex items-start justify-between gap-3 ${orderForProduct ? 'hover:bg-muted/40 cursor-pointer' : ''}`}
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">

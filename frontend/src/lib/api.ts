@@ -650,7 +650,31 @@ export const analyticsApi = {
     );
     return response.data;
   },
+
+  getManagerReport: async (params?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<ManagerReportRow[]> => {
+    const response = await api.get<ManagerReportRow[]>(
+      '/analytics/managers/report',
+      { params },
+    );
+    return response.data;
+  },
 };
+
+// Отчёт по работе менеджеров
+export interface ManagerReportRow {
+  managerId: string;
+  managerName: string;
+  role: string | null;
+  total: number;
+  completed: number;
+  inWork: number;
+  cancelled: number;
+  revenue: number;
+  byStatus: Record<string, number>;
+}
 
 // Детальный отчёт по заказам — кто из сотрудников выполнял какой этап
 export interface OrderProductionReport {

@@ -143,4 +143,20 @@ export class AnalyticsController {
     const end = endDate ? new Date(endDate) : undefined;
     return this.analyticsService.getProductivityReport(start, end);
   }
+
+  @Get("managers/report")
+  @ApiOperation({
+    summary:
+      "Отчёт по работе менеджеров: заказы выполнено/в работе/отменено по каждому (только OWNER)",
+  })
+  @ApiQuery({ name: "startDate", required: false, type: String })
+  @ApiQuery({ name: "endDate", required: false, type: String })
+  getManagerReport(
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
+  ) {
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.analyticsService.getManagerReport(start, end);
+  }
 }

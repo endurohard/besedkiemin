@@ -867,6 +867,85 @@ export class AnalyticsService {
     }));
   }
 
+  // Отчёт по работе менеджеров: сколько заказов выполнено / в работе по каждому
+  async getManagerReport(start?: Date, end?: Date) {
+    const where: any = {};
+    if (start || end) {
+      where.createdAt = {};
+      if (start) where.createdAt.gte = start;
+      if (end) where.createdAt.lte = end;
+    }
+
+    const grouped = await this.prisma.order.groupBy({
+      by: ["createdById", "status"],
+      where,
+      _count: { _all: true },
+      _sum: { totalAmount: true },
+    });
+
+    const managerIds = [...new Set(grouped.map((g) => g.createdById))];
+    const managers = await this.prisma.user.findMany({
+      where: { id: { in: managerIds } },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        role: { select: { code: true, name: true } },
+      },
+    });
+    const managerMap = new Map(managers.map((m) => [m.id, m]));
+
+    const reportMap = new Map<
+      string,
+      {
+        managerId: string;
+        managerName: string;
+        role: string | null;
+        total: number;
+        completed: number;
+        inWork: number;
+        cancelled: number;
+        revenue: number;
+        byStatus: Record<string, number>;
+      }
+    >();
+
+    for (const g of grouped) {
+      let r = reportMap.get(g.createdById);
+      if (!r) {
+        const m = managerMap.get(g.createdById);
+        r = {
+          managerId: g.createdById,
+          managerName: m
+            ? `${m.lastName ?? ""} ${m.firstName ?? ""}`.trim() || "Без имени"
+            : "Неизвестно",
+          role: m?.role?.name ?? null,
+          total: 0,
+          completed: 0,
+          inWork: 0,
+          cancelled: 0,
+          revenue: 0,
+          byStatus: {},
+        };
+        reportMap.set(g.createdById, r);
+      }
+      const cnt = g._count._all;
+      r.total += cnt;
+      r.byStatus[g.status] = (r.byStatus[g.status] ?? 0) + cnt;
+      if (g.status === "COMPLETED") {
+        r.completed += cnt;
+        r.revenue += g._sum.totalAmount ?? 0;
+      } else if (g.status === "CANCELLED") {
+        r.cancelled += cnt;
+      } else {
+        // NEW, MEASUREMENT, DESIGN, WAITING, IN_PRODUCTION — в работе
+        r.inWork += cnt;
+      }
+    }
+
+    return Array.from(reportMap.values()).sort((a, b) => b.total - a.total);
+  }
+
   // Подсчёт рабочих дней (пн-пт) в периоде
   private countWorkingDays(start: Date, end: Date): number {
     let count = 0;
