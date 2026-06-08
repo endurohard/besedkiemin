@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Task } from '@/types';
 import { Button } from '../ui/Button';
 import { tasksApi } from '@/lib/api';
@@ -31,14 +31,8 @@ export const TaskCardWorkerSelectModal = ({
     queryFn: tasksApi.getDepartmentWorkers,
   });
 
-  useEffect(() => {
-    if (departmentWorkers && selectedWorkerId === '' && currentUserId) {
-      const currentWorker = departmentWorkers.find(w => w.id === currentUserId);
-      if (currentWorker) {
-        setSelectedWorkerId(currentUserId);
-      }
-    }
-  }, [departmentWorkers, currentUserId, selectedWorkerId]);
+  // Авто-выбор НЕ делаем: сотрудник обязан явно выбрать своё имя из списка,
+  // иначе кнопка «Принять» остаётся заблокированной.
 
   const taskQuantity = task.quantity || task.product?.quantity || 1;
 

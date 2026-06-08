@@ -258,11 +258,14 @@ export class TasksService {
       throw new NotFoundException("Пользователь не найден");
     }
 
-    // Получаем всех активных пользователей с той же ролью
+    // Получаем всех активных пользователей с той же ролью.
+    // Саму учётку отдела (общий терминал) в список выбора имени НЕ включаем —
+    // сотрудник должен выбрать конкретное своё имя.
     return this.prisma.user.findMany({
       where: {
         roleId: user.roleId,
         isActive: true,
+        isDepartmentAccount: false,
       },
       select: {
         id: true,
