@@ -1466,6 +1466,57 @@ export const KanbanPage = () => {
                                     </div>
                                   )}
 
+                                  {(() => {
+                                    // Принятие по этапам: кто и когда принял задачу на каждом этапе
+                                    const stageOrder = [
+                                      ProductionStage.PENDING,
+                                      ProductionStage.DESIGN,
+                                      ProductionStage.PREPARATION,
+                                      ProductionStage.PAINTING,
+                                      ProductionStage.SEWING,
+                                      ProductionStage.ASSEMBLY,
+                                      ProductionStage.QUALITY_CHECK,
+                                      ProductionStage.COMPLETED,
+                                    ];
+                                    const tasks = (product.tasks || []).filter((t) => !t.isDefect);
+                                    if (tasks.length === 0) return null;
+                                    // группируем по этапу, предпочитая принятую задачу
+                                    const byStage = new Map<string, typeof tasks[number]>();
+                                    for (const t of tasks) {
+                                      const ex = byStage.get(t.stage);
+                                      if (!ex || (!ex.acceptedAt && t.acceptedAt)) byStage.set(t.stage, t);
+                                    }
+                                    const rows = [...byStage.values()].sort(
+                                      (a, b) => stageOrder.indexOf(a.stage) - stageOrder.indexOf(b.stage),
+                                    );
+                                    return (
+                                      <div>
+                                        <div className="text-xs font-medium text-muted-foreground mb-1">
+                                          Принятие по этапам:
+                                        </div>
+                                        <ul className="text-xs space-y-0.5">
+                                          {rows.map((t) => (
+                                            <li key={t.id} className="flex items-center gap-1 flex-wrap">
+                                              <span>{getStageName(t.stage)} —</span>
+                                              {t.assignedTo && (
+                                                <span className="font-medium">
+                                                  {t.assignedTo.firstName} {t.assignedTo.lastName}
+                                                </span>
+                                              )}
+                                              {t.acceptedAt ? (
+                                                <span className="text-green-700">
+                                                  ✓ принял {new Date(t.acceptedAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                              ) : (
+                                                <span className="text-amber-700">⏳ ожидает принятия</span>
+                                              )}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    );
+                                  })()}
+
                                   {product.history && product.history.length > 0 && (
                                     <div>
                                       <div className="text-xs font-medium text-muted-foreground mb-1">

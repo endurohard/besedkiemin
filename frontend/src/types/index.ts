@@ -301,6 +301,8 @@ export interface Product {
     stage: ProductionStage;
     status: string;
     isDefect?: boolean;
+    acceptedAt?: string | null;
+    quantity?: number;
     assignedTo?: {
       id: string;
       firstName: string;

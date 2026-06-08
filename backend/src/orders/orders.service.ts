@@ -207,7 +207,8 @@ export class OrdersService {
               },
             },
             tasks: {
-              where: { status: { in: ["NEW", "ACCEPTED", "COMPLETED"] } },
+              // PASSED включены, чтобы показать принятие по всем (в т.ч. пройденным) этапам
+              where: { status: { in: ["NEW", "ACCEPTED", "COMPLETED", "PASSED"] } },
               include: {
                 assignedTo: {
                   select: {
