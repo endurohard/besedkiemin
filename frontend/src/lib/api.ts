@@ -232,6 +232,26 @@ export const ordersApi = {
     return response.data.data;
   },
 
+  // Загрузить ВСЕ заказы постранично (для Канбана — иначе режется на 50/страницу,
+  // и под отделовскими аккаунтами заказы из старых заказов выпадают из списка)
+  getAllPaginated: async (params?: {
+    status?: OrderStatus;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Order[]> => {
+    const pageSize = 100; // = backend MAX_PAGE_SIZE
+    const all: Order[] = [];
+    for (let page = 1; page <= 100; page++) {
+      const response = await api.get<PaginatedResponse<Order>>('/orders', {
+        params: { ...params, page, limit: pageSize },
+      });
+      const chunk = response.data.data || [];
+      all.push(...chunk);
+      if (chunk.length < pageSize) break; // последняя страница
+    }
+    return all;
+  },
+
   getOne: async (id: string): Promise<Order> => {
     const response = await api.get<Order>(`/orders/${id}`);
     return response.data;
@@ -1138,9 +1158,11 @@ export const payrollApi = {
   },
 
   // Сводка
-  getPayrollSummary: async (periodStart: string, periodEnd: string): Promise<PayrollSummary> => {
+  getPayrollSummary: async (periodStart: string, periodEnd: string, userId?: string): Promise<PayrollSummary> => {
+    const params: Record<string, string> = { periodStart, periodEnd };
+    if (userId) params.userId = userId;
     const response = await api.get<PayrollSummary>('/payroll/summary', {
-      params: { periodStart, periodEnd },
+      params,
     });
     return response.data;
   },

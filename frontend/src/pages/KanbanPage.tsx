@@ -118,7 +118,7 @@ export const KanbanPage = () => {
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => ordersApi.getAll(),
+    queryFn: () => ordersApi.getAllPaginated(),
     refetchInterval: 15000,
   });
 

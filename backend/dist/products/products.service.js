@@ -192,7 +192,7 @@ let ProductsService = ProductsService_1 = class ProductsService {
             where.stage = filters.stage;
         }
         const page = Math.max(1, filters?.page || 1);
-        const limit = Math.min(200, Math.max(1, filters?.limit || 200));
+        const limit = Math.min(2000, Math.max(1, filters?.limit || 2000));
         const [products, total] = await Promise.all([
             this.prisma.product.findMany({
                 where,

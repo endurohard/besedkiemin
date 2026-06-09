@@ -895,7 +895,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             },
         };
     }
-    async getPayrollSummary(periodStart, periodEnd) {
+    async getPayrollSummary(periodStart, periodEnd, userId) {
         const start = new Date(periodStart);
         const end = new Date(periodEnd);
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
@@ -905,6 +905,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             by: ["userId"],
             where: {
                 completedAt: { gte: start, lte: end },
+                ...(userId ? { userId } : {}),
             },
             _sum: { totalAmount: true },
             _count: true,
@@ -914,6 +915,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             where: {
                 date: { gte: start, lte: end },
                 isCancelled: false,
+                ...(userId ? { userId } : {}),
             },
             _sum: { amount: true },
         });
@@ -921,6 +923,7 @@ let PayrollService = PayrollService_1 = class PayrollService {
             ...new Set([
                 ...workLogsByUser.map((w) => w.userId),
                 ...penaltiesByUser.map((p) => p.userId),
+                ...(userId ? [userId] : []),
             ]),
         ];
         const usersData = await this.prisma.user.findMany({

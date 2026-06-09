@@ -128,8 +128,8 @@ let PayrollController = class PayrollController {
             unassigned: unassigned === "true",
         });
     }
-    getPayrollSummary(periodStart, periodEnd) {
-        return this.payrollService.getPayrollSummary(periodStart, periodEnd);
+    getPayrollSummary(periodStart, periodEnd, userId) {
+        return this.payrollService.getPayrollSummary(periodStart, periodEnd, userId);
     }
     getWorkerStats(startDate, endDate) {
         return this.payrollService.getWorkerStats(startDate, endDate);
@@ -373,8 +373,9 @@ __decorate([
     (0, roles_decorator_1.Roles)("SUPER_ADMIN", "OWNER"),
     __param(0, (0, common_1.Query)("periodStart")),
     __param(1, (0, common_1.Query)("periodEnd")),
+    __param(2, (0, common_1.Query)("userId")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "getPayrollSummary", null);
 __decorate([
