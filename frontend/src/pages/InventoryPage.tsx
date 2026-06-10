@@ -142,6 +142,30 @@ export const InventoryPage = () => {
     setShowShipmentModal(true);
   };
 
+  // Отгрузить все готовые позиции заказа одной доставкой
+  const handleShipWholeOrder = (orderItem: InventoryItem) => {
+    const orderItems = (inventory || []).filter(
+      (i) => i.orderId === orderItem.orderId && i.quantity > 0,
+    );
+    if (orderItems.length === 0) return;
+
+    setSelectedItems(orderItems.map((i) => ({ item: i, quantity: i.quantity })));
+
+    const phone =
+      orderItem.order?.customerPhone === 'N/A'
+        ? ''
+        : orderItem.order?.customerPhone || '';
+
+    setGroupShipmentForm({
+      customerName: orderItem.order?.customerName || '',
+      customerPhone: phone,
+      deliveryAddress: orderItem.order?.customerAddress || '',
+      notes: '',
+      orderNumber: orderItem.order?.orderNumber || '',
+    });
+    setShowGroupShipmentModal(true);
+  };
+
   const createGroupShipmentMutation = useMutation({
     mutationFn: shipmentsApi.create,
     onSuccess: () => {
@@ -350,16 +374,36 @@ export const InventoryPage = () => {
                         {format(new Date(item.receivedAt), 'dd.MM.yyyy HH:mm', { locale: ru })}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <Button
-                          onClick={() => handleCreateShipment(item)}
-                          disabled={item.quantity === 0}
-                          size="sm"
-                          variant="outline"
-                          className="gap-1"
-                        >
-                          <TruckIcon size={14} />
-                          <span className="hidden sm:inline">Списать</span>
-                        </Button>
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            onClick={() => handleCreateShipment(item)}
+                            disabled={item.quantity === 0}
+                            size="sm"
+                            variant="outline"
+                            className="gap-1"
+                          >
+                            <TruckIcon size={14} />
+                            <span className="hidden sm:inline">Списать</span>
+                          </Button>
+                          {(() => {
+                            const readyInOrder = (inventory || []).filter(
+                              (i) => i.orderId === item.orderId && i.quantity > 0,
+                            ).length;
+                            if (readyInOrder < 2) return null;
+                            return (
+                              <Button
+                                onClick={() => handleShipWholeOrder(item)}
+                                size="sm"
+                                variant="default"
+                                className="gap-1"
+                                title={`Отгрузить все готовые позиции заказа (${readyInOrder}) одной доставкой`}
+                              >
+                                <PackagePlus size={14} />
+                                <span className="hidden sm:inline">Отгрузить заказ ({readyInOrder})</span>
+                              </Button>
+                            );
+                          })()}
+                        </div>
                       </td>
                     </tr>
                   ))

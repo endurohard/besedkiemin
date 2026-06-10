@@ -76,6 +76,12 @@ export default function PayrollPage() {
   const [showPeriodDetailModal, setShowPeriodDetailModal] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<PayrollPeriod | null>(null);
 
+  // Карточка сотрудника (выполненные работы по клику в сводке)
+  const [showWorkerCard, setShowWorkerCard] = useState(false);
+  const [workerCardName, setWorkerCardName] = useState('');
+  const [workerCardLogs, setWorkerCardLogs] = useState<WorkLog[]>([]);
+  const [workerCardLoading, setWorkerCardLoading] = useState(false);
+
   // Form states
   const [workRateForm, setWorkRateForm] = useState({
     productTypeId: '',
@@ -148,7 +154,7 @@ export default function PayrollPage() {
 
   const loadSummary = async () => {
     try {
-      const data = await payrollApi.getPayrollSummary(periodStart, periodEnd);
+      const data = await payrollApi.getPayrollSummary(periodStart, periodEnd, selectedUserId || undefined);
       setSummary(data);
     } catch (err) {
       console.error('Error loading summary:', err);
@@ -338,12 +344,43 @@ export default function PayrollPage() {
     }
   };
 
+  // Открыть карточку сотрудника: какие изделия/заказы выполнил, когда принял и когда выполнил
+  const openWorkerCard = async (userId: string, userName: string) => {
+    setWorkerCardName(userName);
+    setWorkerCardLogs([]);
+    setShowWorkerCard(true);
+    setWorkerCardLoading(true);
+    try {
+      const logs = await payrollApi.getWorkLogs({
+        userId,
+        startDate: periodStart,
+        endDate: periodEnd,
+      });
+      setWorkerCardLogs(logs);
+    } catch (err) {
+      console.error('Error loading worker card:', err);
+    } finally {
+      setWorkerCardLoading(false);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(amount);
   };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('ru-RU');
+  };
+
+  const formatDateTime = (dateStr?: string | null) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   if (loading && !summary) {
@@ -503,8 +540,13 @@ export default function PayrollPage() {
               </thead>
               <tbody className="bg-card divide-y divide-border">
                 {summary.users.map((userSummary) => (
-                  <tr key={userSummary.userId} className="hover:bg-muted/50">
-                    <td className="px-6 py-4 whitespace-nowrap">{userSummary.userName}</td>
+                  <tr
+                    key={userSummary.userId}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => openWorkerCard(userSummary.userId, userSummary.userName)}
+                    title="Открыть карточку: выполненные работы"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap font-medium text-primary underline-offset-2 hover:underline">{userSummary.userName}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{userSummary.role}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-green-600">
                       {formatCurrency(userSummary.workAmount)}
@@ -1268,6 +1310,109 @@ export default function PayrollPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => setShowPeriodDetailModal(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Карточка сотрудника: выполненные работы / заказы */}
+      {showWorkerCard && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-6 w-full max-w-5xl max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">
+                Карточка сотрудника: {workerCardName}
+              </h2>
+              <button
+                onClick={() => setShowWorkerCard(false)}
+                className="text-muted-foreground hover:text-foreground text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="text-sm text-muted-foreground mb-4">
+              Период: {formatDate(periodStart)} — {formatDate(periodEnd)}
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <div className="text-sm text-muted-foreground">Выполнено работ</div>
+                <div className="font-bold">{workerCardLogs.length}</div>
+              </div>
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <div className="text-sm text-muted-foreground">Изделий (кол-во)</div>
+                <div className="font-bold">
+                  {workerCardLogs.reduce((s, l) => s + (l.quantity || 0), 0)}
+                </div>
+              </div>
+              <div className="bg-green-50 p-3 rounded-lg">
+                <div className="text-sm text-muted-foreground">Сдельная сумма</div>
+                <div className="font-bold text-green-600">
+                  {formatCurrency(workerCardLogs.reduce((s, l) => s + (l.totalAmount || 0), 0))}
+                </div>
+              </div>
+            </div>
+
+            {workerCardLoading ? (
+              <div className="flex items-center justify-center h-40">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : workerCardLogs.length === 0 ? (
+              <div className="text-center text-muted-foreground py-10">
+                Нет выполненных работ за выбранный период
+              </div>
+            ) : (
+              <div className="border rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Заказ</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Изделие</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Этап</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Принял</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Выполнил</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Кол-во</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Сумма</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {workerCardLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-muted/50">
+                        <td className="px-4 py-2 text-sm">
+                          {log.product?.order?.orderNumber
+                            ? `№${log.product.order.orderNumber}`
+                            : '—'}
+                          {log.product?.order?.customerName && (
+                            <span className="block text-xs text-muted-foreground">
+                              {log.product.order.customerName}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-sm">{log.product?.name || '—'}</td>
+                        <td className="px-4 py-2 text-sm">{stageNames[log.stage]}</td>
+                        <td className="px-4 py-2 text-sm text-muted-foreground">
+                          {formatDateTime(log.task?.acceptedAt)}
+                        </td>
+                        <td className="px-4 py-2 text-sm">{formatDateTime(log.completedAt)}</td>
+                        <td className="px-4 py-2 text-sm text-right">{log.quantity}</td>
+                        <td className="px-4 py-2 text-sm text-right text-green-600">
+                          {formatCurrency(log.totalAmount)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowWorkerCard(false)}
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
               >
                 Закрыть

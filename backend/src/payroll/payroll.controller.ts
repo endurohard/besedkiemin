@@ -288,8 +288,9 @@ export class PayrollController {
   getPayrollSummary(
     @Query("periodStart") periodStart: string,
     @Query("periodEnd") periodEnd: string,
+    @Query("userId") userId?: string,
   ) {
-    return this.payrollService.getPayrollSummary(periodStart, periodEnd);
+    return this.payrollService.getPayrollSummary(periodStart, periodEnd, userId);
   }
 
   // ==================== СТАТИСТИКА РАБОТНИКОВ ====================

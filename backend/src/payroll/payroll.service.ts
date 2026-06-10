@@ -1140,7 +1140,11 @@ export class PayrollService {
   }
 
   // Сводка по зарплате за период
-  async getPayrollSummary(periodStart: string, periodEnd: string) {
+  async getPayrollSummary(
+    periodStart: string,
+    periodEnd: string,
+    userId?: string,
+  ) {
     const start = new Date(periodStart);
     const end = new Date(periodEnd);
 
@@ -1153,6 +1157,7 @@ export class PayrollService {
       by: ["userId"],
       where: {
         completedAt: { gte: start, lte: end },
+        ...(userId ? { userId } : {}),
       },
       _sum: { totalAmount: true },
       _count: true,
@@ -1164,6 +1169,7 @@ export class PayrollService {
       where: {
         date: { gte: start, lte: end },
         isCancelled: false,
+        ...(userId ? { userId } : {}),
       },
       _sum: { amount: true },
     });
@@ -1173,6 +1179,9 @@ export class PayrollService {
       ...new Set([
         ...workLogsByUser.map((w) => w.userId),
         ...penaltiesByUser.map((p) => p.userId),
+        // Если фильтруем по сотруднику — включаем его всегда,
+        // даже если у него нет работ/штрафов (например, оклад/комиссия менеджера)
+        ...(userId ? [userId] : []),
       ]),
     ];
 
