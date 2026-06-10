@@ -27,13 +27,25 @@ export const TaskCardInfo = ({ task, isPainter, isSewer }: TaskCardInfoProps) =>
       )}
       <div className="space-y-0.5">
         <div className="flex gap-1">
-          <span className="text-muted-foreground">Продукт:</span>
-          <span className="font-medium truncate">{task.product.name}</span>
+          <span className="text-muted-foreground shrink-0">Продукт:</span>
+          <span className="font-medium break-words">{task.product.name}</span>
         </div>
         <div className="flex gap-1">
-          <span className="text-muted-foreground">Кол-во:</span>
+          <span className="text-muted-foreground shrink-0">Кол-во:</span>
           <span className="font-medium">{task.quantity || task.product.quantity} шт.</span>
         </div>
+        {task.product.dimensions && (
+          <div className="flex gap-1">
+            <span className="text-muted-foreground shrink-0">Размеры:</span>
+            <span className="font-medium break-words">{task.product.dimensions}</span>
+          </div>
+        )}
+        {task.product.description && (
+          <div className="mt-1 pt-1 border-t">
+            <span className="text-muted-foreground block">Описание:</span>
+            <p className="font-medium whitespace-pre-wrap break-words">{task.product.description}</p>
+          </div>
+        )}
       </div>
 
       {isPainter && task.product.color && (

@@ -54,6 +54,19 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Запрещаем кэширование динамических API-ответов.
+  // Иначе браузер отдаёт устаревшие данные (новые задачи/заказы не появляются
+  // до перелогина). Статику в /uploads оставляем кэшируемой.
+  app.getHttpAdapter().getInstance().set("etag", false);
+  app.use((req: any, res: any, next: any) => {
+    if (!req.path.startsWith("/uploads/")) {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    }
+    next();
+  });
+
   // Global exception filter for consistent error responses
   app.useGlobalFilters(new GlobalExceptionFilter());
 

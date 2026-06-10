@@ -7,7 +7,7 @@ import { SchemaImageViewer } from '@/components/SchemaImageViewer';
 import { TaskStatus, OrderPriority, Task, ProductionStage } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { stageLabels } from '@/lib/labels';
-import { Loader2, Package, AlertTriangle, Flame, User, CheckCircle, ArrowRight, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Package, AlertTriangle, Flame, User, CheckCircle, ArrowRight, Image as ImageIcon, ChevronRight, Calendar, X } from 'lucide-react';
 
 const getNextStageName = (stage: ProductionStage, requiresSewing?: boolean | null): string => {
   switch (stage) {
@@ -20,11 +20,31 @@ const getNextStageName = (stage: ProductionStage, requiresSewing?: boolean | nul
   }
 };
 
+const formatDate = (value?: string) => {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
 export const TasksPage = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const selectedWorkerId = searchParams.get('worker');
+
+  // Открытый заказ (выпадающее окно с позициями); по умолчанию все свёрнуты
+  const [openOrderId, setOpenOrderId] = useState<string | null>(null);
+  const toggleOrder = (orderId: string) =>
+    setOpenOrderId((prev) => (prev === orderId ? null : orderId));
+
+  // Текущий пользователь — для скрытия чужих принятых задач на общей доске
+  const currentUserId = user?.id;
+  const isManagerView =
+    user?.role?.code === 'MANAGER' ||
+    user?.role?.code === 'OWNER' ||
+    user?.role?.code === 'SUPER_ADMIN' ||
+    user?.role?.code === 'LOGIST';
 
   const { data: tasks, isLoading, error } = useQuery({
     queryKey: ['tasks'],
@@ -67,11 +87,19 @@ export const TasksPage = () => {
   const tasksByOrder = useMemo(() => {
     const grouped = new Map<string, typeof tasks>();
 
-    const activeTasks = tasks?.filter((task) =>
+    const activeTasks = (tasks?.filter((task) =>
       task.status === TaskStatus.NEW ||
       task.status === TaskStatus.ACCEPTED ||
       task.status === TaskStatus.COMPLETED
-    ) || [];
+    ) || [])
+      // На общей доске отдела не показываем задачи, которые уже принял другой мастер —
+      // они остаются только в его учётке (?worker=). Менеджер/владелец видит всё.
+      .filter((task) => {
+        if (isManagerView) return true;
+        if (task.status === TaskStatus.NEW) return true;
+        const assignee = task.assignedTo?.id || task.assignedToId;
+        return !assignee || assignee === currentUserId;
+      });
 
     activeTasks.forEach((task) => {
       const orderId = task.product?.order?.id || 'unknown';
@@ -81,11 +109,13 @@ export const TasksPage = () => {
       grouped.get(orderId)!.push(task);
     });
 
-    const priorityOrder = {
-      [OrderPriority.URGENT]: 0,
-      [OrderPriority.HIGH]: 1,
-      [OrderPriority.NORMAL]: 2,
-      [OrderPriority.LOW]: 3,
+    // Ранг типа заказа для сортировки: индивидуальные → клиентские → внутренние
+    const getOrderRank = (order: any, orderTasks?: Task[]) => {
+      const isInternal = order?.customerName === 'Внутренний заказ';
+      if (isInternal) return 2;
+      const isCustom = (orderTasks || []).some((t) => t.product?.isCustom);
+      if (isCustom) return 0; // индивидуальный
+      return 1; // клиентский
     };
 
     return Array.from(grouped.entries())
@@ -93,13 +123,21 @@ export const TasksPage = () => {
         orderId,
         order: orderTasks?.[0]?.product?.order,
         tasks: orderTasks,
+        // Когда заявка поступила в отдел = самая ранняя дата создания задачи по заказу
+        arrivedAt: (orderTasks || [])
+          .map((t) => t.createdAt)
+          .filter(Boolean)
+          .sort()[0],
       }))
       .sort((a, b) => {
-        const priorityA = priorityOrder[a.order?.priority as OrderPriority] ?? 2;
-        const priorityB = priorityOrder[b.order?.priority as OrderPriority] ?? 2;
-        return priorityA - priorityB;
+        // 1) тип заказа: индивидуальные и клиентские первыми, внутренние после
+        const rankA = getOrderRank(a.order, a.tasks);
+        const rankB = getOrderRank(b.order, b.tasks);
+        if (rankA !== rankB) return rankA - rankB;
+        // 2) внутри группы — по дате принятия заказа (старые выше: 04 → 05 → 06)
+        return (a.order?.createdAt || '').localeCompare(b.order?.createdAt || '');
       });
-  }, [tasks]);
+  }, [tasks, isManagerView, currentUserId]);
 
   const getOrderStyles = (priority?: string) => {
     switch (priority) {
@@ -214,16 +252,18 @@ export const TasksPage = () => {
   }
 
   // Обычный вид - все задачи
+  const openData = openOrderId ? tasksByOrder.find((o) => o.orderId === openOrderId) : null;
+
   return (
     <div>
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="flex flex-wrap items-start gap-3 pb-2">
         {tasksByOrder.length === 0 ? (
           <div className="flex-1 text-center p-8 bg-muted/50 rounded-lg">
             <Package className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Нет активных задач</p>
           </div>
         ) : (
-          tasksByOrder.map(({ orderId, order, tasks: orderTasks }) => {
+          tasksByOrder.map(({ orderId, order, tasks: orderTasks, arrivedAt }) => {
             const newOrderTasks = orderTasks?.filter((t) => t.status === TaskStatus.NEW) || [];
             const acceptedOrderTasks = orderTasks?.filter((t) => t.status === TaskStatus.ACCEPTED) || [];
             const completedOrderTasks = orderTasks?.filter((t) => t.status === TaskStatus.COMPLETED) || [];
@@ -231,22 +271,65 @@ export const TasksPage = () => {
             const styles = getOrderStyles(order?.priority);
             const priorityLabel = getPriorityLabel(order?.priority);
 
+            const hasNew = newOrderTasks.length > 0;
+            const isOpen = openOrderId === orderId;
+            // Свёрнутая колонка с непринятыми задачами — мигает, чтобы привлечь внимание
+            const blink = hasNew && !isOpen;
+
             return (
               <div
                 key={orderId}
-                className={`flex-shrink-0 w-64 bg-white rounded-lg ${styles.border}`}
+                className={`flex-shrink-0 w-64 bg-white rounded-lg ${styles.border} ${
+                  blink ? 'ring-2 ring-primary animate-blink' : ''
+                }`}
               >
-                <div className={`p-2 border-b rounded-t-lg ${styles.header}`}>
+                <button
+                  type="button"
+                  onClick={() => toggleOrder(orderId)}
+                  className={`w-full text-left p-2 rounded-lg ${styles.header} cursor-pointer hover:brightness-95 transition`}
+                  title="Нажмите, чтобы посмотреть состав"
+                >
                   <div className="flex items-center justify-between">
-                    <h2 className={`text-sm font-bold flex items-center gap-1.5 ${styles.text}`}>
+                    <h2 className={`text-sm font-bold flex items-center gap-1.5 min-w-0 ${styles.text}`}>
+                      <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                       {styles.icon}
-                      {order?.orderNumber || 'Заказ'}
+                      <span className="truncate">{order?.orderNumber || 'Заказ'}</span>
                     </h2>
                     {priorityLabel && (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${styles.badge}`}>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${styles.badge}`}>
                         {priorityLabel}
                       </span>
                     )}
+                  </div>
+                  {/* Счётчики задач — видны всегда, даже в свёрнутом виде */}
+                  <div className="mt-1 flex items-center gap-2 text-[10px] font-semibold">
+                    {hasNew && (
+                      <span className="flex items-center gap-1 text-primary">
+                        <span className="w-1.5 h-1.5 bg-primary/100 rounded-full"></span>
+                        Новые {newOrderTasks.length}
+                      </span>
+                    )}
+                    {acceptedOrderTasks.length > 0 && (
+                      <span className="flex items-center gap-1 text-yellow-700">
+                        <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>
+                        В работе {acceptedOrderTasks.length}
+                      </span>
+                    )}
+                    {completedOrderTasks.length > 0 && (
+                      <span className="flex items-center gap-1 text-green-700">
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                        Готово {completedOrderTasks.length}
+                      </span>
+                    )}
+                  </div>
+                  {/* Даты: создание заказа и поступление в отдел */}
+                  <div className="mt-1 flex flex-col gap-0.5 text-[10px] text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Заказ от {formatDate(order?.createdAt)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <ArrowRight className="w-3 h-3" /> В отдел {formatDate(arrivedAt)}
+                    </span>
                   </div>
                   {order && (user?.role?.code === 'MANAGER' || user?.role?.code === 'LOGIST') && (
                     <div className="mt-1 text-xs text-gray-700">
@@ -254,70 +337,112 @@ export const TasksPage = () => {
                       {order.customerPhone && <span className="ml-2">{order.customerPhone}</span>}
                     </div>
                   )}
-                </div>
-
-                <div className="p-2 space-y-2 max-h-[calc(100vh-220px)] overflow-y-auto">
-                  {newOrderTasks.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-blue-200">
-                        <span className="w-1.5 h-1.5 bg-primary/100 rounded-full"></span>
-                        <h3 className="text-[10px] font-semibold text-primary uppercase">
-                          Новые ({newOrderTasks.length})
-                        </h3>
-                      </div>
-                      <div className="space-y-1.5">
-                        {newOrderTasks.map((task) => (
-                          <TaskCard key={task.id} task={task} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {acceptedOrderTasks.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-yellow-200">
-                        <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>
-                        <h3 className="text-[10px] font-semibold text-yellow-700 uppercase">
-                          В работе ({acceptedOrderTasks.length})
-                        </h3>
-                      </div>
-                      <div className="space-y-1.5">
-                        {acceptedOrderTasks.map((task) => (
-                          <TaskCard key={task.id} task={task} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {completedOrderTasks.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-green-200">
-                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                        <h3 className="text-[10px] font-semibold text-green-700 uppercase">
-                          Завершено ({completedOrderTasks.length})
-                        </h3>
-                      </div>
-                      <div className="space-y-1.5">
-                        {completedOrderTasks.map((task) => (
-                          <TaskCard key={task.id} task={task} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {newOrderTasks.length === 0 &&
-                    acceptedOrderTasks.length === 0 &&
-                    completedOrderTasks.length === 0 && (
-                      <div className="text-center p-4 text-gray-400 text-xs">
-                        Нет задач
-                      </div>
-                    )}
-                </div>
+                </button>
               </div>
             );
           })
         )}
       </div>
+
+      {/* Выпадающее окно с позициями заказа (сетка) */}
+      {openData && (() => {
+        const { order, tasks: orderTasks, arrivedAt } = openData;
+        const newOrderTasks = orderTasks?.filter((t) => t.status === TaskStatus.NEW) || [];
+        const acceptedOrderTasks = orderTasks?.filter((t) => t.status === TaskStatus.ACCEPTED) || [];
+        const completedOrderTasks = orderTasks?.filter((t) => t.status === TaskStatus.COMPLETED) || [];
+        const styles = getOrderStyles(order?.priority);
+        const priorityLabel = getPriorityLabel(order?.priority);
+
+        const Section = ({
+          title,
+          color,
+          dot,
+          items,
+        }: {
+          title: string;
+          color: string;
+          dot: string;
+          items: Task[];
+        }) =>
+          items.length === 0 ? null : (
+            <div>
+              <div className={`flex items-center gap-1.5 mb-2 pb-1 border-b ${color}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${dot}`}></span>
+                <h3 className="text-xs font-semibold uppercase">
+                  {title} ({items.length})
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                {items.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+              </div>
+            </div>
+          );
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto"
+            onClick={() => setOpenOrderId(null)}
+          >
+            <div
+              className={`bg-white rounded-lg shadow-2xl w-full max-w-5xl my-8 ${styles.border}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Шапка окна */}
+              <div className={`p-3 border-b rounded-t-lg ${styles.header}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h2 className={`text-base font-bold flex items-center gap-2 ${styles.text}`}>
+                      {styles.icon}
+                      <span className="truncate">{order?.orderNumber || 'Заказ'}</span>
+                      {priorityLabel && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${styles.badge}`}>
+                          {priorityLabel}
+                        </span>
+                      )}
+                    </h2>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-gray-600">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" /> Заказ от {formatDate(order?.createdAt)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <ArrowRight className="w-3.5 h-3.5" /> Поступил в отдел {formatDate(arrivedAt)}
+                      </span>
+                    </div>
+                    {order && (user?.role?.code === 'MANAGER' || user?.role?.code === 'LOGIST') && (
+                      <div className="mt-1 text-xs text-gray-700">
+                        <span className="font-medium">{order.customerName}</span>
+                        {order.customerPhone && <span className="ml-2">{order.customerPhone}</span>}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOpenOrderId(null)}
+                    className="shrink-0 p-1.5 rounded-md hover:bg-black/10 transition"
+                    title="Закрыть"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Позиции сеткой */}
+              <div className="p-3 space-y-4 max-h-[75vh] overflow-y-auto">
+                <Section title="Новые" color="border-blue-200 text-primary" dot="bg-primary/100" items={newOrderTasks} />
+                <Section title="В работе" color="border-yellow-200 text-yellow-700" dot="bg-yellow-500" items={acceptedOrderTasks} />
+                <Section title="Завершено" color="border-green-200 text-green-700" dot="bg-green-500" items={completedOrderTasks} />
+                {newOrderTasks.length === 0 &&
+                  acceptedOrderTasks.length === 0 &&
+                  completedOrderTasks.length === 0 && (
+                    <div className="text-center p-8 text-gray-400 text-sm">Нет задач</div>
+                  )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
