@@ -387,7 +387,7 @@ export const InventoryPage = () => {
                             <span className="hidden sm:inline">Списать</span>
                           </Button>
                           {(() => {
-                            if (!item.orderId) return null;
+                            if (!item.orderId || item.quantity === 0) return null;
                             const readyInOrder = (inventory || []).filter(
                               (i) => i.orderId === item.orderId && i.quantity > 0,
                             ).length;
