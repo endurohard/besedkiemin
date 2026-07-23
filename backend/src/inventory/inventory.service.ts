@@ -59,6 +59,7 @@ export class InventoryService {
         notes: true,
         receivedAt: true,
         createdAt: true,
+        orderId: true,
         productType: {
           select: {
             id: true,

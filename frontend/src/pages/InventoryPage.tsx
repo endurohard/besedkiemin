@@ -144,6 +144,7 @@ export const InventoryPage = () => {
 
   // Отгрузить все готовые позиции заказа одной доставкой
   const handleShipWholeOrder = (orderItem: InventoryItem) => {
+    if (!orderItem.orderId) return;
     const orderItems = (inventory || []).filter(
       (i) => i.orderId === orderItem.orderId && i.quantity > 0,
     );
@@ -386,6 +387,7 @@ export const InventoryPage = () => {
                             <span className="hidden sm:inline">Списать</span>
                           </Button>
                           {(() => {
+                            if (!item.orderId) return null;
                             const readyInOrder = (inventory || []).filter(
                               (i) => i.orderId === item.orderId && i.quantity > 0,
                             ).length;
