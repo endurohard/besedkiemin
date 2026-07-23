@@ -21,6 +21,7 @@ export const InventoryPage = () => {
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItems, setSelectedItems] = useState<Array<{ item: InventoryItem; quantity: number }>>([]);
+  const [groupOrderId, setGroupOrderId] = useState<string | null>(null);
   const [groupShipmentForm, setGroupShipmentForm] = useState({
     customerName: '',
     customerPhone: '',
@@ -113,6 +114,7 @@ export const InventoryPage = () => {
 
   const resetGroupForm = () => {
     setSelectedItems([]);
+    setGroupOrderId(null);
     setGroupShipmentForm({
       customerName: '',
       customerPhone: '',
@@ -151,6 +153,7 @@ export const InventoryPage = () => {
     if (orderItems.length === 0) return;
 
     setSelectedItems(orderItems.map((i) => ({ item: i, quantity: i.quantity })));
+    setGroupOrderId(orderItem.orderId);
 
     const phone =
       orderItem.order?.customerPhone === 'N/A'
@@ -460,10 +463,22 @@ export const InventoryPage = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredInventory.filter((i) => i.quantity > 0).map((item) => {
+                        {filteredInventory
+                          .filter((i) => i.quantity > 0)
+                          .sort(
+                            (a, b) =>
+                              (b.orderId === groupOrderId ? 1 : 0) -
+                              (a.orderId === groupOrderId ? 1 : 0),
+                          )
+                          .map((item) => {
                           const selected = selectedItems.find(si => si.item.id === item.id);
                           return (
-                            <tr key={item.id} className="border-b hover:bg-muted/50">
+                            <tr
+                              key={item.id}
+                              className={`border-b hover:bg-muted/50 ${
+                                groupOrderId && item.orderId === groupOrderId ? 'bg-primary/10' : ''
+                              }`}
+                            >
                               <td className="px-3 py-2">
                                 <input
                                   type="checkbox"
