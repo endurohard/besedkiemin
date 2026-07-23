@@ -391,20 +391,23 @@ export const InventoryPage = () => {
                           </Button>
                           {(() => {
                             if (!item.orderId || item.quantity === 0) return null;
-                            const readyInOrder = (inventory || []).filter(
+                            const readyRows = (inventory || []).filter(
                               (i) => i.orderId === item.orderId && i.quantity > 0,
-                            ).length;
-                            if (readyInOrder < 2) return null;
+                            );
+                            if (readyRows.length < 2) return null;
+                            const uniqueProducts = new Set(
+                              readyRows.map((i) => `${i.productType?.id}|${i.name}`),
+                            ).size;
                             return (
                               <Button
                                 onClick={() => handleShipWholeOrder(item)}
                                 size="sm"
                                 variant="default"
                                 className="gap-1"
-                                title={`Отгрузить все готовые позиции заказа (${readyInOrder}) одной доставкой`}
+                                title={`Отгрузить все готовые товары заказа (${uniqueProducts}) одной доставкой`}
                               >
                                 <PackagePlus size={14} />
-                                <span className="hidden sm:inline">Отгрузить заказ ({readyInOrder})</span>
+                                <span className="hidden sm:inline">Отгрузить заказ ({uniqueProducts})</span>
                               </Button>
                             );
                           })()}
