@@ -460,7 +460,7 @@ export const InventoryPage = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredInventory.map((item) => {
+                        {filteredInventory.filter((i) => i.quantity > 0).map((item) => {
                           const selected = selectedItems.find(si => si.item.id === item.id);
                           return (
                             <tr key={item.id} className="border-b hover:bg-muted/50">
