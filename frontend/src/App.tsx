@@ -192,9 +192,9 @@ function App() {
             <Route
               path="/app/order-archive"
               element={
-                <OwnerRoute>
+                <PrivateRoute>
                   <OrderArchivePage />
-                </OwnerRoute>
+                </PrivateRoute>
               }
             />
             <Route

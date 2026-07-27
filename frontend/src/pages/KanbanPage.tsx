@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi, productsApi, tasksApi, productTypesApi, nomenclatureApi, uploadApi, usersApi } from '@/lib/api';
 import { resizeImageFiles } from '@/lib/image-resize';
@@ -103,6 +104,7 @@ const SortableStageItem = ({ stage, stageProducts, getStageColor, getStageName, 
 export const KanbanPage = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -118,11 +120,17 @@ export const KanbanPage = () => {
   const [viewerImages, setViewerImages] = useState<{ images: string[]; index: number } | null>(null);
   const [stageDetailsFor, setStageDetailsFor] = useState<ProductionStage | null>(null);
 
-  const { data: orders = [], isLoading: ordersLoading } = useQuery({
+  const { data: allOrders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['orders'],
     queryFn: () => ordersApi.getAllPaginated(),
     refetchInterval: 15000,
   });
+
+  // Выполненные заказы в Канбане не показываются — они в «Архиве заказов»
+  const orders = useMemo(
+    () => allOrders.filter((o) => o.status !== OrderStatus.COMPLETED),
+    [allOrders],
+  );
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['products'],
@@ -901,12 +909,13 @@ export const KanbanPage = () => {
                     В работе ({orders.filter(o => o.status === OrderStatus.IN_PRODUCTION).length})
                   </Button>
                   <Button
-                    variant={statusFilter === OrderStatus.COMPLETED ? 'default' : 'outline'}
-                    onClick={() => setStatusFilter(OrderStatus.COMPLETED)}
+                    variant="outline"
+                    onClick={() => navigate('/app/order-archive')}
                     size="sm"
                     className="h-8 text-xs px-2"
+                    title="Выполненные заказы находятся в архиве"
                   >
-                    Готово ({orders.filter(o => o.status === OrderStatus.COMPLETED).length})
+                    Готово → Архив ({allOrders.filter(o => o.status === OrderStatus.COMPLETED).length})
                   </Button>
                 </div>
               </div>
