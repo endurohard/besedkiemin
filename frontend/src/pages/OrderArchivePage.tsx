@@ -2,11 +2,11 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/lib/api';
 import { ArchivedOrder, Order, OrderStatus } from '@/types';
-import { orderStatusLabels } from '@/lib/labels';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { orderStatusLabels, stageLabels } from '@/lib/labels';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/store/authStore';
-import { Loader2, Archive, Search, RotateCcw, CheckCircle, Trash2 } from 'lucide-react';
+import { Loader2, Archive, Search, RotateCcw, CheckCircle, Trash2, XIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -20,6 +20,14 @@ export const OrderArchivePage = () => {
 
   const [tab, setTab] = useState<ArchiveTab>('completed');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+
+  // Подробная карточка заказа (работает и для удалённых)
+  const { data: orderDetail, isLoading: detailLoading } = useQuery({
+    queryKey: ['order-detail', selectedOrderId],
+    queryFn: () => ordersApi.getOne(selectedOrderId!),
+    enabled: !!selectedOrderId,
+  });
 
   // Выполненные заказы (скрыты из Канбана, но остаются в аналитике/зарплате)
   const { data: completedOrders, isLoading: completedLoading } = useQuery({
@@ -160,7 +168,11 @@ export const OrderArchivePage = () => {
                     </tr>
                   ) : (
                     filteredCompleted.map((order: Order) => (
-                      <tr key={order.id} className="border-b hover:bg-muted/50">
+                      <tr
+                        key={order.id}
+                        className="border-b hover:bg-muted/50 cursor-pointer"
+                        onClick={() => setSelectedOrderId(order.id)}
+                      >
                         <td className="px-4 py-3 font-medium">{order.orderNumber}</td>
                         <td className="px-4 py-3">
                           <div className="max-w-[180px] truncate" title={order.customerName}>
@@ -209,7 +221,11 @@ export const OrderArchivePage = () => {
                     </tr>
                   ) : (
                     filteredDeleted.map((order: ArchivedOrder) => (
-                      <tr key={order.id} className="border-b hover:bg-muted/50">
+                      <tr
+                        key={order.id}
+                        className="border-b hover:bg-muted/50 cursor-pointer"
+                        onClick={() => setSelectedOrderId(order.id)}
+                      >
                         <td className="px-4 py-3 font-medium">{order.orderNumber}</td>
                         <td className="px-4 py-3">
                           <div className="max-w-[180px] truncate" title={order.customerName}>
@@ -231,7 +247,7 @@ export const OrderArchivePage = () => {
                         <td className="px-4 py-3 whitespace-nowrap text-xs text-muted-foreground">
                           {format(new Date(order.deletedAt), 'dd.MM.yyyy HH:mm', { locale: ru })}
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                           <Button
                             onClick={() => handleRestore(order)}
                             disabled={restoreMutation.isPending}
@@ -252,6 +268,177 @@ export const OrderArchivePage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Модальное окно с подробной карточкой заказа */}
+      {selectedOrderId && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedOrderId(null)}
+        >
+          <Card
+            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="flex flex-row items-center justify-between border-b pb-3">
+              <CardTitle className="text-lg">
+                {orderDetail ? `Заказ ${orderDetail.orderNumber}` : 'Заказ'}
+                {orderDetail?.deletedAt && (
+                  <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 rounded text-xs align-middle">
+                    Удалён
+                  </span>
+                )}
+              </CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedOrderId(null)}>
+                <XIcon size={18} />
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {detailLoading || !orderDetail ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="animate-spin" size={32} />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Основная информация */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Клиент</div>
+                      <div className="font-medium">{orderDetail.customerName}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Телефон</div>
+                      <div>{orderDetail.customerPhone || '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Статус</div>
+                      <div>{orderStatusLabels[orderDetail.status] || orderDetail.status}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Сумма</div>
+                      <div>
+                        {orderDetail.totalAmount != null
+                          ? `${orderDetail.totalAmount.toLocaleString('ru-RU')} ₽`
+                          : '—'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Создан</div>
+                      <div>
+                        {format(new Date(orderDetail.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">
+                        {orderDetail.deletedAt ? 'Удалён' : 'Обновлён'}
+                      </div>
+                      <div>
+                        {format(
+                          new Date(orderDetail.deletedAt || orderDetail.updatedAt),
+                          'dd.MM.yyyy HH:mm',
+                          { locale: ru },
+                        )}
+                      </div>
+                    </div>
+                    {orderDetail.customerAddress && (
+                      <div className="col-span-2 md:col-span-3">
+                        <div className="text-xs text-muted-foreground">Адрес</div>
+                        <div>{orderDetail.customerAddress}</div>
+                      </div>
+                    )}
+                    {orderDetail.description && (
+                      <div className="col-span-2 md:col-span-3">
+                        <div className="text-xs text-muted-foreground">Описание</div>
+                        <div className="whitespace-pre-wrap">{orderDetail.description}</div>
+                      </div>
+                    )}
+                    {orderDetail.createdBy && (
+                      <div>
+                        <div className="text-xs text-muted-foreground">Создал</div>
+                        <div>
+                          {orderDetail.createdBy.lastName} {orderDetail.createdBy.firstName}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Товары заказа */}
+                  <div>
+                    <h3 className="text-sm font-semibold mb-2">
+                      Товары ({orderDetail.products?.length || 0})
+                    </h3>
+                    <div className="border rounded-lg overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/50 border-b">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Название</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Тип</th>
+                            <th className="px-3 py-2 text-center font-medium text-muted-foreground">Кол-во</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Этап</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Размеры</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(orderDetail.products || []).length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                                Товаров нет
+                              </td>
+                            </tr>
+                          ) : (
+                            (orderDetail.products || []).map((p) => (
+                              <tr key={p.id} className="border-b last:border-b-0">
+                                <td className="px-3 py-2">
+                                  <div className="max-w-[220px] truncate" title={p.name}>
+                                    {p.name}
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2">
+                                  <span className="px-2 py-1 bg-primary/20 text-primary/90 rounded text-xs">
+                                    {p.productType?.name || '—'}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2 text-center">{p.quantity}</td>
+                                <td className="px-3 py-2">{stageLabels[p.stage] || p.stage}</td>
+                                <td className="px-3 py-2 text-xs text-muted-foreground">
+                                  {p.dimensions || '—'}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Восстановление удалённого заказа из карточки */}
+                  {orderDetail.deletedAt && isOwner && (
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={() => {
+                          handleRestore({
+                            id: orderDetail.id,
+                            orderNumber: orderDetail.orderNumber,
+                            customerName: orderDetail.customerName,
+                            status: orderDetail.status,
+                            createdAt: orderDetail.createdAt,
+                            deletedAt: orderDetail.deletedAt!,
+                          });
+                          setSelectedOrderId(null);
+                        }}
+                        disabled={restoreMutation.isPending}
+                        className="gap-1"
+                      >
+                        <RotateCcw size={14} />
+                        Восстановить заказ
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

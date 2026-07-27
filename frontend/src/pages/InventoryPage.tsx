@@ -75,9 +75,11 @@ export const InventoryPage = () => {
 
   const filteredInventory = useMemo(() => {
     if (!inventory) return [];
-    if (!searchQuery) return inventory;
+    // Позиции с нулевым остатком на складе не показываем
+    const nonZero = inventory.filter((i) => i.quantity > 0);
+    if (!searchQuery) return nonZero;
 
-    return inventory.filter((item) => {
+    return nonZero.filter((item) => {
       const searchLower = searchQuery.toLowerCase();
       return (
         item.name.toLowerCase().includes(searchLower) ||

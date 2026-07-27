@@ -212,9 +212,10 @@ export class InventoryService {
 
   // Получить сводку по остаткам (группировка по типам) - оптимизированный
   async getInventorySummary() {
-    // Используем groupBy для агрегации на уровне БД
+    // Используем groupBy для агрегации на уровне БД (только позиции с остатком)
     const aggregated = await this.prisma.inventoryItem.groupBy({
       by: ["productTypeId"],
+      where: { quantity: { gt: 0 } },
       _sum: {
         quantity: true,
       },
