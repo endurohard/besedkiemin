@@ -390,8 +390,23 @@ export interface Order {
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null; // Мягкое удаление (архив)
   products?: Product[];
   createdBy?: User;
+}
+
+// Заказ в архиве удалённых (укороченная выборка)
+export interface ArchivedOrder {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone?: string | null;
+  status: OrderStatus;
+  totalAmount?: number | null;
+  createdAt: string;
+  deletedAt: string;
+  createdBy?: { id: string; firstName: string; lastName: string };
+  _count?: { products: number };
 }
 
 // Auth DTOs

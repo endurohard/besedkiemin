@@ -26,6 +26,7 @@ import {
   User,
   KeyRound,
   DoorOpen,
+  Archive,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -250,6 +251,11 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
         {/* Канбан - для тех кто может просматривать */}
         {hasPermission('kanban:view') && (
           <NavLink to="/app/kanban" icon={LayoutDashboard} label="Канбан" />
+        )}
+
+        {/* Архив удалённых заказов - только владелец */}
+        {(userRole === 'OWNER' || userRole === 'SUPER_ADMIN') && (
+          <NavLink to="/app/order-archive" icon={Archive} label="Архив заказов" />
         )}
 
         {/* Склад и Отгрузки */}

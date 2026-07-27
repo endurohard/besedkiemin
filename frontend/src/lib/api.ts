@@ -271,6 +271,16 @@ export const ordersApi = {
     await api.delete(`/orders/${id}`);
   },
 
+  // Архив удалённых заказов (только OWNER/SUPER_ADMIN)
+  getArchive: async (): Promise<import('@/types').ArchivedOrder[]> => {
+    const response = await api.get('/orders/archive');
+    return response.data;
+  },
+
+  restore: async (id: string): Promise<void> => {
+    await api.post(`/orders/${id}/restore`);
+  },
+
   getStatistics: async (params?: {
     startDate?: string;
     endDate?: string;

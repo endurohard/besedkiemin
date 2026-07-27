@@ -299,8 +299,44 @@ export class OrdersService {
   async remove(id: string) {
     await this.findOne(id); // Проверка существования
 
-    return this.prisma.order.delete({
+    // Мягкое удаление: заказ попадает в архив владельца и может быть восстановлен
+    return this.prisma.order.update({
       where: { id },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  // Архив удалённых заказов (только OWNER/SUPER_ADMIN)
+  async findArchived() {
+    return this.prisma.order.findMany({
+      where: { deletedAt: { not: null } },
+      select: {
+        id: true,
+        orderNumber: true,
+        customerName: true,
+        customerPhone: true,
+        status: true,
+        totalAmount: true,
+        createdAt: true,
+        deletedAt: true,
+        createdBy: {
+          select: { id: true, firstName: true, lastName: true },
+        },
+        _count: { select: { products: true } },
+      },
+      orderBy: { deletedAt: "desc" },
+    });
+  }
+
+  // Восстановить заказ из архива
+  async restore(id: string) {
+    const order = await this.prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      throw new NotFoundException(`Заказ с ID ${id} не найден`);
+    }
+    return this.prisma.order.update({
+      where: { id },
+      data: { deletedAt: null },
     });
   }
 

@@ -111,6 +111,13 @@ export class OrdersController {
     });
   }
 
+  @Get("archive")
+  @Roles("OWNER")
+  @ApiOperation({ summary: "Архив удалённых заказов (только OWNER и SUPER_ADMIN)" })
+  findArchived() {
+    return this.ordersService.findArchived();
+  }
+
   @Get(":id")
   @ApiOperation({ summary: "Получить заказ по ID" })
   findOne(@Param("id", ParseUUIDPipe) id: string) {
@@ -128,8 +135,15 @@ export class OrdersController {
 
   @Delete(":id")
   @Roles("OWNER")
-  @ApiOperation({ summary: "Удалить заказ (только OWNER и SUPER_ADMIN)" })
+  @ApiOperation({ summary: "Удалить заказ в архив (только OWNER и SUPER_ADMIN)" })
   remove(@Param("id", ParseUUIDPipe) id: string) {
     return this.ordersService.remove(id);
+  }
+
+  @Post(":id/restore")
+  @Roles("OWNER")
+  @ApiOperation({ summary: "Восстановить заказ из архива (только OWNER и SUPER_ADMIN)" })
+  restore(@Param("id", ParseUUIDPipe) id: string) {
+    return this.ordersService.restore(id);
   }
 }

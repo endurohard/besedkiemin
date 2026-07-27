@@ -33,6 +33,7 @@ const PayrollPage = lazy(() => import('./pages/PayrollPage'));
 const ProductionWorkersPage = lazy(() => import('./pages/ProductionWorkersPage'));
 const MyEarningsPage = lazy(() => import('./pages/MyEarningsPage').then(m => ({ default: m.MyEarningsPage })));
 const DepartmentPresetsPage = lazy(() => import('./pages/DepartmentPresetsPage').then(m => ({ default: m.DepartmentPresetsPage })));
+const OrderArchivePage = lazy(() => import('./pages/OrderArchivePage').then(m => ({ default: m.OrderArchivePage })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -186,6 +187,14 @@ function App() {
                 <PrivateRoute>
                   <DefectsPage />
                 </PrivateRoute>
+              }
+            />
+            <Route
+              path="/app/order-archive"
+              element={
+                <OwnerRoute>
+                  <OrderArchivePage />
+                </OwnerRoute>
               }
             />
             <Route

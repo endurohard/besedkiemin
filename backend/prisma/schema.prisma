@@ -246,12 +246,16 @@ model Order {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // Мягкое удаление: заказ скрыт из всех выборок, но доступен владельцу в архиве
+  deletedAt DateTime? @map("deleted_at")
+
   // Продукты в заказе
   products       Product[]
   // Складские остатки из этого заказа
   inventoryItems InventoryItem[]
 
   @@index([status])
+  @@index([deletedAt])
   @@index([createdAt])
   @@index([createdById])
   @@index([sourceId])
