@@ -309,6 +309,14 @@ export class TasksService {
       throw new NotFoundException("Работник не найден");
     }
 
+    // Отдел (общий аккаунт цеха) не может сам принять задачу в работу —
+    // нужно выбрать конкретного сотрудника, иначе не отследить, кто выполнял.
+    if (isDepartmentAccount(worker)) {
+      throw new ForbiddenException(
+        "Отдел не может принять задачу — выберите конкретного сотрудника",
+      );
+    }
+
     if (requesterId && requesterId !== workerId) {
       const requester = await this.prisma.user.findUnique({
         where: { id: requesterId },
