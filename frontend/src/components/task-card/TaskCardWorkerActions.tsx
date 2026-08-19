@@ -56,6 +56,7 @@ export const TaskCardWorkerActions = ({
   const [showPassConfirm, setShowPassConfirm] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   const [passQuantity, setPassQuantity] = useState(task.quantity || task.product?.quantity || 1);
+  const [pin, setPin] = useState('');
 
   const isDefectTask = task.title?.includes('БРАК');
   const isSingleQty = (task.product?.quantity ?? task.quantity) === 1;
@@ -63,21 +64,25 @@ export const TaskCardWorkerActions = ({
   const currentStageName = stageLabels[task.stage] || task.stage;
 
   const acceptMutation = useMutation({
-    mutationFn: (params?: { workerId?: string; quantity?: number }) =>
-      tasksApi.acceptTask(task.id, params?.workerId, params?.quantity),
+    mutationFn: (params?: { workerId?: string; quantity?: number; pin?: string }) =>
+      tasksApi.acceptTask(task.id, params?.workerId, params?.quantity, params?.pin),
+    onError: (e: any) => alert(e?.response?.data?.message || 'Не удалось принять задачу'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setShowWorkerSelectModal(false);
       setShowAcceptConfirm(false);
+      setPin('');
       setAcceptQuantity(task.quantity || task.product?.quantity || 1);
     },
   });
 
   const completeMutation = useMutation({
-    mutationFn: () => tasksApi.completeTask(task.id, { notes, quantity: completedQuantity }),
+    mutationFn: () => tasksApi.completeTask(task.id, { notes, quantity: completedQuantity, pin }),
+    onError: (e: any) => alert(e?.response?.data?.message || 'Не удалось завершить задачу'),
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setNotes('');
+      setPin('');
       setShowNotesInput(false);
       setShowCompleteConfirm(false);
 
@@ -133,10 +138,20 @@ export const TaskCardWorkerActions = ({
       {task.status === TaskStatus.NEW && showAcceptConfirm && (
         <div className="space-y-2 p-2.5 border border-blue-200 rounded-md bg-blue-50">
           <p className="text-xs font-semibold text-blue-900">Принять задачу в работу?</p>
+          <input
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={6}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+            placeholder="PIN-код"
+            className="w-full p-2 border border-blue-200 rounded bg-card text-sm text-center tracking-[0.4em]"
+          />
           <div className="flex gap-1.5">
             <Button
-              onClick={() => acceptMutation.mutate(isDefectTask ? { workerId: task.assignedTo?.id } : undefined)}
-              disabled={acceptMutation.isPending}
+              onClick={() => acceptMutation.mutate(isDefectTask ? { workerId: task.assignedTo?.id, pin } : { pin })}
+              disabled={acceptMutation.isPending || pin.length < 4}
               className="flex-1 text-xs py-1.5"
               size="sm"
             >
@@ -144,7 +159,7 @@ export const TaskCardWorkerActions = ({
               {acceptMutation.isPending ? 'Принятие...' : 'Подтвердить'}
             </Button>
             <Button
-              onClick={() => setShowAcceptConfirm(false)}
+              onClick={() => { setShowAcceptConfirm(false); setPin(""); }}
               variant="outline"
               className="text-xs py-1.5"
               size="sm"
@@ -162,7 +177,7 @@ export const TaskCardWorkerActions = ({
           acceptQuantity={acceptQuantity}
           onAcceptQuantityChange={setAcceptQuantity}
           isPending={acceptMutation.isPending}
-          onConfirm={(workerId, qty) => acceptMutation.mutate({ workerId, quantity: qty })}
+          onConfirm={(workerId, qty, workerPin) => acceptMutation.mutate({ workerId, quantity: qty, pin: workerPin })}
           onClose={() => {
             setShowWorkerSelectModal(false);
             setAcceptQuantity(task.quantity || task.product?.quantity || 1);
@@ -233,10 +248,20 @@ export const TaskCardWorkerActions = ({
             <ArrowRight size={10} />
             <span className="font-medium">{nextStageName}</span>
           </div>
+          <input
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={6}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+            placeholder="PIN-код сотрудника"
+            className="w-full p-2 border border-green-200 rounded bg-card text-sm text-center tracking-[0.4em]"
+          />
           <div className="flex gap-1.5">
             <Button
               onClick={() => completeMutation.mutate()}
-              disabled={completeMutation.isPending}
+              disabled={completeMutation.isPending || pin.length < 4}
               className="flex-1 text-xs py-1.5"
               size="sm"
             >
@@ -244,7 +269,7 @@ export const TaskCardWorkerActions = ({
               {completeMutation.isPending ? 'Передача...' : 'Подтвердить'}
             </Button>
             <Button
-              onClick={() => setShowCompleteConfirm(false)}
+              onClick={() => { setShowCompleteConfirm(false); setPin(""); }}
               variant="outline"
               className="text-xs py-1.5"
               size="sm"
@@ -293,16 +318,28 @@ export const TaskCardWorkerActions = ({
               />
             </div>
           )}
+          <div>
+            <label className="block text-sm font-medium mb-1">PIN-код сотрудника</label>
+            <Input
+              type="password"
+              inputMode="numeric"
+              maxLength={6}
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+              placeholder="PIN для подтверждения"
+              className="text-center tracking-[0.4em]"
+            />
+          </div>
           <div className="flex gap-2">
             <Button
               onClick={() => completeMutation.mutate()}
-              disabled={completeMutation.isPending || completedQuantity <= 0}
+              disabled={completeMutation.isPending || completedQuantity <= 0 || pin.length < 4}
               className="flex-1"
             >
               {completeMutation.isPending ? 'Сохранение...' : 'Подтвердить'}
             </Button>
             <Button
-              onClick={() => { setShowNotesInput(false); setNotes(''); }}
+              onClick={() => { setShowNotesInput(false); setNotes(''); setPin(''); }}
               variant="outline"
             >
               Отмена

@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   Logger,
 } from "@nestjs/common";
+import * as bcrypt from "bcrypt";
 import { PrismaService } from "../prisma/prisma.service";
 import { TelegramService } from "../telegram/telegram.service";
 import { PayrollService } from "../payroll/payroll.service";
@@ -284,11 +285,29 @@ export class TasksService {
   }
 
   // Принять задачу в работу
+  // Проверка PIN-кода сотрудника перед приёмкой/завершением задачи.
+  // Склад (WAREHOUSE) исключён: приёмка на склад делается аккаунтом отдела без PIN.
+  private async verifyWorkerPin(
+    worker: { pin?: string | null; role?: { code?: string } | null } | null,
+    pin?: string,
+  ) {
+    if (!worker || worker.role?.code === "WAREHOUSE") return;
+    if (!worker.pin) {
+      throw new BadRequestException(
+        "У сотрудника не установлен PIN-код. Обратитесь к владельцу, чтобы он задал PIN в разделе «Пользователи».",
+      );
+    }
+    if (!pin || !(await bcrypt.compare(pin, worker.pin))) {
+      throw new ForbiddenException("Неверный PIN-код сотрудника");
+    }
+  }
+
   async acceptTask(
     taskId: string,
     workerId: string,
     requesterId?: string,
     acceptQuantity?: number,
+    pin?: string,
   ) {
     // Валидация количества
     if (acceptQuantity !== undefined && acceptQuantity !== null) {
@@ -318,6 +337,9 @@ export class TasksService {
         "Отдел не может принять задачу — выберите конкретного сотрудника",
       );
     }
+
+    // Сотрудник подтверждает приёмку своим PIN-кодом
+    await this.verifyWorkerPin(worker, pin);
 
     if (requesterId && requesterId !== workerId) {
       const requester = await this.prisma.user.findUnique({
@@ -722,6 +744,7 @@ export class TasksService {
     userId: string,
     notes?: string,
     quantity?: number,
+    pin?: string,
   ) {
     // Используем транзакцию для атомарности операции
     return this.prisma.$transaction(async (tx) => {
@@ -736,6 +759,9 @@ export class TasksService {
       if (!task) {
         throw new NotFoundException("Задача не найдена");
       }
+
+      // Сотрудник, на которого назначена задача, подтверждает завершение PIN-кодом
+      await this.verifyWorkerPin(task.assignedTo, pin);
 
       // Проверяем, что пользователь из того же отдела (та же роль)
       if (task.assignedToId !== userId) {

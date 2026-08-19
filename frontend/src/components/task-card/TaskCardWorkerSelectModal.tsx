@@ -11,7 +11,7 @@ interface TaskCardWorkerSelectModalProps {
   acceptQuantity: number;
   onAcceptQuantityChange: (qty: number) => void;
   isPending: boolean;
-  onConfirm: (workerId: string, quantity: number) => void;
+  onConfirm: (workerId: string, quantity: number, pin: string) => void;
   onClose: () => void;
 }
 
@@ -25,6 +25,7 @@ export const TaskCardWorkerSelectModal = ({
   onClose,
 }: TaskCardWorkerSelectModalProps) => {
   const [selectedWorkerId, setSelectedWorkerId] = useState('');
+  const [pin, setPin] = useState('');
 
   const { data: departmentWorkers, isLoading: isLoadingWorkers } = useQuery({
     queryKey: ['department-workers'],
@@ -107,14 +108,32 @@ export const TaskCardWorkerSelectModal = ({
                   </div>
                 </div>
               )}
+
+              {selectedWorkerId && (
+                <div className="mb-1">
+                  <label className="text-sm text-muted-foreground block mb-2">
+                    PIN-код сотрудника для подтверждения:
+                  </label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={6}
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                    placeholder="••••"
+                    className="w-full p-3 border border-border rounded-lg bg-card text-base text-center tracking-[0.5em] font-semibold"
+                  />
+                </div>
+              )}
             </>
           )}
         </div>
 
         <div className="flex gap-2">
           <Button
-            onClick={() => onConfirm(selectedWorkerId, acceptQuantity)}
-            disabled={!selectedWorkerId || isPending}
+            onClick={() => onConfirm(selectedWorkerId, acceptQuantity, pin)}
+            disabled={!selectedWorkerId || pin.length < 4 || isPending}
             className="flex-1"
           >
             {isPending ? 'Принятие...' : `Принять ${acceptQuantity} шт.`}

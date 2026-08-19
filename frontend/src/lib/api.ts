@@ -547,8 +547,8 @@ export const tasksApi = {
     return response.data;
   },
 
-  acceptTask: async (id: string, selectedUserId?: string, quantity?: number): Promise<Task> => {
-    const response = await api.post<Task>(`/tasks/${id}/accept`, { selectedUserId, quantity });
+  acceptTask: async (id: string, selectedUserId?: string, quantity?: number, pin?: string): Promise<Task> => {
+    const response = await api.post<Task>(`/tasks/${id}/accept`, { selectedUserId, quantity, pin });
     return response.data;
   },
 

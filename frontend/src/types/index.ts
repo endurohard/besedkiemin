@@ -585,6 +585,7 @@ export interface AcceptTaskDto {
 export interface CompleteTaskDto {
   notes?: string;
   quantity?: number;
+  pin?: string;
 }
 
 export interface PassTaskDto {

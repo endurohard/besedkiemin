@@ -67,6 +67,7 @@ export class TasksController {
     @Param("id") id: string,
     @Body("selectedUserId") selectedUserId: string,
     @Body("quantity") quantity: number,
+    @Body("pin") pin: string,
     @Req() req,
   ) {
     // Если selectedUserId передан - используем его, иначе текущего пользователя
@@ -76,6 +77,7 @@ export class TasksController {
       workerId,
       req.user.userId,
       quantity,
+      pin,
     );
   }
 
@@ -85,9 +87,10 @@ export class TasksController {
     @Param("id") id: string,
     @Body("notes") notes: string,
     @Body("quantity") quantity: number,
+    @Body("pin") pin: string,
     @Req() req,
   ) {
-    return this.tasksService.completeTask(id, req.user.userId, notes, quantity);
+    return this.tasksService.completeTask(id, req.user.userId, notes, quantity, pin);
   }
 
   @Post(":id/pass")
