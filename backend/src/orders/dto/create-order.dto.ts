@@ -7,6 +7,7 @@ import {
   IsNumber,
   IsUUID,
   IsDateString,
+  IsBoolean,
 } from "class-validator";
 import { OrderPriority } from "@prisma/client";
 
@@ -84,4 +85,22 @@ export class CreateOrderDto {
   @IsDateString()
   @IsOptional()
   deadline?: string;
+
+  @ApiProperty({
+    example: false,
+    required: false,
+    description: "Требуется выезд на замер перед производством",
+  })
+  @IsBoolean()
+  @IsOptional()
+  needsMeasurement?: boolean;
+
+  @ApiProperty({
+    example: "uuid-замерщика",
+    required: false,
+    description: "ID назначенного замерщика (роль MEASURER)",
+  })
+  @IsUUID()
+  @IsOptional()
+  measurerId?: string | null;
 }

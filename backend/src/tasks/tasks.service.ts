@@ -580,6 +580,132 @@ export class TasksService {
     });
   }
 
+  // Вернуть изделие на выбранный этап (для OWNER/SUPER_ADMIN).
+  // Используется, когда отдел по ошибке передал изделие дальше (например, на склад)
+  // и его нужно вернуть в нужный отдел. Работает только для незавершённых изделий —
+  // у них ещё нет начисленной зарплаты (work_logs создаются только при приёмке складом).
+  async returnProductToStage(
+    productId: string,
+    targetStage: string,
+    userId: string,
+  ) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      include: { order: true },
+    });
+    if (!product) {
+      throw new NotFoundException("Изделие не найдено");
+    }
+
+    if (product.stage === ProductionStage.COMPLETED) {
+      throw new BadRequestException(
+        "Нельзя вернуть завершённое изделие — по нему уже начислена зарплата. Обратитесь к разработчику для ручной корректировки.",
+      );
+    }
+
+    // Целевой этап должен существовать и быть активным
+    const targetWs = await this.prisma.workflowStage.findFirst({
+      where: {
+        legacyStage: targetStage as ProductionStage,
+        isActive: true,
+      },
+      include: { roles: { include: { role: true } } },
+    });
+    if (!targetWs || !targetWs.legacyStage) {
+      throw new BadRequestException("Целевой этап не найден или отключён");
+    }
+
+    // Нельзя «вернуть» вперёд — только на этап не позже текущего
+    const currentWs = await this.prisma.workflowStage.findFirst({
+      where: { legacyStage: product.stage, isActive: true },
+    });
+    if (currentWs && targetWs.order > currentWs.order) {
+      throw new BadRequestException(
+        "Вернуть можно только на предыдущий этап, не вперёд",
+      );
+    }
+
+    // Определяем исполнителя целевого этапа: если у изделия закреплён работник —
+    // берём его, иначе создаём задачу всем работникам отдела (общий цех).
+    const stageAssignments = (product as any).stageAssignments as Record<
+      string,
+      string
+    > | null;
+    const assignedId = stageAssignments
+      ? stageAssignments[targetWs.legacyStage]
+      : undefined;
+    const roleIds = targetWs.roles?.map((r) => r.roleId) || [];
+    const workers = await this.prisma.user.findMany({
+      where: { roleId: { in: roleIds }, isActive: true },
+    });
+    const targetWorkers = assignedId
+      ? workers.filter((w) => w.id === assignedId)
+      : workers;
+
+    // Для очистки задач: карта этап -> порядок
+    const allStages = await this.prisma.workflowStage.findMany({
+      where: { legacyStage: { not: null } },
+    });
+    const orderByStage = new Map(
+      allStages.map((s) => [s.legacyStage as string, s.order]),
+    );
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Удаляем задачи этапов начиная с целевого и выше (незавершённое изделие —
+      // work_logs по ним нет, удалять безопасно). История более ранних этапов остаётся.
+      const productTasks = await tx.task.findMany({
+        where: { productId },
+        select: { id: true, stage: true },
+      });
+      const toDelete = productTasks
+        .filter(
+          (t) => (orderByStage.get(t.stage) ?? 0) >= targetWs.order,
+        )
+        .map((t) => t.id);
+      if (toDelete.length > 0) {
+        await tx.task.deleteMany({ where: { id: { in: toDelete } } });
+      }
+
+      // Переводим изделие на целевой этап
+      await tx.product.update({
+        where: { id: productId },
+        data: { stage: targetWs.legacyStage! },
+      });
+
+      // Создаём задачу целевого этапа
+      for (const worker of targetWorkers) {
+        await tx.task.create({
+          data: {
+            title: `${product.name} - ${targetWs.name}`,
+            description: `Возврат на этап администратором (кол-во: ${product.quantity} шт.)`,
+            stage: targetWs.legacyStage!,
+            productId,
+            assignedToId: worker.id,
+            quantity: product.quantity,
+            workflowStageId: targetWs.id,
+          },
+        });
+      }
+
+      return tx.product.findUnique({
+        where: { id: productId },
+        include: {
+          order: { select: { id: true, orderNumber: true } },
+          productType: { select: { id: true, name: true } },
+        },
+      });
+    });
+
+    // Пересчитываем статус заказа по фактическим этапам изделий
+    await this.updateOrderStatus(product.orderId);
+
+    this.logger.log(
+      `Product ${productId} returned to stage ${targetWs.legacyStage} by user ${userId} (${targetWorkers.length} task(s) created)`,
+    );
+
+    return result;
+  }
+
   // Завершить задачу
   async completeTask(
     taskId: string,

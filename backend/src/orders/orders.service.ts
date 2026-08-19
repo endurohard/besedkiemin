@@ -34,7 +34,11 @@ export class OrdersService {
     }
 
     // Извлекаем orderNumber и deadline из DTO (deadline конвертируем в Date)
-    const { orderNumber: _, deadline, ...restDto } = createOrderDto;
+    const { orderNumber: _, deadline, needsMeasurement, ...restDto } =
+      createOrderDto;
+
+    // Если нужен замер — заказ сразу попадает в воронку «Замеры»
+    const status = needsMeasurement ? OrderStatus.MEASUREMENT : OrderStatus.NEW;
 
     return this.prisma.order.create({
       data: {
@@ -42,8 +46,9 @@ export class OrdersService {
         ...(deadline !== undefined
           ? { deadline: deadline ? new Date(deadline) : null }
           : {}),
+        needsMeasurement: needsMeasurement ?? false,
         orderNumber,
-        status: OrderStatus.NEW,
+        status,
         createdById: userId,
       },
       include: {
@@ -71,6 +76,9 @@ export class OrdersService {
             lastName: true,
             role: true,
           },
+        },
+        measurer: {
+          select: { id: true, firstName: true, lastName: true },
         },
         source: true,
       },
@@ -127,6 +135,11 @@ export class OrdersService {
           productionStartedAt: true,
           callbackAt: true,
           callbackNote: true,
+          needsMeasurement: true,
+          measurerId: true,
+          measurer: {
+            select: { id: true, firstName: true, lastName: true },
+          },
           sourceId: true,
           source: {
             select: {
@@ -246,6 +259,9 @@ export class OrdersService {
             role: true,
           },
         },
+        measurer: {
+          select: { id: true, firstName: true, lastName: true },
+        },
         source: true,
       },
     });
@@ -260,23 +276,35 @@ export class OrdersService {
   async update(id: string, updateOrderDto: UpdateOrderDto) {
     const existing = await this.findOne(id); // Проверка существования
 
-    const { deadline, acceptedAt, callbackAt, status, ...restDto } =
+    const { deadline, acceptedAt, callbackAt, status, needsMeasurement, ...restDto } =
       updateOrderDto;
 
     // Хелпер: преобразование ISO-строки/null в Date/null, undefined — не трогаем
     const toDate = (v?: string | null) =>
       v !== undefined ? (v ? new Date(v) : null) : undefined;
 
+    // Галочка «замер» влияет на статус, если статус не задан явно в этом же запросе:
+    // включили — заказ уходит в «Замеры»; сняли — возвращается в «Новый».
+    let derivedStatus = status;
+    if (needsMeasurement !== undefined && status === undefined) {
+      if (needsMeasurement) {
+        derivedStatus = OrderStatus.MEASUREMENT;
+      } else if (existing.status === OrderStatus.MEASUREMENT) {
+        derivedStatus = OrderStatus.NEW;
+      }
+    }
+
     return this.prisma.order.update({
       where: { id },
       data: {
         ...restDto,
-        ...(status !== undefined ? { status } : {}),
+        ...(needsMeasurement !== undefined ? { needsMeasurement } : {}),
+        ...(derivedStatus !== undefined ? { status: derivedStatus } : {}),
         ...(deadline !== undefined ? { deadline: toDate(deadline) } : {}),
         ...(acceptedAt !== undefined ? { acceptedAt: toDate(acceptedAt) } : {}),
         ...(callbackAt !== undefined ? { callbackAt: toDate(callbackAt) } : {}),
         // При переводе в производство фиксируем дату принятия в отдел (один раз)
-        ...(status === "IN_PRODUCTION" && !existing.productionStartedAt
+        ...(derivedStatus === "IN_PRODUCTION" && !existing.productionStartedAt
           ? { productionStartedAt: new Date() }
           : {}),
       },
@@ -290,6 +318,9 @@ export class OrdersService {
             lastName: true,
             role: true,
           },
+        },
+        measurer: {
+          select: { id: true, firstName: true, lastName: true },
         },
         source: true,
       },

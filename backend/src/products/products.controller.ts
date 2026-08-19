@@ -75,6 +75,15 @@ export class ProductsController {
     return this.productsService.getProductsByStage(stage);
   }
 
+  @Get("revision")
+  @Roles("MANAGER", "OWNER", "SUPER_ADMIN")
+  @ApiOperation({
+    summary: "Ревизия отделов: изделия по этапам для сверки/печати",
+  })
+  getRevision() {
+    return this.productsService.getRevision();
+  }
+
   @Get(":id")
   @ApiOperation({ summary: "Получить продукт по ID" })
   findOne(@Param("id") id: string) {

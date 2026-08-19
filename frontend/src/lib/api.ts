@@ -6,6 +6,7 @@ import type {
   CreateOrderDto,
   UpdateOrderDto,
   Product,
+  RevisionStage,
   CreateProductDto,
   UpdateProductDto,
   MoveProductDto,
@@ -317,6 +318,12 @@ export const productsApi = {
     return response.data;
   },
 
+  // Ревизия отделов: изделия по этапам для сверки/печати
+  getRevision: async (): Promise<RevisionStage[]> => {
+    const response = await api.get<RevisionStage[]>('/products/revision');
+    return response.data;
+  },
+
   getOne: async (id: string): Promise<Product> => {
     const response = await api.get<Product>(`/products/${id}`);
     return response.data;
@@ -624,6 +631,18 @@ export const tasksApi = {
     const response = await api.patch<Task>(`/tasks/${taskId}/reassign`, {
       workerId,
     });
+    return response.data;
+  },
+
+  // Вернуть изделие на выбранный этап (OWNER/SUPER_ADMIN)
+  returnProductToStage: async (
+    productId: string,
+    targetStage: string,
+  ): Promise<Product> => {
+    const response = await api.post<Product>(
+      `/tasks/product/${productId}/return-stage`,
+      { targetStage },
+    );
     return response.data;
   },
 };

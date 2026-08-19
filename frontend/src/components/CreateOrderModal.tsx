@@ -122,6 +122,9 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     queryFn: () => usersApi.getProductionWorkers(),
     enabled: isOpen,
   });
+  const measurers: User[] = allWorkers.filter(
+    (w: User) => w.isActive && w.role?.code === 'MEASURER',
+  );
   const workersByRole: Record<string, User[]> = {
     DESIGNER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'DESIGNER'),
     PREPARER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PREPARER'),
@@ -148,6 +151,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
   const [sourceId, setSourceId] = useState<string>('');
   const [totalAmount, setTotalAmount] = useState<string>('');
   const [deadline, setDeadline] = useState<string>('');
+  const [needsMeasurement, setNeedsMeasurement] = useState(false);
+  const [measurerId, setMeasurerId] = useState<string>('');
   const [products, setProducts] = useState<ProductFormData[]>([]);
 
   const createOrderMutation = useMutation({
@@ -162,6 +167,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
         sourceId: orderData.sourceId,
         totalAmount: orderData.totalAmount,
         deadline: orderData.deadline,
+        needsMeasurement: orderData.needsMeasurement,
+        measurerId: orderData.measurerId || null,
       });
 
       // Создаем продукты для заказа (если есть)
@@ -234,6 +241,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     setSourceId('');
     setTotalAmount('');
     setDeadline('');
+    setNeedsMeasurement(false);
+    setMeasurerId('');
     setProducts([]);
     onClose();
   };
@@ -257,6 +266,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
       sourceId: sourceId || undefined,
       totalAmount: totalAmount ? parseFloat(totalAmount) : undefined,
       deadline: deadline || undefined,
+      needsMeasurement,
+      measurerId: needsMeasurement ? (measurerId || undefined) : undefined,
       isInternalOrder,
       products: products.filter((p) => p.name.trim() !== '' && p.productTypeId),
     });
@@ -543,6 +554,49 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             <p className="text-xs text-muted-foreground mt-1">
               За 4 дня до срока заказ начнёт мигать красным 🔴
             </p>
+          </div>
+
+          {/* Замер перед производством */}
+          <div className="rounded-lg border p-3 space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={needsMeasurement}
+                onChange={(e) => {
+                  setNeedsMeasurement(e.target.checked);
+                  if (!e.target.checked) setMeasurerId('');
+                }}
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium">📐 Требуется замер (выезд к клиенту)</span>
+            </label>
+            {needsMeasurement && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Замерщик
+                </label>
+                <select
+                  value={measurerId}
+                  onChange={(e) => setMeasurerId(e.target.value)}
+                  className="w-full h-9 px-2 border rounded-md bg-card text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">Не назначен</option>
+                  {measurers.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.lastName} {m.firstName}
+                    </option>
+                  ))}
+                </select>
+                {measurers.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Нет сотрудников с ролью «Замерщик». Добавьте их в разделе «Пользователи».
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Заказ попадёт в колонку «Замеры» на Канбане.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Продукты */}

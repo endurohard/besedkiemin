@@ -166,7 +166,9 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Заказы созданные менеджером
-  ordersCreated  Order[]
+  ordersCreated  Order[]           @relation("OrderCreatedBy")
+  // Заказы, назначенные этому замерщику
+  ordersToMeasure Order[]          @relation("OrderMeasurer")
   // История работы с продуктами
   productHistory ProductHistory[]
   // Проверки качества
@@ -241,7 +243,12 @@ model Order {
   callbackNote        String?   @map("callback_note") // Причина ожидания / отказа клиента
 
   createdById String @map("created_by_id")
-  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdBy   User   @relation("OrderCreatedBy", fields: [createdById], references: [id])
+
+  // Замер перед производством: требуется ли выезд и кто из замерщиков назначен
+  needsMeasurement Boolean   @default(false) @map("needs_measurement")
+  measurerId       String?   @map("measurer_id")
+  measurer         User?     @relation("OrderMeasurer", fields: [measurerId], references: [id])
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -259,6 +266,7 @@ model Order {
   @@index([createdAt])
   @@index([createdById])
   @@index([sourceId])
+  @@index([measurerId])
   @@map("orders")
 }
 

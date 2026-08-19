@@ -387,6 +387,9 @@ export interface Order {
   productionStartedAt?: string | null; // Дата принятия в производство/отдел
   callbackAt?: string | null; // Планируемая дата повторного обзвона (WAITING)
   callbackNote?: string | null; // Причина ожидания / отказа клиента
+  needsMeasurement?: boolean; // Требуется выезд на замер
+  measurerId?: string | null; // Назначенный замерщик
+  measurer?: { id: string; firstName: string; lastName: string } | null;
   createdById: string;
   createdAt: string;
   updatedAt: string;
@@ -431,6 +434,8 @@ export interface CreateOrderDto {
   sourceId?: string;
   totalAmount?: number;
   deadline?: string | null;
+  needsMeasurement?: boolean;
+  measurerId?: string | null;
 }
 
 export interface UpdateOrderDto extends Partial<CreateOrderDto> {
@@ -439,6 +444,28 @@ export interface UpdateOrderDto extends Partial<CreateOrderDto> {
   acceptedAt?: string | null;
   callbackAt?: string | null;
   callbackNote?: string | null;
+}
+
+// Ревизия отделов (отчёт по этапам)
+export interface RevisionItem {
+  id: string;
+  name: string;
+  quantity: number;
+  productType?: string | null;
+  color?: string | null;
+  dimensions?: string | null;
+  orderNumber?: string | null;
+  customerName?: string | null;
+  assignee?: string | null;
+}
+
+export interface RevisionStage {
+  stage: ProductionStage;
+  name: string;
+  order: number;
+  count: number;
+  totalQuantity: number;
+  items: RevisionItem[];
 }
 
 // Product DTOs

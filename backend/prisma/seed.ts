@@ -82,6 +82,25 @@ async function main() {
     },
   });
 
+  const measurerRole = await prisma.role.upsert({
+    where: { code: 'MEASURER' },
+    update: {},
+    create: {
+      id: 'role-measurer',
+      name: 'Замерщик',
+      code: 'MEASURER',
+      description: 'Выезжает на замеры перед производством',
+      color: '#06B6D4',
+      isSystem: true,
+      order: 3,
+      permissions: [
+        'kanban:view',
+        'orders:view',
+        'tasks:view_own',
+      ],
+    },
+  });
+
   const designerRole = await prisma.role.upsert({
     where: { code: 'DESIGNER' },
     update: {},
@@ -433,6 +452,18 @@ async function main() {
       firstName: 'Анна',
       lastName: 'Проектировщик',
       roleId: designerRole.id,
+    },
+  });
+
+  const measurer = await prisma.user.upsert({
+    where: { email: 'measurer@example.com' },
+    update: {},
+    create: {
+      email: 'measurer@example.com',
+      password: hashedPassword,
+      firstName: 'Ахмед',
+      lastName: 'Замерщик',
+      roleId: measurerRole.id,
     },
   });
 

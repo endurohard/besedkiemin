@@ -12,6 +12,7 @@ import { Package, Clock, CheckCircle, ArrowRight, Plus, Search, Calendar, X, Tra
 import { CreateOrderModal } from '@/components/CreateOrderModal';
 import { SchemaImageViewer } from '@/components/SchemaImageViewer';
 import { ReassignTaskControl } from '@/components/ReassignTaskControl';
+import { ReturnStageControl } from '@/components/ReturnStageControl';
 import { getPriorityLabel, getPriorityColor, getPrioritySortOrder } from '@/lib/priority-utils';
 import { taskStatusLabels } from '@/lib/labels';
 import { getDeadlineInfo } from '@/lib/deadline';
@@ -108,7 +109,7 @@ export const KanbanPage = () => {
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '', deadline: '', status: 'NEW' as string, callbackAt: '', callbackNote: '' });
+  const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '', deadline: '', status: 'NEW' as string, callbackAt: '', callbackNote: '', needsMeasurement: false, measurerId: '' });
   const [editProducts, setEditProducts] = useState<ProductEditForm[]>([]);
   const [productsToDelete, setProductsToDelete] = useState<string[]>([]);
   const [expandedProductIds, setExpandedProductIds] = useState<Set<string>>(new Set());
@@ -159,6 +160,9 @@ export const KanbanPage = () => {
     enabled: !!selectedOrder && isEditing,
   });
 
+  const measurers: User[] = allWorkers.filter(
+    (w: User) => w.isActive && w.role?.code === 'MEASURER',
+  );
   const workersByRole: Record<string, User[]> = {
     PREPARER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PREPARER'),
     PAINTER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PAINTER'),
@@ -273,6 +277,8 @@ export const KanbanPage = () => {
       status: selectedOrder.status || 'NEW',
       callbackAt: selectedOrder.callbackAt ? new Date(selectedOrder.callbackAt).toISOString().slice(0, 10) : '',
       callbackNote: selectedOrder.callbackNote || '',
+      needsMeasurement: selectedOrder.needsMeasurement ?? false,
+      measurerId: selectedOrder.measurerId || '',
     });
     // Load existing products into edit form
     const existingProducts: ProductEditForm[] = (selectedOrder.products || []).map((p) => ({
@@ -384,6 +390,8 @@ export const KanbanPage = () => {
           status: editOrderForm.status,
           callbackAt: editOrderForm.status === 'WAITING' ? (editOrderForm.callbackAt || null) : null,
           callbackNote: editOrderForm.status === 'WAITING' ? (editOrderForm.callbackNote || null) : null,
+          needsMeasurement: editOrderForm.needsMeasurement,
+          measurerId: editOrderForm.needsMeasurement ? (editOrderForm.measurerId || null) : null,
         },
       });
 
@@ -1451,9 +1459,28 @@ export const KanbanPage = () => {
                                               currentAssigneeId={activeTask.assignedTo.id}
                                             />
                                           )}
+                                        {/* Возврат на этап — только владелец/суперадмин, только для незавершённых */}
+                                        {product.stage !== ProductionStage.COMPLETED &&
+                                          (user?.role?.code === 'OWNER' ||
+                                            user?.role?.code === 'SUPER_ADMIN') && (
+                                            <ReturnStageControl
+                                              productId={product.id}
+                                              currentStage={product.stage}
+                                            />
+                                          )}
                                       </div>
                                     ) : (
-                                      <p className="text-xs text-muted-foreground">Нет активных задач по этапу</p>
+                                      <div className="space-y-1.5">
+                                        <p className="text-xs text-muted-foreground">Нет активных задач по этапу</p>
+                                        {product.stage !== ProductionStage.COMPLETED &&
+                                          (user?.role?.code === 'OWNER' ||
+                                            user?.role?.code === 'SUPER_ADMIN') && (
+                                            <ReturnStageControl
+                                              productId={product.id}
+                                              currentStage={product.stage}
+                                            />
+                                          )}
+                                      </div>
                                     )}
                                   </div>
 
@@ -1655,6 +1682,54 @@ export const KanbanPage = () => {
                       <p className="text-[11px] text-muted-foreground mt-1">
                         В производстве/Завершён обычно проставляются автоматически по этапам позиций
                       </p>
+                    </div>
+
+                    {/* Замер перед производством */}
+                    <div className="p-3 border rounded-md bg-muted/30 space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={editOrderForm.needsMeasurement}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setEditOrderForm({
+                              ...editOrderForm,
+                              needsMeasurement: checked,
+                              measurerId: checked ? editOrderForm.measurerId : '',
+                              // синхронизируем статус с галочкой
+                              status: checked
+                                ? 'MEASUREMENT'
+                                : editOrderForm.status === 'MEASUREMENT'
+                                  ? 'NEW'
+                                  : editOrderForm.status,
+                            });
+                          }}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-xs font-medium">📐 Требуется замер (выезд к клиенту)</span>
+                      </label>
+                      {editOrderForm.needsMeasurement && (
+                        <div>
+                          <label className="block text-xs font-medium text-foreground mb-1">Замерщик</label>
+                          <select
+                            value={editOrderForm.measurerId}
+                            onChange={(e) => setEditOrderForm({ ...editOrderForm, measurerId: e.target.value })}
+                            className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          >
+                            <option value="">Не назначен</option>
+                            {measurers.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.lastName} {m.firstName}
+                              </option>
+                            ))}
+                          </select>
+                          {measurers.length === 0 && (
+                            <p className="text-[11px] text-amber-600 mt-1">
+                              Нет сотрудников с ролью «Замерщик» — добавьте их в разделе «Пользователи».
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Поля ожидания клиента (статус WAITING) */}
@@ -2116,7 +2191,7 @@ export const KanbanPage = () => {
                             {customerName && <span> · {customerName}</span>}
                           </div>
                         </div>
-                        <div className="shrink-0 text-right">
+                        <div className="shrink-0 text-right flex flex-col items-end gap-1.5">
                           {worker ? (
                             <div className="flex items-center gap-1.5 text-sm">
                               <UserIcon className="w-3.5 h-3.5 text-muted-foreground" />
@@ -2129,6 +2204,16 @@ export const KanbanPage = () => {
                               Не назначен
                             </span>
                           )}
+                          {product.stage !== ProductionStage.COMPLETED &&
+                            (user?.role?.code === 'OWNER' ||
+                              user?.role?.code === 'SUPER_ADMIN') && (
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <ReturnStageControl
+                                  productId={product.id}
+                                  currentStage={product.stage}
+                                />
+                              </div>
+                            )}
                         </div>
                       </div>
                     );

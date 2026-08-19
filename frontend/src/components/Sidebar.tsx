@@ -258,6 +258,11 @@ export const Sidebar = ({ userRole, permissions = [], onNavigate, isMobile = fal
           <NavLink to="/app/order-archive" icon={Archive} label="Архив заказов" />
         )}
 
+        {/* Ревизия отделов — менеджер/владелец/суперадмин */}
+        {(hasPermission('orders:view') || userRole === 'OWNER' || userRole === 'SUPER_ADMIN') && (
+          <NavLink to="/app/revision" icon={ClipboardList} label="Ревизия" />
+        )}
+
         {/* Склад и Отгрузки */}
         {hasPermission('inventory:view') && (
           <NavLink to="/app/inventory" icon={Package} label="Склад" />

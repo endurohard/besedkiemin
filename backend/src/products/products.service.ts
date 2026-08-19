@@ -482,6 +482,69 @@ export class ProductsService {
     return this.findAll({ stage });
   }
 
+  // Ревизия отделов: изделия, находящиеся на каждом производственном этапе,
+  // сгруппированные по этапам в порядке воронки. Для печати/сверки по факту.
+  async getRevision() {
+    const wfStages = await this.prisma.workflowStage.findMany({
+      where: { isActive: true, legacyStage: { not: null } },
+      orderBy: { order: "asc" },
+    });
+    const stageValues = wfStages.map(
+      (w) => w.legacyStage as ProductionStage,
+    );
+
+    const products = await this.prisma.product.findMany({
+      where: { stage: { in: stageValues } },
+      select: {
+        id: true,
+        name: true,
+        quantity: true,
+        stage: true,
+        color: true,
+        dimensions: true,
+        order: {
+          select: { orderNumber: true, customerName: true },
+        },
+        productType: { select: { name: true } },
+        tasks: {
+          where: { status: { in: ["NEW", "ACCEPTED"] } },
+          select: {
+            assignedTo: { select: { firstName: true, lastName: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return wfStages.map((w) => {
+      const items = products
+        .filter((p) => p.stage === w.legacyStage)
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          quantity: p.quantity,
+          productType: p.productType?.name || null,
+          color: p.color || null,
+          dimensions: p.dimensions || null,
+          orderNumber: p.order?.orderNumber || null,
+          customerName: p.order?.customerName || null,
+          assignee: p.tasks[0]?.assignedTo
+            ? `${p.tasks[0].assignedTo.lastName} ${p.tasks[0].assignedTo.firstName}`
+            : null,
+        }));
+      return {
+        stage: w.legacyStage,
+        name: w.name,
+        order: w.order,
+        count: items.length,
+        totalQuantity: items.reduce((s, i) => s + (i.quantity || 0), 0),
+        items,
+      };
+    });
+  }
+
   // Получить историю продукта
   async getProductHistory(productId: string) {
     await this.findOne(productId); // Проверяем существование

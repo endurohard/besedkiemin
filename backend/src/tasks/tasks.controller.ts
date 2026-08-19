@@ -167,4 +167,23 @@ export class TasksController {
   ) {
     return this.tasksService.reassignTask(id, workerId, req.user.userId);
   }
+
+  @Post("product/:productId/return-stage")
+  @UseGuards(RolesGuard)
+  @Roles("OWNER")
+  @ApiOperation({
+    summary:
+      "Вернуть изделие на выбранный этап (OWNER/SUPER_ADMIN). Для исправления ошибочной передачи отделом.",
+  })
+  async returnProductToStage(
+    @Param("productId") productId: string,
+    @Body("targetStage") targetStage: string,
+    @Req() req,
+  ) {
+    return this.tasksService.returnProductToStage(
+      productId,
+      targetStage,
+      req.user.userId,
+    );
+  }
 }
