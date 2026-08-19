@@ -169,6 +169,8 @@ model User {
   ordersCreated  Order[]           @relation("OrderCreatedBy")
   // Заказы, назначенные этому замерщику
   ordersToMeasure Order[]          @relation("OrderMeasurer")
+  // Заказы, назначенные этому установщику
+  ordersToInstall Order[]          @relation("OrderInstaller")
   // История работы с продуктами
   productHistory ProductHistory[]
   // Проверки качества
@@ -250,6 +252,11 @@ model Order {
   measurerId       String?   @map("measurer_id")
   measurer         User?     @relation("OrderMeasurer", fields: [measurerId], references: [id])
 
+  // Установка (монтаж после отгрузки): требуется ли выезд и кто из установщиков назначен
+  needsInstallation Boolean  @default(false) @map("needs_installation")
+  installerId       String?  @map("installer_id")
+  installer         User?    @relation("OrderInstaller", fields: [installerId], references: [id])
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -267,6 +274,7 @@ model Order {
   @@index([createdById])
   @@index([sourceId])
   @@index([measurerId])
+  @@index([installerId])
   @@map("orders")
 }
 

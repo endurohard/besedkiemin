@@ -61,6 +61,7 @@ export class UsersService {
   async findProductionWorkers(): Promise<UserEntity[]> {
     const productionRoles = [
       SYSTEM_ROLES.MEASURER,
+      SYSTEM_ROLES.INSTALLER,
       SYSTEM_ROLES.DESIGNER,
       SYSTEM_ROLES.PREPARER,
       SYSTEM_ROLES.PAINTER,

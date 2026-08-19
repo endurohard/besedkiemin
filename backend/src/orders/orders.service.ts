@@ -80,6 +80,9 @@ export class OrdersService {
         measurer: {
           select: { id: true, firstName: true, lastName: true },
         },
+        installer: {
+          select: { id: true, firstName: true, lastName: true },
+        },
         source: true,
       },
     });
@@ -138,6 +141,11 @@ export class OrdersService {
           needsMeasurement: true,
           measurerId: true,
           measurer: {
+            select: { id: true, firstName: true, lastName: true },
+          },
+          needsInstallation: true,
+          installerId: true,
+          installer: {
             select: { id: true, firstName: true, lastName: true },
           },
           sourceId: true,
@@ -262,6 +270,9 @@ export class OrdersService {
         measurer: {
           select: { id: true, firstName: true, lastName: true },
         },
+        installer: {
+          select: { id: true, firstName: true, lastName: true },
+        },
         source: true,
       },
     });
@@ -320,6 +331,9 @@ export class OrdersService {
           },
         },
         measurer: {
+          select: { id: true, firstName: true, lastName: true },
+        },
+        installer: {
           select: { id: true, firstName: true, lastName: true },
         },
         source: true,

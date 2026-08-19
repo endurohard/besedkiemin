@@ -101,6 +101,25 @@ async function main() {
     },
   });
 
+  const installerRole = await prisma.role.upsert({
+    where: { code: 'INSTALLER' },
+    update: {},
+    create: {
+      id: 'role-installer',
+      name: 'Установщик',
+      code: 'INSTALLER',
+      description: 'Выезжает на монтаж/установку после отгрузки',
+      color: '#F59E0B',
+      isSystem: true,
+      order: 3,
+      permissions: [
+        'kanban:view',
+        'orders:view',
+        'tasks:view_own',
+      ],
+    },
+  });
+
   const designerRole = await prisma.role.upsert({
     where: { code: 'DESIGNER' },
     update: {},
@@ -464,6 +483,18 @@ async function main() {
       firstName: 'Ахмед',
       lastName: 'Замерщик',
       roleId: measurerRole.id,
+    },
+  });
+
+  const installer = await prisma.user.upsert({
+    where: { email: 'installer@example.com' },
+    update: {},
+    create: {
+      email: 'installer@example.com',
+      password: hashedPassword,
+      firstName: 'Руслан',
+      lastName: 'Установщик',
+      roleId: installerRole.id,
     },
   });
 

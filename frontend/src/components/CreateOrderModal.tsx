@@ -125,6 +125,9 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
   const measurers: User[] = allWorkers.filter(
     (w: User) => w.isActive && w.role?.code === 'MEASURER',
   );
+  const installers: User[] = allWorkers.filter(
+    (w: User) => w.isActive && w.role?.code === 'INSTALLER',
+  );
   const workersByRole: Record<string, User[]> = {
     DESIGNER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'DESIGNER'),
     PREPARER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PREPARER'),
@@ -153,6 +156,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
   const [deadline, setDeadline] = useState<string>('');
   const [needsMeasurement, setNeedsMeasurement] = useState(false);
   const [measurerId, setMeasurerId] = useState<string>('');
+  const [needsInstallation, setNeedsInstallation] = useState(false);
+  const [installerId, setInstallerId] = useState<string>('');
   const [products, setProducts] = useState<ProductFormData[]>([]);
 
   const createOrderMutation = useMutation({
@@ -169,6 +174,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
         deadline: orderData.deadline,
         needsMeasurement: orderData.needsMeasurement,
         measurerId: orderData.measurerId || null,
+        needsInstallation: orderData.needsInstallation,
+        installerId: orderData.installerId || null,
       });
 
       // Создаем продукты для заказа (если есть)
@@ -243,6 +250,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
     setDeadline('');
     setNeedsMeasurement(false);
     setMeasurerId('');
+    setNeedsInstallation(false);
+    setInstallerId('');
     setProducts([]);
     onClose();
   };
@@ -268,6 +277,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
       deadline: deadline || undefined,
       needsMeasurement,
       measurerId: needsMeasurement ? (measurerId || undefined) : undefined,
+      needsInstallation,
+      installerId: needsInstallation ? (installerId || undefined) : undefined,
       isInternalOrder,
       products: products.filter((p) => p.name.trim() !== '' && p.productTypeId),
     });
@@ -595,6 +606,46 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
                 <p className="text-xs text-muted-foreground mt-1">
                   Заказ попадёт в колонку «Замеры» на Канбане.
                 </p>
+              </div>
+            )}
+          </div>
+
+          {/* Установка после отгрузки */}
+          <div className="rounded-lg border p-3 space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={needsInstallation}
+                onChange={(e) => {
+                  setNeedsInstallation(e.target.checked);
+                  if (!e.target.checked) setInstallerId('');
+                }}
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium">🔧 Требуется установка (монтаж у клиента)</span>
+            </label>
+            {needsInstallation && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Установщик
+                </label>
+                <select
+                  value={installerId}
+                  onChange={(e) => setInstallerId(e.target.value)}
+                  className="w-full h-9 px-2 border rounded-md bg-card text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">Не назначен</option>
+                  {installers.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.lastName} {m.firstName}
+                    </option>
+                  ))}
+                </select>
+                {installers.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Нет сотрудников с ролью «Установщик». Добавьте их в разделе «Пользователи».
+                  </p>
+                )}
               </div>
             )}
           </div>

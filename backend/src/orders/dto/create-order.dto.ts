@@ -103,4 +103,22 @@ export class CreateOrderDto {
   @IsUUID()
   @IsOptional()
   measurerId?: string | null;
+
+  @ApiProperty({
+    example: false,
+    required: false,
+    description: "Требуется выезд на установку/монтаж после отгрузки",
+  })
+  @IsBoolean()
+  @IsOptional()
+  needsInstallation?: boolean;
+
+  @ApiProperty({
+    example: "uuid-установщика",
+    required: false,
+    description: "ID назначенного установщика (роль INSTALLER)",
+  })
+  @IsUUID()
+  @IsOptional()
+  installerId?: string | null;
 }

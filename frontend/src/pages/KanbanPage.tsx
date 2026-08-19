@@ -109,7 +109,7 @@ export const KanbanPage = () => {
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '', deadline: '', status: 'NEW' as string, callbackAt: '', callbackNote: '', needsMeasurement: false, measurerId: '' });
+  const [editOrderForm, setEditOrderForm] = useState({ customerName: '', customerPhone: '', customerAddress: '', description: '', totalAmount: '', priority: 'NORMAL' as string, sourceId: '', deadline: '', status: 'NEW' as string, callbackAt: '', callbackNote: '', needsMeasurement: false, measurerId: '', needsInstallation: false, installerId: '' });
   const [editProducts, setEditProducts] = useState<ProductEditForm[]>([]);
   const [productsToDelete, setProductsToDelete] = useState<string[]>([]);
   const [expandedProductIds, setExpandedProductIds] = useState<Set<string>>(new Set());
@@ -162,6 +162,9 @@ export const KanbanPage = () => {
 
   const measurers: User[] = allWorkers.filter(
     (w: User) => w.isActive && w.role?.code === 'MEASURER',
+  );
+  const installers: User[] = allWorkers.filter(
+    (w: User) => w.isActive && w.role?.code === 'INSTALLER',
   );
   const workersByRole: Record<string, User[]> = {
     PREPARER: allWorkers.filter((w: User) => w.isActive && w.role?.code === 'PREPARER'),
@@ -279,6 +282,8 @@ export const KanbanPage = () => {
       callbackNote: selectedOrder.callbackNote || '',
       needsMeasurement: selectedOrder.needsMeasurement ?? false,
       measurerId: selectedOrder.measurerId || '',
+      needsInstallation: selectedOrder.needsInstallation ?? false,
+      installerId: selectedOrder.installerId || '',
     });
     // Load existing products into edit form
     const existingProducts: ProductEditForm[] = (selectedOrder.products || []).map((p) => ({
@@ -392,6 +397,8 @@ export const KanbanPage = () => {
           callbackNote: editOrderForm.status === 'WAITING' ? (editOrderForm.callbackNote || null) : null,
           needsMeasurement: editOrderForm.needsMeasurement,
           measurerId: editOrderForm.needsMeasurement ? (editOrderForm.measurerId || null) : null,
+          needsInstallation: editOrderForm.needsInstallation,
+          installerId: editOrderForm.needsInstallation ? (editOrderForm.installerId || null) : null,
         },
       });
 
@@ -1726,6 +1733,48 @@ export const KanbanPage = () => {
                           {measurers.length === 0 && (
                             <p className="text-[11px] text-amber-600 mt-1">
                               Нет сотрудников с ролью «Замерщик» — добавьте их в разделе «Пользователи».
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Установка после отгрузки */}
+                    <div className="p-3 border rounded-md bg-muted/30 space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={editOrderForm.needsInstallation}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setEditOrderForm({
+                              ...editOrderForm,
+                              needsInstallation: checked,
+                              installerId: checked ? editOrderForm.installerId : '',
+                            });
+                          }}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-xs font-medium">🔧 Требуется установка (монтаж у клиента)</span>
+                      </label>
+                      {editOrderForm.needsInstallation && (
+                        <div>
+                          <label className="block text-xs font-medium text-foreground mb-1">Установщик</label>
+                          <select
+                            value={editOrderForm.installerId}
+                            onChange={(e) => setEditOrderForm({ ...editOrderForm, installerId: e.target.value })}
+                            className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          >
+                            <option value="">Не назначен</option>
+                            {installers.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.lastName} {m.firstName}
+                              </option>
+                            ))}
+                          </select>
+                          {installers.length === 0 && (
+                            <p className="text-[11px] text-amber-600 mt-1">
+                              Нет сотрудников с ролью «Установщик» — добавьте их в разделе «Пользователи».
                             </p>
                           )}
                         </div>

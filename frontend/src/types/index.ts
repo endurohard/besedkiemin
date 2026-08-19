@@ -390,6 +390,9 @@ export interface Order {
   needsMeasurement?: boolean; // Требуется выезд на замер
   measurerId?: string | null; // Назначенный замерщик
   measurer?: { id: string; firstName: string; lastName: string } | null;
+  needsInstallation?: boolean; // Требуется выезд на установку (после отгрузки)
+  installerId?: string | null; // Назначенный установщик
+  installer?: { id: string; firstName: string; lastName: string } | null;
   createdById: string;
   createdAt: string;
   updatedAt: string;
@@ -436,6 +439,8 @@ export interface CreateOrderDto {
   deadline?: string | null;
   needsMeasurement?: boolean;
   measurerId?: string | null;
+  needsInstallation?: boolean;
+  installerId?: string | null;
 }
 
 export interface UpdateOrderDto extends Partial<CreateOrderDto> {
