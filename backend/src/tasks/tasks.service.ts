@@ -292,11 +292,9 @@ export class TasksService {
     pin?: string,
   ) {
     if (!worker || worker.role?.code === "WAREHOUSE") return;
-    if (!worker.pin) {
-      throw new BadRequestException(
-        "У сотрудника не установлен PIN-код. Обратитесь к владельцу, чтобы он задал PIN в разделе «Пользователи».",
-      );
-    }
+    // Мягкий режим: если у сотрудника PIN не задан — пропускаем (не блокируем цех).
+    // Как только PIN установлен — он становится обязательным для этого сотрудника.
+    if (!worker.pin) return;
     if (!pin || !(await bcrypt.compare(pin, worker.pin))) {
       throw new ForbiddenException("Неверный PIN-код сотрудника");
     }

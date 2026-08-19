@@ -112,7 +112,7 @@ export const TaskCardWorkerSelectModal = ({
               {selectedWorkerId && (
                 <div className="mb-1">
                   <label className="text-sm text-muted-foreground block mb-2">
-                    PIN-код сотрудника для подтверждения:
+                    PIN-код сотрудника (если установлен):
                   </label>
                   <input
                     type="password"
@@ -133,7 +133,7 @@ export const TaskCardWorkerSelectModal = ({
         <div className="flex gap-2">
           <Button
             onClick={() => onConfirm(selectedWorkerId, acceptQuantity, pin)}
-            disabled={!selectedWorkerId || pin.length < 4 || isPending}
+            disabled={!selectedWorkerId || isPending}
             className="flex-1"
           >
             {isPending ? 'Принятие...' : `Принять ${acceptQuantity} шт.`}

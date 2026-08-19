@@ -145,13 +145,13 @@ export const TaskCardWorkerActions = ({
             maxLength={6}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            placeholder="PIN-код"
+            placeholder="PIN (если установлен)"
             className="w-full p-2 border border-blue-200 rounded bg-card text-sm text-center tracking-[0.4em]"
           />
           <div className="flex gap-1.5">
             <Button
               onClick={() => acceptMutation.mutate(isDefectTask ? { workerId: task.assignedTo?.id, pin } : { pin })}
-              disabled={acceptMutation.isPending || pin.length < 4}
+              disabled={acceptMutation.isPending}
               className="flex-1 text-xs py-1.5"
               size="sm"
             >
@@ -255,13 +255,13 @@ export const TaskCardWorkerActions = ({
             maxLength={6}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            placeholder="PIN-код сотрудника"
+            placeholder="PIN (если установлен)"
             className="w-full p-2 border border-green-200 rounded bg-card text-sm text-center tracking-[0.4em]"
           />
           <div className="flex gap-1.5">
             <Button
               onClick={() => completeMutation.mutate()}
-              disabled={completeMutation.isPending || pin.length < 4}
+              disabled={completeMutation.isPending}
               className="flex-1 text-xs py-1.5"
               size="sm"
             >
@@ -319,21 +319,21 @@ export const TaskCardWorkerActions = ({
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium mb-1">PIN-код сотрудника</label>
+            <label className="block text-sm font-medium mb-1">PIN-код (если установлен)</label>
             <Input
               type="password"
               inputMode="numeric"
               maxLength={6}
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              placeholder="PIN для подтверждения"
+              placeholder="PIN (если установлен)"
               className="text-center tracking-[0.4em]"
             />
           </div>
           <div className="flex gap-2">
             <Button
               onClick={() => completeMutation.mutate()}
-              disabled={completeMutation.isPending || completedQuantity <= 0 || pin.length < 4}
+              disabled={completeMutation.isPending || completedQuantity <= 0}
               className="flex-1"
             >
               {completeMutation.isPending ? 'Сохранение...' : 'Подтвердить'}
