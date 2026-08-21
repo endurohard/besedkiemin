@@ -739,6 +739,157 @@ export class TasksService {
     return result;
   }
 
+  // Корректировка по ревизии (OWNER/SUPER_ADMIN): переместить часть/всё количество
+  // изделия на другой этап. Нужно, когда сотрудники передали неверное число.
+  // Уменьшает запись на текущем этапе и создаёт новую на целевом (без слияний,
+  // как при частичной передаче). Только для незавершённых изделий — зарплата не задета.
+  async moveProductQuantity(
+    productId: string,
+    quantity: number,
+    targetStage: string,
+    userId: string,
+  ) {
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw new BadRequestException("Количество должно быть больше 0");
+    }
+
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      include: { order: true },
+    });
+    if (!product) {
+      throw new NotFoundException("Изделие не найдено");
+    }
+    if (product.stage === ProductionStage.COMPLETED) {
+      throw new BadRequestException(
+        "Нельзя корректировать завершённое изделие — по нему уже начислена зарплата.",
+      );
+    }
+    if (quantity > product.quantity) {
+      throw new BadRequestException(
+        `Нельзя переместить ${quantity} шт. — в этой записи только ${product.quantity} шт.`,
+      );
+    }
+
+    const targetWs = await this.prisma.workflowStage.findFirst({
+      where: { legacyStage: targetStage as ProductionStage, isActive: true },
+      include: { roles: { include: { role: true } } },
+    });
+    if (!targetWs || !targetWs.legacyStage) {
+      throw new BadRequestException("Целевой этап не найден или отключён");
+    }
+    if (targetWs.legacyStage === product.stage) {
+      throw new BadRequestException("Изделие уже на этом этапе");
+    }
+
+    // Исполнители целевого этапа (закреплённый или весь отдел)
+    const stageAssignments = (product as any).stageAssignments as Record<
+      string,
+      string
+    > | null;
+    const assignedId = stageAssignments
+      ? stageAssignments[targetWs.legacyStage]
+      : undefined;
+    const roleIds = targetWs.roles?.map((r) => r.roleId) || [];
+    const workers = await this.prisma.user.findMany({
+      where: { roleId: { in: roleIds }, isActive: true },
+    });
+    const targetWorkers = assignedId
+      ? workers.filter((w) => w.id === assignedId)
+      : workers;
+
+    const moveWhole = quantity === product.quantity;
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      let targetProductId: string;
+      let targetQty: number;
+
+      if (moveWhole) {
+        // Двигаем всю запись на целевой этап: открытые задачи текущего этапа удаляем
+        await tx.task.deleteMany({
+          where: {
+            productId,
+            status: { in: [TaskStatus.NEW, TaskStatus.ACCEPTED] },
+          },
+        });
+        await tx.product.update({
+          where: { id: productId },
+          data: { stage: targetWs.legacyStage! },
+        });
+        targetProductId = productId;
+        targetQty = product.quantity;
+      } else {
+        // Частично: уменьшаем текущую запись, создаём новую на целевом этапе
+        const remaining = product.quantity - quantity;
+        await tx.product.update({
+          where: { id: productId },
+          data: { quantity: remaining },
+        });
+        await tx.task.updateMany({
+          where: {
+            productId,
+            status: { in: [TaskStatus.NEW, TaskStatus.ACCEPTED] },
+          },
+          data: { quantity: remaining },
+        });
+        const clone = await tx.product.create({
+          data: {
+            name: product.name,
+            description: product.description,
+            quantity,
+            dimensions: product.dimensions,
+            schemaImageUrl: product.schemaImageUrl,
+            schemaImageUrls: product.schemaImageUrls,
+            stage: targetWs.legacyStage!,
+            deadline: product.deadline,
+            productTypeId: product.productTypeId,
+            requiresSewing: product.requiresSewing,
+            color: product.color,
+            upholsteryMaterial: product.upholsteryMaterial,
+            isCustom: product.isCustom,
+            needsDesign: product.needsDesign,
+            stageAssignments: (product as any).stageAssignments ?? undefined,
+            orderId: product.orderId,
+            nomenclatureId: (product as any).nomenclatureId ?? undefined,
+          },
+        });
+        targetProductId = clone.id;
+        targetQty = quantity;
+      }
+
+      // Задачи целевого этапа
+      for (const worker of targetWorkers) {
+        await tx.task.create({
+          data: {
+            title: `${product.name} - ${targetWs.name}`,
+            description: `Корректировка по ревизии (кол-во: ${targetQty} шт.)`,
+            stage: targetWs.legacyStage!,
+            productId: targetProductId,
+            assignedToId: worker.id,
+            quantity: targetQty,
+            workflowStageId: targetWs.id,
+          },
+        });
+      }
+
+      return tx.product.findUnique({
+        where: { id: targetProductId },
+        include: {
+          order: { select: { id: true, orderNumber: true } },
+          productType: { select: { id: true, name: true } },
+        },
+      });
+    });
+
+    await this.updateOrderStatus(product.orderId);
+
+    this.logger.log(
+      `Revision move: ${quantity} of product ${productId} -> stage ${targetWs.legacyStage} by ${userId}`,
+    );
+
+    return result;
+  }
+
   // Завершить задачу
   async completeTask(
     taskId: string,

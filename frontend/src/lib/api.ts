@@ -645,6 +645,19 @@ export const tasksApi = {
     );
     return response.data;
   },
+
+  // Корректировка по ревизии: переместить N штук изделия на другой этап (OWNER/SUPER_ADMIN)
+  moveProductQuantity: async (
+    productId: string,
+    quantity: number,
+    targetStage: string,
+  ): Promise<Product> => {
+    const response = await api.post<Product>(
+      `/tasks/product/${productId}/move-quantity`,
+      { quantity, targetStage },
+    );
+    return response.data;
+  },
 };
 
 // Analytics API (только для OWNER)

@@ -1,9 +1,88 @@
-import { useQuery } from '@tanstack/react-query';
-import { productsApi } from '@/lib/api';
-import { RevisionStage } from '@/types';
-import { Loader2, Printer, ClipboardList } from 'lucide-react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { productsApi, tasksApi } from '@/lib/api';
+import { RevisionStage, RevisionItem } from '@/types';
+import { Loader2, Printer, ClipboardList, MoveRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useAuthStore } from '@/store/authStore';
+
+// Корректировка по ревизии: переместить часть/всё количество изделия на другой этап
+const RevisionMoveControl = ({
+  item,
+  currentStage,
+  stages,
+}: {
+  item: RevisionItem;
+  currentStage: string;
+  stages: RevisionStage[];
+}) => {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [qty, setQty] = useState<number>(item.quantity);
+  const [targetStage, setTargetStage] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: () => tasksApi.moveProductQuantity(item.id, qty, targetStage),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['revision'] });
+      setOpen(false);
+    },
+    onError: (e: any) =>
+      alert(e?.response?.data?.message || 'Не удалось переместить'),
+  });
+
+  const options = stages.filter((s) => s.stage !== currentStage);
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => { setOpen(true); setQty(item.quantity); setTargetStage(''); }}
+        className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded"
+      >
+        <MoveRight size={12} />
+        Переместить
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 flex-wrap justify-center">
+      <input
+        type="number"
+        min={1}
+        max={item.quantity}
+        value={qty}
+        onChange={(e) => setQty(Math.min(item.quantity, Math.max(1, parseInt(e.target.value) || 1)))}
+        className="w-14 px-1 py-1 border rounded text-xs text-center"
+      />
+      <span className="text-[11px] text-muted-foreground">шт →</span>
+      <select
+        value={targetStage}
+        onChange={(e) => setTargetStage(e.target.value)}
+        className="px-1 py-1 border rounded text-xs bg-card"
+      >
+        <option value="">этап…</option>
+        {options.map((s) => (
+          <option key={s.stage} value={s.stage}>{s.name}</option>
+        ))}
+      </select>
+      <button
+        onClick={() => targetStage && mutation.mutate()}
+        disabled={!targetStage || mutation.isPending}
+        className="px-2 py-1 text-[11px] font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 rounded"
+      >
+        {mutation.isPending ? '…' : 'ОК'}
+      </button>
+      <button
+        onClick={() => setOpen(false)}
+        className="px-2 py-1 text-[11px] border rounded hover:bg-muted"
+      >
+        ✕
+      </button>
+    </div>
+  );
+};
 
 const esc = (v: unknown) =>
   String(v ?? '')
@@ -12,6 +91,8 @@ const esc = (v: unknown) =>
     .replace(/>/g, '&gt;');
 
 export const RevisionPage = () => {
+  const { user } = useAuthStore();
+  const isOwner = user?.role?.code === 'OWNER' || user?.role?.code === 'SUPER_ADMIN';
   const { data: stages, isLoading, error, dataUpdatedAt } = useQuery({
     queryKey: ['revision'],
     queryFn: () => productsApi.getRevision(),
@@ -177,6 +258,9 @@ export const RevisionPage = () => {
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Исполнитель</th>
                     <th className="px-3 py-2 text-center font-medium text-muted-foreground w-20">Кол-во</th>
                     <th className="px-3 py-2 text-center font-medium text-muted-foreground w-24">Факт</th>
+                    {isOwner && (
+                      <th className="px-3 py-2 text-center font-medium text-muted-foreground">Корректировка</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -198,6 +282,11 @@ export const RevisionPage = () => {
                       <td className="px-3 py-2">{it.assignee || '—'}</td>
                       <td className="px-3 py-2 text-center font-semibold">{it.quantity}</td>
                       <td className="px-3 py-2 text-center text-muted-foreground">&nbsp;</td>
+                      {isOwner && (
+                        <td className="px-3 py-2 text-center">
+                          <RevisionMoveControl item={it} currentStage={st.stage} stages={list} />
+                        </td>
+                      )}
                     </tr>
                   ))}
                   <tr className="border-t bg-muted/30 font-semibold">
@@ -206,6 +295,7 @@ export const RevisionPage = () => {
                     </td>
                     <td className="px-3 py-2 text-center">{st.totalQuantity}</td>
                     <td className="px-3 py-2 text-center text-muted-foreground">&nbsp;</td>
+                    {isOwner && <td className="px-3 py-2">&nbsp;</td>}
                   </tr>
                 </tbody>
               </table>

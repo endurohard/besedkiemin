@@ -189,4 +189,25 @@ export class TasksController {
       req.user.userId,
     );
   }
+
+  @Post("product/:productId/move-quantity")
+  @UseGuards(RolesGuard)
+  @Roles("OWNER")
+  @ApiOperation({
+    summary:
+      "Корректировка по ревизии: переместить N штук изделия на другой этап (OWNER/SUPER_ADMIN)",
+  })
+  async moveProductQuantity(
+    @Param("productId") productId: string,
+    @Body("quantity") quantity: number,
+    @Body("targetStage") targetStage: string,
+    @Req() req,
+  ) {
+    return this.tasksService.moveProductQuantity(
+      productId,
+      quantity,
+      targetStage,
+      req.user.userId,
+    );
+  }
 }
