@@ -1691,6 +1691,9 @@ export const KanbanPage = () => {
                       </p>
                     </div>
 
+                    {/* Замер и установка — только для клиентских заказов */}
+                    {selectedOrder?.customerName !== 'Внутренний заказ' && (
+                    <>
                     {/* Замер перед производством */}
                     <div className="p-3 border rounded-md bg-muted/30 space-y-2">
                       <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -1780,6 +1783,8 @@ export const KanbanPage = () => {
                         </div>
                       )}
                     </div>
+                    </>
+                    )}
 
                     {/* Поля ожидания клиента (статус WAITING) */}
                     {editOrderForm.status === 'WAITING' && (

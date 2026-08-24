@@ -567,6 +567,9 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
             </p>
           </div>
 
+          {/* Замер и установка — только для клиентских заказов */}
+          {!isInternalOrder && (
+          <>
           {/* Замер перед производством */}
           <div className="rounded-lg border p-3 space-y-2">
             <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -649,6 +652,8 @@ export const CreateOrderModal = ({ isOpen, onClose }: CreateOrderModalProps) => 
               </div>
             )}
           </div>
+          </>
+          )}
 
           {/* Продукты */}
           <div className="space-y-4">
